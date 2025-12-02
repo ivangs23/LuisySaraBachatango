@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-export async function createPost(formData: FormData) {
+export async function createPost(formData: FormData): Promise<void> {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -17,7 +17,6 @@ export async function createPost(formData: FormData) {
   const content = formData.get('content') as string
 
   if (!title || !content) {
-    // return { error: 'Title and content are required' }
     return
   }
 
@@ -29,7 +28,6 @@ export async function createPost(formData: FormData) {
 
   if (error) {
     console.error('Error creating post:', error)
-    // return { error: 'Failed to create post' }
     return
   }
 
@@ -37,7 +35,7 @@ export async function createPost(formData: FormData) {
   redirect('/community')
 }
 
-export async function createComment(formData: FormData) {
+export async function createComment(formData: FormData): Promise<void> {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -50,7 +48,6 @@ export async function createComment(formData: FormData) {
   const content = formData.get('content') as string
 
   if (!postId || !content) {
-    // return { error: 'Content is required' }
     return
   }
 
@@ -62,7 +59,6 @@ export async function createComment(formData: FormData) {
 
   if (error) {
     console.error('Error creating comment:', error)
-    // return { error: 'Failed to create comment' }
     return
   }
 
