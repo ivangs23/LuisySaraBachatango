@@ -17,7 +17,8 @@ export async function createPost(formData: FormData) {
   const content = formData.get('content') as string
 
   if (!title || !content) {
-    return { error: 'Title and content are required' }
+    // return { error: 'Title and content are required' }
+    return
   }
 
   const { error } = await supabase.from('posts').insert({
@@ -28,7 +29,8 @@ export async function createPost(formData: FormData) {
 
   if (error) {
     console.error('Error creating post:', error)
-    return { error: 'Failed to create post' }
+    // return { error: 'Failed to create post' }
+    return
   }
 
   revalidatePath('/community')
@@ -48,7 +50,8 @@ export async function createComment(formData: FormData) {
   const content = formData.get('content') as string
 
   if (!postId || !content) {
-    return { error: 'Content is required' }
+    // return { error: 'Content is required' }
+    return
   }
 
   const { error } = await supabase.from('comments').insert({
@@ -59,7 +62,8 @@ export async function createComment(formData: FormData) {
 
   if (error) {
     console.error('Error creating comment:', error)
-    return { error: 'Failed to create comment' }
+    // return { error: 'Failed to create comment' }
+    return
   }
 
   revalidatePath(`/community/${postId}`)
