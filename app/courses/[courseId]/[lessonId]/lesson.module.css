@@ -1,0 +1,91 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.header {
+  margin-bottom: var(--spacing-md);
+}
+
+.backLink {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.backLink:hover {
+  color: var(--primary);
+}
+
+.videoWrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  background-color: #000;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.videoPlayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.content {
+  background-color: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border);
+}
+
+.title {
+  font-size: 1.8rem;
+  color: var(--text-main);
+  margin-bottom: var(--spacing-md);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--spacing-md);
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding-bottom: var(--spacing-sm);
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.tabActive {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.tabActive::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary);
+}
+
+.description {
+  color: var(--text-muted);
+  line-height: 1.6;
+}

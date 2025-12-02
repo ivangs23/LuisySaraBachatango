@@ -1,0 +1,123 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.popup {
+  background-color: #1a1a1a;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  animation: slideUp 0.3s ease-out;
+}
+
+.closeButton {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  line-height: 1;
+}
+
+.closeButton:hover {
+  color: var(--text-main);
+}
+
+.title {
+  font-size: 1.5rem;
+  color: var(--text-main);
+  margin-bottom: var(--spacing-md);
+}
+
+.thumbnailContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background-color: #000;
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+}
+
+.playOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.playIcon {
+  font-size: 3rem;
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 5px; /* Visual adjustment for play triangle */
+}
+
+.message {
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.5;
+}
+
+.ctaButton {
+  display: block;
+  width: 100%;
+  background-color: var(--primary);
+  color: #000;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background-color 0.2s;
+}
+
+.ctaButton:hover {
+  background-color: var(--primary-hover);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

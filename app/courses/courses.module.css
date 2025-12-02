@@ -1,0 +1,107 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-md);
+}
+
+.title {
+  font-size: 2.5rem;
+  color: var(--primary);
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--spacing-xl);
+  background-color: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.subtext {
+  color: var(--text-muted);
+  margin-top: var(--spacing-md);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.card {
+  background-color: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary);
+}
+
+.imageContainer {
+  aspect-ratio: 16 / 9;
+  background-color: var(--surface-hover);
+  position: relative;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholderImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(45deg, var(--surface), var(--surface-hover));
+  color: var(--text-muted);
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.content {
+  padding: var(--spacing-md);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.courseTitle {
+  font-size: 1.25rem;
+  color: var(--text-main);
+  margin-bottom: var(--spacing-xs);
+}
+
+.courseDate {
+  color: var(--primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-md);
+}
+
+.description {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.cta {
+  color: var(--primary);
+  font-weight: bold;
+  align-self: flex-end;
+  font-size: 0.9rem;
+}
