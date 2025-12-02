@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-export async function createPost(formData: FormData): Promise<void> {
+export async function submitPost(formData: FormData): Promise<void> {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -35,7 +35,7 @@ export async function createPost(formData: FormData): Promise<void> {
   redirect('/community')
 }
 
-export async function createComment(formData: FormData): Promise<void> {
+export async function submitComment(formData: FormData): Promise<void> {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()

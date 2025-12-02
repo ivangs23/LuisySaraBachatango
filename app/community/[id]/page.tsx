@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import { createComment } from '../actions'
+import { submitComment } from '../actions'
 import Link from 'next/link'
 import styles from '../community.module.css'
 import { notFound } from 'next/navigation'
@@ -41,7 +41,7 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
       <div className={styles.commentsSection}>
         <h2 className={styles.commentsTitle}>Comentarios ({comments?.length || 0})</h2>
 
-        <form action={createComment} className={styles.commentForm}>
+        <form action={submitComment} className={styles.commentForm}>
           <input type="hidden" name="postId" value={post.id} />
           <textarea 
             name="content" 

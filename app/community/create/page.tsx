@@ -1,4 +1,4 @@
-import { createPost } from '../actions'
+import { submitPost } from '../actions'
 import styles from '../community.module.css'
 
 export default function CreatePostPage() {
@@ -6,7 +6,7 @@ export default function CreatePostPage() {
     <div className={styles.container}>
       <h1 className={styles.title} style={{ marginBottom: '2rem' }}>Crear Nuevo Post</h1>
       
-      <form action={createPost}>
+      <form action={submitPost}>
         <div className={styles.formGroup}>
           <label htmlFor="title" className={styles.label}>Título</label>
           <input 
