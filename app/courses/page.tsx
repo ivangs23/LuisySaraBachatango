@@ -22,9 +22,28 @@ export default async function CoursesPage() {
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
 
+  const { data: { user } } = await supabase.auth.getUser()
+  let profile = null
+
+  if (user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    profile = data
+  }
+
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Cursos Disponibles</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Cursos Disponibles</h1>
+        {profile?.role === 'admin' && (
+          <Link href="/courses/create" className={styles.createButton}>
+            + Crear Curso
+          </Link>
+        )}
+      </div>
       
       {!courses || courses.length === 0 ? (
         <div className={styles.emptyState}>

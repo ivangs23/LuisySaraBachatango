@@ -68,9 +68,14 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
         <h1 className={styles.title}>{course.title}</h1>
         <p className={styles.description}>{course.description}</p>
         {isAdmin && (
-          <Link href={`/courses/${course.id}/add-lesson`} className={styles.adminButton} style={{ display: 'inline-block', marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
-            + Añadir Lección
-          </Link>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <Link href={`/courses/${course.id}/edit`} className={styles.adminButton} style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--text-secondary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+              Editar Curso
+            </Link>
+            <Link href={`/courses/${course.id}/add-lesson`} className={styles.adminButton} style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+              + Añadir Lección
+            </Link>
+          </div>
         )}
       </div>
 

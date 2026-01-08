@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
+import Features from "@/components/Features";
 
 export default function Home() {
   return (
@@ -23,23 +24,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className={styles.features}>
-        <div className={styles.featureCard}>
-          <div className={styles.icon}>📅</div>
-          <h3>4 Clases Mensuales</h3>
-          <p>Contenido estructurado para tu progreso constante.</p>
-        </div>
-        <div className={styles.featureCard}>
-          <div className={styles.icon}>🔒</div>
-          <h3>Contenido Exclusivo</h3>
-          <p>Acceso único a técnicas avanzadas y secretos de baile.</p>
-        </div>
-        <div className={styles.featureCard}>
-          <div className={styles.icon}>▶</div>
-          <h3>Acceso 24/7</h3>
-          <p>Practica a tu ritmo, donde y cuando quieras.</p>
-        </div>
-      </section>
+      <Features />
     </div>
   );
 }

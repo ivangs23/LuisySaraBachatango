@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import styles from './profile.module.css'
 import { updateProfile, deleteAccount } from './actions'
+import ProfileForm from '@/components/ProfileForm';
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -37,29 +38,7 @@ export default async function ProfilePage() {
       <div className={styles.grid}>
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Editar Perfil</h2>
-          <form action={updateProfile} className={styles.form}>
-            <div className={styles.group}>
-              <label htmlFor="fullName">Nombre Completo</label>
-              <input 
-                id="fullName" 
-                name="fullName" 
-                type="text" 
-                defaultValue={profile?.full_name || ''} 
-                placeholder="Tu nombre"
-              />
-            </div>
-            <div className={styles.group}>
-              <label htmlFor="avatarUrl">Avatar URL</label>
-              <input 
-                id="avatarUrl" 
-                name="avatarUrl" 
-                type="url" 
-                defaultValue={profile?.avatar_url || ''} 
-                placeholder="https://example.com/avatar.jpg"
-              />
-            </div>
-            <button type="submit" className={styles.buttonPrimary}>Guardar Cambios</button>
-          </form>
+          <ProfileForm profile={profile} />
         </div>
 
         <div className={styles.section}>
@@ -69,10 +48,7 @@ export default async function ProfilePage() {
               <span className={styles.label}>Email</span>
               <span className={styles.value}>{user.email}</span>
             </div>
-            <div className={styles.infoItem}>
-              <span className={styles.label}>ID</span>
-              <span className={styles.value}>{user.id}</span>
-            </div>
+
           </div>
         </div>
       </div>

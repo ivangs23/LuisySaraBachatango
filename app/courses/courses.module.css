@@ -1,107 +1,123 @@
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-lg) var(--spacing-md);
-}
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+  }
 
-.title {
-  font-size: 2.5rem;
-  color: var(--primary);
-  margin-bottom: var(--spacing-xl);
-  text-align: center;
-}
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .title {
+    font-size: 2rem;
+    color: var(--text-main);
+    margin: 0;
+  }
 
-.emptyState {
-  text-align: center;
-  padding: var(--spacing-xl);
-  background-color: var(--surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-}
-
-.subtext {
-  color: var(--text-muted);
-  margin-top: var(--spacing-md);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
-}
-
-.card {
-  background-color: var(--surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-  display: flex;
-  flex-direction: column;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border-color: var(--primary);
-}
-
-.imageContainer {
-  aspect-ratio: 16 / 9;
-  background-color: var(--surface-hover);
-  position: relative;
-}
-
-.image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.placeholderImage {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(45deg, var(--surface), var(--surface-hover));
-  color: var(--text-muted);
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.content {
-  padding: var(--spacing-md);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.courseTitle {
-  font-size: 1.25rem;
-  color: var(--text-main);
-  margin-bottom: var(--spacing-xs);
-}
-
-.courseDate {
-  color: var(--primary);
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--spacing-md);
-}
-
-.description {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: var(--spacing-lg);
-  line-height: 1.5;
-  flex: 1;
-}
-
-.cta {
-  color: var(--primary);
-  font-weight: bold;
-  align-self: flex-end;
-  font-size: 0.9rem;
-}
+  .createButton {
+    background-color: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+  }
+  
+  .card {
+    background-color: var(--surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+  
+  .imageContainer {
+    position: relative;
+    height: 180px;
+    background-color: var(--bg-secondary);
+  }
+  
+  .image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .placeholderImage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    background-color: #2a2a2a;
+  }
+  
+  .content {
+    padding: var(--spacing-md);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .courseTitle {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-main);
+  }
+  
+  .courseDate {
+    font-size: 0.85rem;
+    color: var(--primary);
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 600;
+  }
+  
+  .description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+  
+  .cta {
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 600;
+    text-align: right;
+  }
+  
+  .emptyState {
+    text-align: center;
+    padding: 4rem 1rem;
+    background-color: var(--surface);
+    border-radius: var(--radius-md);
+  }
+  
+  .subtext {
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+  }

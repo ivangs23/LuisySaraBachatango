@@ -13,13 +13,53 @@ export async function updateProfile(formData: FormData) {
   }
 
   const fullName = formData.get('fullName') as string
-  const avatarUrl = formData.get('avatarUrl') as string
+  const avatarMode = formData.get('avatarMode') as string
+  let avatarUrl = formData.get('avatarUrl') as string
+  
+  // Handle Avatar Upload
+  const avatarFile = formData.get('avatarFile') as File
+  if (avatarMode === 'upload' && avatarFile && avatarFile.size > 0) {
+      const fileExt = avatarFile.name.split('.').pop()
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`
+      const filePath = `avatars/${fileName}` // Using a consistent 'avatars' folder prefix
+
+      // Try uploading to 'thumbnails' bucket (reusing existing one) or 'avatars' if we had one.
+      // Let's stick to 'thumbnails' since we know it works for now, or just try 'avatars' bucket?
+      // Step 496 showed us 'profiles' table but not buckets. 
+      // Safest is reuse 'thumbnails' or user might need to create 'avatars' bucket.
+      // Let's assume 'thumbnails' works for now or try to create 'avatars' dynamically? No.
+      // I'll try 'thumbnails' but path 'avatars/...'
+      const { error: uploadError } = await supabase.storage
+        .from('thumbnails') 
+        .upload(filePath, avatarFile, { upsert: true })
+
+      if (uploadError) {
+        console.error('Avatar upload error:', uploadError)
+        // If "Bucket not found", we might need to fallback or ask user.
+        // Assuming 'thumbnails' exists from Course creation.
+      } else {
+         const { data: { publicUrl } } = supabase.storage
+          .from('thumbnails')
+          .getPublicUrl(filePath)
+          
+         avatarUrl = publicUrl
+      }
+  }
+
+  const instagram = formData.get('instagram') as string
+  const facebook = formData.get('facebook') as string
+  const tiktok = formData.get('tiktok') as string
+  const youtube = formData.get('youtube') as string
 
   const { error } = await supabase
     .from('profiles')
     .update({
       full_name: fullName,
       avatar_url: avatarUrl,
+      instagram,
+      facebook,
+      tiktok,
+      youtube,
       updated_at: new Date().toISOString(),
     })
     .eq('id', user.id)

@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import styles from './lesson.module.css'
+import LessonTabs from '@/components/LessonTabs'
 
 export default async function LessonPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const params = await props.params;
@@ -43,6 +44,21 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
   const hasActiveSubscription = !!subscription;
   const hasAccess = isAdmin || (isPremium && hasActiveSubscription) || hasActiveSubscription;
 
+  let videoUrl = lesson.video_url;
+  let isSupabaseVideo = false;
+
+  if (videoUrl.startsWith('storage://')) {
+    isSupabaseVideo = true;
+    const path = videoUrl.replace('storage://', '');
+    const { data } = await supabase.storage
+      .from('course-content')
+      .createSignedUrl(path, 3600); // 1 hour validity
+    
+    if (data?.signedUrl) {
+      videoUrl = data.signedUrl;
+    }
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -53,12 +69,21 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
 
       <div className={styles.videoWrapper}>
         {hasAccess ? (
-          <iframe 
-            src={lesson.video_url} 
-            className={styles.videoPlayer} 
-            allowFullScreen 
-            title={lesson.title}
-          />
+          isSupabaseVideo ? (
+             <video 
+               src={videoUrl} 
+               className={styles.videoPlayer} 
+               controls 
+               controlsList="nodownload" // Optional: harder to download
+             />
+          ) : (
+            <iframe 
+              src={lesson.video_url} 
+              className={styles.videoPlayer} 
+              allowFullScreen 
+              title={lesson.title}
+            />
+          )
         ) : (
           <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
             <h2 style={{ marginBottom: '1rem' }}>Contenido Bloqueado</h2>
@@ -71,17 +96,31 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
       </div>
 
       <div className={styles.content}>
-        <h1 className={styles.title}>{lesson.title}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 className={styles.title}>{lesson.title}</h1>
+          {isAdmin && (
+            <Link 
+              href={`/courses/${params.courseId}/${params.lessonId}/edit`} 
+              className={styles.adminButton}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--primary)', // or a different color for edit
+                color: 'white',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                fontSize: '0.9rem'
+              }}
+            >
+              ✎ Editar Lección
+            </Link>
+          )}
+        </div>
         
-        <div className={styles.tabs}>
-          <button className={`${styles.tab} ${styles.tabActive}`}>Descripción</button>
-          <button className={styles.tab}>Recursos Musicales</button>
-          <button className={styles.tab}>Comentarios</button>
-        </div>
-
-        <div className={styles.description}>
-          <p>{lesson.description}</p>
-        </div>
+        <LessonTabs 
+          description={lesson.description} 
+          courseId={params.courseId} 
+          lessonId={params.lessonId} 
+        />
       </div>
     </div>
   )
