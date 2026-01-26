@@ -1,0 +1,44 @@
+.container {
+  min-height: 100vh;
+  padding: var(--spacing-xl) 5%;
+  background-color: var(--background);
+}
+
+.title {
+  text-align: center;
+  font-size: 3rem;
+  color: var(--primary);
+  margin-bottom: var(--spacing-lg);
+  font-family: 'Playfair Display', serif;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto var(--spacing-xl);
+  font-size: 1.1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background-color: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: var(--spacing-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.iframeWrapper {
+  width: 100%;
+  height: 380px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}

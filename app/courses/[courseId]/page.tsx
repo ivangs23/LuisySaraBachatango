@@ -51,6 +51,23 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   const isPremium = profile?.role === 'premium';
   const hasActiveSubscription = !!subscription;
 
+  // Fetch progress for these lessons
+  const lessonIds = lessons?.map(l => l.id) || []
+  let completedLessonIds = new Set<string>()
+
+  if (lessonIds.length > 0) {
+    const { data: progress } = await supabase
+      .from('lesson_progress')
+      .select('lesson_id')
+      .eq('user_id', user.id)
+      .in('lesson_id', lessonIds)
+      .eq('is_completed', true)
+    
+    if (progress) {
+      progress.forEach(p => completedLessonIds.add(p.lesson_id))
+    }
+  }
+
   // Access logic: Admin OR (Premium AND Active Subscription)
   // Note: User requirement says "premium que ha pagado...". 
   // If role is 'premium', we assume they should have access, but let's enforce subscription check if that's the source of truth.
@@ -89,18 +106,27 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
         </div>
       ) : (
         <div className={styles.lessonList}>
-          {lessons && lessons.map((lesson) => (
-            <Link href={`/courses/${course.id}/${lesson.id}`} key={lesson.id} className={styles.lessonCard}>
-              <div className={styles.lessonNumber}>{lesson.order}</div>
-              <div className={styles.lessonInfo}>
-                <h3 className={styles.lessonTitle}>{lesson.title}</h3>
-                <p className={styles.lessonDate}>
-                  Disponible: {new Date(lesson.release_date).toLocaleDateString()}
-                </p>
-              </div>
-              <div className={styles.playIcon}>▶</div>
-            </Link>
-          ))}
+          {lessons && lessons.map((lesson) => {
+            const isCompleted = completedLessonIds.has(lesson.id)
+            return (
+              <Link href={`/courses/${course.id}/${lesson.id}`} key={lesson.id} className={styles.lessonCard}>
+                <div className={styles.lessonNumber}>{lesson.order}</div>
+                <div className={styles.lessonInfo}>
+                  <h3 className={styles.lessonTitle}>{lesson.title}</h3>
+                  <p className={styles.lessonDate}>
+                    Disponible: {new Date(lesson.release_date).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className={styles.playIcon}>
+                  {isCompleted ? (
+                    <span style={{ color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 'bold' }}>✓</span>
+                  ) : (
+                    '▶'
+                  )}
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

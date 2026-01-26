@@ -1,6 +1,11 @@
+'use client';
+
 import styles from './Features.module.css';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function Features() {
+  const { t } = useLanguage();
+
   return (
     <section className={styles.features}>
       <div className={styles.container}>
@@ -19,9 +24,9 @@ export default function Features() {
               <path d="M16 18h.01"></path>
             </svg>
           </div>
-          <h3 className={styles.title}>4 Clases Mensuales</h3>
+          <h3 className={styles.title}>{t.features.monthly.title}</h3>
           <p className={styles.description}>
-            Contenido estructurado y progresivo. Cada mes desbloqueas un nuevo módulo diseñado para elevar tu nivel paso a paso.
+            {t.features.monthly.desc}
           </p>
         </div>
 
@@ -32,9 +37,9 @@ export default function Features() {
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
-          <h3 className={styles.title}>Contenido Exclusivo</h3>
+          <h3 className={styles.title}>{t.features.exclusive.title}</h3>
           <p className={styles.description}>
-            Accede a secretos de técnica, musicalidad y conexión que no encontrarás en ningún otro lugar. Masterclasses de expertos.
+            {t.features.exclusive.desc}
           </p>
         </div>
 
@@ -44,9 +49,9 @@ export default function Features() {
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
           </div>
-          <h3 className={styles.title}>Acceso 24/7</h3>
+          <h3 className={styles.title}>{t.features.access.title}</h3>
           <p className={styles.description}>
-            Tu plataforma de aprendizaje siempre disponible. Practica a tu ritmo, repite las lecciones y perfecciona tu estilo desde casa.
+            {t.features.access.desc}
           </p>
         </div>
       </div>

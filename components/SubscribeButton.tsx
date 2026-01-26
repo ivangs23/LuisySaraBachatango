@@ -18,17 +18,23 @@ export default function SubscribeButton({ priceId }: { priceId?: string }) {
         body: JSON.stringify({ priceId }),
       });
 
-      const { sessionId } = await response.json();
-      const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+      const data = await response.json();
       
-      if (stripe) {
-        const { error } = await (stripe as any).redirectToCheckout({ sessionId });
-        if (error) {
-          console.error(error);
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
       }
-    } catch (error) {
+
+      const { url } = data;
+      
+      if (url) {
+        window.open(url, '_blank');
+        setLoading(false); // Reset loading since we stay on page
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error: any) {
       console.error(error);
+      alert('Error: ' + error.message);
     } finally {
       setLoading(false);
     }

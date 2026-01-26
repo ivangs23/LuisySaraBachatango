@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 
 import { createClient } from "@/utils/supabase/server";
 
+import { LanguageProvider } from '@/context/LanguageContext';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -34,11 +36,13 @@ export default async function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
-        <Header user={user} profile={profile} />
-        <main style={{ minHeight: '80vh' }}>
-          {children}
-        </main>
-        <Footer />
+        <LanguageProvider>
+          <Header user={user} profile={profile} />
+          <main style={{ minHeight: '80vh' }}>
+            {children}
+          </main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

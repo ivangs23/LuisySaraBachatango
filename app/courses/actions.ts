@@ -272,5 +272,30 @@ export async function updateCourse(formData: FormData) {
 
   revalidatePath('/courses')
   revalidatePath(`/courses/${courseId}`)
+  revalidatePath(`/courses/${courseId}`)
   redirect(`/courses/${courseId}`)
+}
+
+export async function markLessonAsCompleted(courseId: string, lessonId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return
+
+  const { error } = await supabase
+    .from('lesson_progress')
+    .upsert({
+      user_id: user.id,
+      lesson_id: lessonId,
+      is_completed: true,
+      updated_at: new Date().toISOString()
+    })
+
+  if (error) {
+    console.error('Error marking lesson complete:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/courses/${courseId}/${lessonId}`)
+  revalidatePath(`/courses/${courseId}`)
 }

@@ -5,7 +5,18 @@ import styles from './profile.module.css'
 import { updateProfile, deleteAccount } from './actions'
 import ProfileForm from '@/components/ProfileForm';
 
-export default async function ProfilePage() {
+import { verifyStripeSession } from './actions'
+
+export default async function ProfilePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams;
+  const sessionId = searchParams.session_id as string | undefined;
+
+  // If session_id is present, verify payment first
+  if (sessionId) {
+    const result = await verifyStripeSession(sessionId);
+    console.log('Verification Result:', result);
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()

@@ -107,35 +107,97 @@ export async function deleteAccount() {
 }
 
 // Helper to create admin client
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 async function createClientWithServiceRole() {
-  const cookieStore = await cookies()
-  
-  // We need the SERVICE_ROLE_KEY for this. 
-  // Assuming it's in process.env.SUPABASE_SERVICE_ROLE_KEY
-  // If not, we can't delete from auth.users easily.
-  // Fallback: If no service key, we might just delete from 'profiles' and sign out.
-  
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
   if (!serviceRoleKey) {
     throw new Error('Error: SUPABASE_SERVICE_ROLE_KEY is missing in .env.local. You must add this key to delete users.')
   }
 
-  return createServerClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceRoleKey,
     {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-             // Admin client doesn't need to set cookies usually, but we keep structure
-        },
-      },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
   )
+}
+
+import { stripe } from '@/utils/stripe/server'
+
+export async function verifyStripeSession(sessionId: string) {
+  // We need context of who the user IS, but we need admin rights to write to DB if RLS blocks it.
+  // Actually, we can get the user ID from the standard client, but use admin client for the DB write.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
+  
+  const supabaseAdmin = await createClientWithServiceRole()
+
+  try {
+    console.log('Verifying session:', sessionId);
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    console.log('Session retrieved:', session.id, 'Status:', session.payment_status);
+
+    if (session.payment_status === 'paid') {
+      const subscriptionId = session.subscription as string;
+
+      if (subscriptionId) {
+        // ... (subscription logic)
+        // Subscription logic (if we ever go back to recurring)
+        const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
+         // ...
+         // Subscription logic (if we ever go back to recurring)
+         // ...
+         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const subscription = subscriptionResponse as any;
+
+         await supabaseAdmin
+          .from('subscriptions')
+          .upsert({
+            id: subscriptionId,
+            user_id: user.id,
+            status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          });
+      } else {
+         console.log('One-time payment detected. Updating DB as Admin...');
+         // One-time payment logic
+         const { error: upsertError } = await supabaseAdmin
+            .from('subscriptions')
+            .upsert({
+              id: session.id,
+              user_id: user.id,
+              status: 'active',
+              current_period_start: new Date().toISOString(),
+              current_period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 100)).toISOString(),
+            });
+         
+         if (upsertError) {
+            console.error('Upsert Error:', upsertError);
+            return { success: false, error: upsertError.message };
+         }
+         console.log('DB Updated successfully for one-time payment.');
+      }
+
+      // revalidatePath('/profile')
+      // revalidatePath('/courses')
+      return { success: true }
+    } else {
+        console.log('Payment status not paid:', session.payment_status);
+        return { success: false, error: 'Payment not completed' }
+    }
+  } catch (error: any) {
+    console.error('Error verifying session:', error)
+    return { success: false, error: error.message }
+  }
 }

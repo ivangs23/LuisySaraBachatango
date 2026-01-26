@@ -8,6 +8,8 @@ import { useClickOutside } from '@/hooks/useClickOutside';
 
 import Image from 'next/image';
 import { User } from '@supabase/supabase-js';
+import { useLanguage } from '@/context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 type HeaderProps = {
   user: User | null;
@@ -18,6 +20,7 @@ export default function Header({ user, profile }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   useClickOutside(dropdownRef, () => {
     if (isDropdownOpen) setIsDropdownOpen(false);
@@ -44,8 +47,16 @@ export default function Header({ user, profile }: HeaderProps) {
       </button>
 
       <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ''}`}>
-        <Link href="/courses" onClick={() => setIsMenuOpen(false)}>Cursos</Link>
-        <Link href="/community" onClick={() => setIsMenuOpen(false)}>Comunidad</Link>
+        <Link href="/courses" onClick={() => setIsMenuOpen(false)}>{t.header.courses}</Link>
+        <Link href="/events" onClick={() => setIsMenuOpen(false)}>{t.header.events}</Link>
+        <Link href="/music" onClick={() => setIsMenuOpen(false)}>{t.header.music}</Link>
+        <Link href="/community" onClick={() => setIsMenuOpen(false)}>{t.header.community}</Link>
+        <Link href="/sobre-nosotros" onClick={() => setIsMenuOpen(false)}>{t.header.about}</Link>
+        
+        <div style={{ marginLeft: '0.5rem', marginRight: '0.5rem' }}>
+          <LanguageSwitcher />
+        </div>
+
         <div className={styles.bellWrapper}>
           <NotificationBell />
         </div>
@@ -79,7 +90,7 @@ export default function Header({ user, profile }: HeaderProps) {
                   Dashboard
                 </Link>
                 <Link href="/profile" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
-                  Perfil
+                  {t.header.profile}
                 </Link>
                 <form action="/auth/signout" method="post">
                   <button type="submit" className={styles.dropdownItem} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }}>
@@ -90,7 +101,7 @@ export default function Header({ user, profile }: HeaderProps) {
             )}
           </div>
         ) : (
-          <Link href="/login" className={styles.cta} onClick={() => setIsMenuOpen(false)}>Entrar</Link>
+          <Link href="/login" className={styles.cta} onClick={() => setIsMenuOpen(false)}>{t.header.login}</Link>
         )}
       </nav>
     </header>

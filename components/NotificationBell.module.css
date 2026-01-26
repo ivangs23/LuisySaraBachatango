@@ -9,10 +9,15 @@
   cursor: pointer;
   position: relative;
   transition: transform 0.2s;
+  color: var(--text-main); /* Default to main text color, usually white/light */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bell:hover {
   transform: scale(1.1);
+  color: var(--primary);
 }
 
 .badge {

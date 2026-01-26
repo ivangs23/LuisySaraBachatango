@@ -37,7 +37,7 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode: 'payment',
       success_url: `${req.headers.get('origin')}/profile?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/profile`,
       metadata: {
@@ -45,9 +45,9 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (err: any) {
     console.error(err);
-    return new NextResponse(err.message, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

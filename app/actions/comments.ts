@@ -23,34 +23,41 @@ export async function getComments(lessonId: string): Promise<{ data?: Comment[],
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch comments with author profile
+  // 1. Fetch comments without join first (to be safe against missing FKs)
   const { data: comments, error } = await supabase
     .from('comments')
-    .select(`
-      *,
-      profiles:user_id (
-        full_name,
-        avatar_url
-      )
-    `)
+    .select('*')
     .eq('lesson_id', lessonId)
-    .order('created_at', { ascending: true }); // Oldest first for discussion flow
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Error fetching comments:', error);
     return { error: error.message };
   }
 
-  // Fetch likes count and user like status efficiently
-  // Note: For large scale, we might want a counter cache or a separate query per comment is too slow.
-  // Best approach here: fetch all likes for this lesson's comments?
-  // Or just fetch likes count via a view or separate query.
-  // For simplicity: We will fetch all likes for these comments.
-  
   if (!comments || comments.length === 0) return { data: [] };
 
-  const commentIds = comments.map(c => c.id);
+  // 2. Fetch unique User IDs from comments
+  const userIds = Array.from(new Set(comments.map(c => c.user_id)));
+
+  // 3. Fetch Profiles for these users
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', userIds);
+    
+  if (profilesError) {
+      console.error('Error fetching profiles for comments:', profilesError);
+  }
   
+  // Create a map for fast lookup
+  const profileMap = new Map();
+  profiles?.forEach(p => {
+      profileMap.set(p.id, p);
+  });
+
+  // 4. Fetch likes
+  const commentIds = comments.map(c => c.id);
   const { data: likes } = await supabase
     .from('comment_likes')
     .select('comment_id, user_id')
@@ -58,8 +65,14 @@ export async function getComments(lessonId: string): Promise<{ data?: Comment[],
 
   const enhancedComments = comments.map(comment => {
     const commentLikes = likes?.filter(l => l.comment_id === comment.id) || [];
+    const authorProfile = profileMap.get(comment.user_id);
+    
     return {
       ...comment,
+      profiles: {
+          full_name: authorProfile?.full_name || 'Usuario',
+          avatar_url: authorProfile?.avatar_url || null
+      },
       likes_count: commentLikes.length,
       user_has_liked: user ? commentLikes.some(l => l.user_id === user.id) : false,
       replies: []

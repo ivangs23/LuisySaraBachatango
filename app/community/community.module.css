@@ -203,3 +203,124 @@
   border: 1px solid var(--border);
   color: var(--text-main);
 }
+
+/* Community Feed (Search & Filter) */
+.filterSection {
+  margin-bottom: var(--spacing-xl);
+}
+
+.searchWrapper {
+  position: relative;
+  margin-bottom: var(--spacing-md);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 1rem;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.categories {
+  display: flex;
+  gap: var(--spacing-sm);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-xs);
+  scrollbar-width: none;
+}
+
+.categoryChip {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.categoryChip:hover {
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.activeChip {
+  background-color: var(--primary);
+  color: black;
+  border-color: var(--primary);
+}
+
+.cardHeader {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.avatarMini {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.authorName {
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.dot {
+  margin: 0 var(--spacing-xs);
+  color: var(--text-muted);
+}
+
+.cardFooter {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  gap: var(--spacing-lg);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.interaction {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+  background-color: var(--surface);
+  border-radius: var(--radius-md);
+}
