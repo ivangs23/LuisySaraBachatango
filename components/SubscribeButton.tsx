@@ -1,11 +1,12 @@
 'use client';
 
-import { loadStripe } from '@stripe/stripe-js';
 import { useState } from 'react';
 import styles from './SubscribeButton.module.css';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function SubscribeButton({ priceId }: { priceId?: string }) {
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -42,7 +43,7 @@ export default function SubscribeButton({ priceId }: { priceId?: string }) {
 
   return (
     <button onClick={handleSubscribe} disabled={loading} className={styles.button}>
-      {loading ? 'Procesando...' : 'Suscribirse Ahora'}
+      {loading ? t.common.processing : t.common.subscribeNow}
     </button>
   );
 }

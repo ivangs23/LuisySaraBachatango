@@ -11,6 +11,11 @@ export const dictionaries = {
       login: "Iniciar Sesión",
       profile: "Mi Perfil"
     },
+    common: {
+      processing: "Procesando...",
+      subscribeNow: "Suscribirse Ahora",
+      login: "Iniciar Sesión"
+    },
     footer: {
       description: "Aprende Bachatango con Luis y Sara. La fusión perfecta entre la sensualidad de la bachata y la elegancia del tango.",
       explore: "Explorar",
@@ -136,6 +141,22 @@ export const dictionaries = {
       },
       quote: "El bachatango no es solo pasos, es sentir la respiración de tu pareja y convertirla en movimiento. Queremos que nuestros alumnos no solo aprendan a bailar, sino a sentir.",
       cta: "Empieza a Bailar Hoy"
+    },
+    communityPage: {
+      joinTitle: "Únete a la Comunidad",
+      joinDesc: "Para ver y participar en las discusiones exclusivas de la comunidad Bachatango, necesitas estar registrado y suscrito.",
+      alreadyAccount: "¿Ya tienes cuenta?",
+      login: "Iniciar Sesión",
+      title: "Comunidad",
+      create: "Crear Post"
+    },
+    coursesPage: {
+      title: "Cursos Disponibles",
+      create: "+ Crear Curso",
+      empty: "No hay cursos publicados en este momento.",
+      emptySub: "¡Vuelve pronto para ver las nuevas clases de Luis y Sara!",
+      view: "Ver Clases",
+      months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
     }
   },
   en: {
@@ -147,6 +168,11 @@ export const dictionaries = {
       about: "About Us",
       login: "Login",
       profile: "My Profile"
+    },
+    common: {
+      processing: "Processing...",
+      subscribeNow: "Subscribe Now",
+      login: "Login"
     },
     footer: {
       description: "Learn Bachatango with Luis & Sara. The perfect fusion between the sensuality of bachata and the elegance of tango.",
@@ -272,11 +298,32 @@ export const dictionaries = {
       },
       quote: "Bachatango is not just steps, it is feeling your partner's breathing and converting it into movement. We want our students not only to learn to dance, but to feel.",
       cta: "Start Dancing Today"
+    },
+    communityPage: {
+      joinTitle: "Join the Community",
+      joinDesc: "To view and participate in exclusive Bachatango community discussions, you need to be registered and subscribed.",
+      alreadyAccount: "Already have an account?",
+      login: "Login",
+      title: "Community",
+      create: "Create Post"
+    },
+    coursesPage: {
+      title: "Available Courses",
+      create: "+ Create Course",
+      empty: "No courses published at this moment.",
+      emptySub: "Come back soon to see new classes from Luis & Sara!",
+      view: "View Classes",
+      months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     }
   },
   fr: {
     header: {
       courses: "Cours", events: "Événements", music: "Musique", community: "Communauté", about: "À Propos", login: "Connexion", profile: "Mon Profil"
+    },
+    common: {
+      processing: "Traitement...",
+      subscribeNow: "S'abonner Maintenant",
+      login: "Connexion"
     },
     footer: {
       description: "Apprenez le Bachatango avec Luis et Sara. La fusion parfaite entre la sensualité de la bachata et l'élégance du tango.",
@@ -341,11 +388,32 @@ export const dictionaries = {
       bio2: "Leur voyage a commencé à Madrid. Aujourd'hui, ils parcourent le monde pour partager leur vision.",
       stats: { s1: "Années d'Expérience", s2: "Étudiants en Ligne", s3: "Pays Visités", s4: "Champions Internationaux" },
       quote: "Le bachatango n'est pas que des pas, c'est sentir la respiration de son partenaire.", cta: "Commencez à Danser Aujourd'hui"
+    },
+    communityPage: {
+      joinTitle: "Rejoignez la Communauté",
+      joinDesc: "Pour voir et participer aux discussions exclusives, vous devez être inscrit et abonné.",
+      alreadyAccount: "Déjà un compte ?",
+      login: "Connexion",
+      title: "Communauté",
+      create: "Créer un Post"
+    },
+    coursesPage: {
+      title: "Cours Disponibles",
+      create: "+ Créer un Cours",
+      empty: "Aucun cours publié pour le moment.",
+      emptySub: "Revenez bientôt pour voir les nouvelles classes !",
+      view: "Voir les Cours",
+      months: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
     }
   },
   de: {
     header: {
       courses: "Kurse", events: "Events", music: "Musik", community: "Community", about: "Über Uns", login: "Anmelden", profile: "Mein Profil"
+    },
+    common: {
+      processing: "Verarbeitung...",
+      subscribeNow: "Jetzt Abonnieren",
+      login: "Anmelden"
     },
     footer: {
       description: "Lerne Bachatango mit Luis und Sara. Die perfekte Fusion zwischen der Sinnlichkeit von Bachata und der Eleganz des Tango.",
@@ -410,11 +478,32 @@ export const dictionaries = {
       bio2: "Ihre Reise begann in Madrid. Heute reisen sie um die Welt.",
       stats: { s1: "Jahre Erfahrung", s2: "Online-Schüler", s3: "Besuchte Länder", s4: "Internationale Champions" },
       quote: "Bachatango ist nicht nur Schritte, es ist Fühlen.", cta: "Fang heute an zu tanzen"
+    },
+    communityPage: {
+      joinTitle: "Tritt der Community bei",
+      joinDesc: "Um an exklusiven Diskussionen teilzunehmen, musst du registriert und abonniert sein.",
+      alreadyAccount: "Hast du schon ein Konto?",
+      login: "Anmelden",
+      title: "Community",
+      create: "Beitrag erstellen"
+    },
+    coursesPage: {
+      title: "Verfügbare Kurse",
+      create: "+ Kurs erstellen",
+      empty: "Momentan keine Kurse veröffentlicht.",
+      emptySub: "Komm bald wieder für neue Klassen!",
+      view: "Kurse ansehen",
+      months: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
     }
   },
   it: {
     header: {
       courses: "Corsi", events: "Eventi", music: "Musica", community: "Comunità", about: "Chi Siamo", login: "Login", profile: "Il Mio Profilo"
+    },
+    common: {
+      processing: "Elaborazione...",
+      subscribeNow: "Iscriviti Ora",
+      login: "Accedi"
     },
     footer: {
       description: "Impara il Bachatango con Luis e Sara. La fusione perfetta tra la sensualità della bachata e l'eleganza del tango.",
@@ -478,11 +567,32 @@ export const dictionaries = {
       bio1: "Pionieri della fusione.", bio2: "Il viaggio è iniziato a Madrid.",
       stats: { s1: "Anni di Esperienza", s2: "Studenti Online", s3: "Paesi Visitati", s4: "Campioni Internazionali" },
       quote: "Bachatango è sentire.", cta: "Inizia a Ballare Oggi"
+    },
+    communityPage: {
+      joinTitle: "Unisciti alla Comunità",
+      joinDesc: "Per vedere e partecipare alle discussioni esclusive, devi essere registrato e abbonato.",
+      alreadyAccount: "Hai già un account?",
+      login: "Accedi",
+      title: "Comunità",
+      create: "Crea Post"
+    },
+    coursesPage: {
+      title: "Corsi Disponibili",
+      create: "+ Crea Corso",
+      empty: "Nessun corso pubblicato al momento.",
+      emptySub: "Torna presto per nuove lezioni!",
+      view: "Vedi Corsi",
+      months: ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
     }
   },
   ja: {
     header: {
       courses: "コース", events: "イベント", music: "音楽", community: "コミュニティ", about: "私達について", login: "ログイン", profile: "プロフィール"
+    },
+    common: {
+      processing: "処理中...",
+      subscribeNow: "今すぐ登録",
+      login: "ログイン"
     },
     footer: {
       description: "ルイスとサラと一緒にバチャタンゴを学びましょう。バチャータの官能性とタンゴの優雅さの完璧な融合。",
@@ -547,6 +657,22 @@ export const dictionaries = {
       bio2: "彼らの旅はマドリードで始まりました。",
       stats: { s1: "年の経験", s2: "オンラインの生徒", s3: "訪問した国", s4: "国際チャンピオン" },
       quote: "バチャタンゴはただのステップではありません、感じることです。", cta: "今日から踊り始めよう"
+    },
+    communityPage: {
+      joinTitle: "コミュニティに参加",
+      joinDesc: "独占的な議論に参加するには、登録と購読が必要です。",
+      alreadyAccount: "すでにアカウントをお持ちですか？",
+      login: "ログイン",
+      title: "コミュニティ",
+      create: "投稿を作成"
+    },
+    coursesPage: {
+      title: "利用可能なコース",
+      create: "+ コースを作成",
+      empty: "現在公開されているコースはありません。",
+      emptySub: "すぐに新しいクラスをチェックしに来てください！",
+      view: "クラスを見る",
+      months: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
     }
   }
 };
