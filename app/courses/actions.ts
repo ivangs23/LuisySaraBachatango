@@ -34,6 +34,8 @@ export async function createLesson(formData: FormData) {
   const videoSource = formData.get('videoSource') as 'url' | 'upload'
   const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
   const isFree = formData.get('isFree') === 'on'
+  const mediaConfigStr = formData.get('mediaConfig') as string
+  const mediaConfig = mediaConfigStr ? JSON.parse(mediaConfigStr) : {}
 
   const { error } = await supabase
     .from('lessons')
@@ -47,7 +49,8 @@ export async function createLesson(formData: FormData) {
       thumbnail_url: thumbnailUrl,
       video_source: videoSource,
       duration: duration,
-      is_free: isFree
+      is_free: isFree,
+      media_config: mediaConfig // Save media_config
     })
 
   if (error) {
@@ -88,6 +91,13 @@ export async function updateLesson(formData: FormData) {
   const videoSource = formData.get('videoSource') as 'url' | 'upload'
   const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
   const isFree = formData.get('isFree') === 'on'
+  const mediaConfigStr = formData.get('mediaConfig') as string
+  const mediaConfig = mediaConfigStr ? JSON.parse(mediaConfigStr) : null
+
+  type MediaConfig = {
+    tracks: { language: string; label: string; url: string }[];
+    subtitles: { language: string; label: string; url: string }[];
+  };
 
   type LessonUpdateData = {
     title: string;
@@ -98,6 +108,7 @@ export async function updateLesson(formData: FormData) {
     duration: number | null;
     is_free: boolean;
     thumbnail_url?: string;
+    media_config?: MediaConfig;
   };
 
   const updateData: LessonUpdateData = {
@@ -115,6 +126,10 @@ export async function updateLesson(formData: FormData) {
     updateData.thumbnail_url = thumbnailUrl
   }
 
+  if (mediaConfig) {
+    updateData.media_config = mediaConfig
+  }
+
   const { error } = await supabase
     .from('lessons')
     .update(updateData)
@@ -130,68 +145,61 @@ export async function updateLesson(formData: FormData) {
   redirect(`/courses/${courseId}`) // Or back to lesson detail? course list seems safer.
 }
 
+async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClient>>, imageFile: File): Promise<{ url: string } | { error: string }> {
+  const fileExt = imageFile.name.split('.').pop()
+  const fileName = `${crypto.randomUUID()}.${fileExt}`
+  const filePath = `course-covers/${fileName}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('thumbnails')
+    .upload(filePath, imageFile)
+
+  if (uploadError) return { error: uploadError.message }
+
+  const { data: { publicUrl } } = supabase.storage.from('thumbnails').getPublicUrl(filePath)
+  return { url: publicUrl }
+}
+
 export async function createCourse(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  if (!user) {
-    redirect('/login')
-  }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can create courses')
 
-  // Verify Admin Role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    throw new Error('Unauthorized: Only admins can create courses')
-  }
-
+  const courseType = (formData.get('courseType') as string) || 'membership'
   const title = formData.get('title') as string
   const description = formData.get('description') as string
-  const year = parseInt(formData.get('year') as string)
-  const month = parseInt(formData.get('month') as string)
   const isPublished = formData.get('isPublished') === 'on'
   const imageFile = formData.get('image') as File
+  const priceEurRaw = formData.get('priceEur') as string
+  const category = (formData.get('category') as string) || null
+
+  const yearRaw = formData.get('year') as string
+  const monthRaw = formData.get('month') as string
+  const year = yearRaw ? parseInt(yearRaw) : null
+  const month = monthRaw ? parseInt(monthRaw) : null
+  const priceEur = priceEurRaw ? parseInt(priceEurRaw) : null
 
   let imageUrl = ''
-
   if (imageFile && imageFile.size > 0) {
-    const fileExt = imageFile.name.split('.').pop()
-    const fileName = `${Math.random()}.${fileExt}`
-    const filePath = `course-covers/${fileName}`
-
-    // Ensure bucket exists or use a common one. 'thumbnails' might be okay, or create 'courses'.
-    // Existing buckets: 'thumbnails', 'course-content'. 
-    // Let's use 'thumbnails' for course covers for now as it makes sense for public images.
-    const { error: uploadError } = await supabase.storage
-      .from('thumbnails')
-      .upload(filePath, imageFile)
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return { error: uploadError.message }
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('thumbnails')
-      .getPublicUrl(filePath)
-    
-    imageUrl = publicUrl
+    const result = await uploadCourseImage(supabase, imageFile)
+    if ('error' in result) return { error: result.error }
+    imageUrl = result.url
   }
 
-  const { error } = await supabase
-    .from('courses')
-    .insert({
-      title,
-      description,
-      year,
-      month,
-      is_published: isPublished,
-      image_url: imageUrl
-    })
+  const { error } = await supabase.from('courses').insert({
+    title,
+    description,
+    year,
+    month,
+    is_published: isPublished,
+    image_url: imageUrl,
+    course_type: courseType,
+    category,
+    price_eur: priceEur,
+  })
 
   if (error) {
     console.error('Create course error:', error)
@@ -205,52 +213,32 @@ export async function createCourse(formData: FormData) {
 export async function updateCourse(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Verify Admin Role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    throw new Error('Unauthorized: Only admins can edit courses')
-  }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can edit courses')
 
   const courseId = formData.get('courseId') as string
+  const courseType = (formData.get('courseType') as string) || 'membership'
   const title = formData.get('title') as string
   const description = formData.get('description') as string
-  const year = parseInt(formData.get('year') as string)
-  const month = parseInt(formData.get('month') as string)
   const isPublished = formData.get('isPublished') === 'on'
   const imageFile = formData.get('image') as File
-  const imageUrlProp = formData.get('imageUrl') as string
+  const imageUrlProp = (formData.get('imageUrl') as string) || ''
+  const priceEurRaw = formData.get('priceEur') as string
+  const category = (formData.get('category') as string) || null
+
+  const yearRaw = formData.get('year') as string
+  const monthRaw = formData.get('month') as string
+  const year = yearRaw ? parseInt(yearRaw) : null
+  const month = monthRaw ? parseInt(monthRaw) : null
+  const priceEur = priceEurRaw ? parseInt(priceEurRaw) : null
 
   let imageUrl = imageUrlProp
-
   if (imageFile && imageFile.size > 0) {
-    const fileExt = imageFile.name.split('.').pop()
-    const fileName = `${Math.random()}.${fileExt}`
-    const filePath = `course-covers/${fileName}`
-
-    const { error: uploadError } = await supabase.storage
-      .from('thumbnails')
-      .upload(filePath, imageFile)
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return { error: uploadError.message }
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('thumbnails')
-      .getPublicUrl(filePath)
-    
-    imageUrl = publicUrl
+    const result = await uploadCourseImage(supabase, imageFile)
+    if ('error' in result) return { error: result.error }
+    imageUrl = result.url
   }
 
   const { error } = await supabase
@@ -261,7 +249,10 @@ export async function updateCourse(formData: FormData) {
       year,
       month,
       is_published: isPublished,
-      image_url: imageUrl
+      image_url: imageUrl,
+      course_type: courseType,
+      category,
+      price_eur: priceEur,
     })
     .eq('id', courseId)
 
@@ -272,9 +263,145 @@ export async function updateCourse(formData: FormData) {
 
   revalidatePath('/courses')
   revalidatePath(`/courses/${courseId}`)
-  revalidatePath(`/courses/${courseId}`)
   redirect(`/courses/${courseId}`)
 }
+
+// ─── Assignment actions ──────────────────────────────────────────────��─────
+
+export async function createAssignment(lessonId: string, courseId: string, title: string, description: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized')
+
+  // Verify the lesson actually belongs to this course
+  const { data: lesson } = await supabase
+    .from('lessons')
+    .select('id')
+    .eq('id', lessonId)
+    .eq('course_id', courseId)
+    .maybeSingle()
+
+  if (!lesson) throw new Error('Lesson not found in this course')
+
+  const { error } = await supabase
+    .from('assignments')
+    .insert({ lesson_id: lessonId, course_id: courseId, title, description })
+
+  if (error) {
+    console.error('Error creating assignment:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/courses/${courseId}/${lessonId}`)
+  revalidatePath(`/courses/${courseId}/${lessonId}/edit`)
+}
+
+export async function updateAssignment(assignmentId: string, title: string, description: string, courseId: string, lessonId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized')
+
+  const { error } = await supabase
+    .from('assignments')
+    .update({ title, description })
+    .eq('id', assignmentId)
+
+  if (error) {
+    console.error('Error updating assignment:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/courses/${courseId}/${lessonId}`)
+  revalidatePath(`/courses/${courseId}/${lessonId}/edit`)
+}
+
+export async function deleteAssignment(assignmentId: string, courseId: string, lessonId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized')
+
+  const { error } = await supabase.from('assignments').delete().eq('id', assignmentId)
+
+  if (error) {
+    console.error('Error deleting assignment:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/courses/${courseId}/${lessonId}`)
+  revalidatePath(`/courses/${courseId}/${lessonId}/edit`)
+}
+
+// ─── Submission actions ────────────────────────────────────────────────────
+
+export async function submitAssignment(assignmentId: string, textContent: string, fileUrl: string | null) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { error } = await supabase
+    .from('submissions')
+    .upsert({
+      assignment_id: assignmentId,
+      user_id: user.id,
+      text_content: textContent || null,
+      file_url: fileUrl,
+      status: 'pending',
+      updated_at: new Date().toISOString(),
+    })
+
+  if (error) {
+    console.error('Error submitting assignment:', error)
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function gradeSubmission(
+  submissionId: string,
+  grade: string,
+  feedback: string,
+  courseId: string,
+  lessonId: string,
+  submittedUserId: string,
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized')
+
+  const { error } = await supabase
+    .from('submissions')
+    .update({ grade, feedback, status: 'reviewed', updated_at: new Date().toISOString() })
+    .eq('id', submissionId)
+
+  if (error) {
+    console.error('Error grading submission:', error)
+    return { error: error.message }
+  }
+
+  // Notify the student
+  await supabase.from('notifications').insert({
+    user_id: submittedUserId,
+    title: 'Tu tarea ha sido corregida',
+    message: `El profesor ha revisado tu entrega. Calificación: ${grade || 'Sin nota'}`,
+  })
+
+  revalidatePath(`/courses/${courseId}/${lessonId}/submissions`)
+}
+
+// ─── Lesson progress ───────────────────────────────────────────────────────
 
 export async function markLessonAsCompleted(courseId: string, lessonId: string) {
   const supabase = await createClient()

@@ -1,4 +1,4 @@
-import SubscribeButton from '@/components/SubscribeButton';
+import BuyCourseButton from '@/components/BuyCourseButton';
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -26,11 +26,15 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   }
 
   // Fetch lessons
-  const { data: lessons } = await supabase
+  const { data: lessons, error: lessonsError } = await supabase
     .from('lessons')
     .select('*')
     .eq('course_id', params.courseId)
     .order('order', { ascending: true })
+
+  if (lessonsError) {
+    console.error('Error fetching lessons:', lessonsError)
+  }
 
   // Fetch user profile for role
   const { data: profile } = await supabase
@@ -39,21 +43,37 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
     .eq('id', user.id)
     .single()
 
-  // Check subscription
-  const { data: subscription } = await supabase
+  const isAdmin = profile?.role === 'admin';
+
+  // --- Access check ---
+  // 1. Individual course purchase
+  const { data: coursePurchase } = await supabase
+    .from('course_purchases')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('course_id', params.courseId)
+    .maybeSingle()
+
+  // 2. Active subscription covering this course's month/year
+  //    A subscription covers a course if current_period_start <= last day of course month
+  //    AND current_period_end >= first day of course month
+  const courseFirstDay = new Date(course.year, course.month - 1, 1).toISOString()
+  const courseLastDay = new Date(course.year, course.month, 0, 23, 59, 59).toISOString()
+
+  const { data: coveringSubscription } = await supabase
     .from('subscriptions')
-    .select('*')
+    .select('id')
     .eq('user_id', user.id)
     .in('status', ['active', 'trialing'])
-    .single()
+    .lte('current_period_start', courseLastDay)
+    .gte('current_period_end', courseFirstDay)
+    .maybeSingle()
 
-  const isAdmin = profile?.role === 'admin';
-  const isPremium = profile?.role === 'premium';
-  const hasActiveSubscription = !!subscription;
+  const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription;
 
-  // Fetch progress for these lessons
+  // Fetch lesson progress
   const lessonIds = lessons?.map(l => l.id) || []
-  let completedLessonIds = new Set<string>()
+  const completedLessonIds = new Set<string>()
 
   if (lessonIds.length > 0) {
     const { data: progress } = await supabase
@@ -62,21 +82,11 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
       .eq('user_id', user.id)
       .in('lesson_id', lessonIds)
       .eq('is_completed', true)
-    
+
     if (progress) {
       progress.forEach(p => completedLessonIds.add(p.lesson_id))
     }
   }
-
-  // Access logic: Admin OR (Premium AND Active Subscription)
-  // Note: User requirement says "premium que ha pagado...". 
-  // If role is 'premium', we assume they should have access, but let's enforce subscription check if that's the source of truth.
-  // However, if 'premium' role is manually assigned, maybe they get access regardless? 
-  // Let's stick to: Admin gets access. Premium gets access IF they have a subscription (or maybe just being 'premium' role is enough if that's how it's managed).
-  // The prompt says: "premium que ha pagado la membresia y por tanto puede ver los cursos siempre y cuando halla sido premium ese mes."
-  // This implies subscription check is key.
-  
-  const hasAccess = isAdmin || (isPremium && hasActiveSubscription) || hasActiveSubscription; // Fallback: if they have subscription, they probably should have access even if role isn't updated yet.
 
   return (
     <div className={styles.container}>
@@ -99,9 +109,9 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
       {!hasAccess ? (
         <div className={styles.lockedState}>
           <h2>Contenido Bloqueado</h2>
-          <p>Necesitas una suscripción activa para ver este curso.</p>
+          <p>Compra este curso o suscríbete para acceder a las lecciones.</p>
           <div style={{ marginTop: '1rem' }}>
-            <SubscribeButton />
+            <BuyCourseButton courseId={params.courseId} label="Comprar este curso" />
           </div>
         </div>
       ) : (

@@ -4,28 +4,27 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const supabase = await createClient();
 
-  // Logic: Find the next lesson that is released or about to be released (e.g., today)
-  // For this MVP, let's find the most recent lesson that was released within the last 3 days
-  // OR the next upcoming lesson in the next 24 hours.
-  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return new NextResponse('Unauthorized', { status: 401 });
+  }
+
   const now = new Date();
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(now.getDate() - 3);
-  
-  const next24Hours = new Date();
-  next24Hours.setHours(now.getHours() + 24);
+
+  const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
   const { data: lesson, error } = await supabase
     .from('lessons')
-    .select('*')
+    .select('id, title, order, release_date, course_id, thumbnail_url, is_free')
     .gte('release_date', threeDaysAgo.toISOString())
     .lte('release_date', next24Hours.toISOString())
-    .order('release_date', { ascending: true }) // Get the earliest one in this window
+    .order('release_date', { ascending: true })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    // It's okay if no lesson is found, just return null
     return NextResponse.json(null);
   }
 

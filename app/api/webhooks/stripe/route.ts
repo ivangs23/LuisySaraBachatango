@@ -1,10 +1,17 @@
 import { headers } from 'next/headers';
 import { stripe } from '@/utils/stripe/server';
-import { createClient } from '@/utils/supabase/server';
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
+
+function getSupabaseAdmin() {
+  return createSupabaseAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -17,68 +24,78 @@ export async function POST(req: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (error: any) {
-    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new NextResponse(`Webhook Error: ${message}`, { status: 400 });
   }
 
-  const supabase = await createClient();
+  const supabase = getSupabaseAdmin();
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-    const subscriptionId = session.subscription as string;
     const userId = session.metadata?.userId;
+    const courseId = session.metadata?.courseId;
 
-    if (userId) {
+    if (!userId) {
+      console.error('Webhook: missing userId in metadata');
+      return new NextResponse('Missing userId', { status: 400 });
+    }
+
+    // Persist stripe_customer_id in profile if not already set
+    if (session.customer) {
+      await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: session.customer as string })
+        .eq('id', userId)
+        .is('stripe_customer_id', null);
+    }
+
+    if (courseId) {
+      // One-time course purchase
+      if (session.payment_status === 'paid') {
+        const { error } = await supabase
+          .from('course_purchases')
+          .upsert({
+            user_id: userId,
+            course_id: courseId,
+            stripe_session_id: session.id,
+            amount_paid: session.amount_total ?? null,
+          });
+
+        if (error) {
+          console.error('Error saving course purchase:', error);
+          return new NextResponse('Database Error', { status: 500 });
+        }
+      }
+    } else {
+      // Subscription purchase
+      const subscriptionId = session.subscription as string | null;
+
       if (subscriptionId) {
-        // Update subscription in Supabase
-        const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const subscription = subscriptionResponse as any;
-        
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
         const { error } = await supabase
           .from('subscriptions')
           .upsert({
             id: subscriptionId,
             user_id: userId,
             status: subscription.status,
+            plan_type: subscription.items.data[0]?.price.id ?? null,
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           });
-  
-        if (error) {
-          console.error('Error updating subscription:', error);
-          return new NextResponse('Database Error', { status: 500 });
-        }
-      } else {
-        // Handle one-time payment (Lifetime access)
-        // We'll Create a "fake" subscription record with long expiry
-        // Use session.id as ID since we don't have sub ID
-        
-        // Check payment status
-        if (session.payment_status === 'paid') {
-           const { error } = await supabase
-            .from('subscriptions')
-            .upsert({
-              id: session.id, // Use session ID as PK
-              user_id: userId,
-              status: 'active',
-              current_period_start: new Date().toISOString(),
-              current_period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 100)).toISOString(), // 100 years
-            });
 
-           if (error) {
-             console.error('Error updating one-time subscription:', error);
-             return new NextResponse('Database Error', { status: 500 });
-           }
+        if (error) {
+          console.error('Error saving subscription:', error);
+          return new NextResponse('Database Error', { status: 500 });
         }
       }
     }
   }
 
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const subscription = event.data.object as any; // Cast to any to avoid type errors with current_period_start
-    
+    const subscription = event.data.object as Stripe.Subscription;
+
     const { error } = await supabase
       .from('subscriptions')
       .update({
@@ -87,11 +104,11 @@ export async function POST(req: Request) {
         current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       })
       .eq('id', subscription.id);
-      
-     if (error) {
-        console.error('Error updating subscription:', error);
-        return new NextResponse('Database Error', { status: 500 });
-      }
+
+    if (error) {
+      console.error('Error updating subscription:', error);
+      return new NextResponse('Database Error', { status: 500 });
+    }
   }
 
   return new NextResponse(null, { status: 200 });

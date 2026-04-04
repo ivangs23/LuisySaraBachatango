@@ -5,6 +5,25 @@ import { createClient } from '@/utils/supabase/client';
 import { createLesson, updateLesson } from '@/app/courses/actions';
 import { Upload } from 'tus-js-client';
 import styles from './AddLessonForm.module.css';
+import { Plus, Trash2, FileAudio, Captions } from 'lucide-react';
+
+// Shared types (should ideally be imported from a centralized types file)
+export interface VideoTrack {
+  language: string
+  label: string
+  url: string
+}
+
+export interface SubtitleTrack {
+  language: string
+  label: string
+  url: string
+}
+
+export interface MediaConfig {
+  tracks: VideoTrack[]
+  subtitles: SubtitleTrack[]
+}
 
 type LessonData = {
   id?: string;
@@ -16,6 +35,7 @@ type LessonData = {
   duration?: number | null;
   is_free?: boolean;
   order: number;
+  media_config?: MediaConfig; // New field
 };
 
 type LessonFormProps = {
@@ -23,12 +43,23 @@ type LessonFormProps = {
   initialData?: LessonData;
 };
 
+// Language options
+const LANGUAGES = [
+  { code: 'es', label: 'Español' },
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'ja', label: '日本語' }
+];
+
 export default function LessonForm({ courseId, initialData }: LessonFormProps) {
   const supabase = createClient();
   
   const [activeTab, setActiveTab] = useState<'url' | 'upload'>(initialData?.video_source || 'url');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [currentUploadLabel, setCurrentUploadLabel] = useState<string>('');
   
   // Controlled Inputs
   const [title, setTitle] = useState(initialData?.title || '');
@@ -45,31 +76,47 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(initialData?.thumbnail_url || null);
 
+  // Multi-language State
+  // We manage the "staging" state where files might not be uploaded yet
+  type StagedVideoTrack = {
+    id: string; // temp id
+    language: string;
+    label: string;
+    url: string;
+    file: File | null;
+  };
+
+  type StagedSubtitleTrack = {
+    id: string;
+    language: string;
+    label: string;
+    url: string;
+    file: File | null;
+  };
+
+  // Convert initial media_config to staged format
+  const [tracks, setTracks] = useState<StagedVideoTrack[]>(() => 
+    initialData?.media_config?.tracks?.map(t => ({ ...t, id: Math.random().toString(), file: null })) || []
+  );
+  
+  const [subtitles, setSubtitles] = useState<StagedSubtitleTrack[]>(() => 
+    initialData?.media_config?.subtitles?.map(t => ({ ...t, id: Math.random().toString(), file: null })) || []
+  );
+
   const [isDirty, setIsDirty] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Dirty Check Logic
+  // Dirty Check Logic — only mark dirty after initial mount when values actually change
   useEffect(() => {
-    if (!initialData) {
-        setIsDirty(true); 
-        return;
+    if (!hasMounted) {
+      setHasMounted(true);
+      return;
     }
-
-    const hasChanges = 
-        title !== initialData.title ||
-        description !== initialData.description ||
-        order != initialData.order || // Loose comparison because order state might be string
-        (activeTab === 'url' && videoUrl !== initialData.video_url) || 
-        (activeTab === 'upload' && !!videoFile) || 
-        activeTab !== initialData.video_source || 
-        duration != (initialData.duration || '') || 
-        isFree !== initialData.is_free ||
-        !!thumbnailFile; 
-
-    setIsDirty(hasChanges);
+    setIsDirty(true);
   }, [
-    title, description, order, videoUrl, videoFile, activeTab, 
-    duration, isFree, thumbnailFile, initialData
-  ]);
+    title, description, order, videoUrl, videoFile, activeTab,
+    duration, isFree, thumbnailFile, tracks, subtitles
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,6 +145,64 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
       setOrderError(null);
     }
   };
+
+  // --- Track Management ---
+  const addTrack = () => {
+    setTracks([...tracks, { 
+      id: Math.random().toString(), 
+      language: 'en', 
+      label: 'English', 
+      url: '', 
+      file: null 
+    }]);
+  };
+
+  const removeTrack = (id: string) => {
+    setTracks(tracks.filter(t => t.id !== id));
+  };
+
+  const updateTrack = (id: string, field: keyof StagedVideoTrack, value: string | File | null) => {
+    setTracks(tracks.map(t => {
+      if (t.id === id) {
+        if (field === 'language') {
+           // Auto-update label if using default format
+           const langLabel = LANGUAGES.find(l => l.code === value)?.label || value;
+           return { ...t, language: value, label: langLabel };
+        }
+        return { ...t, [field]: value };
+      }
+      return t;
+    }));
+  };
+
+  // --- Subtitle Management ---
+  const addSubtitle = () => {
+    setSubtitles([...subtitles, { 
+      id: Math.random().toString(), 
+      language: 'es', 
+      label: 'Español', 
+      url: '', 
+      file: null 
+    }]);
+  };
+
+  const removeSubtitle = (id: string) => {
+    setSubtitles(subtitles.filter(t => t.id !== id));
+  };
+
+  const updateSubtitle = (id: string, field: keyof StagedSubtitleTrack, value: string | File | null) => {
+    setSubtitles(subtitles.map(t => {
+      if (t.id === id) {
+        if (field === 'language') {
+           const langLabel = LANGUAGES.find(l => l.code === value)?.label || value;
+           return { ...t, language: value, label: langLabel };
+        }
+        return { ...t, [field]: value };
+      }
+      return t;
+    }));
+  };
+
 
   const uploadVideoWithTus = async (file: File): Promise<string> => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -151,10 +256,26 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
     });
   };
 
+  const uploadFileStandard = async (file: File, bucket: string): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${courseId}/${fileName}`;
+    
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
+    if (uploadError) throw uploadError;
+    
+    // For VTT in 'course-content' or a new 'subtitles' bucket? 
+    // Usually 'course-content' is fine but 'thumbnails' is public.
+    // Subtitles should be public/signed. Let's assume 'course-content' and use Signed URL generator in display or Public bucket.
+    // Ideally create a public 'subtitles' bucket. For now sticking with 'course-content' implies we need signed URLs.
+    // BUT `LessonVideoPlayer` expects a URL. If it's `storage://` logic handles it.
+    
+    return `storage://${filePath}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); 
-    if (initialData && !isDirty) return;
-    if (orderError) return; // Prevent submit if error
+    if (orderError) return;
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -172,6 +293,8 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
       // 1. Upload Thumbnail
       let finalThumbnailUrl = initialData?.thumbnail_url || '';
       if (thumbnailFile) {
+        setCurrentUploadLabel('Subiendo Thumbnail...');
+        // Using 'thumbnails' public bucket logic from original code
         const fileExt = thumbnailFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${courseId}/${fileName}`;
@@ -182,16 +305,51 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
       }
       if (finalThumbnailUrl) formData.append('thumbnailUrl', finalThumbnailUrl);
 
-      // 2. Process Video
+      // 2. Process Main Video
       let finalVideoUrl = initialData?.video_url || '';
       if (activeTab === 'upload' && videoFile) {
+         setCurrentUploadLabel('Subiendo Video Principal...');
          finalVideoUrl = await uploadVideoWithTus(videoFile);
       } else if (activeTab === 'url') {
          finalVideoUrl = videoUrl;
       }
       formData.append('videoUrl', finalVideoUrl);
 
-      // 3. Server Action
+      // 3. Process Multi-language Tracks
+      const finalTracks: VideoTrack[] = [];
+      for (const t of tracks) {
+        let tUrl = t.url;
+        if (t.file) {
+          setCurrentUploadLabel(`Subiendo Audio (${t.label})...`);
+          tUrl = await uploadVideoWithTus(t.file);
+        }
+        if (tUrl) {
+           finalTracks.push({ language: t.language, label: t.label, url: tUrl });
+        }
+      }
+
+      // 4. Process Subtitles
+      const finalSubtitles: SubtitleTrack[] = [];
+      for (const s of subtitles) {
+        let sUrl = s.url;
+        if (s.file) {
+          setCurrentUploadLabel(`Subiendo Subtítulos (${s.label})...`);
+          // Use TUS or Standard? Subtitles are small. Standard upload to course-content
+          sUrl = await uploadFileStandard(s.file, 'course-content');
+        }
+        if (sUrl) {
+          finalSubtitles.push({ language: s.language, label: s.label, url: sUrl });
+        }
+      }
+
+      const mediaConfig: MediaConfig = {
+        tracks: finalTracks,
+        subtitles: finalSubtitles
+      };
+      formData.append('mediaConfig', JSON.stringify(mediaConfig));
+
+      // 5. Server Action
+      setCurrentUploadLabel('Guardando cambios...');
       if (initialData?.id) {
         formData.append('lessonId', initialData.id);
         const result = await updateLesson(formData);
@@ -201,12 +359,14 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
         if (result?.error) throw new Error(result.error);
       }
 
-    } catch (error: any) {
-      if (error.message === 'NEXT_REDIRECT' || error.message.includes('NEXT_REDIRECT')) return;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Something went wrong';
+      if (message === 'NEXT_REDIRECT' || message.includes('NEXT_REDIRECT')) return;
       console.error('Submit error:', error);
-      alert(`Error: ${error.message || 'Something went wrong'}`);
+      alert(`Error: ${message}`);
     } finally {
       setIsUploading(false);
+      setCurrentUploadLabel('');
     }
   };
 
@@ -260,7 +420,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
           className={`${styles.tab} ${activeTab === 'upload' ? styles.active : ''}`}
           onClick={() => setActiveTab('upload')}
         >
-          Subir Video
+          Subir Video Principal
         </button>
       </div>
 
@@ -279,12 +439,30 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
         </div>
       ) : (
         <div className={styles.group}>
-          <label htmlFor="videoFile">Archivo de Video</label>
-          {initialData?.video_source === 'upload' && !videoFile && (
-             <p style={{fontSize: '0.9rem', color: '#888', marginBottom: '0.5rem'}}>
-               Video actual: {initialData.video_url} (Selecciona uno nuevo para reemplazarlo)
-             </p>
+          <label htmlFor="videoFile">Archivo de Video Principal</label>
+          
+          {initialData?.video_source === 'upload' && initialData.video_url && !videoFile && (
+             <div style={{ 
+               marginBottom: '0.75rem', 
+               padding: '0.75rem', 
+               backgroundColor: 'rgba(76, 175, 80, 0.1)', 
+               border: '1px solid rgba(76, 175, 80, 0.3)', 
+               borderRadius: '4px',
+               display: 'flex',
+               alignItems: 'center',
+               gap: '0.5rem',
+               color: '#fff'
+             }}>
+               <div style={{ color: '#4CAF50' }}>✓</div>
+               <div style={{ fontSize: '0.9rem', flex: 1 }}>
+                 <strong>Video Actual Seleccionado:</strong>
+                 <div style={{ fontSize: '0.8rem', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                   {initialData.video_url.split('/').pop()}
+                 </div>
+               </div>
+             </div>
           )}
+
           <input 
             type="file" 
             id="videoFile" 
@@ -293,16 +471,112 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
             className={styles.input}
             required={activeTab === 'upload' && !initialData?.id} 
           />
-          {isUploading && activeTab === 'upload' && (
-             <div style={{marginTop: '1rem'}}>
-                <div style={{height: '10px', width: '100%',  backgroundColor: '#333', borderRadius: '5px', overflow: 'hidden'}}>
-                  <div style={{height: '100%', width: `${uploadProgress}%`, backgroundColor: 'var(--primary)', transition: 'width 0.2s'}}></div>
-                </div>
-                <p style={{textAlign: 'center', marginTop: '0.5rem'}}>{uploadProgress}% Subido</p>
-             </div>
-          )}
         </div>
       )}
+
+      {/* --- Multi-language & Subtitles Sections --- */}
+      <div style={{ marginTop: '2rem', borderTop: '1px solid #333', paddingTop: '1.5rem' }}>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FileAudio size={18} /> Pistas de Audio Adicionales
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+           {tracks.map((track) => (
+             <div key={track.id} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 40px', gap: '0.5rem', alignItems: 'center', background: '#333', padding: '0.5rem', borderRadius: '4px' }}>
+               <select 
+                 className={styles.input} 
+                 value={track.language}
+                 onChange={(e) => updateTrack(track.id, 'language', e.target.value)}
+                 style={{ marginBottom: 0 }}
+               >
+                 {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+               </select>
+               <input 
+                 type="text" 
+                 placeholder="Ej. Español Latino"
+                 className={styles.input}
+                 value={track.label}
+                 onChange={(e) => updateTrack(track.id, 'label', e.target.value)}
+                 style={{ marginBottom: 0 }}
+               />
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <input 
+                    type="file" 
+                    accept="video/*"
+                    onChange={(e) => updateTrack(track.id, 'file', e.target.files?.[0])}
+                    style={{ fontSize: '0.8rem', color: '#ccc' }}
+                  />
+                  {!track.file && track.url && (
+                    <div style={{ fontSize: '0.7rem', color: '#4CAF50', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>✓</span> Archivo actual: {track.url.split('/').pop()}
+                    </div>
+                  )}
+               </div>
+               <button type="button" onClick={() => removeTrack(track.id)} style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer' }}>
+                 <Trash2 size={18} />
+               </button>
+             </div>
+           ))}
+           <button 
+             type="button" 
+             onClick={addTrack}
+             style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', alignSelf: 'start' }}
+           >
+             <Plus size={16} /> Añadir Pista de Audio
+           </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '2rem', borderTop: '1px solid #333', paddingTop: '1.5rem', marginBottom: '2rem' }}>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+           <Captions size={18} /> Subtítulos
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+           {subtitles.map((sub) => (
+             <div key={sub.id} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 40px', gap: '0.5rem', alignItems: 'center', background: '#333', padding: '0.5rem', borderRadius: '4px' }}>
+               <select 
+                 className={styles.input} 
+                 value={sub.language}
+                 onChange={(e) => updateSubtitle(sub.id, 'language', e.target.value)}
+                 style={{ marginBottom: 0 }}
+               >
+                 {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+               </select>
+               <input 
+                 type="text" 
+                 placeholder="Etiqueta"
+                 className={styles.input}
+                 value={sub.label}
+                 onChange={(e) => updateSubtitle(sub.id, 'label', e.target.value)}
+                 style={{ marginBottom: 0 }}
+               />
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <input 
+                    type="file" 
+                    accept=".vtt"
+                    onChange={(e) => updateSubtitle(sub.id, 'file', e.target.files?.[0])}
+                    style={{ fontSize: '0.8rem', color: '#ccc' }}
+                  />
+                   {!sub.file && sub.url && (
+                    <div style={{ fontSize: '0.7rem', color: '#4CAF50', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>✓</span> Archivo actual: {sub.url.split('/').pop()}
+                    </div>
+                  )}
+               </div>
+               <button type="button" onClick={() => removeSubtitle(sub.id)} style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer' }}>
+                 <Trash2 size={18} />
+               </button>
+             </div>
+           ))}
+           <button 
+             type="button" 
+             onClick={addSubtitle}
+             style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', alignSelf: 'start' }}
+           >
+             <Plus size={16} /> Añadir Subtítulo (.vtt)
+           </button>
+        </div>
+      </div>
+
 
       <div className={styles.row}>
         <div className={styles.group}>
@@ -355,7 +629,8 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
         {isUploading ? (
           <>
             <span className={styles.spinner}></span>
-            Procesando...
+            {currentUploadLabel || 'Procesando...'}
+            {uploadProgress > 0 && ` (${uploadProgress}%)`}
           </>
         ) : (initialData ? 'Actualizar Lección' : 'Crear Lección')}
       </button>

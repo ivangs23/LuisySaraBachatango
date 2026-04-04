@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { stripe } from '@/utils/stripe/server';
 import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
@@ -11,43 +12,100 @@ export async function POST(req: Request) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
-  const { priceId } = await req.json();
-  const price = priceId || STRIPE_CONFIG.SUBSCRIPTION_PRICE_ID;
+  const { priceId, courseId } = await req.json() as { priceId?: string; courseId?: string };
+  const origin = req.headers.get('origin') ?? '';
 
-  // Check if user already has a Stripe Customer ID in Supabase
-  // For now, we'll create a new customer or let Stripe handle it via email if we were syncing
-  // Ideally, we store stripe_customer_id in the profiles table.
-  
-  // Let's fetch the profile to see if we have a customer ID (schema needs update if we want to store it)
-  // For this MVP, we will rely on email matching or create a new customer each time (not ideal but works for v0)
-  // Better: Create customer if not exists.
+  // Retrieve or create Stripe customer to avoid duplicates
+  const supabaseAdmin = createSupabaseAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-  let customerId;
-  // Fetch profile (assuming we added stripe_customer_id to profiles, which we haven't yet in the SQL I wrote)
-  // Let's just create a session with customer_email for now.
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('stripe_customer_id')
+    .eq('id', user.id)
+    .single();
+
+  let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
+
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+      metadata: { userId: user.id },
+    });
+    customerId = customer.id;
+    await supabaseAdmin
+      .from('profiles')
+      .update({ stripe_customer_id: customerId })
+      .eq('id', user.id);
+  }
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      billing_address_collection: 'auto',
-      customer_email: user.email,
-      line_items: [
-        {
-          price: price,
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${req.headers.get('origin')}/profile?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/profile`,
-      metadata: {
-        userId: user.id,
-      },
-    });
+    // ── Subscription (recurring) ─────────────────────────────────────
+    // priceId is passed directly (from /pricing page) and it's a recurring price
+    if (priceId && !courseId) {
+      const subscriptionPriceIds = Object.values(STRIPE_CONFIG.SUBSCRIPTION_PRICES);
+      if (!subscriptionPriceIds.includes(priceId)) {
+        return NextResponse.json({ error: 'Invalid subscription price' }, { status: 400 });
+      }
 
-    return NextResponse.json({ sessionId: session.id, url: session.url });
-  } catch (err: any) {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        billing_address_collection: 'auto',
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/pricing`,
+        metadata: { userId: user.id },
+      });
+
+      return NextResponse.json({ sessionId: session.id, url: session.url });
+    }
+
+    // ── Course purchase (one-time, dynamic price) ─────────────────────
+    if (courseId) {
+      const { data: course } = await supabase
+        .from('courses')
+        .select('title, price_eur')
+        .eq('id', courseId)
+        .single();
+
+      if (!course) {
+        return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+      }
+
+      if (!course.price_eur || course.price_eur <= 0) {
+        return NextResponse.json({ error: 'Este curso no tiene precio configurado' }, { status: 400 });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        billing_address_collection: 'auto',
+        line_items: [{
+          price_data: {
+            currency: STRIPE_CONFIG.CURRENCY,
+            unit_amount: course.price_eur * 100, // euros → céntimos
+            product_data: { name: course.title },
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/courses/${courseId}`,
+        metadata: { userId: user.id, courseId },
+      });
+
+      return NextResponse.json({ sessionId: session.id, url: session.url });
+    }
+
+    return NextResponse.json({ error: 'Falta courseId o priceId' }, { status: 400 });
+
+  } catch (err: unknown) {
     console.error(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

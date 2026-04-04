@@ -8,6 +8,8 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
   const params = await props.params;
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+
   const { data: post } = await supabase
     .from('posts')
     .select('*, profiles(full_name)')
@@ -27,13 +29,13 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
   return (
     <div className={styles.detailContainer}>
       <Link href="/community" className={styles.backLink}>← Volver a la comunidad</Link>
-      
+
       <h1 className={styles.detailTitle}>{post.title}</h1>
       <div className={styles.detailMeta}>
         <span>Por {post.profiles?.full_name || 'Usuario'}</span>
         <span> • {new Date(post.created_at).toLocaleDateString()}</span>
       </div>
-      
+
       <div className={styles.detailContent}>
         {post.content}
       </div>
@@ -41,17 +43,23 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
       <div className={styles.commentsSection}>
         <h2 className={styles.commentsTitle}>Comentarios ({comments?.length || 0})</h2>
 
-        <form action={submitComment} className={styles.commentForm}>
-          <input type="hidden" name="postId" value={post.id} />
-          <textarea 
-            name="content" 
-            className={styles.textarea} 
-            placeholder="Escribe un comentario..." 
-            required
-            style={{ minHeight: '80px' }}
-          />
-          <button type="submit" className={styles.submitButton}>Comentar</button>
-        </form>
+        {user ? (
+          <form action={submitComment} className={styles.commentForm}>
+            <input type="hidden" name="postId" value={post.id} />
+            <textarea
+              name="content"
+              className={styles.textarea}
+              placeholder="Escribe un comentario..."
+              required
+              style={{ minHeight: '80px' }}
+            />
+            <button type="submit" className={styles.submitButton}>Comentar</button>
+          </form>
+        ) : (
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            <Link href="/login?next=/community" style={{ color: 'var(--primary)' }}>Inicia sesión</Link> para dejar un comentario.
+          </p>
+        )}
 
         <div className={styles.commentList}>
           {comments?.map((comment) => (
@@ -63,7 +71,7 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
               <p className={styles.commentText}>{comment.content}</p>
             </div>
           ))}
-          
+
           {comments?.length === 0 && (
             <p style={{ color: 'var(--text-muted)' }}>No hay comentarios aún.</p>
           )}

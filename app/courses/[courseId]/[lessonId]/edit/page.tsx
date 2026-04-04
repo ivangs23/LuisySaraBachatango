@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import LessonForm from '@/components/LessonForm'
+import AssignmentManager from '@/components/AssignmentManager'
 
 export default async function EditLessonPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const params = await props.params;
@@ -29,10 +30,22 @@ export default async function EditLessonPage(props: { params: Promise<{ courseId
     notFound()
   }
 
+  // Fetch existing assignment for this lesson (if any)
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('id, title, description')
+    .eq('lesson_id', params.lessonId)
+    .maybeSingle()
+
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Editar Lección: {lesson.title}</h1>
       <LessonForm courseId={params.courseId} initialData={lesson} />
+      <AssignmentManager
+        lessonId={params.lessonId}
+        courseId={params.courseId}
+        assignment={assignment ?? null}
+      />
     </div>
   )
 }

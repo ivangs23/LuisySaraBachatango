@@ -5,5 +5,5 @@ values (
   12, 
   2025, 
   true, 
-  '/placeholder.jpg'
+  null
 );

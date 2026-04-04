@@ -1,0 +1,99 @@
+.section {
+  margin-bottom: 3.5rem;
+}
+
+.sectionHeader {
+  margin-bottom: 1.25rem;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  color: var(--text-main);
+  margin: 0 0 0.25rem;
+}
+
+.sectionSub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Category filter buttons */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.filterBtn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filterBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filterBtnActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+/* Image overlay for badges */
+.badgeOverlay {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  right: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.badgeCategory {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--primary-rgb, 180,140,60), 0.4);
+}
+
+.badgeAccess {
+  display: inline-block;
+  background: rgba(76, 175, 80, 0.85);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+}
+
+/* Card footer: price + CTA */
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.priceTag {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}

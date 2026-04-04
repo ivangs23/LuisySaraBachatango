@@ -33,9 +33,10 @@ export default function SubscribeButton({ priceId }: { priceId?: string }) {
       } else {
         throw new Error('No checkout URL received');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
       console.error(error);
-      alert('Error: ' + error.message);
+      alert('Error: ' + message);
     } finally {
       setLoading(false);
     }

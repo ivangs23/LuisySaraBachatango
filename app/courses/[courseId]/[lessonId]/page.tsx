@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import styles from './lesson.module.css'
@@ -13,6 +14,12 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
   if (!user) {
     redirect('/login')
   }
+
+  // Create Admin Client for Storage Operations (Bypass RLS)
+  const supabaseAdmin = createSupabaseAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   // Fetch lesson details
   const { data: lesson, error } = await supabase
@@ -33,31 +40,73 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     .eq('id', user.id)
     .single()
 
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('status', ['active', 'trialing'])
+  const isAdmin = profile?.role === 'admin';
+
+  // Fetch the course to get month/year for subscription coverage check
+  const { data: course } = await supabase
+    .from('courses')
+    .select('month, year')
+    .eq('id', params.courseId)
     .single()
 
-  const isAdmin = profile?.role === 'admin';
-  const isPremium = profile?.role === 'premium';
-  const hasActiveSubscription = !!subscription;
-  const hasAccess = isAdmin || (isPremium && hasActiveSubscription) || hasActiveSubscription;
+  // 1. Individual course purchase
+  const { data: coursePurchase } = await supabase
+    .from('course_purchases')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('course_id', params.courseId)
+    .maybeSingle()
+
+  // 2. Active subscription covering this course's month/year
+  let coveringSubscription = null;
+  if (course) {
+    const courseFirstDay = new Date(Date.UTC(course.year, course.month - 1, 1)).toISOString()
+    const courseLastDay = new Date(Date.UTC(course.year, course.month, 0, 23, 59, 59)).toISOString()
+
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .lte('current_period_start', courseLastDay)
+      .gte('current_period_end', courseFirstDay)
+      .maybeSingle()
+
+    coveringSubscription = data;
+  }
+
+  const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription;
 
   let videoUrl = lesson.video_url;
   let isSupabaseVideo = false;
 
+  // Route storage videos through the proxy — access is re-validated on every request
+  // and the proxy issues a short-lived (300 s) signed URL redirect.
   if (videoUrl.startsWith('storage://')) {
     isSupabaseVideo = true;
-    const path = videoUrl.replace('storage://', '');
-    const { data } = await supabase.storage
-      .from('course-content')
-      .createSignedUrl(path, 3600); // 1 hour validity
-    
-    if (data?.signedUrl) {
-      videoUrl = data.signedUrl;
-    }
+    videoUrl = `/api/video/${params.lessonId}?courseId=${params.courseId}`;
+  }
+
+  // Sign audio tracks and subtitle URLs in parallel — 5-minute expiry
+  type TrackItem = { language: string; label: string; url: string }
+  let mediaConfig = lesson.media_config ? JSON.parse(JSON.stringify(lesson.media_config)) : null;
+
+  if (mediaConfig) {
+    const signUrl = async (item: TrackItem) => {
+      if (!item.url?.startsWith('storage://')) return item;
+      const path = item.url.replace('storage://', '');
+      const { data, error } = await supabaseAdmin.storage.from('course-content').createSignedUrl(path, 300);
+      if (error || !data?.signedUrl) return null;
+      return { ...item, url: data.signedUrl };
+    };
+
+    const [signedTracks, signedSubtitles] = await Promise.all([
+      Promise.all((mediaConfig.tracks ?? []).map(signUrl)),
+      Promise.all((mediaConfig.subtitles ?? []).map(signUrl)),
+    ]);
+
+    mediaConfig.tracks = signedTracks.filter(Boolean);
+    mediaConfig.subtitles = signedSubtitles.filter(Boolean);
   }
 
   // Fetch all lessons for sidebar
@@ -86,6 +135,25 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     if (progress) {
       progress.forEach(p => completedLessonIds.add(p.lesson_id))
     }
+  }
+
+  // Fetch assignment for this lesson (if any)
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('id, title, description')
+    .eq('lesson_id', params.lessonId)
+    .maybeSingle()
+
+  // Fetch user's submission for this assignment
+  let submission = null;
+  if (assignment) {
+    const { data } = await supabase
+      .from('submissions')
+      .select('id, text_content, file_url, status, grade, feedback')
+      .eq('assignment_id', assignment.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    submission = data;
   }
 
   return (
@@ -136,6 +204,8 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
                 lessonId={params.lessonId}
                 courseId={params.courseId}
                 title={lesson.title}
+                mediaConfig={mediaConfig}
+                videoSource={lesson.video_source} // Pass explicit source type
               />
             ) : (
               <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
@@ -169,10 +239,13 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
               )}
             </div>
             
-            <LessonTabs 
-              description={lesson.description} 
-              courseId={params.courseId} 
-              lessonId={params.lessonId} 
+            <LessonTabs
+              description={lesson.description}
+              courseId={params.courseId}
+              lessonId={params.lessonId}
+              assignment={assignment}
+              submission={submission}
+              isAdmin={isAdmin}
             />
           </div>
         </div>
