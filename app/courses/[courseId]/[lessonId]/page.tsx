@@ -222,12 +222,12 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h1 className={styles.title}>{lesson.title}</h1>
               {isAdmin && (
-                <Link 
-                  href={`/courses/${params.courseId}/${params.lessonId}/edit`} 
+                <Link
+                  href={`/courses/${params.courseId}/${params.lessonId}/edit`}
                   className={styles.adminButton}
                   style={{
                     padding: '0.5rem 1rem',
-                    backgroundColor: 'var(--primary)', // or a different color for edit
+                    backgroundColor: 'var(--primary)',
                     color: 'white',
                     borderRadius: '4px',
                     textDecoration: 'none',
@@ -238,15 +238,24 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
                 </Link>
               )}
             </div>
-            
-            <LessonTabs
-              description={lesson.description}
-              courseId={params.courseId}
-              lessonId={params.lessonId}
-              assignment={assignment}
-              submission={submission}
-              isAdmin={isAdmin}
-            />
+
+            {hasAccess ? (
+              <LessonTabs
+                description={lesson.description}
+                courseId={params.courseId}
+                lessonId={params.lessonId}
+                assignment={assignment}
+                submission={submission}
+                isAdmin={isAdmin}
+              />
+            ) : (
+              <div style={{ marginTop: '2rem', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center' }}>
+                <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>El contenido de esta lección es exclusivo para miembros Premium.</p>
+                <Link href="/pricing" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+                  Obtener Premium
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

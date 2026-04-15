@@ -44,7 +44,7 @@ export default function AddLessonForm({ courseId }: AddLessonFormProps) {
       let thumbnailUrl = '';
       if (thumbnailFile) {
         const fileExt = thumbnailFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${courseId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -64,7 +64,7 @@ export default function AddLessonForm({ courseId }: AddLessonFormProps) {
       let videoUrl = formData.get('videoUrl') as string;
       if (activeTab === 'upload' && videoFile) {
         const fileExt = videoFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${courseId}/${fileName}`;
 
         // Note: Supabase JS client doesn't expose upload progress easily in v2 without TUS or custom xhr

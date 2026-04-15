@@ -79,6 +79,9 @@ export async function POST(req: Request) {
       if (!course.price_eur || course.price_eur <= 0) {
         return NextResponse.json({ error: 'Este curso no tiene precio configurado' }, { status: 400 });
       }
+      if (course.price_eur > 10000) {
+        return NextResponse.json({ error: 'Precio del curso inválido' }, { status: 400 });
+      }
 
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
@@ -87,7 +90,7 @@ export async function POST(req: Request) {
         line_items: [{
           price_data: {
             currency: STRIPE_CONFIG.CURRENCY,
-            unit_amount: course.price_eur * 100, // euros → céntimos
+            unit_amount: Math.round(course.price_eur * 100), // euros → céntimos
             product_data: { name: course.title },
           },
           quantity: 1,
@@ -104,8 +107,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Falta courseId o priceId' }, { status: 400 });
 
   } catch (err: unknown) {
-    console.error(err);
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[checkout]', err);
+    return NextResponse.json({ error: 'Error al procesar el pago. Inténtalo de nuevo.' }, { status: 500 });
   }
 }

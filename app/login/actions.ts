@@ -17,8 +17,7 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    console.error('Login error:', error)
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    redirect('/login?error=invalid_credentials')
   }
 
   revalidatePath('/', 'layout')
@@ -43,8 +42,7 @@ export async function signup(formData: FormData) {
   })
 
   if (error) {
-    console.error('Signup error:', error)
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    redirect('/login?error=signup_failed')
   }
 
   revalidatePath('/', 'layout')
@@ -61,8 +59,7 @@ export async function resetPassword(formData: FormData) {
   })
 
   if (error) {
-    console.error('Reset password error:', error)
-    redirect(`/forgot-password?error=${encodeURIComponent(error.message)}`)
+    redirect('/forgot-password?error=reset_failed')
   }
 
   revalidatePath('/', 'layout')

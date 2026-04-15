@@ -19,15 +19,20 @@ export async function submitPost(formData: FormData): Promise<void> {
   if (!title || !content) {
     return
   }
+  if (title.length > 200) {
+    return
+  }
+  if (content.length > 10000) {
+    return
+  }
 
   const { error } = await supabase.from('posts').insert({
     user_id: user.id,
-    title,
-    content,
+    title: title.trim(),
+    content: content.trim(),
   })
 
   if (error) {
-    console.error('Error creating post:', error)
     return
   }
 
@@ -50,15 +55,17 @@ export async function submitComment(formData: FormData): Promise<void> {
   if (!postId || !content) {
     return
   }
+  if (content.length > 5000) {
+    return
+  }
 
   const { error } = await supabase.from('comments').insert({
     user_id: user.id,
     post_id: postId,
-    content,
+    content: content.trim(),
   })
 
   if (error) {
-    console.error('Error creating comment:', error)
     return
   }
 

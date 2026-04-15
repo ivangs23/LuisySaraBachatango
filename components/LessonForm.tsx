@@ -96,11 +96,11 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
 
   // Convert initial media_config to staged format
   const [tracks, setTracks] = useState<StagedVideoTrack[]>(() => 
-    initialData?.media_config?.tracks?.map(t => ({ ...t, id: Math.random().toString(), file: null })) || []
+    initialData?.media_config?.tracks?.map(t => ({ ...t, id: crypto.randomUUID(), file: null })) || []
   );
   
   const [subtitles, setSubtitles] = useState<StagedSubtitleTrack[]>(() => 
-    initialData?.media_config?.subtitles?.map(t => ({ ...t, id: Math.random().toString(), file: null })) || []
+    initialData?.media_config?.subtitles?.map(t => ({ ...t, id: crypto.randomUUID(), file: null })) || []
   );
 
   const [isDirty, setIsDirty] = useState(false);
@@ -149,7 +149,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
   // --- Track Management ---
   const addTrack = () => {
     setTracks([...tracks, { 
-      id: Math.random().toString(), 
+      id: crypto.randomUUID(), 
       language: 'en', 
       label: 'English', 
       url: '', 
@@ -178,7 +178,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
   // --- Subtitle Management ---
   const addSubtitle = () => {
     setSubtitles([...subtitles, { 
-      id: Math.random().toString(), 
+      id: crypto.randomUUID(), 
       language: 'es', 
       label: 'Español', 
       url: '', 
@@ -210,7 +210,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
 
     return new Promise((resolve, reject) => {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${courseId}/${fileName}`;
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -258,7 +258,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
 
   const uploadFileStandard = async (file: File, bucket: string): Promise<string> => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${courseId}/${fileName}`;
     
     const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
@@ -296,7 +296,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
         setCurrentUploadLabel('Subiendo Thumbnail...');
         // Using 'thumbnails' public bucket logic from original code
         const fileExt = thumbnailFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${courseId}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from('thumbnails').upload(filePath, thumbnailFile);
         if (uploadError) throw uploadError;

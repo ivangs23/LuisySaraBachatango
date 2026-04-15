@@ -4,19 +4,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Footer.module.css'
 import { useLanguage } from '@/context/LanguageContext'
+import { safeSocialUrl } from '@/utils/sanitize'
 
 type FooterClientProps = {
-  adminProfile: any
+  adminProfile: { instagram?: string | null; facebook?: string | null; tiktok?: string | null; youtube?: string | null } | null
 }
 
 export default function FooterClient({ adminProfile }: FooterClientProps) {
   const { t } = useLanguage()
 
-  // Default Fallbacks
-  const instagramUrl = adminProfile?.instagram || "https://www.instagram.com/luisysarabachatango/"
-  const facebookUrl = adminProfile?.facebook || "https://www.facebook.com/LuisySaraBachatango"
-  const tiktokUrl = adminProfile?.tiktok || "https://www.tiktok.com/@luisysarabachatango"
-  const youtubeUrl = adminProfile?.youtube || "https://www.youtube.com/@LuisySaraBachatango"
+  const instagramUrl = safeSocialUrl(adminProfile?.instagram, "https://www.instagram.com/luisysarabachatango/")
+  const facebookUrl = safeSocialUrl(adminProfile?.facebook, "https://www.facebook.com/LuisySaraBachatango")
+  const tiktokUrl = safeSocialUrl(adminProfile?.tiktok, "https://www.tiktok.com/@luisysarabachatango")
+  const youtubeUrl = safeSocialUrl(adminProfile?.youtube, "https://www.youtube.com/@LuisySaraBachatango")
 
   return (
     <footer className={styles.footer}>

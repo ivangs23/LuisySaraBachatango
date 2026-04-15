@@ -28,14 +28,23 @@ export async function createLesson(formData: FormData) {
   const description = formData.get('description') as string
   const videoUrl = formData.get('videoUrl') as string
   const order = parseInt(formData.get('order') as string)
-  
+  if (isNaN(order) || order < 1) return { error: 'El orden de la lección debe ser un número positivo' }
+
   // New fields
   const thumbnailUrl = formData.get('thumbnailUrl') as string
   const videoSource = formData.get('videoSource') as 'url' | 'upload'
-  const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
+  const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
+  const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
   const isFree = formData.get('isFree') === 'on'
   const mediaConfigStr = formData.get('mediaConfig') as string
-  const mediaConfig = mediaConfigStr ? JSON.parse(mediaConfigStr) : {}
+  let mediaConfig = {}
+  if (mediaConfigStr) {
+    try {
+      mediaConfig = JSON.parse(mediaConfigStr)
+    } catch {
+      return { error: 'Configuración de media inválida' }
+    }
+  }
 
   const { error } = await supabase
     .from('lessons')
@@ -87,12 +96,21 @@ export async function updateLesson(formData: FormData) {
   const description = formData.get('description') as string
   const videoUrl = formData.get('videoUrl') as string
   const order = parseInt(formData.get('order') as string)
+  if (isNaN(order) || order < 1) return { error: 'El orden de la lección debe ser un número positivo' }
   const thumbnailUrl = formData.get('thumbnailUrl') as string
   const videoSource = formData.get('videoSource') as 'url' | 'upload'
-  const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
+  const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
+  const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
   const isFree = formData.get('isFree') === 'on'
   const mediaConfigStr = formData.get('mediaConfig') as string
-  const mediaConfig = mediaConfigStr ? JSON.parse(mediaConfigStr) : null
+  let mediaConfig = null
+  if (mediaConfigStr) {
+    try {
+      mediaConfig = JSON.parse(mediaConfigStr)
+    } catch {
+      return { error: 'Configuración de media inválida' }
+    }
+  }
 
   type MediaConfig = {
     tracks: { language: string; label: string; url: string }[];
@@ -146,6 +164,16 @@ export async function updateLesson(formData: FormData) {
 }
 
 async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClient>>, imageFile: File): Promise<{ url: string } | { error: string }> {
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+
+  if (!ALLOWED_TYPES.includes(imageFile.type)) {
+    return { error: 'Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF).' }
+  }
+  if (imageFile.size > MAX_SIZE) {
+    return { error: 'El archivo es demasiado grande. El tamaño máximo es 5MB.' }
+  }
+
   const fileExt = imageFile.name.split('.').pop()
   const fileName = `${crypto.randomUUID()}.${fileExt}`
   const filePath = `course-covers/${fileName}`

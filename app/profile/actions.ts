@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { sanitizeUrl } from '@/utils/sanitize'
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
@@ -19,37 +20,39 @@ export async function updateProfile(formData: FormData) {
   // Handle Avatar Upload
   const avatarFile = formData.get('avatarFile') as File
   if (avatarMode === 'upload' && avatarFile && avatarFile.size > 0) {
-      const fileExt = avatarFile.name.split('.').pop()
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`
-      const filePath = `avatars/${fileName}` // Using a consistent 'avatars' folder prefix
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+      const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
-      // Try uploading to 'thumbnails' bucket (reusing existing one) or 'avatars' if we had one.
-      // Let's stick to 'thumbnails' since we know it works for now, or just try 'avatars' bucket?
-      // Step 496 showed us 'profiles' table but not buckets. 
-      // Safest is reuse 'thumbnails' or user might need to create 'avatars' bucket.
-      // Let's assume 'thumbnails' works for now or try to create 'avatars' dynamically? No.
-      // I'll try 'thumbnails' but path 'avatars/...'
+      if (!ALLOWED_TYPES.includes(avatarFile.type)) {
+        throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF).')
+      }
+      if (avatarFile.size > MAX_SIZE) {
+        throw new Error('El archivo es demasiado grande. El tamaño máximo es 5MB.')
+      }
+
+      const fileExt = avatarFile.name.split('.').pop()
+      const fileName = `${user.id}-${crypto.randomUUID()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
       const { error: uploadError } = await supabase.storage
-        .from('thumbnails') 
+        .from('thumbnails')
         .upload(filePath, avatarFile, { upsert: true })
 
       if (uploadError) {
-        console.error('Avatar upload error:', uploadError)
-        // If "Bucket not found", we might need to fallback or ask user.
-        // Assuming 'thumbnails' exists from Course creation.
+        throw new Error('Error al subir el avatar. Inténtalo de nuevo.')
       } else {
          const { data: { publicUrl } } = supabase.storage
           .from('thumbnails')
           .getPublicUrl(filePath)
-          
+
          avatarUrl = publicUrl
       }
   }
 
-  const instagram = formData.get('instagram') as string
-  const facebook = formData.get('facebook') as string
-  const tiktok = formData.get('tiktok') as string
-  const youtube = formData.get('youtube') as string
+  const instagram = sanitizeUrl(formData.get('instagram'))
+  const facebook = sanitizeUrl(formData.get('facebook'))
+  const tiktok = sanitizeUrl(formData.get('tiktok'))
+  const youtube = sanitizeUrl(formData.get('youtube'))
 
   const { error } = await supabase
     .from('profiles')
@@ -65,8 +68,6 @@ export async function updateProfile(formData: FormData) {
     .eq('id', user.id)
 
   if (error) {
-    console.error('Error updating profile:', error)
-    // return { error: 'Could not update profile' }
     throw new Error('Could not update profile')
   }
 
@@ -96,8 +97,6 @@ export async function deleteAccount() {
   const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
 
   if (error) {
-    console.error('Error deleting account:', error)
-    // return { error: 'Could not delete account' }
     throw new Error('Could not delete account')
   }
 
@@ -143,24 +142,17 @@ export async function verifyStripeSession(sessionId: string) {
   const supabaseAdmin = await createClientWithServiceRole()
 
   try {
-    console.log('Verifying session:', sessionId);
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    console.log('Session retrieved:', session.id, 'Status:', session.payment_status);
 
     if (session.payment_status === 'paid') {
       const subscriptionId = session.subscription as string;
 
       if (subscriptionId) {
-        // ... (subscription logic)
-        // Subscription logic (if we ever go back to recurring)
         const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
-         // ...
-         // Subscription logic (if we ever go back to recurring)
-         // ...
-         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const subscription = subscriptionResponse as any;
 
-         await supabaseAdmin
+        await supabaseAdmin
           .from('subscriptions')
           .upsert({
             id: subscriptionId,
@@ -170,34 +162,27 @@ export async function verifyStripeSession(sessionId: string) {
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           });
       } else {
-         console.log('One-time payment detected. Updating DB as Admin...');
-         // One-time payment logic
-         const { error: upsertError } = await supabaseAdmin
-            .from('subscriptions')
-            .upsert({
-              id: session.id,
-              user_id: user.id,
-              status: 'active',
-              current_period_start: new Date().toISOString(),
-              current_period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 100)).toISOString(),
-            });
-         
-         if (upsertError) {
-            console.error('Upsert Error:', upsertError);
-            return { success: false, error: upsertError.message };
-         }
-         console.log('DB Updated successfully for one-time payment.');
+        // One-time payment logic
+        const { error: upsertError } = await supabaseAdmin
+          .from('subscriptions')
+          .upsert({
+            id: session.id,
+            user_id: user.id,
+            status: 'active',
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 100)).toISOString(),
+          });
+
+        if (upsertError) {
+          return { success: false, error: 'Error al procesar el pago' };
+        }
       }
 
-      // revalidatePath('/profile')
-      // revalidatePath('/courses')
       return { success: true }
     } else {
-        console.log('Payment status not paid:', session.payment_status);
-        return { success: false, error: 'Payment not completed' }
+      return { success: false, error: 'Payment not completed' }
     }
-  } catch (error: any) {
-    console.error('Error verifying session:', error)
-    return { success: false, error: error.message }
+  } catch (error: unknown) {
+    return { success: false, error: 'Error al verificar el pago' }
   }
 }

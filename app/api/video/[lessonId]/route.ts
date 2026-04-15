@@ -9,6 +9,10 @@ export async function GET(
   const { lessonId } = await params
   const courseId = new URL(req.url).searchParams.get('courseId')
 
+  if (!courseId) {
+    return new NextResponse('Bad Request: courseId is required', { status: 400 })
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -16,23 +20,19 @@ export async function GET(
     return new NextResponse('Unauthorized', { status: 401 })
   }
 
-  // Get the lesson and verify it exists
+  // Get the lesson and verify it belongs to the specified course
   const { data: lesson } = await supabase
     .from('lessons')
     .select('video_url, course_id')
     .eq('id', lessonId)
+    .eq('course_id', courseId)
     .single()
 
   if (!lesson) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  // Prevent cross-course access
-  if (courseId && lesson.course_id !== courseId) {
-    return new NextResponse('Forbidden', { status: 403 })
-  }
-
-  // Check access rights
+  // Check access rights (course_id match already validated in query above)
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')

@@ -1,14 +1,18 @@
 import NextClassPopup from '@/components/NextClassPopup';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import styles from './dashboard.module.css';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Mock data for visual implementation (matching the design)
-  // In a real scenario, we would fetch this from the DB based on the user's subscription and progress
+  if (!user) {
+    redirect('/login')
+  }
+
+  // TODO: Replace mock data with real DB queries based on user subscription and progress
   const activeMonth = "Noviembre";
   const progress = 50;
   

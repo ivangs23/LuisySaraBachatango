@@ -101,7 +101,7 @@ export async function getComments(lessonId: string): Promise<{ data?: Comment[],
   return { data: rootComments };
 }
 
-export async function addComment(lessonId: string, content: string, parentId: string | null = null) {
+export async function addComment(lessonId: string, content: string, parentId: string | null = null, courseId?: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -109,25 +109,29 @@ export async function addComment(lessonId: string, content: string, parentId: st
     return { error: 'Debes iniciar sesión para comentar' };
   }
 
+  if (!content || content.trim().length === 0) {
+    return { error: 'El comentario no puede estar vacío' };
+  }
+  if (content.length > 5000) {
+    return { error: 'El comentario no puede superar los 5000 caracteres' };
+  }
+
   const { error } = await supabase
     .from('comments')
     .insert({
-      content,
+      content: content.trim(),
       lesson_id: lessonId,
       user_id: user.id,
       parent_id: parentId
     });
 
   if (error) {
-    console.error('Error adding comment:', error);
-    return { error: error.message };
+    return { error: 'Error al publicar el comentario' };
   }
 
-  revalidatePath(`/courses/${lessonId}`); // Technically needs courseId, but revalidatePath might work if we have exact path
-  // Since we don't have courseId here easily (unless passed), we might rely on the client to refresh or revalidate path with wildcard if possible.
-  // Actually, revalidatePath works on the route segment. We need the full path.
-  // Let's rely on client-side state update or the caller to revalidate properly if possible.
-  // OR: pass courseId to this action.
+  if (courseId) {
+    revalidatePath(`/courses/${courseId}/${lessonId}`);
+  }
   return { success: true };
 }
 

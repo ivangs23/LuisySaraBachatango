@@ -51,24 +51,32 @@ export async function POST(req: Request) {
     }
 
     if (courseId) {
-      // One-time course purchase
+      // One-time course purchase — idempotency: skip if session already processed
       if (session.payment_status === 'paid') {
-        const { error } = await supabase
+        const { data: existing } = await supabase
           .from('course_purchases')
-          .upsert({
-            user_id: userId,
-            course_id: courseId,
-            stripe_session_id: session.id,
-            amount_paid: session.amount_total ?? null,
-          });
+          .select('id')
+          .eq('stripe_session_id', session.id)
+          .maybeSingle();
 
-        if (error) {
-          console.error('Error saving course purchase:', error);
-          return new NextResponse('Database Error', { status: 500 });
+        if (!existing) {
+          const { error } = await supabase
+            .from('course_purchases')
+            .upsert({
+              user_id: userId,
+              course_id: courseId,
+              stripe_session_id: session.id,
+              amount_paid: session.amount_total ?? null,
+            });
+
+          if (error) {
+            console.error('Error saving course purchase:', error);
+            return new NextResponse('Database Error', { status: 500 });
+          }
         }
       }
     } else {
-      // Subscription purchase
+      // Subscription purchase — upsert on subscription ID is already idempotent
       const subscriptionId = session.subscription as string | null;
 
       if (subscriptionId) {
