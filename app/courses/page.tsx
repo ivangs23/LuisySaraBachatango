@@ -1,19 +1,48 @@
+import type { Metadata } from 'next';
 import CoursesClient from '@/components/CoursesClient'
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { unstable_cache } from 'next/cache'
+
+// Shared cache for the published courses list — same for all users.
+// Uses the anon key (no cookies) because unstable_cache cannot call cookies() internally.
+// RLS still applies: anon role can read published courses.
+// Revalidate every 5 minutes, or call revalidateTag('courses') after an admin publishes/edits.
+const getPublishedCourses = unstable_cache(
+  async () => {
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data, error } = await supabase
+      .from('courses')
+      .select('id, title, description, image_url, month, year, is_published, course_type, category, price_eur, stripe_price_id')
+      .eq('is_published', true)
+      .order('year', { ascending: false })
+      .order('month', { ascending: false })
+    if (error) console.error('Error fetching courses:', error)
+    return data ?? []
+  },
+  ['published-courses'],
+  { revalidate: 300, tags: ['courses'] }
+)
+
+export const metadata: Metadata = {
+  title: "Cursos",
+  description: "Explora todos los cursos de Bachata y Bachatango de Luis y Sara. Cursos mensuales con suscripción y cursos completos disponibles para compra individual.",
+  openGraph: {
+    title: "Cursos | Luis y Sara Bachatango",
+    description: "Explora todos los cursos de Bachata y Bachatango de Luis y Sara.",
+    url: "/courses",
+  },
+  alternates: { canonical: "/courses" },
+};
 
 export default async function CoursesPage() {
   const supabase = await createClient()
 
-  const { data: courses, error } = await supabase
-    .from('courses')
-    .select('id, title, description, image_url, month, year, is_published, course_type, category, price_eur, stripe_price_id')
-    .eq('is_published', true)
-    .order('year', { ascending: false })
-    .order('month', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching courses:', error)
-  }
+  // Courses list is shared across all users — served from cache.
+  const courses = await getPublishedCourses()
 
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -21,35 +50,27 @@ export default async function CoursesPage() {
   const accessibleCourseIds: string[] = []
 
   if (user) {
-    // Fetch user role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    isAdmin = profile?.role === 'admin'
-
-    if (isAdmin) {
-      // Admin can access all courses
-      courses?.forEach(c => accessibleCourseIds.push(c.id))
-    } else {
-      // 1. Direct course purchases
-      const { data: purchases } = await supabase
-        .from('course_purchases')
-        .select('course_id')
-        .eq('user_id', user.id)
-
-      purchases?.forEach(p => accessibleCourseIds.push(p.course_id))
-
-      // 2. Subscription-covered membership courses
-      const { data: subscriptions } = await supabase
-        .from('subscriptions')
+    // Fetch role, purchases and subscriptions in parallel.
+    const [profileResult, purchasesResult, subscriptionsResult] = await Promise.all([
+      supabase.from('profiles').select('role').eq('id', user.id).single(),
+      supabase.from('course_purchases').select('course_id').eq('user_id', user.id),
+      supabase.from('subscriptions')
         .select('current_period_start, current_period_end')
         .eq('user_id', user.id)
-        .in('status', ['active', 'trialing'])
+        .in('status', ['active', 'trialing']),
+    ])
 
-      if (subscriptions && subscriptions.length > 0 && courses) {
+    isAdmin = profileResult.data?.role === 'admin'
+
+    if (isAdmin) {
+      courses.forEach(c => accessibleCourseIds.push(c.id))
+    } else {
+      // 1. Direct course purchases
+      purchasesResult.data?.forEach(p => accessibleCourseIds.push(p.course_id))
+
+      // 2. Subscription-covered membership courses
+      const subscriptions = subscriptionsResult.data
+      if (subscriptions && subscriptions.length > 0) {
         for (const course of courses) {
           if (course.course_type !== 'membership') continue
           if (accessibleCourseIds.includes(course.id)) continue
@@ -73,7 +94,7 @@ export default async function CoursesPage() {
 
   return (
     <CoursesClient
-      courses={courses || []}
+      courses={courses}
       isAdmin={isAdmin}
       accessibleCourseIds={accessibleCourseIds}
     />

@@ -1,6 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { checkRateLimit } from '@/utils/rate-limit'
+
+// 30 signed-URL requests per user per minute — protects Supabase from flood.
+const RATE_LIMIT = 30
+const RATE_WINDOW_MS = 60_000
 
 export async function GET(
   req: Request,
@@ -20,42 +25,45 @@ export async function GET(
     return new NextResponse('Unauthorized', { status: 401 })
   }
 
-  // Get the lesson and verify it belongs to the specified course
-  const { data: lesson } = await supabase
-    .from('lessons')
-    .select('video_url, course_id')
-    .eq('id', lessonId)
-    .eq('course_id', courseId)
-    .single()
+  // Rate limit per user — keyed by userId so it's not spoofable via IP header manipulation.
+  if (!checkRateLimit(`video:${user.id}`, RATE_LIMIT, RATE_WINDOW_MS)) {
+    return new NextResponse('Too Many Requests', {
+      status: 429,
+      headers: { 'Retry-After': '60' },
+    })
+  }
+
+  // Fetch lesson and profile in parallel — both only need IDs we already have.
+  const [{ data: lesson }, { data: profile }] = await Promise.all([
+    supabase.from('lessons')
+      .select('video_url, course_id')
+      .eq('id', lessonId)
+      .eq('course_id', courseId)
+      .single(),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+  ])
 
   if (!lesson) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  // Check access rights (course_id match already validated in query above)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
   const isAdmin = profile?.role === 'admin'
 
   if (!isAdmin) {
-    const { data: purchase } = await supabase
-      .from('course_purchases')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('course_id', lesson.course_id)
-      .maybeSingle()
-
-    if (!purchase) {
-      const { data: course } = await supabase
-        .from('courses')
+    // Check purchase and course metadata in parallel.
+    const [{ data: purchase }, { data: course }] = await Promise.all([
+      supabase.from('course_purchases')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_id', lesson.course_id)
+        .maybeSingle(),
+      supabase.from('courses')
         .select('month, year')
         .eq('id', lesson.course_id)
-        .single()
+        .single(),
+    ])
 
+    if (!purchase) {
       let hasSubscription = false
       if (course?.month && course?.year) {
         const courseFirstDay = new Date(Date.UTC(course.year, course.month - 1, 1)).toISOString()

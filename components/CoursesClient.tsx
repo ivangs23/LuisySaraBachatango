@@ -35,24 +35,13 @@ type Props = {
   accessibleCourseIds: string[];
 };
 
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+type CourseCardProps = {
+  course: Course;
+  accessible: boolean;
+  tc: typeof import('@/utils/dictionaries').dictionaries['es']['coursesPage'];
+};
 
-function AccessBadge({ accessible }: { accessible: boolean }) {
-  if (accessible) {
-    return (
-      <span className={cardStyles.badgeAccess}>✓ Tienes acceso</span>
-    );
-  }
-  return null;
-}
-
-function PriceTag({ price, accessible }: { price: number | null; accessible: boolean }) {
-  if (accessible) return null;
-  if (!price) return <span className={cardStyles.priceTag}>Precio no disponible</span>;
-  return <span className={cardStyles.priceTag}>€{price}</span>;
-}
-
-function CourseCard({ course, accessible }: { course: Course; accessible: boolean }) {
+function CourseCard({ course, accessible, tc }: CourseCardProps) {
   return (
     <Link href={`/courses/${course.id}`} className={styles.card}>
       <div className={styles.imageContainer}>
@@ -68,32 +57,35 @@ function CourseCard({ course, accessible }: { course: Course; accessible: boolea
         ) : (
           <div className={styles.placeholderImage}>
             {course.course_type === 'membership' && course.month && course.year
-              ? <span>{MONTHS_ES[course.month - 1]} {course.year}</span>
+              ? <span>{tc.months[course.month - 1]} {course.year}</span>
               : <span>{course.title}</span>
             }
           </div>
         )}
-        {/* Overlay badge */}
         <div className={cardStyles.badgeOverlay}>
           {course.course_type === 'complete' && course.category && (
             <span className={cardStyles.badgeCategory}>
               {CATEGORY_LABELS[course.category] ?? course.category}
             </span>
           )}
-          <AccessBadge accessible={accessible} />
+          {accessible && <span className={cardStyles.badgeAccess}>{tc.hasAccess}</span>}
         </div>
       </div>
 
       <div className={styles.content}>
         <h2 className={styles.courseTitle}>{course.title}</h2>
         {course.course_type === 'membership' && course.month && course.year && (
-          <p className={styles.courseDate}>{MONTHS_ES[course.month - 1]} {course.year}</p>
+          <p className={styles.courseDate}>{tc.months[course.month - 1]} {course.year}</p>
         )}
         <p className={styles.description}>{course.description}</p>
         <div className={cardStyles.cardFooter}>
-          <PriceTag price={course.price_eur} accessible={accessible} />
+          {!accessible && (
+            <span className={cardStyles.priceTag}>
+              {course.price_eur ? `€${course.price_eur}` : tc.priceNA}
+            </span>
+          )}
           <span className={styles.cta}>
-            {accessible ? 'Ver Clases →' : course.price_eur ? 'Comprar →' : 'Ver más →'}
+            {accessible ? tc.view : course.price_eur ? tc.buy : tc.viewMore}
           </span>
         </div>
       </div>
@@ -103,6 +95,7 @@ function CourseCard({ course, accessible }: { course: Course; accessible: boolea
 
 export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }: Props) {
   const { t } = useLanguage();
+  const tc = t.coursesPage;
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const completeCourses = courses.filter(c => c.course_type === 'complete');
@@ -117,18 +110,18 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>{t.coursesPage.title}</h1>
+        <h1 className={styles.title}>{tc.title}</h1>
         {isAdmin && (
           <Link href="/courses/create" className={styles.createButton}>
-            {t.coursesPage.create}
+            {tc.create}
           </Link>
         )}
       </div>
 
       {courses.length === 0 && (
         <div className={styles.emptyState}>
-          <p>{t.coursesPage.empty}</p>
-          <p className={styles.subtext}>{t.coursesPage.emptySub}</p>
+          <p>{tc.empty}</p>
+          <p className={styles.subtext}>{tc.emptySub}</p>
         </div>
       )}
 
@@ -136,8 +129,8 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
       {completeCourses.length > 0 && (
         <section className={cardStyles.section}>
           <div className={cardStyles.sectionHeader}>
-            <h2 className={cardStyles.sectionTitle}>Cursos Completos</h2>
-            <p className={cardStyles.sectionSub}>Precio fijo · Acceso permanente</p>
+            <h2 className={cardStyles.sectionTitle}>{tc.completeCourses}</h2>
+            <p className={cardStyles.sectionSub}>{tc.completeSub}</p>
           </div>
 
           {/* Category filter */}
@@ -149,7 +142,7 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
                   onClick={() => setCategoryFilter(cat)}
                   className={`${cardStyles.filterBtn} ${categoryFilter === cat ? cardStyles.filterBtnActive : ''}`}
                 >
-                  {cat === 'all' ? 'Todos' : (CATEGORY_LABELS[cat] ?? cat)}
+                  {cat === 'all' ? tc.filterAll : (CATEGORY_LABELS[cat] ?? cat)}
                 </button>
               ))}
             </div>
@@ -161,6 +154,7 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
                 key={course.id}
                 course={course}
                 accessible={accessibleCourseIds.includes(course.id)}
+                tc={tc}
               />
             ))}
           </div>
@@ -171,10 +165,8 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
       {membershipCourses.length > 0 && (
         <section className={cardStyles.section}>
           <div className={cardStyles.sectionHeader}>
-            <h2 className={cardStyles.sectionTitle}>Clases Mensuales</h2>
-            <p className={cardStyles.sectionSub}>
-              4 clases por mes · Suscripción o compra individual por mes
-            </p>
+            <h2 className={cardStyles.sectionTitle}>{tc.monthlyClasses}</h2>
+            <p className={cardStyles.sectionSub}>{tc.monthlySub}</p>
           </div>
           <div className={styles.grid}>
             {membershipCourses.map(course => (
@@ -182,6 +174,7 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
                 key={course.id}
                 course={course}
                 accessible={accessibleCourseIds.includes(course.id)}
+                tc={tc}
               />
             ))}
           </div>

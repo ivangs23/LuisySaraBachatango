@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import styles from './dashboard.module.css';
+import { getDict } from '@/utils/get-dict';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -11,6 +12,8 @@ export default async function DashboardPage() {
   if (!user) {
     redirect('/login')
   }
+
+  const t = await getDict();
 
   // TODO: Replace mock data with real DB queries based on user subscription and progress
   const activeMonth = "Noviembre";
@@ -26,15 +29,15 @@ export default async function DashboardPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Mis Cursos</h1>
+        <h1 className={styles.title}>{t.dashboard.title}</h1>
       </div>
 
       <section className={styles.activeMonth}>
-        <h2 className={styles.monthTitle}>Tu Mes Activo: {activeMonth}</h2>
-        
+        <h2 className={styles.monthTitle}>{t.dashboard.activeMonth}: {activeMonth}</h2>
+
         <div className={styles.progressContainer}>
           <div className={styles.progressLabel}>
-            <span>Progreso</span>
+            <span>{t.dashboard.progress}</span>
             <span>{progress}%</span>
           </div>
           <div className={styles.progressBar}>
@@ -59,11 +62,11 @@ export default async function DashboardPage() {
               <div className={styles.cardContent}>
                 {lesson.locked ? (
                   <>
-                    <span className={styles.lockedText}>Disponible: {lesson.date}</span>
+                    <span className={styles.lockedText}>{t.dashboard.available}: {lesson.date}</span>
                   </>
                 ) : (
                   <Link href={`/courses/demo/${lesson.id}`} className={styles.cardButton}>
-                    VER CLASE
+                    {t.dashboard.viewClass}
                   </Link>
                 )}
               </div>
@@ -73,7 +76,7 @@ export default async function DashboardPage() {
       </section>
 
       <section>
-        <h2 className={styles.sectionTitle}>Meses Anteriores</h2>
+        <h2 className={styles.sectionTitle}>{t.dashboard.previousMonths}</h2>
         <div className={styles.grid}>
           {/* Placeholders for previous months */}
           <div className={`${styles.card} ${styles.folder}`}>

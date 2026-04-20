@@ -1,4 +1,17 @@
+import type { Metadata } from 'next';
 import styles from './pricing.module.css'
+import { getDict } from '@/utils/get-dict'
+
+export const metadata: Metadata = {
+  title: "Precios y Suscripción",
+  description: "Planes de suscripción para acceder a los cursos de Luis y Sara Bachatango. Desde 19€/mes. Acceso a 4 clases mensuales, comunidad y correcciones del profesor.",
+  openGraph: {
+    title: "Precios | Luis y Sara Bachatango",
+    description: "Suscríbete desde 19€/mes. Acceso a 4 clases mensuales, comunidad y correcciones personalizadas.",
+    url: "/pricing",
+  },
+  alternates: { canonical: "/pricing" },
+};
 
 const PLANS = [
   {
@@ -39,16 +52,15 @@ const PLANS = [
   },
 ]
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const t = await getDict();
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Suscripciones</h1>
-        <p className={styles.subtitle}>
-          Accede a los cursos de bachata de Luis y Sara con una suscripción mensual.
-          Cada mes incluye 4 clases nuevas.
-        </p>
-        <div className={styles.comingSoonBadge}>Próximamente</div>
+        <h1 className={styles.title}>{t.pricing.title}</h1>
+        <p className={styles.subtitle}>{t.pricing.subtitle}</p>
+        <div className={styles.comingSoonBadge}>{t.pricing.comingSoon}</div>
       </div>
 
       <div className={styles.grid}>
@@ -58,13 +70,13 @@ export default function PricingPage() {
             className={`${styles.card} ${plan.highlighted ? styles.highlighted : ''}`}
           >
             {plan.highlighted && (
-              <div className={styles.popularBadge}>Más popular</div>
+              <div className={styles.popularBadge}>{t.pricing.mostPopular}</div>
             )}
             <h2 className={styles.planName}>{plan.name}</h2>
             <div className={styles.priceRow}>
               <span className={styles.currency}>€</span>
               <span className={styles.price}>{plan.price}</span>
-              {plan.id === '1month' && <span className={styles.period}>/mes</span>}
+              {plan.id === '1month' && <span className={styles.period}>{t.pricing.perMonth}</span>}
             </div>
             <p className={styles.planDescription}>{plan.description}</p>
             <ul className={styles.featureList}>
@@ -76,15 +88,13 @@ export default function PricingPage() {
               ))}
             </ul>
             <button disabled className={styles.ctaButton}>
-              Próximamente
+              {t.pricing.comingSoon}
             </button>
           </div>
         ))}
       </div>
 
-      <p className={styles.note}>
-        ¿Quieres acceder a un mes anterior? Puedes comprarlo individualmente desde la página del curso.
-      </p>
+      <p className={styles.note}>{t.pricing.note}</p>
     </div>
   )
 }

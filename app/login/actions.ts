@@ -46,7 +46,7 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/login?message=Check email to continue sign in process')
+  redirect('/login?message=email_confirmation')
 }
 
 export async function resetPassword(formData: FormData) {
@@ -63,5 +63,5 @@ export async function resetPassword(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/login?message=Check email to continue password reset process')
+  redirect('/login?message=email_reset')
 }

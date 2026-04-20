@@ -9,7 +9,9 @@ export const dictionaries = {
       community: "Comunidad",
       about: "Sobre Nosotros",
       login: "Iniciar Sesión",
-      profile: "Mi Perfil"
+      profile: "Mi Perfil",
+      dashboard: "Dashboard",
+      logout: "Cerrar Sesión"
     },
     common: {
       processing: "Procesando...",
@@ -26,7 +28,8 @@ export const dictionaries = {
       terms: "Términos y Condiciones",
       privacy: "Política de Privacidad",
       cookies: "Política de Cookies",
-      rights: "Todos los derechos reservados."
+      rights: "Todos los derechos reservados.",
+      blog: "Blog"
     },
     hero: {
       title: "Domina el Arte del Bachatango",
@@ -156,7 +159,100 @@ export const dictionaries = {
       empty: "No hay cursos publicados en este momento.",
       emptySub: "¡Vuelve pronto para ver las nuevas clases de Luis y Sara!",
       view: "Ver Clases",
+      viewMore: "Ver más →",
+      buy: "Comprar →",
+      hasAccess: "✓ Tienes acceso",
+      priceNA: "Precio no disponible",
+      completeCourses: "Cursos Completos",
+      completeSub: "Precio fijo · Acceso permanente",
+      monthlyClasses: "Clases Mensuales",
+      monthlySub: "4 clases por mes · Suscripción o compra individual por mes",
+      filterAll: "Todos",
       months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    },
+    lesson: {
+      backToCourse: "← Volver al Curso",
+      courseLessons: "Lecciones del Curso",
+      lockedContent: "Contenido Bloqueado",
+      lockedMessage: "Este video es exclusivo para miembros Premium.",
+      getPremium: "Obtener Premium",
+      editLesson: "✎ Editar Lección",
+      exclusiveContent: "El contenido de esta lección es exclusivo para miembros Premium.",
+      description: "Descripción",
+      musicalResources: "Recursos Musicales",
+      assignment: "Tarea",
+      comments: "Comentarios",
+      resourcesComingSoon: "Recursos musicales próximamente..."
+    },
+    dashboard: {
+      title: "Mis Cursos",
+      activeMonth: "Tu Mes Activo",
+      progress: "Progreso",
+      available: "Disponible",
+      viewClass: "VER CLASE",
+      previousMonths: "Meses Anteriores"
+    },
+    login: {
+      title: "Inicio de Sesión",
+      subtitle: "Accede a la plataforma exclusiva de Luis y Sara",
+      email: "Email",
+      password: "Contraseña",
+      submit: "Iniciar Sesión",
+      noAccount: "¿No tienes cuenta? Regístrate",
+      forgotPassword: "¿Olvidaste tu contraseña?"
+    },
+    signup: {
+      title: "Regístrate",
+      subtitle: "Crea tu cuenta para acceder a la plataforma",
+      email: "Email",
+      fullName: "Nombre Completo",
+      fullNamePlaceholder: "Juan Pérez",
+      password: "Contraseña",
+      submit: "Registrarse",
+      hasAccount: "¿Ya tienes cuenta? Inicia Sesión",
+      forgotPassword: "¿Olvidaste tu contraseña?"
+    },
+    forgotPassword: {
+      title: "Recuperar Contraseña",
+      subtitle: "Ingresa tu email para recibir un enlace de recuperación",
+      email: "Email",
+      submit: "Enviar enlace",
+      backToLogin: "Volver al inicio de sesión"
+    },
+    profile: {
+      title: "Mi Perfil",
+      editProfile: "Editar Perfil",
+      accountInfo: "Información de Cuenta",
+      email: "Email",
+      subscription: "Suscripción",
+      status: "Estado",
+      active: "Activo",
+      inactive: "Inactivo",
+      activeUntil: "Tu suscripción está activa hasta el",
+      noActiveSubscription: "No tienes una suscripción activa actualmente.",
+      dangerZone: "Zona de Peligro",
+      undoableWarning: "Estas acciones no se pueden deshacer.",
+      logout: "Cerrar Sesión",
+      deleteAccount: "Eliminar Cuenta"
+    },
+    pricing: {
+      title: "Suscripciones",
+      subtitle: "Accede a los cursos de bachata de Luis y Sara con una suscripción mensual. Cada mes incluye 4 clases nuevas.",
+      comingSoon: "Próximamente",
+      mostPopular: "Más popular",
+      perMonth: "/mes",
+      note: "¿Quieres acceder a un mes anterior? Puedes comprarlo individualmente desde la página del curso."
+    },
+    errors: {
+      invalid_credentials: "Credenciales incorrectas. Comprueba tu email y contraseña.",
+      signup_failed: "Error al crear la cuenta. Inténtalo de nuevo.",
+      reset_failed: "Error al enviar el enlace. Inténtalo de nuevo.",
+      unknown: "Ha ocurrido un error. Inténtalo de nuevo."
+    },
+    messages: {
+      email_confirmation: "Revisa tu email para continuar el proceso de registro.",
+      email_reset: "Revisa tu email para continuar el proceso de recuperación de contraseña.",
+      account_deleted: "Cuenta eliminada correctamente."
     }
   },
   en: {
@@ -167,7 +263,9 @@ export const dictionaries = {
       community: "Community",
       about: "About Us",
       login: "Login",
-      profile: "My Profile"
+      profile: "My Profile",
+      dashboard: "Dashboard",
+      logout: "Log Out"
     },
     common: {
       processing: "Processing...",
@@ -184,7 +282,8 @@ export const dictionaries = {
       terms: "Terms & Conditions",
       privacy: "Privacy Policy",
       cookies: "Cookie Policy",
-      rights: "All rights reserved."
+      rights: "All rights reserved.",
+      blog: "Blog"
     },
     hero: {
       title: "Master the Art of Bachatango",
@@ -313,12 +412,105 @@ export const dictionaries = {
       empty: "No courses published at this moment.",
       emptySub: "Come back soon to see new classes from Luis & Sara!",
       view: "View Classes",
+      viewMore: "View more →",
+      buy: "Buy →",
+      hasAccess: "✓ You have access",
+      priceNA: "Price not available",
+      completeCourses: "Full Courses",
+      completeSub: "Fixed price · Permanent access",
+      monthlyClasses: "Monthly Classes",
+      monthlySub: "4 classes per month · Subscription or individual monthly purchase",
+      filterAll: "All",
       months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    },
+    lesson: {
+      backToCourse: "← Back to Course",
+      courseLessons: "Course Lessons",
+      lockedContent: "Locked Content",
+      lockedMessage: "This video is exclusive for Premium members.",
+      getPremium: "Get Premium",
+      editLesson: "✎ Edit Lesson",
+      exclusiveContent: "The content of this lesson is exclusive for Premium members.",
+      description: "Description",
+      musicalResources: "Musical Resources",
+      assignment: "Assignment",
+      comments: "Comments",
+      resourcesComingSoon: "Musical resources coming soon..."
+    },
+    dashboard: {
+      title: "My Courses",
+      activeMonth: "Your Active Month",
+      progress: "Progress",
+      available: "Available",
+      viewClass: "VIEW CLASS",
+      previousMonths: "Previous Months"
+    },
+    login: {
+      title: "Sign In",
+      subtitle: "Access the exclusive Luis & Sara platform",
+      email: "Email",
+      password: "Password",
+      submit: "Sign In",
+      noAccount: "Don't have an account? Sign Up",
+      forgotPassword: "Forgot your password?"
+    },
+    signup: {
+      title: "Sign Up",
+      subtitle: "Create your account to access the platform",
+      email: "Email",
+      fullName: "Full Name",
+      fullNamePlaceholder: "John Doe",
+      password: "Password",
+      submit: "Sign Up",
+      hasAccount: "Already have an account? Sign In",
+      forgotPassword: "Forgot your password?"
+    },
+    forgotPassword: {
+      title: "Recover Password",
+      subtitle: "Enter your email to receive a recovery link",
+      email: "Email",
+      submit: "Send link",
+      backToLogin: "Back to login"
+    },
+    profile: {
+      title: "My Profile",
+      editProfile: "Edit Profile",
+      accountInfo: "Account Information",
+      email: "Email",
+      subscription: "Subscription",
+      status: "Status",
+      active: "Active",
+      inactive: "Inactive",
+      activeUntil: "Your subscription is active until",
+      noActiveSubscription: "You don't have an active subscription currently.",
+      dangerZone: "Danger Zone",
+      undoableWarning: "These actions cannot be undone.",
+      logout: "Log Out",
+      deleteAccount: "Delete Account"
+    },
+    pricing: {
+      title: "Subscriptions",
+      subtitle: "Access Luis & Sara's bachata courses with a monthly subscription. Each month includes 4 new classes.",
+      comingSoon: "Coming Soon",
+      mostPopular: "Most popular",
+      perMonth: "/month",
+      note: "Want to access a previous month? You can purchase it individually from the course page."
+    },
+    errors: {
+      invalid_credentials: "Invalid credentials. Check your email and password.",
+      signup_failed: "Failed to create account. Please try again.",
+      reset_failed: "Failed to send reset link. Please try again.",
+      unknown: "An error occurred. Please try again."
+    },
+    messages: {
+      email_confirmation: "Check your email to continue the sign in process.",
+      email_reset: "Check your email to continue the password reset process.",
+      account_deleted: "Account deleted successfully."
     }
   },
   fr: {
     header: {
-      courses: "Cours", events: "Événements", music: "Musique", community: "Communauté", about: "À Propos", login: "Connexion", profile: "Mon Profil"
+      courses: "Cours", events: "Événements", music: "Musique", community: "Communauté", about: "À Propos", login: "Connexion", profile: "Mon Profil", dashboard: "Dashboard", logout: "Déconnexion"
     },
     common: {
       processing: "Traitement...",
@@ -328,7 +520,7 @@ export const dictionaries = {
     footer: {
       description: "Apprenez le Bachatango avec Luis et Sara. La fusion parfaite entre la sensualité de la bachata et l'élégance du tango.",
       explore: "Explorer", home: "Accueil", contact: "Contact", notice: "Mentions Légales",
-      legal: "Légal", terms: "Conditions Générales", privacy: "Politique de Confidentialité", cookies: "Politique de Cookies", rights: "Tous droits réservés."
+      legal: "Légal", terms: "Conditions Générales", privacy: "Politique de Confidentialité", cookies: "Politique de Cookies", rights: "Tous droits réservés.", blog: "Blog"
     },
     hero: {
       title: "Maîtrisez l'Art du Bachatango",
@@ -403,12 +595,105 @@ export const dictionaries = {
       empty: "Aucun cours publié pour le moment.",
       emptySub: "Revenez bientôt pour voir les nouvelles classes !",
       view: "Voir les Cours",
+      viewMore: "Voir plus →",
+      buy: "Acheter →",
+      hasAccess: "✓ Vous avez accès",
+      priceNA: "Prix non disponible",
+      completeCourses: "Cours Complets",
+      completeSub: "Prix fixe · Accès permanent",
+      monthlyClasses: "Cours Mensuels",
+      monthlySub: "4 cours par mois · Abonnement ou achat individuel par mois",
+      filterAll: "Tous",
       months: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+    },
+    lesson: {
+      backToCourse: "← Retour au Cours",
+      courseLessons: "Leçons du Cours",
+      lockedContent: "Contenu Verrouillé",
+      lockedMessage: "Cette vidéo est réservée aux membres Premium.",
+      getPremium: "Obtenir Premium",
+      editLesson: "✎ Modifier la Leçon",
+      exclusiveContent: "Le contenu de cette leçon est réservé aux membres Premium.",
+      description: "Description",
+      musicalResources: "Ressources Musicales",
+      assignment: "Devoir",
+      comments: "Commentaires",
+      resourcesComingSoon: "Ressources musicales bientôt..."
+    },
+    dashboard: {
+      title: "Mes Cours",
+      activeMonth: "Votre Mois Actif",
+      progress: "Progression",
+      available: "Disponible",
+      viewClass: "VOIR LA CLASSE",
+      previousMonths: "Mois Précédents"
+    },
+    login: {
+      title: "Connexion",
+      subtitle: "Accédez à la plateforme exclusive de Luis et Sara",
+      email: "Email",
+      password: "Mot de passe",
+      submit: "Se connecter",
+      noAccount: "Pas de compte ? S'inscrire",
+      forgotPassword: "Mot de passe oublié ?"
+    },
+    signup: {
+      title: "S'inscrire",
+      subtitle: "Créez votre compte pour accéder à la plateforme",
+      email: "Email",
+      fullName: "Nom Complet",
+      fullNamePlaceholder: "Jean Dupont",
+      password: "Mot de passe",
+      submit: "S'inscrire",
+      hasAccount: "Déjà un compte ? Connexion",
+      forgotPassword: "Mot de passe oublié ?"
+    },
+    forgotPassword: {
+      title: "Récupérer le Mot de Passe",
+      subtitle: "Entrez votre email pour recevoir un lien de récupération",
+      email: "Email",
+      submit: "Envoyer le lien",
+      backToLogin: "Retour à la connexion"
+    },
+    profile: {
+      title: "Mon Profil",
+      editProfile: "Modifier le Profil",
+      accountInfo: "Informations du Compte",
+      email: "Email",
+      subscription: "Abonnement",
+      status: "Statut",
+      active: "Actif",
+      inactive: "Inactif",
+      activeUntil: "Votre abonnement est actif jusqu'au",
+      noActiveSubscription: "Vous n'avez pas d'abonnement actif actuellement.",
+      dangerZone: "Zone Dangereuse",
+      undoableWarning: "Ces actions sont irréversibles.",
+      logout: "Déconnexion",
+      deleteAccount: "Supprimer le Compte"
+    },
+    pricing: {
+      title: "Abonnements",
+      subtitle: "Accédez aux cours de bachata de Luis et Sara avec un abonnement mensuel. Chaque mois comprend 4 nouveaux cours.",
+      comingSoon: "Bientôt",
+      mostPopular: "Le plus populaire",
+      perMonth: "/mois",
+      note: "Vous voulez accéder à un mois précédent ? Vous pouvez l'acheter individuellement depuis la page du cours."
+    },
+    errors: {
+      invalid_credentials: "Identifiants incorrects. Vérifiez votre email et votre mot de passe.",
+      signup_failed: "Échec de la création du compte. Réessayez.",
+      reset_failed: "Échec de l'envoi du lien. Réessayez.",
+      unknown: "Une erreur s'est produite. Réessayez."
+    },
+    messages: {
+      email_confirmation: "Consultez votre email pour continuer le processus d'inscription.",
+      email_reset: "Consultez votre email pour continuer le processus de réinitialisation.",
+      account_deleted: "Compte supprimé avec succès."
     }
   },
   de: {
     header: {
-      courses: "Kurse", events: "Events", music: "Musik", community: "Community", about: "Über Uns", login: "Anmelden", profile: "Mein Profil"
+      courses: "Kurse", events: "Events", music: "Musik", community: "Community", about: "Über Uns", login: "Anmelden", profile: "Mein Profil", dashboard: "Dashboard", logout: "Abmelden"
     },
     common: {
       processing: "Verarbeitung...",
@@ -418,7 +703,7 @@ export const dictionaries = {
     footer: {
       description: "Lerne Bachatango mit Luis und Sara. Die perfekte Fusion zwischen der Sinnlichkeit von Bachata und der Eleganz des Tango.",
       explore: "Entdecken", home: "Startseite", contact: "Kontakt", notice: "Impressum",
-      legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", rights: "Alle Rechte vorbehalten."
+      legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", rights: "Alle Rechte vorbehalten.", blog: "Blog"
     },
     hero: {
       title: "Meistere die Kunst des Bachatango",
@@ -493,12 +778,105 @@ export const dictionaries = {
       empty: "Momentan keine Kurse veröffentlicht.",
       emptySub: "Komm bald wieder für neue Klassen!",
       view: "Kurse ansehen",
+      viewMore: "Mehr anzeigen →",
+      buy: "Kaufen →",
+      hasAccess: "✓ Du hast Zugang",
+      priceNA: "Preis nicht verfügbar",
+      completeCourses: "Vollständige Kurse",
+      completeSub: "Festpreis · Dauerhafter Zugang",
+      monthlyClasses: "Monatliche Klassen",
+      monthlySub: "4 Klassen pro Monat · Abo oder monatlicher Einzelkauf",
+      filterAll: "Alle",
       months: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
+    },
+    lesson: {
+      backToCourse: "← Zurück zum Kurs",
+      courseLessons: "Kurslektionen",
+      lockedContent: "Gesperrter Inhalt",
+      lockedMessage: "Dieses Video ist exklusiv für Premium-Mitglieder.",
+      getPremium: "Premium holen",
+      editLesson: "✎ Lektion bearbeiten",
+      exclusiveContent: "Der Inhalt dieser Lektion ist exklusiv für Premium-Mitglieder.",
+      description: "Beschreibung",
+      musicalResources: "Musikalische Ressourcen",
+      assignment: "Aufgabe",
+      comments: "Kommentare",
+      resourcesComingSoon: "Musikalische Ressourcen demnächst..."
+    },
+    dashboard: {
+      title: "Meine Kurse",
+      activeMonth: "Dein Aktiver Monat",
+      progress: "Fortschritt",
+      available: "Verfügbar",
+      viewClass: "KLASSE ANSEHEN",
+      previousMonths: "Vorherige Monate"
+    },
+    login: {
+      title: "Anmelden",
+      subtitle: "Zugang zur exklusiven Plattform von Luis und Sara",
+      email: "Email",
+      password: "Passwort",
+      submit: "Anmelden",
+      noAccount: "Kein Konto? Registrieren",
+      forgotPassword: "Passwort vergessen?"
+    },
+    signup: {
+      title: "Registrieren",
+      subtitle: "Erstelle dein Konto für den Zugang zur Plattform",
+      email: "Email",
+      fullName: "Vollständiger Name",
+      fullNamePlaceholder: "Max Mustermann",
+      password: "Passwort",
+      submit: "Registrieren",
+      hasAccount: "Schon ein Konto? Anmelden",
+      forgotPassword: "Passwort vergessen?"
+    },
+    forgotPassword: {
+      title: "Passwort Wiederherstellen",
+      subtitle: "Gib deine E-Mail ein, um einen Wiederherstellungslink zu erhalten",
+      email: "Email",
+      submit: "Link senden",
+      backToLogin: "Zurück zur Anmeldung"
+    },
+    profile: {
+      title: "Mein Profil",
+      editProfile: "Profil bearbeiten",
+      accountInfo: "Kontoinformationen",
+      email: "Email",
+      subscription: "Abonnement",
+      status: "Status",
+      active: "Aktiv",
+      inactive: "Inaktiv",
+      activeUntil: "Dein Abonnement ist aktiv bis",
+      noActiveSubscription: "Du hast aktuell kein aktives Abonnement.",
+      dangerZone: "Gefahrenzone",
+      undoableWarning: "Diese Aktionen können nicht rückgängig gemacht werden.",
+      logout: "Abmelden",
+      deleteAccount: "Konto löschen"
+    },
+    pricing: {
+      title: "Abonnements",
+      subtitle: "Greife mit einem Monatsabonnement auf die Bachatakurse von Luis und Sara zu. Jeden Monat gibt es 4 neue Klassen.",
+      comingSoon: "Demnächst",
+      mostPopular: "Am beliebtesten",
+      perMonth: "/Monat",
+      note: "Möchtest du auf einen früheren Monat zugreifen? Du kannst ihn einzeln von der Kursseite kaufen."
+    },
+    errors: {
+      invalid_credentials: "Falsche Anmeldedaten. Überprüfe deine E-Mail und dein Passwort.",
+      signup_failed: "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
+      reset_failed: "Link konnte nicht gesendet werden. Bitte versuche es erneut.",
+      unknown: "Ein Fehler ist aufgetreten. Bitte versuche es erneut."
+    },
+    messages: {
+      email_confirmation: "Überprüfe deine E-Mail, um den Anmeldeprozess fortzusetzen.",
+      email_reset: "Überprüfe deine E-Mail, um den Passwort-Zurücksetzen-Prozess fortzusetzen.",
+      account_deleted: "Konto erfolgreich gelöscht."
     }
   },
   it: {
     header: {
-      courses: "Corsi", events: "Eventi", music: "Musica", community: "Comunità", about: "Chi Siamo", login: "Login", profile: "Il Mio Profilo"
+      courses: "Corsi", events: "Eventi", music: "Musica", community: "Comunità", about: "Chi Siamo", login: "Login", profile: "Il Mio Profilo", dashboard: "Dashboard", logout: "Esci"
     },
     common: {
       processing: "Elaborazione...",
@@ -508,7 +886,7 @@ export const dictionaries = {
     footer: {
       description: "Impara il Bachatango con Luis e Sara. La fusione perfetta tra la sensualità della bachata e l'eleganza del tango.",
       explore: "Esplora", home: "Home", contact: "Contatti", notice: "Avviso Legale",
-      legal: "Legale", terms: "Termini e Condizioni", privacy: "Privacy", cookies: "Cookies", rights: "Tutti i diritti riservati."
+      legal: "Legale", terms: "Termini e Condizioni", privacy: "Privacy", cookies: "Cookies", rights: "Tutti i diritti riservati.", blog: "Blog"
     },
     hero: {
       title: "Domina l'Arte del Bachatango",
@@ -582,12 +960,105 @@ export const dictionaries = {
       empty: "Nessun corso pubblicato al momento.",
       emptySub: "Torna presto per nuove lezioni!",
       view: "Vedi Corsi",
+      viewMore: "Vedi altro →",
+      buy: "Acquista →",
+      hasAccess: "✓ Hai accesso",
+      priceNA: "Prezzo non disponibile",
+      completeCourses: "Corsi Completi",
+      completeSub: "Prezzo fisso · Accesso permanente",
+      monthlyClasses: "Classi Mensili",
+      monthlySub: "4 classi al mese · Abbonamento o acquisto individuale mensile",
+      filterAll: "Tutti",
       months: ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
+    },
+    lesson: {
+      backToCourse: "← Torna al Corso",
+      courseLessons: "Lezioni del Corso",
+      lockedContent: "Contenuto Bloccato",
+      lockedMessage: "Questo video è esclusivo per i membri Premium.",
+      getPremium: "Ottieni Premium",
+      editLesson: "✎ Modifica Lezione",
+      exclusiveContent: "Il contenuto di questa lezione è esclusivo per i membri Premium.",
+      description: "Descrizione",
+      musicalResources: "Risorse Musicali",
+      assignment: "Compito",
+      comments: "Commenti",
+      resourcesComingSoon: "Risorse musicali prossimamente..."
+    },
+    dashboard: {
+      title: "I Miei Corsi",
+      activeMonth: "Il Tuo Mese Attivo",
+      progress: "Progresso",
+      available: "Disponibile",
+      viewClass: "VEDI CLASSE",
+      previousMonths: "Mesi Precedenti"
+    },
+    login: {
+      title: "Accedi",
+      subtitle: "Accedi alla piattaforma esclusiva di Luis e Sara",
+      email: "Email",
+      password: "Password",
+      submit: "Accedi",
+      noAccount: "Non hai un account? Registrati",
+      forgotPassword: "Hai dimenticato la password?"
+    },
+    signup: {
+      title: "Registrati",
+      subtitle: "Crea il tuo account per accedere alla piattaforma",
+      email: "Email",
+      fullName: "Nome Completo",
+      fullNamePlaceholder: "Mario Rossi",
+      password: "Password",
+      submit: "Registrati",
+      hasAccount: "Hai già un account? Accedi",
+      forgotPassword: "Hai dimenticato la password?"
+    },
+    forgotPassword: {
+      title: "Recupera Password",
+      subtitle: "Inserisci la tua email per ricevere un link di recupero",
+      email: "Email",
+      submit: "Invia link",
+      backToLogin: "Torna al login"
+    },
+    profile: {
+      title: "Il Mio Profilo",
+      editProfile: "Modifica Profilo",
+      accountInfo: "Informazioni Account",
+      email: "Email",
+      subscription: "Abbonamento",
+      status: "Stato",
+      active: "Attivo",
+      inactive: "Inattivo",
+      activeUntil: "Il tuo abbonamento è attivo fino al",
+      noActiveSubscription: "Non hai un abbonamento attivo al momento.",
+      dangerZone: "Zona Pericolo",
+      undoableWarning: "Queste azioni non possono essere annullate.",
+      logout: "Esci",
+      deleteAccount: "Elimina Account"
+    },
+    pricing: {
+      title: "Abbonamenti",
+      subtitle: "Accedi ai corsi di bachata di Luis e Sara con un abbonamento mensile. Ogni mese include 4 nuove lezioni.",
+      comingSoon: "Prossimamente",
+      mostPopular: "Più popolare",
+      perMonth: "/mese",
+      note: "Vuoi accedere a un mese precedente? Puoi acquistarlo individualmente dalla pagina del corso."
+    },
+    errors: {
+      invalid_credentials: "Credenziali errate. Controlla la tua email e la password.",
+      signup_failed: "Impossibile creare l'account. Riprova.",
+      reset_failed: "Impossibile inviare il link. Riprova.",
+      unknown: "Si è verificato un errore. Riprova."
+    },
+    messages: {
+      email_confirmation: "Controlla la tua email per continuare il processo di registrazione.",
+      email_reset: "Controlla la tua email per continuare il processo di recupero password.",
+      account_deleted: "Account eliminato con successo."
     }
   },
   ja: {
     header: {
-      courses: "コース", events: "イベント", music: "音楽", community: "コミュニティ", about: "私達について", login: "ログイン", profile: "プロフィール"
+      courses: "コース", events: "イベント", music: "音楽", community: "コミュニティ", about: "私達について", login: "ログイン", profile: "プロフィール", dashboard: "ダッシュボード", logout: "ログアウト"
     },
     common: {
       processing: "処理中...",
@@ -597,7 +1068,7 @@ export const dictionaries = {
     footer: {
       description: "ルイスとサラと一緒にバチャタンゴを学びましょう。バチャータの官能性とタンゴの優雅さの完璧な融合。",
       explore: "探索", home: "ホーム", contact: "お問い合わせ", notice: "法的通知",
-      legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", rights: "全著作権所有。"
+      legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", rights: "全著作権所有。", blog: "ブログ"
     },
     hero: {
       title: "バチャタンゴの芸術をマスターする",
@@ -672,7 +1143,100 @@ export const dictionaries = {
       empty: "現在公開されているコースはありません。",
       emptySub: "すぐに新しいクラスをチェックしに来てください！",
       view: "クラスを見る",
+      viewMore: "もっと見る →",
+      buy: "購入する →",
+      hasAccess: "✓ アクセス権があります",
+      priceNA: "価格未設定",
+      completeCourses: "完全コース",
+      completeSub: "固定価格・永久アクセス",
+      monthlyClasses: "月次クラス",
+      monthlySub: "月4クラス・サブスクリプションまたは月別個別購入",
+      filterAll: "すべて",
       months: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+    },
+    lesson: {
+      backToCourse: "← コースに戻る",
+      courseLessons: "コースのレッスン",
+      lockedContent: "ロックされたコンテンツ",
+      lockedMessage: "このビデオはプレミアム会員専用です。",
+      getPremium: "プレミアムを取得",
+      editLesson: "✎ レッスンを編集",
+      exclusiveContent: "このレッスンのコンテンツはプレミアム会員専用です。",
+      description: "説明",
+      musicalResources: "音楽リソース",
+      assignment: "課題",
+      comments: "コメント",
+      resourcesComingSoon: "音楽リソース近日公開..."
+    },
+    dashboard: {
+      title: "マイコース",
+      activeMonth: "アクティブな月",
+      progress: "進捗",
+      available: "利用可能",
+      viewClass: "クラスを見る",
+      previousMonths: "過去の月"
+    },
+    login: {
+      title: "ログイン",
+      subtitle: "ルイスとサラの独占プラットフォームにアクセス",
+      email: "メール",
+      password: "パスワード",
+      submit: "ログイン",
+      noAccount: "アカウントがない？登録する",
+      forgotPassword: "パスワードをお忘れですか？"
+    },
+    signup: {
+      title: "登録する",
+      subtitle: "プラットフォームにアクセスするためのアカウントを作成",
+      email: "メール",
+      fullName: "氏名",
+      fullNamePlaceholder: "山田太郎",
+      password: "パスワード",
+      submit: "登録する",
+      hasAccount: "すでにアカウントをお持ちですか？ログイン",
+      forgotPassword: "パスワードをお忘れですか？"
+    },
+    forgotPassword: {
+      title: "パスワードの回復",
+      subtitle: "回復リンクを受け取るためにメールアドレスを入力",
+      email: "メール",
+      submit: "リンクを送る",
+      backToLogin: "ログインに戻る"
+    },
+    profile: {
+      title: "マイプロフィール",
+      editProfile: "プロフィールを編集",
+      accountInfo: "アカウント情報",
+      email: "メール",
+      subscription: "サブスクリプション",
+      status: "ステータス",
+      active: "アクティブ",
+      inactive: "非アクティブ",
+      activeUntil: "サブスクリプションは",
+      noActiveSubscription: "現在アクティブなサブスクリプションがありません。",
+      dangerZone: "危険ゾーン",
+      undoableWarning: "これらの操作は元に戻せません。",
+      logout: "ログアウト",
+      deleteAccount: "アカウントを削除"
+    },
+    pricing: {
+      title: "サブスクリプション",
+      subtitle: "月額サブスクリプションでルイスとサラのバチャータコースにアクセス。毎月4つの新しいクラスが含まれます。",
+      comingSoon: "近日公開",
+      mostPopular: "最人気",
+      perMonth: "/月",
+      note: "過去の月にアクセスしたいですか？コースページから個別に購入できます。"
+    },
+    errors: {
+      invalid_credentials: "認証情報が正しくありません。メールとパスワードを確認してください。",
+      signup_failed: "アカウントの作成に失敗しました。もう一度お試しください。",
+      reset_failed: "リンクの送信に失敗しました。もう一度お試しください。",
+      unknown: "エラーが発生しました。もう一度お試しください。"
+    },
+    messages: {
+      email_confirmation: "登録プロセスを続けるにはメールを確認してください。",
+      email_reset: "パスワードリセットプロセスを続けるにはメールを確認してください。",
+      account_deleted: "アカウントが正常に削除されました。"
     }
   }
 };

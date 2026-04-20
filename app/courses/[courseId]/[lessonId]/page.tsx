@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import Link from 'next/link'
@@ -5,6 +6,28 @@ import { notFound, redirect } from 'next/navigation'
 import styles from './lesson.module.css'
 import LessonTabs from '@/components/LessonTabs'
 import LessonVideoPlayer from '@/components/LessonVideoPlayer'
+import { getDict } from '@/utils/get-dict'
+
+export async function generateMetadata(
+  props: { params: Promise<{ courseId: string; lessonId: string }> }
+): Promise<Metadata> {
+  const { courseId, lessonId } = await props.params;
+  const supabase = await createClient();
+  const { data: lesson } = await supabase
+    .from('lessons')
+    .select('title, description')
+    .eq('id', lessonId)
+    .eq('course_id', courseId)
+    .single();
+
+  if (!lesson) return { title: 'Lección' };
+
+  return {
+    title: lesson.title,
+    description: lesson.description ?? `Lección de Bachatango: ${lesson.title}. Aprende con Luis y Sara.`,
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function LessonPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const params = await props.params;
@@ -15,67 +38,90 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     redirect('/login')
   }
 
+  const t = await getDict();
+
   // Create Admin Client for Storage Operations (Bypass RLS)
   const supabaseAdmin = createSupabaseAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Fetch lesson details
-  const { data: lesson, error } = await supabase
-    .from('lessons')
-    .select('*')
-    .eq('id', params.lessonId)
-    .eq('course_id', params.courseId)
-    .single()
-
-  if (error || !lesson) {
-    notFound()
-  }
-
-  // Check access rights
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  const isAdmin = profile?.role === 'admin';
-
-  // Fetch the course to get month/year for subscription coverage check
-  const { data: course } = await supabase
-    .from('courses')
-    .select('month, year')
-    .eq('id', params.courseId)
-    .single()
-
-  // 1. Individual course purchase
-  const { data: coursePurchase } = await supabase
-    .from('course_purchases')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('course_id', params.courseId)
-    .maybeSingle()
-
-  // 2. Active subscription covering this course's month/year
-  let coveringSubscription = null;
-  if (course) {
-    const courseFirstDay = new Date(Date.UTC(course.year, course.month - 1, 1)).toISOString()
-    const courseLastDay = new Date(Date.UTC(course.year, course.month, 0, 23, 59, 59)).toISOString()
-
-    const { data } = await supabase
-      .from('subscriptions')
+  // Batch 1: all queries that only need lessonId / courseId / userId.
+  const [
+    { data: lesson, error: lessonError },
+    { data: profile },
+    { data: course },
+    { data: coursePurchase },
+    { data: allLessons },
+    { data: assignment },
+  ] = await Promise.all([
+    supabase.from('lessons')
+      .select('id, title, description, video_url, video_source, media_config, course_id')
+      .eq('id', params.lessonId)
+      .eq('course_id', params.courseId)
+      .single(),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('courses').select('month, year').eq('id', params.courseId).single(),
+    supabase.from('course_purchases')
       .select('id')
       .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
-      .lte('current_period_start', courseLastDay)
-      .gte('current_period_end', courseFirstDay)
-      .maybeSingle()
+      .eq('course_id', params.courseId)
+      .maybeSingle(),
+    supabase.from('lessons')
+      .select('id, title, order')
+      .eq('course_id', params.courseId)
+      .order('order', { ascending: true }),
+    supabase.from('assignments')
+      .select('id, title, description')
+      .eq('lesson_id', params.lessonId)
+      .maybeSingle(),
+  ])
 
-    coveringSubscription = data;
-  }
+  if (lessonError || !lesson) notFound()
 
-  const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription;
+  const isAdmin = profile?.role === 'admin'
+  const lessonIds = allLessons?.map(l => l.id) ?? []
+
+  // Batch 2: queries that depend on batch 1 results (course dates, lesson IDs, assignment ID).
+  const courseFirstDay = course ? new Date(Date.UTC(course.year, course.month - 1, 1)).toISOString() : null
+  const courseLastDay = course ? new Date(Date.UTC(course.year, course.month, 0, 23, 59, 59)).toISOString() : null
+
+  const [
+    { data: coveringSubscription },
+    progressResult,
+    submissionResult,
+  ] = await Promise.all([
+    courseFirstDay && courseLastDay
+      ? supabase.from('subscriptions')
+          .select('id')
+          .eq('user_id', user.id)
+          .in('status', ['active', 'trialing'])
+          .lte('current_period_start', courseLastDay)
+          .gte('current_period_end', courseFirstDay)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    lessonIds.length > 0
+      ? supabase.from('lesson_progress')
+          .select('lesson_id, is_completed')
+          .eq('user_id', user.id)
+          .in('lesson_id', lessonIds)
+          .eq('is_completed', true)
+      : Promise.resolve({ data: [] }),
+    assignment
+      ? supabase.from('submissions')
+          .select('id, text_content, file_url, status, grade, feedback')
+          .eq('assignment_id', assignment.id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription
+
+  const submission = submissionResult.data
+
+  const completedLessonIds = new Set<string>()
+  progressResult.data?.forEach(p => completedLessonIds.add(p.lesson_id))
 
   let videoUrl = lesson.video_url;
   let isSupabaseVideo = false;
@@ -109,64 +155,17 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     mediaConfig.subtitles = signedSubtitles.filter(Boolean);
   }
 
-  // Fetch all lessons for sidebar
-  const { data: allLessons } = await supabase
-    .from('lessons')
-    .select('id, title, order')
-    .eq('course_id', params.courseId)
-    .order('order', { ascending: true })
-
-  // Fetch all progress for this user in this course
-  // We can fetch all progress entries for this user, or filter by lessons in this course.
-  // Since we have allLessons, we can filter by their IDs if we want, or just fetch all for simplicity.
-  // Let's fetch progress only for the relevant lessons.
-  const lessonIds = allLessons?.map(l => l.id) || []
-  
-  let completedLessonIds = new Set<string>()
-
-  if (lessonIds.length > 0) {
-    const { data: progress } = await supabase
-      .from('lesson_progress')
-      .select('lesson_id, is_completed')
-      .eq('user_id', user.id)
-      .in('lesson_id', lessonIds)
-      .eq('is_completed', true)
-    
-    if (progress) {
-      progress.forEach(p => completedLessonIds.add(p.lesson_id))
-    }
-  }
-
-  // Fetch assignment for this lesson (if any)
-  const { data: assignment } = await supabase
-    .from('assignments')
-    .select('id, title, description')
-    .eq('lesson_id', params.lessonId)
-    .maybeSingle()
-
-  // Fetch user's submission for this assignment
-  let submission = null;
-  if (assignment) {
-    const { data } = await supabase
-      .from('submissions')
-      .select('id, text_content, file_url, status, grade, feedback')
-      .eq('assignment_id', assignment.id)
-      .eq('user_id', user.id)
-      .maybeSingle()
-    submission = data;
-  }
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <Link href={`/courses/${params.courseId}`} className={styles.backLink}>
-          &larr; Volver al Curso
+          {t.lesson.backToCourse}
         </Link>
       </div>
 
       <div className={styles.mainLayout}>
         <aside className={styles.sidebar}>
-          <h3 className={styles.sidebarTitle}>Lecciones del Curso</h3>
+          <h3 className={styles.sidebarTitle}>{t.lesson.courseLessons}</h3>
           <div className={styles.lessonList}>
             {allLessons?.map((l) => {
               const isCompleted = completedLessonIds.has(l.id)
@@ -209,10 +208,10 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
               />
             ) : (
               <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
-                <h2 style={{ marginBottom: '1rem' }}>Contenido Bloqueado</h2>
-                <p style={{ marginBottom: '1.5rem' }}>Este video es exclusivo para miembros Premium.</p>
+                <h2 style={{ marginBottom: '1rem' }}>{t.lesson.lockedContent}</h2>
+                <p style={{ marginBottom: '1.5rem' }}>{t.lesson.lockedMessage}</p>
                 <Link href="/pricing" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
-                  Obtener Premium
+                  {t.lesson.getPremium}
                 </Link>
               </div>
             )}
@@ -234,7 +233,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
                     fontSize: '0.9rem'
                   }}
                 >
-                  ✎ Editar Lección
+                  {t.lesson.editLesson}
                 </Link>
               )}
             </div>
@@ -250,9 +249,9 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
               />
             ) : (
               <div style={{ marginTop: '2rem', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center' }}>
-                <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>El contenido de esta lección es exclusivo para miembros Premium.</p>
+                <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>{t.lesson.exclusiveContent}</p>
                 <Link href="/pricing" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
-                  Obtener Premium
+                  {t.lesson.getPremium}
                 </Link>
               </div>
             )}

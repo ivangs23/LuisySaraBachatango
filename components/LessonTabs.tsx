@@ -4,6 +4,7 @@ import { useState } from 'react';
 import styles from './LessonTabs.module.css';
 import CommentsSection from './CommentsSection';
 import LessonAssignmentTab from './LessonAssignmentTab';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Assignment = {
   id: string;
@@ -40,6 +41,7 @@ export default function LessonTabs({
   isAdmin = false,
 }: LessonTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('description');
+  const { t } = useLanguage();
 
   return (
     <>
@@ -48,19 +50,19 @@ export default function LessonTabs({
           className={`${styles.tab} ${activeTab === 'description' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('description')}
         >
-          Descripción
+          {t.lesson.description}
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'resources' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('resources')}
         >
-          Recursos Musicales
+          {t.lesson.musicalResources}
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'assignment' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('assignment')}
         >
-          Tarea
+          {t.lesson.assignment}
           {assignment && !submission && (
             <span style={{ marginLeft: 6, width: 8, height: 8, background: 'var(--primary)', borderRadius: '50%', display: 'inline-block', verticalAlign: 'middle' }} />
           )}
@@ -69,7 +71,7 @@ export default function LessonTabs({
           className={`${styles.tab} ${activeTab === 'comments' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('comments')}
         >
-          Comentarios
+          {t.lesson.comments}
         </button>
       </div>
 
@@ -81,7 +83,7 @@ export default function LessonTabs({
         )}
         {activeTab === 'resources' && (
           <div className={styles.placeholder}>
-            <p>Recursos musicales próximamente...</p>
+            <p>{t.lesson.resourcesComingSoon}</p>
           </div>
         )}
         {activeTab === 'assignment' && (

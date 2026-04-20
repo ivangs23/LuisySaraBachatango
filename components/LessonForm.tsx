@@ -166,10 +166,10 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
       if (t.id === id) {
         if (field === 'language') {
            // Auto-update label if using default format
-           const langLabel = LANGUAGES.find(l => l.code === value)?.label || value;
-           return { ...t, language: value, label: langLabel };
+           const langLabel = LANGUAGES.find(l => l.code === value)?.label || String(value ?? '');
+           return { ...t, language: value as string, label: langLabel };
         }
-        return { ...t, [field]: value };
+        return { ...t, [field]: value } as StagedVideoTrack;
       }
       return t;
     }));
@@ -194,10 +194,10 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
     setSubtitles(subtitles.map(t => {
       if (t.id === id) {
         if (field === 'language') {
-           const langLabel = LANGUAGES.find(l => l.code === value)?.label || value;
-           return { ...t, language: value, label: langLabel };
+           const langLabel = LANGUAGES.find(l => l.code === value)?.label || String(value ?? '');
+           return { ...t, language: value as string, label: langLabel };
         }
-        return { ...t, [field]: value };
+        return { ...t, [field]: value } as StagedSubtitleTrack;
       }
       return t;
     }));
@@ -502,7 +502,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
                   <input 
                     type="file" 
                     accept="video/*"
-                    onChange={(e) => updateTrack(track.id, 'file', e.target.files?.[0])}
+                    onChange={(e) => updateTrack(track.id, 'file', e.target.files?.[0] ?? null)}
                     style={{ fontSize: '0.8rem', color: '#ccc' }}
                   />
                   {!track.file && track.url && (
@@ -553,7 +553,7 @@ export default function LessonForm({ courseId, initialData }: LessonFormProps) {
                   <input 
                     type="file" 
                     accept=".vtt"
-                    onChange={(e) => updateSubtitle(sub.id, 'file', e.target.files?.[0])}
+                    onChange={(e) => updateSubtitle(sub.id, 'file', e.target.files?.[0] ?? null)}
                     style={{ fontSize: '0.8rem', color: '#ccc' }}
                   />
                    {!sub.file && sub.url && (

@@ -30,8 +30,8 @@ export default function Header({ user, profile }: HeaderProps) {
     <header className={styles.header}>
       <div className={styles.logo}>
         <Link href="/">
-          <div style={{ backgroundColor: 'white', borderRadius: '50%', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '52px', height: '50px', overflow: 'hidden' }}>
-            <Image src="/logo.png" alt="Luis y Sara Bachatango" width={60} height={60} style={{ objectFit: 'contain', transform: 'scale(1.60)', transformOrigin: 'center', objectPosition: 'center' }} />
+          <div style={{ backgroundColor: 'white', borderRadius: '50%', position: 'relative', width: '52px', height: '52px', overflow: 'hidden' }}>
+            <Image src="/logo.png" alt="Luis y Sara Bachatango" fill style={{ objectFit: 'cover', objectPosition: 'center', transform: 'scale(1.60)', transformOrigin: 'center' }} />
           </div>
         </Link>
       </div>
@@ -87,14 +87,14 @@ export default function Header({ user, profile }: HeaderProps) {
             {isDropdownOpen && (
               <div className={styles.dropdown}>
                 <Link href="/dashboard" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
-                  Dashboard
+                  {t.header.dashboard}
                 </Link>
                 <Link href="/profile" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                   {t.header.profile}
                 </Link>
                 <form action="/auth/signout" method="post">
                   <button type="submit" className={styles.dropdownItem} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }}>
-                    Cerrar Sesión
+                    {t.header.logout}
                   </button>
                 </form>
               </div>

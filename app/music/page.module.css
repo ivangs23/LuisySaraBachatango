@@ -1,6 +1,8 @@
 .container {
-  min-height: 100vh;
-  padding: var(--spacing-xl) 5%;
+  height: calc(100vh - 70px);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-xl) 5% var(--spacing-lg);
   background-color: var(--background);
 }
 
@@ -41,4 +43,20 @@
   height: 380px;
   border-radius: var(--radius-md);
   overflow: hidden;
+}
+
+.playlistWrapper {
+  flex: 1;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.playlistWrapper iframe {
+  display: block;
+  height: 100%;
 }

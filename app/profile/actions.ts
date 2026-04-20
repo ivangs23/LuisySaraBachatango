@@ -102,7 +102,7 @@ export async function deleteAccount() {
 
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
-  redirect('/login?message=Account deleted successfully')
+  redirect('/login?message=account_deleted')
 }
 
 // Helper to create admin client

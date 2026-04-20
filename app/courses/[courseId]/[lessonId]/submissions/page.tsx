@@ -65,7 +65,7 @@ export default async function SubmissionsPage(props: {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {submissions.map((sub) => {
-            const studentProfile = sub.profiles as { full_name: string | null; email: string | null; avatar_url: string | null } | null;
+            const studentProfile = (sub.profiles as unknown) as { full_name: string | null; email: string | null; avatar_url: string | null } | null;
             return (
               <div
                 key={sub.id}

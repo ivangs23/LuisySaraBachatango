@@ -62,7 +62,7 @@ export default function FooterClient({ adminProfile }: FooterClientProps) {
             <li><Link href="/courses" className={styles.link}>{t.header.courses}</Link></li>
             <li><Link href="/events" className={styles.link}>{t.header.events}</Link></li>
             <li><Link href="/music" className={styles.link}>{t.header.music}</Link></li>
-            <li><Link href="/blog" className={styles.link}>Blog</Link></li>
+            <li><Link href="/blog" className={styles.link}>{t.footer.blog}</Link></li>
             <li><Link href="/community" className={styles.link}>{t.header.community}</Link></li>
             <li><Link href="/contact" className={styles.link}>{t.footer.contact}</Link></li>
             <li><Link href="/sobre-nosotros" className={styles.link}>{t.header.about}</Link></li>
