@@ -53,3 +53,15 @@ export function buildSubtitleTrackPayload(url: string, languageCode: string, nam
     name,
   };
 }
+
+export function buildDirectUploadParams(origin: string, lessonId: string) {
+  return {
+    cors_origin: origin,
+    new_asset_settings: {
+      playback_policy: ['signed'] as ['signed'],
+      mp4_support: 'none' as const,
+      passthrough: lessonId,
+      max_resolution_tier: '1080p' as const,
+    },
+  };
+}

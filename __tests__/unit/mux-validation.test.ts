@@ -6,6 +6,7 @@ import {
   validateSubtitleFile,
   buildAudioTrackPayload,
   buildSubtitleTrackPayload,
+  buildDirectUploadParams,
 } from '@/utils/mux/validation'
 
 describe('validateLanguageCode', () => {
@@ -84,5 +85,20 @@ describe('buildSubtitleTrackPayload', () => {
 describe('SUPPORTED_LANGUAGES', () => {
   it('contains the 6 app locales', () => {
     expect(SUPPORTED_LANGUAGES.map(l => l.code).sort()).toEqual(['de','en','es','fr','it','ja'])
+  })
+})
+
+describe('buildDirectUploadParams', () => {
+  it('returns signed playback policy with lessonId passthrough', () => {
+    const params = buildDirectUploadParams('http://localhost:3000', 'lesson-123')
+    expect(params).toEqual({
+      cors_origin: 'http://localhost:3000',
+      new_asset_settings: {
+        playback_policy: ['signed'],
+        mp4_support: 'none',
+        passthrough: 'lesson-123',
+        max_resolution_tier: '1080p',
+      },
+    })
   })
 })
