@@ -53,3 +53,39 @@ export async function createMuxUpload(lessonId: string, origin: string) {
 
   return { uploadUrl: upload.url, uploadId: upload.id }
 }
+
+export async function deleteMuxAsset(lessonId: string) {
+  const { supabase, error } = await requireAdmin()
+  if (error) return { error }
+
+  const { data: lesson } = await supabase
+    .from('lessons')
+    .select('id, mux_asset_id, course_id')
+    .eq('id', lessonId)
+    .single()
+  if (!lesson) return { error: 'Lección no encontrada' }
+
+  if (lesson.mux_asset_id) {
+    try {
+      await mux.video.assets.delete(lesson.mux_asset_id)
+    } catch (err) {
+      console.error('Failed to delete Mux asset:', err)
+      // Continue: the asset may already be gone; clear fields regardless.
+    }
+  }
+
+  const { error: dbErr } = await supabase
+    .from('lessons')
+    .update({
+      mux_asset_id: null,
+      mux_playback_id: null,
+      mux_upload_id: null,
+      mux_status: 'pending_upload',
+    })
+    .eq('id', lessonId)
+
+  if (dbErr) return { error: dbErr.message }
+
+  revalidatePath(`/courses/${lesson.course_id}/${lessonId}/edit`)
+  return { success: true as const }
+}
