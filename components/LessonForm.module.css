@@ -1,0 +1,8 @@
+.form { display: flex; flex-direction: column; gap: var(--spacing-md); max-width: 640px; }
+.field { display: flex; flex-direction: column; gap: 0.35rem; }
+.field label { color: var(--text-main); font-weight: 500; }
+.field input, .field textarea { padding: 0.5rem 0.75rem; background: #1a1a1a; color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit; }
+.field textarea { resize: vertical; min-height: 6rem; }
+.form button[type="submit"] { padding: 0.75rem 1.25rem; background: var(--primary); color: #000; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; }
+.form button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
+.error { color: #e53e3e; margin: 0; }

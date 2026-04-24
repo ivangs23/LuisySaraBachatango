@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import LessonForm from '@/components/LessonForm'
 import AssignmentManager from '@/components/AssignmentManager'
+import { updateLesson } from '@/app/courses/actions'
 
 export default async function EditLessonPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const params = await props.params;
@@ -40,7 +41,7 @@ export default async function EditLessonPage(props: { params: Promise<{ courseId
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Editar Lección: {lesson.title}</h1>
-      <LessonForm courseId={params.courseId} initialData={lesson} />
+      <LessonForm courseId={params.courseId} initialData={lesson} action={updateLesson} />
       <AssignmentManager
         lessonId={params.lessonId}
         courseId={params.courseId}

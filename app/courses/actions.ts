@@ -7,60 +7,38 @@ import { redirect } from 'next/navigation'
 export async function createLesson(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Verify Admin Role
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    throw new Error('Unauthorized: Only admins can add lessons')
-  }
+    .from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can add lessons')
 
   const courseId = formData.get('courseId') as string
   const title = formData.get('title') as string
   const description = formData.get('description') as string
-  const videoUrl = formData.get('videoUrl') as string
   const order = parseInt(formData.get('order') as string)
   if (isNaN(order) || order < 1) return { error: 'El orden de la lección debe ser un número positivo' }
 
-  // New fields
   const thumbnailUrl = formData.get('thumbnailUrl') as string
-  const videoSource = formData.get('videoSource') as 'url' | 'upload'
   const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
   const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
   const isFree = formData.get('isFree') === 'on'
-  const mediaConfigStr = formData.get('mediaConfig') as string
-  let mediaConfig = {}
-  if (mediaConfigStr) {
-    try {
-      mediaConfig = JSON.parse(mediaConfigStr)
-    } catch {
-      return { error: 'Configuración de media inválida' }
-    }
-  }
 
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('lessons')
     .insert({
       course_id: courseId,
       title,
       description,
-      video_url: videoUrl,
       "order": order,
       release_date: new Date().toISOString(),
-      thumbnail_url: thumbnailUrl,
-      video_source: videoSource,
-      duration: duration,
+      thumbnail_url: thumbnailUrl || null,
+      duration,
       is_free: isFree,
-      media_config: mediaConfig // Save media_config
+      mux_status: 'pending_upload',
     })
+    .select('id')
+    .single()
 
   if (error) {
     console.error('Create lesson error:', error)
@@ -68,99 +46,46 @@ export async function createLesson(formData: FormData) {
   }
 
   revalidatePath(`/courses/${courseId}`)
-  redirect(`/courses/${courseId}`)
+  redirect(`/courses/${courseId}/${inserted.id}/edit`)
 }
 
 export async function updateLesson(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Verify Admin Role
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    throw new Error('Unauthorized: Only admins can edit lessons')
-  }
+    .from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can edit lessons')
 
   const lessonId = formData.get('lessonId') as string
   const courseId = formData.get('courseId') as string
   const title = formData.get('title') as string
   const description = formData.get('description') as string
-  const videoUrl = formData.get('videoUrl') as string
   const order = parseInt(formData.get('order') as string)
   if (isNaN(order) || order < 1) return { error: 'El orden de la lección debe ser un número positivo' }
   const thumbnailUrl = formData.get('thumbnailUrl') as string
-  const videoSource = formData.get('videoSource') as 'url' | 'upload'
   const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
   const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
   const isFree = formData.get('isFree') === 'on'
-  const mediaConfigStr = formData.get('mediaConfig') as string
-  let mediaConfig = null
-  if (mediaConfigStr) {
-    try {
-      mediaConfig = JSON.parse(mediaConfigStr)
-    } catch {
-      return { error: 'Configuración de media inválida' }
-    }
-  }
 
-  type MediaConfig = {
-    tracks: { language: string; label: string; url: string }[];
-    subtitles: { language: string; label: string; url: string }[];
-  };
-
-  type LessonUpdateData = {
-    title: string;
-    description: string;
-    video_url: string;
-    "order": number;
-    video_source: 'url' | 'upload';
-    duration: number | null;
-    is_free: boolean;
-    thumbnail_url?: string;
-    media_config?: MediaConfig;
-  };
-
-  const updateData: LessonUpdateData = {
+  const update: Record<string, unknown> = {
     title,
     description,
-    video_url: videoUrl,
     "order": order,
-    video_source: videoSource,
-    duration: duration,
-    is_free: isFree
+    duration,
+    is_free: isFree,
   }
+  if (thumbnailUrl) update.thumbnail_url = thumbnailUrl
 
-  // Only update thumbnail if a new one is provided
-  if (thumbnailUrl) {
-    updateData.thumbnail_url = thumbnailUrl
-  }
-
-  if (mediaConfig) {
-    updateData.media_config = mediaConfig
-  }
-
-  const { error } = await supabase
-    .from('lessons')
-    .update(updateData)
-    .eq('id', lessonId)
-
+  const { error } = await supabase.from('lessons').update(update).eq('id', lessonId)
   if (error) {
     console.error('Update lesson error:', error)
     return { error: error.message }
   }
 
   revalidatePath(`/courses/${courseId}`)
-  revalidatePath(`/courses/${courseId}/${lessonId}`)
-  redirect(`/courses/${courseId}`) // Or back to lesson detail? course list seems safer.
+  revalidatePath(`/courses/${courseId}/${lessonId}/edit`)
 }
 
 async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClient>>, imageFile: File): Promise<{ url: string } | { error: string }> {
