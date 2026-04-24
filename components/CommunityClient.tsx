@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import styles from '@/app/community/community.module.css';
-import SubscribeButton from '@/components/SubscribeButton';
+import subscribeStyles from '@/components/SubscribeButton.module.css';
 import CommunityFeed from '@/app/community/CommunityFeed';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -23,11 +23,9 @@ export default function CommunityClient({ user, posts }: Props) {
         </p>
         
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-          <SubscribeButton />
-          
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-            {t.communityPage.alreadyAccount} <Link href="/login" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>{t.communityPage.login}</Link>
-          </p>
+          <Link href="/login" className={subscribeStyles.button} style={{ textAlign: 'center' }}>
+            {t.communityPage.login}
+          </Link>
         </div>
       </div>
     );

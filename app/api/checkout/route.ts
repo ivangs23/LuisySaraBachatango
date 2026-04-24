@@ -5,43 +5,43 @@ import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return new NextResponse('Unauthorized', { status: 401 });
-  }
-
-  const { priceId, courseId } = await req.json() as { priceId?: string; courseId?: string };
-  const origin = req.headers.get('origin') ?? '';
-
-  // Retrieve or create Stripe customer to avoid duplicates
-  const supabaseAdmin = createSupabaseAdmin(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('stripe_customer_id')
-    .eq('id', user.id)
-    .single();
-
-  let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
-
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: { userId: user.id },
-    });
-    customerId = customer.id;
-    await supabaseAdmin
-      .from('profiles')
-      .update({ stripe_customer_id: customerId })
-      .eq('id', user.id);
-  }
-
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { priceId, courseId } = await req.json() as { priceId?: string; courseId?: string };
+    const origin = req.headers.get('origin') ?? '';
+
+    // Retrieve or create Stripe customer to avoid duplicates
+    const supabaseAdmin = createSupabaseAdmin(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single();
+
+    let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { userId: user.id },
+      });
+      customerId = customer.id;
+      await supabaseAdmin
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', user.id);
+    }
+
     // ── Subscription (recurring) ─────────────────────────────────────
     // priceId is passed directly (from /pricing page) and it's a recurring price
     if (priceId && !courseId) {

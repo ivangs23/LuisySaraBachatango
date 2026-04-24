@@ -34,7 +34,7 @@ export const dictionaries = {
     hero: {
       title: "Domina el Arte del Bachatango",
       subtitle: "Aprende con los mejores instructores, Luis y Sara. Cursos exclusivos, técnica refinada y pasión en cada paso.",
-      cta: "SUSCRÍBETE AL CURSO DE NOVIEMBRE"
+      cta: "DESCUBRE NUESTROS CURSOS"
     },
     features: {
       monthly: {
@@ -186,11 +186,11 @@ export const dictionaries = {
     },
     dashboard: {
       title: "Mis Cursos",
-      activeMonth: "Tu Mes Activo",
-      progress: "Progreso",
-      available: "Disponible",
       viewClass: "VER CLASE",
-      previousMonths: "Meses Anteriores"
+      empty: "Aún no tienes cursos.",
+      emptySub: "Explora nuestro catálogo y empieza a bailar hoy mismo.",
+      discover: "Últimos Cursos Añadidos",
+      exploreAll: "Ver todos los cursos →"
     },
     login: {
       title: "Inicio de Sesión",
@@ -288,7 +288,7 @@ export const dictionaries = {
     hero: {
       title: "Master the Art of Bachatango",
       subtitle: "Learn with the best instructors, Luis & Sara. Exclusive courses, refined technique, and passion in every step.",
-      cta: "SUBSCRIBE TO NOVEMBER COURSE"
+      cta: "DISCOVER OUR COURSES"
     },
     features: {
       monthly: {
@@ -439,11 +439,11 @@ export const dictionaries = {
     },
     dashboard: {
       title: "My Courses",
-      activeMonth: "Your Active Month",
-      progress: "Progress",
-      available: "Available",
       viewClass: "VIEW CLASS",
-      previousMonths: "Previous Months"
+      empty: "You don't have any courses yet.",
+      emptySub: "Explore our catalog and start dancing today.",
+      discover: "Latest Added Courses",
+      exploreAll: "View all courses →"
     },
     login: {
       title: "Sign In",
@@ -525,7 +525,7 @@ export const dictionaries = {
     hero: {
       title: "Maîtrisez l'Art du Bachatango",
       subtitle: "Apprenez avec les meilleurs instructeurs, Luis et Sara. Cours exclusifs, technique raffinée et passion à chaque pas.",
-      cta: "INSCRIVEZ-VOUS AU COURS DE NOVEMBRE"
+      cta: "DÉCOUVREZ NOS COURS"
     },
     features: {
       monthly: { title: "4 Cours Mensuels", desc: "Contenu structuré et progressif. Chaque mois, débloquez un nouveau module conçu pour élever votre niveau étape par étape." },
@@ -622,11 +622,11 @@ export const dictionaries = {
     },
     dashboard: {
       title: "Mes Cours",
-      activeMonth: "Votre Mois Actif",
-      progress: "Progression",
-      available: "Disponible",
       viewClass: "VOIR LA CLASSE",
-      previousMonths: "Mois Précédents"
+      empty: "Vous n'avez encore aucun cours.",
+      emptySub: "Explorez notre catalogue et commencez à danser dès aujourd'hui.",
+      discover: "Derniers Cours Ajoutés",
+      exploreAll: "Voir tous les cours →"
     },
     login: {
       title: "Connexion",
@@ -708,7 +708,7 @@ export const dictionaries = {
     hero: {
       title: "Meistere die Kunst des Bachatango",
       subtitle: "Lerne von den besten Lehrern, Luis und Sara. Exklusive Kurse, verfeinerte Technik und Leidenschaft in jedem Schritt.",
-      cta: "ABONNIERE DEN NOVEMBER-KURS"
+      cta: "ENTDECKE UNSERE KURSE"
     },
     features: {
       monthly: { title: "4 Monatliche Kurse", desc: "Strukturierter und progressiver Inhalt. Jeden Monat schaltest du ein neues Modul frei." },
@@ -805,11 +805,11 @@ export const dictionaries = {
     },
     dashboard: {
       title: "Meine Kurse",
-      activeMonth: "Dein Aktiver Monat",
-      progress: "Fortschritt",
-      available: "Verfügbar",
       viewClass: "KLASSE ANSEHEN",
-      previousMonths: "Vorherige Monate"
+      empty: "Du hast noch keine Kurse.",
+      emptySub: "Entdecke unseren Katalog und fang noch heute an zu tanzen.",
+      discover: "Neueste Kurse",
+      exploreAll: "Alle Kurse ansehen →"
     },
     login: {
       title: "Anmelden",
@@ -891,7 +891,7 @@ export const dictionaries = {
     hero: {
       title: "Domina l'Arte del Bachatango",
       subtitle: "Impara con i migliori istruttori. Corsi esclusivi, tecnica raffinata e passione in ogni passo.",
-      cta: "ISCRIVITI AL CORSO DI NOVEMBRE"
+      cta: "SCOPRI I NOSTRI CORSI"
     },
     features: {
       monthly: { title: "4 Classi Mensili", desc: "Contenuto strutturato e progressivo." },
@@ -987,11 +987,11 @@ export const dictionaries = {
     },
     dashboard: {
       title: "I Miei Corsi",
-      activeMonth: "Il Tuo Mese Attivo",
-      progress: "Progresso",
-      available: "Disponibile",
       viewClass: "VEDI CLASSE",
-      previousMonths: "Mesi Precedenti"
+      empty: "Non hai ancora corsi.",
+      emptySub: "Esplora il nostro catalogo e inizia a ballare oggi stesso.",
+      discover: "Ultimi Corsi Aggiunti",
+      exploreAll: "Vedi tutti i corsi →"
     },
     login: {
       title: "Accedi",
@@ -1073,7 +1073,7 @@ export const dictionaries = {
     hero: {
       title: "バチャタンゴの芸術をマスターする",
       subtitle: "最高のインストラクター、ルイスとサラから学びましょう。独占コース、洗練されたテクニック、そして情熱を一歩一歩。",
-      cta: "11月のコースに登録する"
+      cta: "コースを見る"
     },
     features: {
       monthly: { title: "毎月4クラス", desc: "体系的かつ進歩的な内容。" },
@@ -1170,11 +1170,11 @@ export const dictionaries = {
     },
     dashboard: {
       title: "マイコース",
-      activeMonth: "アクティブな月",
-      progress: "進捗",
-      available: "利用可能",
       viewClass: "クラスを見る",
-      previousMonths: "過去の月"
+      empty: "まだコースがありません。",
+      emptySub: "カタログを見て、今日から踊り始めましょう。",
+      discover: "新着コース",
+      exploreAll: "すべてのコースを見る →"
     },
     login: {
       title: "ログイン",

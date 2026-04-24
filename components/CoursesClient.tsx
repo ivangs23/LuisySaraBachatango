@@ -161,8 +161,8 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
         </section>
       )}
 
-      {/* ── Clases Mensuales ──────────────────────────────────────── */}
-      {membershipCourses.length > 0 && (
+      {/* ── Clases Mensuales (solo admin mientras no hay suscripciones activas) ─ */}
+      {isAdmin && membershipCourses.length > 0 && (
         <section className={cardStyles.section}>
           <div className={cardStyles.sectionHeader}>
             <h2 className={cardStyles.sectionTitle}>{tc.monthlyClasses}</h2>
