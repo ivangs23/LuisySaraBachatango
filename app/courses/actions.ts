@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -345,10 +346,17 @@ export async function gradeSubmission(
   }
 
   // Notify the student
-  await supabase.from('notifications').insert({
+  // Use admin client to bypass RLS (notifications has no INSERT policy for users).
+  const adminSupabase = createSupabaseAdmin()
+  await adminSupabase.from('notifications').insert({
     user_id: submittedUserId,
     title: 'Tu tarea ha sido corregida',
     message: `El profesor ha revisado tu entrega. Calificación: ${grade || 'Sin nota'}`,
+    type: 'assignment_graded',
+    entity_type: 'submission',
+    entity_id: submissionId,
+    link: `/courses/${courseId}/lessons/${lessonId}`,
+    actor_ids: [user.id],
   })
 
   revalidatePath(`/courses/${courseId}/${lessonId}/submissions`)
