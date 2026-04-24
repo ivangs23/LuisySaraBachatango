@@ -4,7 +4,7 @@ import LessonForm from '@/components/LessonForm'
 import VideoUploadWidget from '@/components/VideoUploadWidget'
 import MuxTracksManager from '@/components/MuxTracksManager'
 import AssignmentManager from '@/components/AssignmentManager'
-import { listMuxTracks } from '@/app/courses/mux-actions'
+import { listMuxTracks } from '@/utils/mux/tracks'
 import { updateLesson } from '@/app/courses/actions'
 
 export default async function EditLessonPage(props: {

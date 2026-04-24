@@ -7,12 +7,8 @@ import {
   validateAudioFile,
   validateSubtitleFile,
 } from '@/utils/mux/validation'
-import {
-  addMuxAudioTrack,
-  addMuxTextTrack,
-  deleteMuxTrack,
-  type MuxTrackSummary,
-} from '@/app/courses/mux-actions'
+import { addMuxAudioTrack, addMuxTextTrack, deleteMuxTrack } from '@/app/courses/mux-actions'
+import type { MuxTrackSummary } from '@/utils/mux/tracks'
 import styles from './MuxTracksManager.module.css'
 
 interface Props {
@@ -94,7 +90,10 @@ function TrackSection({
   const handleDelete = async (trackId: string) => {
     if (!confirm('¿Eliminar esta pista?')) return
     startTransition(async () => {
-      await deleteMuxTrack(lessonId, trackId)
+      const result = await deleteMuxTrack(lessonId, trackId)
+      if (result && 'error' in result && result.error) {
+        setError(result.error)
+      }
     })
   }
 

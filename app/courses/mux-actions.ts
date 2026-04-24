@@ -180,33 +180,3 @@ export async function deleteMuxTrack(lessonId: string, trackId: string) {
   }
 }
 
-export type MuxTrackSummary = {
-  id: string
-  type: 'audio' | 'text'
-  languageCode: string | null
-  name: string | null
-  status: string | null
-}
-
-/**
- * Server-side helper (NOT a server action) to list tracks for an asset.
- * Called from admin page render. Not marked 'use server' — it's just an async function.
- */
-export async function listMuxTracks(assetId: string): Promise<MuxTrackSummary[]> {
-  try {
-    const asset = await mux.video.assets.retrieve(assetId)
-    const tracks = asset.tracks ?? []
-    return tracks
-      .filter(t => t.type === 'audio' || t.type === 'text')
-      .map(t => ({
-        id: t.id ?? '',
-        type: t.type as 'audio' | 'text',
-        languageCode: (t as { language_code?: string | null }).language_code ?? null,
-        name: (t as { name?: string | null }).name ?? null,
-        status: (t as { status?: string | null }).status ?? null,
-      }))
-  } catch (err) {
-    console.error('listMuxTracks error:', err)
-    return []
-  }
-}
