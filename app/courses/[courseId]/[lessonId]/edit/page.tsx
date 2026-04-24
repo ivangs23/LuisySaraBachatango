@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import LessonForm from '@/components/LessonForm'
 import VideoUploadWidget from '@/components/VideoUploadWidget'
 import MuxTracksManager from '@/components/MuxTracksManager'
+import AssignmentManager from '@/components/AssignmentManager'
 import { listMuxTracks } from '@/app/courses/mux-actions'
 import { updateLesson } from '@/app/courses/actions'
 
@@ -26,6 +27,12 @@ export default async function EditLessonPage(props: {
 
   if (!lesson) notFound()
 
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('id, title, description')
+    .eq('lesson_id', params.lessonId)
+    .maybeSingle()
+
   const tracks = lesson.mux_asset_id ? await listMuxTracks(lesson.mux_asset_id) : []
 
   return (
@@ -43,6 +50,12 @@ export default async function EditLessonPage(props: {
       {lesson.mux_status === 'ready' && lesson.mux_asset_id && (
         <MuxTracksManager lessonId={lesson.id} tracks={tracks} />
       )}
+
+      <AssignmentManager
+        lessonId={params.lessonId}
+        courseId={params.courseId}
+        assignment={assignment ?? null}
+      />
     </div>
   )
 }
