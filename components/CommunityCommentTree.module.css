@@ -1,0 +1,20 @@
+.tree { display: flex; flex-direction: column; gap: 1rem; }
+.node {
+  background: rgba(255,255,255,0.03);
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+}
+.header { display: flex; gap: 0.6rem; align-items: baseline; }
+.date { color: var(--text-muted, #888); font-size: 0.75rem; }
+.body { margin: 0.4rem 0; white-space: pre-wrap; }
+.actions { display: flex; gap: 0.8rem; }
+.actions button {
+  background: none; border: none; color: var(--text-muted, #aaa);
+  cursor: pointer; padding: 0; font-size: 0.85rem;
+}
+.actions button.liked { color: var(--primary, #d4a85a); }
+.actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+.replyForm { margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.replyForm textarea { min-height: 60px; padding: 0.5rem; border-radius: 4px; }
+.replyForm button { align-self: flex-end; padding: 0.4rem 0.8rem; }
+.replies { margin-top: 0.8rem; padding-left: 1rem; border-left: 2px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 0.6rem; }
