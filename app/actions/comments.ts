@@ -117,17 +117,44 @@ export async function addComment(lessonId: string, content: string, parentId: st
     return { error: 'El comentario no puede superar los 5000 caracteres' };
   }
 
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('comments')
     .insert({
       content: content.trim(),
       lesson_id: lessonId,
       user_id: user.id,
-      parent_id: parentId
-    });
+      parent_id: parentId,
+    })
+    .select('id')
+    .single();
 
-  if (error) {
+  if (error || !inserted) {
     return { error: 'Error al publicar el comentario' };
+  }
+
+  if (parentId) {
+    const { data: parent } = await supabase
+      .from('comments')
+      .select('user_id, lesson_id')
+      .eq('id', parentId)
+      .single();
+
+    if (parent) {
+      const { data: lesson } = await supabase
+        .from('lessons')
+        .select('course_id')
+        .eq('id', parent.lesson_id)
+        .single();
+
+      await notify({
+        recipientId: parent.user_id,
+        actorId: user.id,
+        type: 'comment_reply',
+        entityType: 'comment',
+        entityId: inserted.id,
+        link: `/courses/${lesson?.course_id ?? courseId ?? ''}/lessons/${parent.lesson_id}#comment-${inserted.id}`,
+      });
+    }
   }
 
   if (courseId) {
