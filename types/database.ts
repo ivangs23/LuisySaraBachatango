@@ -32,33 +32,14 @@ export type Lesson = {
   course_id: string
   title: string
   description: string | null
-  video_url: string
   thumbnail_url: string | null
   release_date: string | null
   order: number
-  video_source: 'url' | 'upload'
   duration: number | null
   is_free: boolean
-  media_config: MediaConfig | null
   created_at: string
 }
 
-export type MediaConfig = {
-  tracks: VideoTrack[]
-  subtitles: SubtitleTrack[]
-}
-
-export type VideoTrack = {
-  language: string
-  label: string
-  url: string
-}
-
-export type SubtitleTrack = {
-  language: string
-  label: string
-  url: string
-}
 
 export type Subscription = {
   id: string
