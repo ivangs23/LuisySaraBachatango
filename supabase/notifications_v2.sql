@@ -30,10 +30,15 @@ CREATE TABLE IF NOT EXISTS post_likes (
 
 ALTER TABLE post_likes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Likes viewable by all authenticated" ON post_likes;
 CREATE POLICY "Likes viewable by all authenticated"
   ON post_likes FOR SELECT USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Users can like posts" ON post_likes;
 CREATE POLICY "Users can like posts"
   ON post_likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can unlike own" ON post_likes;
 CREATE POLICY "Users can unlike own"
   ON post_likes FOR DELETE USING (auth.uid() = user_id);
 
