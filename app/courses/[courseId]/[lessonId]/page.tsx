@@ -5,7 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import styles from './lesson.module.css'
 import LessonTabs from '@/components/LessonTabs'
 import LessonPlayer from '@/components/LessonPlayer'
-import { signPlaybackToken } from '@/utils/mux/server'
+import { signPlaybackToken, signThumbnailToken } from '@/utils/mux/server'
 import { getDict } from '@/utils/get-dict'
 
 export async function generateMetadata(
@@ -50,7 +50,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     { data: assignment },
   ] = await Promise.all([
     supabase.from('lessons')
-      .select('id, title, description, mux_playback_id, mux_status, course_id')
+      .select('id, title, description, thumbnail_url, mux_playback_id, mux_status, course_id')
       .eq('id', params.lessonId)
       .eq('course_id', params.courseId)
       .single(),
@@ -117,9 +117,13 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
   const completedLessonIds = new Set<string>()
   progressResult.data?.forEach(p => completedLessonIds.add(p.lesson_id))
 
-  const playbackToken = hasAccess && lesson.mux_status === 'ready' && lesson.mux_playback_id
-    ? await signPlaybackToken(lesson.mux_playback_id)
-    : null
+  const canPlay = hasAccess && lesson.mux_status === 'ready' && lesson.mux_playback_id
+  const [playbackToken, thumbnailToken] = canPlay
+    ? await Promise.all([
+        signPlaybackToken(lesson.mux_playback_id!),
+        signThumbnailToken(lesson.mux_playback_id!),
+      ])
+    : [null, null]
 
   return (
     <div className={styles.container}>
@@ -166,6 +170,8 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
               <LessonPlayer
                 playbackId={lesson.mux_playback_id}
                 playbackToken={playbackToken!}
+                thumbnailToken={thumbnailToken ?? undefined}
+                posterUrl={lesson.thumbnail_url}
                 lessonId={params.lessonId}
                 lessonTitle={lesson.title}
                 courseId={params.courseId}
@@ -180,7 +186,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
               <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
                 <h2 style={{ marginBottom: '1rem' }}>{t.lesson.lockedContent}</h2>
                 <p style={{ marginBottom: '1.5rem' }}>{t.lesson.lockedMessage}</p>
-                <Link href="/pricing" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+                <Link href={`/courses/${params.courseId}`} style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
                   {t.lesson.getPremium}
                 </Link>
               </div>
@@ -220,7 +226,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
             ) : (
               <div style={{ marginTop: '2rem', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center' }}>
                 <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>{t.lesson.exclusiveContent}</p>
-                <Link href="/pricing" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+                <Link href={`/courses/${params.courseId}`} style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
                   {t.lesson.getPremium}
                 </Link>
               </div>

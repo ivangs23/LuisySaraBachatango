@@ -50,8 +50,8 @@ function CourseCard({ course, accessible, tc }: CourseCardProps) {
             src={course.image_url}
             alt={course.title}
             className={styles.image}
-            width={400}
-            height={225}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             style={{ objectFit: 'cover' }}
           />
         ) : (
@@ -99,7 +99,6 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const completeCourses = courses.filter(c => c.course_type === 'complete');
-  const membershipCourses = courses.filter(c => c.course_type === 'membership');
 
   const categories = ['all', ...Array.from(new Set(completeCourses.map(c => c.category).filter(Boolean) as string[]))];
 
@@ -150,26 +149,6 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
 
           <div className={styles.grid}>
             {filteredComplete.map(course => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                accessible={accessibleCourseIds.includes(course.id)}
-                tc={tc}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── Clases Mensuales (solo admin mientras no hay suscripciones activas) ─ */}
-      {isAdmin && membershipCourses.length > 0 && (
-        <section className={cardStyles.section}>
-          <div className={cardStyles.sectionHeader}>
-            <h2 className={cardStyles.sectionTitle}>{tc.monthlyClasses}</h2>
-            <p className={cardStyles.sectionSub}>{tc.monthlySub}</p>
-          </div>
-          <div className={styles.grid}>
-            {membershipCourses.map(course => (
               <CourseCard
                 key={course.id}
                 course={course}

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { priceId, courseId } = await req.json() as { priceId?: string; courseId?: string };
+    const { courseId } = await req.json() as { courseId?: string };
     const origin = req.headers.get('origin') ?? '';
 
     // Retrieve or create Stripe customer to avoid duplicates
@@ -40,28 +40,6 @@ export async function POST(req: Request) {
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id);
-    }
-
-    // ── Subscription (recurring) ─────────────────────────────────────
-    // priceId is passed directly (from /pricing page) and it's a recurring price
-    if (priceId && !courseId) {
-      const subscriptionPriceIds = Object.values(STRIPE_CONFIG.SUBSCRIPTION_PRICES);
-      if (!subscriptionPriceIds.includes(priceId)) {
-        return NextResponse.json({ error: 'Invalid subscription price' }, { status: 400 });
-      }
-
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        billing_address_collection: 'auto',
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: 'subscription',
-        success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/pricing`,
-        metadata: { userId: user.id },
-      });
-
-      return NextResponse.json({ sessionId: session.id, url: session.url });
     }
 
     // ── Course purchase (one-time, dynamic price) ─────────────────────
@@ -104,7 +82,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ sessionId: session.id, url: session.url });
     }
 
-    return NextResponse.json({ error: 'Falta courseId o priceId' }, { status: 400 });
+    return NextResponse.json({ error: 'Falta courseId' }, { status: 400 });
 
   } catch (err: unknown) {
     console.error('[checkout]', err);

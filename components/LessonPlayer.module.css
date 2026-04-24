@@ -1,0 +1,14 @@
+.wrapper {
+  border: 2px solid var(--primary);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  --media-border-radius: 12px;
+  --primary-color: var(--primary);
+  background: #000;
+}

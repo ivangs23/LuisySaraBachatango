@@ -1,50 +1,74 @@
 /**
  * Normalize WebVTT exported by DaVinci Resolve.
  *
- * DaVinci's default timeline start is 01:00:00:00 (broadcast convention),
- * so exported VTTs end up with every cue offset by +1 h (or whatever the
- * project start timecode is). This helper detects that pattern and shifts
- * every timestamp back so the first cue starts near 00:00:00.
+ * DaVinci's export has two distinct quirks:
  *
- * Also strips `<font>` tags which DaVinci inserts for cue colouring.
- * WebVTT does not allow arbitrary HTML; `<font>` is non-standard and is
- * ignored (or rendered as text) by spec-compliant players.
+ * 1. When the project's start timecode is 01:00:00:00 (DaVinci default,
+ *    broadcast convention), some cues end up with BOTH start and end at
+ *    01:xx:xx. Others come out asymmetric: start at 00:xx:xx but end at
+ *    01:xx:xx (the end time picks up the timeline offset while the start
+ *    resets to zero for some reason). Asymmetric cues are catastrophic —
+ *    their end time is one hour in the future, so the cue stays on screen
+ *    for the entire video and subtitles pile up on top of each other.
  *
- * Detection is conservative: if the first cue doesn't start at >= 01:00:00
- * the offset is 0 (no change). Lessons longer than 1 h with legitimately
- * high timestamps are unaffected because we use the first cue's hour as
- * the offset, not a fixed "subtract 1 h".
+ * 2. DaVinci inserts `<font color='#xxxxxx'>` tags for cue colouring.
+ *    These are not part of the WebVTT spec; colour is applied via
+ *    `::cue` CSS rules. We strip them so the text is clean.
+ *
+ * Strategy (per cue):
+ *   - If end_hour > start_hour, clamp end_hour down to start_hour
+ *     (fixes asymmetric cues). The minutes/seconds stay as-is — the
+ *     hour was the wrong part.
+ *   - If start_hour >= 1 AND end_hour >= 1 after the clamp above, shift
+ *     both down by start_hour so the cue lands at hour 0 (fixes uniform
+ *     offset cues).
+ *
+ * Detection is per-cue (not based on the first cue alone) so we catch
+ * mixed exports where some cues are asymmetric and others aren't.
  */
 
-const TIMING_LINE = /^(\d{2}):(\d{2}):(\d{2}\.\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}\.\d{3})/
+const CUE_TIMING =
+  /^(\d{2}):(\d{2}):(\d{2}\.\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}\.\d{3})(.*)$/
+
+function normalizeCueTiming(line: string): string {
+  const m = line.match(CUE_TIMING)
+  if (!m) return line
+
+  let sh = parseInt(m[1], 10)
+  const sm = m[2]
+  const ss = m[3]
+  let eh = parseInt(m[4], 10)
+  const em = m[5]
+  const es = m[6]
+  const rest = m[7] ?? ''
+
+  // 1. Fix asymmetric cues: end hour must not be greater than start hour.
+  //    If it is, clamp it (DaVinci puts the timeline offset on the end only).
+  if (eh > sh) {
+    eh = sh
+  }
+
+  // 2. Fix uniform offset: if both sides are >= 1, shift to hour 0.
+  if (sh >= 1 && eh >= 1) {
+    const offset = sh
+    sh -= offset
+    eh -= offset
+  }
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(sh)}:${sm}:${ss} --> ${pad(eh)}:${em}:${es}${rest}`
+}
 
 export function normalizeVtt(text: string): { normalized: string; changed: boolean } {
-  // Find the first cue timing line to detect the offset.
-  let offsetHours = 0
-  for (const line of text.split(/\r?\n/)) {
-    const m = line.match(TIMING_LINE)
-    if (m) {
-      offsetHours = parseInt(m[1], 10)
-      break
-    }
-  }
+  const lines = text.split(/\r?\n/)
+  const normalizedLines = lines.map(normalizeCueTiming)
 
-  let out = text
-
-  // Only shift if the first cue starts at >= 01:00:00. This avoids
-  // shrinking timestamps for genuinely long-form content (lessons
-  // where the first cue is legitimately past the 1 h mark).
-  const shouldShift = offsetHours >= 1
-  if (shouldShift) {
-    out = out.replace(/(\d{2}):(\d{2}):(\d{2}\.\d{3})/g, (match, h, mm, ss) => {
-      const newH = parseInt(h, 10) - offsetHours
-      if (newH < 0) return match // don't create negative timestamps
-      return `${String(newH).padStart(2, '0')}:${mm}:${ss}`
-    })
-  }
+  const withTimingsFixed = normalizedLines.join('\n')
 
   // Strip <font ...> and </font> tags (DaVinci colouring, invalid in VTT).
-  const withoutFont = out.replace(/<font[^>]*>/gi, '').replace(/<\/font>/gi, '')
+  const withoutFont = withTimingsFixed
+    .replace(/<font[^>]*>/gi, '')
+    .replace(/<\/font>/gi, '')
 
   const changed = withoutFont !== text
   return { normalized: withoutFont, changed }

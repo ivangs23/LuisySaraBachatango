@@ -38,8 +38,8 @@ export const dictionaries = {
     },
     features: {
       monthly: {
-        title: "4 Clases Mensuales",
-        desc: "Contenido estructurado y progresivo. Cada mes desbloqueas un nuevo módulo diseñado para elevar tu nivel paso a paso."
+        title: "Cursos Completos",
+        desc: "Programas integrales de principio a fin. Aprende desde iniciación hasta nivel avanzado con un solo pago y acceso de por vida."
       },
       exclusive: {
         title: "Contenido Exclusivo",
@@ -292,8 +292,8 @@ export const dictionaries = {
     },
     features: {
       monthly: {
-        title: "4 Monthly Classes",
-        desc: "Structured and progressive content. Each month you unlock a new module designed to raise your level step by step."
+        title: "Complete Courses",
+        desc: "Comprehensive programs from start to finish. Learn from beginner to advanced with a single payment and lifetime access."
       },
       exclusive: {
         title: "Exclusive Content",
@@ -528,7 +528,7 @@ export const dictionaries = {
       cta: "DÉCOUVREZ NOS COURS"
     },
     features: {
-      monthly: { title: "4 Cours Mensuels", desc: "Contenu structuré et progressif. Chaque mois, débloquez un nouveau module conçu pour élever votre niveau étape par étape." },
+      monthly: { title: "Cours Complets", desc: "Programmes complets de A à Z. Apprenez du niveau débutant à avancé avec un paiement unique et un accès à vie." },
       exclusive: { title: "Contenu Exclusif", desc: "Accédez à des secrets de technique, de musicalité et de connexion introuvables ailleurs. Masterclasses d'experts." },
       access: { title: "Accès 24/7", desc: "Votre plateforme d'apprentissage toujours disponible. Pratiquez à votre rythme, répétez les leçons et perfectionnez votre style depuis chez vous." }
     },
@@ -711,7 +711,7 @@ export const dictionaries = {
       cta: "ENTDECKE UNSERE KURSE"
     },
     features: {
-      monthly: { title: "4 Monatliche Kurse", desc: "Strukturierter und progressiver Inhalt. Jeden Monat schaltest du ein neues Modul frei." },
+      monthly: { title: "Komplette Kurse", desc: "Umfassende Programme von Anfang bis Ende. Lerne vom Anfänger bis zum Fortgeschrittenen mit einer einmaligen Zahlung und lebenslangem Zugang." },
       exclusive: { title: "Exklusiver Inhalt", desc: "Zugang zu Geheimnissen der Technik, Musikalität und Verbindung. Masterclasses von Experten." },
       access: { title: "24/7 Zugang", desc: "Deine Lernplattform immer verfügbar. Übe in deinem eigenen Tempo von zu Hause aus." }
     },
@@ -894,7 +894,7 @@ export const dictionaries = {
       cta: "SCOPRI I NOSTRI CORSI"
     },
     features: {
-      monthly: { title: "4 Classi Mensili", desc: "Contenuto strutturato e progressivo." },
+      monthly: { title: "Corsi Completi", desc: "Programmi integrali dall'inizio alla fine. Impara dal livello principiante ad avanzato con un unico pagamento e accesso a vita." },
       exclusive: { title: "Contenuto Esclusivo", desc: "Accedi a segreti di tecnica e musicalità." },
       access: { title: "Accesso 24/7", desc: "La tua piattaforma di apprendimento sempre disponibile." }
     },
@@ -1076,7 +1076,7 @@ export const dictionaries = {
       cta: "コースを見る"
     },
     features: {
-      monthly: { title: "毎月4クラス", desc: "体系的かつ進歩的な内容。" },
+      monthly: { title: "完全コース", desc: "初心者から上級者まで、最初から最後まで学べる総合プログラム。一度のお支払いで生涯アクセス可能。" },
       exclusive: { title: "独占コンテンツ", desc: "他では見られないテクニック、音楽性、コネクションの秘密。" },
       access: { title: "24時間365日アクセス", desc: "いつでも利用可能な学習プラットフォーム。" }
     },

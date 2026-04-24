@@ -34,3 +34,18 @@ export async function signPlaybackToken(
     expiration,
   });
 }
+
+/**
+ * Sign a thumbnail JWT for a given Mux playback ID. Used as a poster fallback
+ * when the lesson has no custom thumbnail_url — Mux Player fetches the auto-
+ * extracted frame from image.mux.com using this token.
+ */
+export async function signThumbnailToken(
+  playbackId: string,
+  expiration: string = '4h',
+): Promise<string> {
+  return mux.jwt.signPlaybackId(playbackId, {
+    type: 'thumbnail',
+    expiration,
+  });
+}

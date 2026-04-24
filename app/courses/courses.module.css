@@ -28,38 +28,47 @@
   
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: var(--spacing-xl, 2rem);
   }
-  
+
   .card {
     background-color: var(--surface);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg, 16px);
     overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
   }
-  
+
   .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+    border-color: var(--primary);
   }
-  
+
   .imageContainer {
     position: relative;
-    height: 180px;
+    aspect-ratio: 16 / 10;
     background-color: var(--bg-secondary);
+    overflow: hidden;
   }
-  
+
   .image {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.4s ease;
   }
-  
+
+  .card:hover .image {
+    transform: scale(1.05);
+  }
+
   .placeholderImage {
     width: 100%;
     height: 100%;
@@ -67,47 +76,69 @@
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 0.9rem;
-    background-color: #2a2a2a;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
   }
-  
+
   .content {
-    padding: var(--spacing-md);
+    padding: var(--spacing-lg);
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 0.35rem;
   }
-  
+
   .courseTitle {
-    font-size: 1.25rem;
-    margin-bottom: var(--spacing-xs);
+    font-size: 1.6rem;
+    line-height: 1.2;
+    margin: 0 0 var(--spacing-xs);
     color: var(--text-main);
+    font-weight: 700;
   }
-  
+
   .courseDate {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--primary);
     text-transform: uppercase;
-    margin-bottom: var(--spacing-sm);
-    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin: 0 0 var(--spacing-sm);
+    font-weight: 700;
   }
-  
+
   .description {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
     color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
+    margin: 0 0 var(--spacing-lg);
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     flex: 1;
   }
-  
+
   .cta {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--primary);
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     text-align: right;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: gap 0.2s ease;
+  }
+
+  .cta::after {
+    content: '→';
+    transition: transform 0.2s ease;
+  }
+
+  .card:hover .cta::after {
+    transform: translateX(4px);
   }
   
   .emptyState {

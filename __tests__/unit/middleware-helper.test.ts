@@ -49,7 +49,6 @@ describe('requiresAuth — public routes', () => {
     '/community',
     '/community/abc123',
     '/login',
-    '/pricing',
     '/about',
     '/contact',
     '/music',

@@ -35,6 +35,13 @@ export async function GET(
     let assetId = lesson.mux_asset_id
     if (!assetId && lesson.mux_upload_id) {
       const upload = await mux.video.uploads.retrieve(lesson.mux_upload_id)
+
+      // Terminal upload states — short-circuit polling.
+      if (upload.status === 'errored' || upload.status === 'cancelled' || upload.status === 'timed_out') {
+        await supabase.from('lessons').update({ mux_status: 'errored' }).eq('id', lessonId)
+        return NextResponse.json({ status: 'errored', reason: `upload_${upload.status}` })
+      }
+
       if (upload.asset_id) assetId = upload.asset_id
     }
 
@@ -62,7 +69,13 @@ export async function GET(
 
     if (asset.status === 'errored') {
       await supabase.from('lessons').update({ mux_status: 'errored' }).eq('id', lessonId)
-      return NextResponse.json({ status: 'errored', assetId })
+      const muxErrors = asset.errors?.messages ?? []
+      return NextResponse.json({
+        status: 'errored',
+        assetId,
+        reason: asset.errors?.type ?? 'asset_errored',
+        muxMessages: muxErrors,
+      })
     }
 
     // Still preparing

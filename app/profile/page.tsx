@@ -1,4 +1,3 @@
-import SubscribeButton from '@/components/SubscribeButton';
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import styles from './profile.module.css'
@@ -33,16 +32,6 @@ export default async function ProfilePage(props: { searchParams: Promise<{ [key:
     .eq('id', user.id)
     .single()
 
-  // Fetch subscription status
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('status', ['active', 'trialing'])
-    .single()
-
-  const isActive = !!subscription;
-
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>{t.profile.title}</h1>
@@ -61,28 +50,6 @@ export default async function ProfilePage(props: { searchParams: Promise<{ [key:
               <span className={styles.value}>{user.email}</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>{t.profile.subscription}</h2>
-        <div className={styles.subscriptionCard}>
-          <p className={styles.status}>
-            {t.profile.status}: <span className={isActive ? styles.active : styles.inactive}>
-              {isActive ? t.profile.active : t.profile.inactive}
-            </span>
-          </p>
-
-          {isActive ? (
-            <p className={styles.description}>
-              {t.profile.activeUntil} {new Date(subscription.current_period_end).toLocaleDateString()}.
-            </p>
-          ) : (
-            <>
-              <p className={styles.description}>{t.profile.noActiveSubscription}</p>
-              <SubscribeButton />
-            </>
-          )}
         </div>
       </div>
 

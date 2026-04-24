@@ -96,13 +96,6 @@ export default async function RootLayout({
     sameAs: [
       'https://www.instagram.com/luisysaradance',
     ],
-    offers: {
-      '@type': 'Offer',
-      url: `${BASE_URL}/pricing`,
-      priceCurrency: 'EUR',
-      price: '19',
-      description: 'Suscripción mensual a cursos de Bachata y Bachatango',
-    },
   };
 
   return (
