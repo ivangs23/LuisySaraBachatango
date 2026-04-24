@@ -30,8 +30,8 @@ export default function Header({ user, profile }: HeaderProps) {
     <header className={styles.header}>
       <div className={styles.logo}>
         <Link href="/">
-          <div style={{ backgroundColor: 'white', borderRadius: '50%', position: 'relative', width: '52px', height: '52px', overflow: 'hidden' }}>
-            <Image src="/logo.png" alt="Luis y Sara Bachatango" fill style={{ objectFit: 'cover', objectPosition: 'center', transform: 'scale(1.60)', transformOrigin: 'center' }} />
+          <div style={{ backgroundColor: 'white', borderRadius: '50%', position: 'relative', width: '64px', height: '64px', overflow: 'hidden' }}>
+            <Image src="/logo.png" alt="Luis y Sara Bachatango" fill style={{ objectFit: 'contain', objectPosition: 'center', padding: '4px', transform: 'scale(2)' }} />
           </div>
         </Link>
       </div>

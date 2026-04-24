@@ -16,8 +16,11 @@
 
 .column h3 {
   color: var(--text-main);
-  font-family: 'Playfair Display', serif;
-  font-size: 1.25rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   margin-bottom: 1.5rem;
 }
 

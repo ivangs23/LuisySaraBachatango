@@ -4,15 +4,24 @@
   flex-direction: column;
 }
 
+/* ---------- Hero ---------- */
 .hero {
-  height: 85vh;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), url('/hero-bg.png');
-  background-size: contain;
+  min-height: 100vh;           /* fallback */
+  min-height: 100svh;          /* Safari iOS estable */
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(5, 5, 5, 0.25) 0%,
+      rgba(5, 5, 5, 0.4) 55%,
+      rgba(5, 5, 5, 0.6) 100%
+    ),
+    url('/hero-bg.png');
+  background-size: auto;      /* era `contain` — el bug visible */
   background-repeat: no-repeat;
-  background-position: center;
+  background-position: top center;
   display: flex;
   align-items: center;
-  padding: 0 10%;
+  padding-inline: clamp(1.5rem, 10vw, 8rem);
   position: relative;
 }
 
@@ -22,12 +31,10 @@
 }
 
 .title {
-  font-size: 4rem;
-  font-weight: 300; /* Elegant serif-like weight */
+  font: var(--h1);
   color: var(--text-main);
   margin-bottom: var(--spacing-md);
-  line-height: 1.1;
-  font-family: 'Playfair Display', serif; /* Assuming we might add a serif font, or fallback to sans */
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
@@ -35,80 +42,42 @@
   color: var(--text-muted);
   margin-bottom: var(--spacing-xl);
   line-height: 1.6;
+  max-width: 52ch;
 }
 
 .ctaButton {
   background: linear-gradient(45deg, var(--primary), #e6c885);
   color: #000;
   padding: 1rem 2rem;
-  font-weight: bold;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   border-radius: var(--radius-sm);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   display: inline-block;
 }
-
 .ctaButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(192, 160, 98, 0.4);
+  box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.4);
   color: #000;
 }
-
-.features {
-  background-color: var(--surface);
-  padding: var(--spacing-xl) 10%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-xl);
-  text-align: center;
-}
-
-.featureCard {
-  padding: var(--spacing-lg);
-  transition: transform 0.3s;
-}
-
-.featureCard:hover {
-  transform: translateY(-5px);
-}
-
-.icon {
-  font-size: 2.5rem;
-  margin-bottom: var(--spacing-md);
-  color: var(--primary);
-}
-
-.featureCard h3 {
-  font-size: 1.2rem;
-  margin-bottom: var(--spacing-sm);
-  color: var(--text-main);
-}
-
-.featureCard p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
+.ctaButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 768px) {
-  .title {
-    font-size: 2.5rem;
-  }
-  
   .hero {
-    padding: 0 var(--spacing-lg);
     justify-content: center;
     text-align: center;
+    background-size: cover;
+  }
+  .heroContent {
+    margin-inline: auto;
   }
 }

@@ -1,20 +1,19 @@
 .faq {
-  padding: var(--spacing-xl) 5%;
+  padding: var(--spacing-2xl) var(--page-pad);
   background-color: var(--surface);
   color: var(--text-main);
 }
 
 .container {
   max-width: 800px;
-  margin: 0 auto;
+  margin-inline: auto;
 }
 
 .title {
   text-align: center;
-  font-size: 2.5rem;
+  font: var(--h2);
   color: var(--primary);
   margin-bottom: var(--spacing-xl);
-  font-family: 'Playfair Display', serif;
 }
 
 .item {
@@ -35,31 +34,34 @@
   justify-content: space-between;
   align-items: center;
   font-weight: 500;
-  transition: color 0.3s;
+  transition: color 0.3s ease;
 }
-
-.question:hover {
-  color: var(--primary);
+.question:hover { color: var(--primary); }
+.question:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
 }
 
 .answer {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out, padding 0.3s ease;
+  transition:
+    max-height 0.45s cubic-bezier(0.2, 0, 0, 1),
+    padding 0.3s ease;
   color: var(--text-muted);
   line-height: 1.6;
 }
 
 .answer.open {
-  max-height: 200px; /* Arbitrary large number */
+  max-height: 1200px;           /* era 200 — cortaba respuestas largas silenciosamente */
   padding-bottom: var(--spacing-md);
 }
 
 .icon {
   font-size: 1.5rem;
-  transition: transform 0.3s;
+  transition: transform 0.3s ease;
 }
-
 .icon.open {
   transform: rotate(45deg);
 }

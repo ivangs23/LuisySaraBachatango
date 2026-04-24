@@ -45,7 +45,7 @@
 .filterBtnActive {
   background: var(--primary);
   border-color: var(--primary);
-  color: white;
+  color: #000;
   font-weight: 600;
 }
 
@@ -79,7 +79,7 @@
 .badgeAccess {
   display: inline-block;
   background: rgba(76, 175, 80, 0.92);
-  color: white;
+  color: #000;
   font-size: 0.78rem;
   font-weight: 700;
   padding: 0.35rem 0.8rem;
