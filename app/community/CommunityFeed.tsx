@@ -12,7 +12,9 @@ type Post = {
   profiles: {
     full_name: string | null;
   } | null;
-  category?: string; // Optional for now
+  category?: string;
+  likes_count?: number;
+  comments_count?: number;
 };
 
 const CATEGORIES = ["Todos", "General", "Dudas de Clase", "Música", "Eventos", "Quedadas"];
@@ -86,10 +88,11 @@ export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }
             <p className={styles.postContent}>{post.content.substring(0, 150)}...</p>
             
             <div className={styles.cardFooter}>
-              {/* Fake stats for now to show visual improvement */}
-              <span className={styles.interaction}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                Ver discusión
+              <span className={styles.interaction} aria-label="likes">
+                ♥ {post.likes_count ?? 0}
+              </span>
+              <span className={styles.interaction} aria-label="comentarios">
+                💬 {post.comments_count ?? 0}
               </span>
             </div>
           </Link>
