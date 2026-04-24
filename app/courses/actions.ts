@@ -347,17 +347,23 @@ export async function gradeSubmission(
 
   // Notify the student
   // Use admin client to bypass RLS (notifications has no INSERT policy for users).
+  // UPSERT so re-grading updates the existing notification instead of conflicting on the dedupe unique index.
   const adminSupabase = createSupabaseAdmin()
-  await adminSupabase.from('notifications').insert({
-    user_id: submittedUserId,
-    title: 'Tu tarea ha sido corregida',
-    message: `El profesor ha revisado tu entrega. Calificación: ${grade || 'Sin nota'}`,
-    type: 'assignment_graded',
-    entity_type: 'submission',
-    entity_id: submissionId,
-    link: `/courses/${courseId}/lessons/${lessonId}`,
-    actor_ids: [user.id],
-  })
+  await adminSupabase.from('notifications').upsert(
+    {
+      user_id: submittedUserId,
+      title: 'Tu tarea ha sido corregida',
+      message: `El profesor ha revisado tu entrega. Calificación: ${grade || 'Sin nota'}`,
+      type: 'assignment_graded',
+      entity_type: 'submission',
+      entity_id: submissionId,
+      link: `/courses/${courseId}/lessons/${lessonId}`,
+      actor_ids: [user.id],
+      is_read: false,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id,type,entity_type,entity_id' }
+  )
 
   revalidatePath(`/courses/${courseId}/${lessonId}/submissions`)
 }
