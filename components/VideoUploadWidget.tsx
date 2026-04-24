@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as UpChunk from '@mux/upchunk'
 import { createMuxUpload, deleteMuxAsset } from '@/app/courses/mux-actions'
 import styles from './VideoUploadWidget.module.css'
@@ -26,10 +26,22 @@ export default function VideoUploadWidget({ lessonId, currentStatus, currentPlay
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pollTimerRef = useRef<number | null>(null)
+  const isCancelledRef = useRef(false)
+
+  useEffect(() => {
+    return () => {
+      isCancelledRef.current = true
+      if (pollTimerRef.current !== null) {
+        clearTimeout(pollTimerRef.current)
+        pollTimerRef.current = null
+      }
+    }
+  }, [])
 
   const startPolling = () => {
     let attempts = 0
     const tick = async () => {
+      if (isCancelledRef.current) return
       attempts++
       try {
         const res = await fetch(`/api/mux/status/${lessonId}`)
