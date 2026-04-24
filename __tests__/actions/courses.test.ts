@@ -23,17 +23,6 @@ function validateOrder(raw: string): string | null {
   return null
 }
 
-// ── JSON.parse validation (pure logic) ───────────────────────────────────────
-
-function parseMediaConfig(raw: string | null): { config: unknown } | { error: string } {
-  if (!raw) return { config: {} }
-  try {
-    return { config: JSON.parse(raw) }
-  } catch {
-    return { error: 'Configuración de media inválida' }
-  }
-}
-
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('validateImageFile', () => {
@@ -111,29 +100,3 @@ describe('validateOrder', () => {
   })
 })
 
-describe('parseMediaConfig', () => {
-  it('returns empty config for null', () => {
-    expect(parseMediaConfig(null)).toEqual({ config: {} })
-  })
-
-  it('parses valid JSON', () => {
-    const json = JSON.stringify({ tracks: [], subtitles: [] })
-    expect(parseMediaConfig(json)).toEqual({ config: { tracks: [], subtitles: [] } })
-  })
-
-  it('returns error for malformed JSON', () => {
-    const result = parseMediaConfig('{bad json}')
-    expect(result).toHaveProperty('error', 'Configuración de media inválida')
-  })
-
-  it('returns error for truncated JSON', () => {
-    const result = parseMediaConfig('{"tracks": [')
-    expect(result).toHaveProperty('error', 'Configuración de media inválida')
-  })
-
-  it('handles nested valid JSON', () => {
-    const json = JSON.stringify({ tracks: [{ language: 'es', url: 'https://x.com/file.vtt' }] })
-    const result = parseMediaConfig(json) as { config: unknown }
-    expect(result.config).toHaveProperty('tracks')
-  })
-})

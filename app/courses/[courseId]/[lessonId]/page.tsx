@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
-import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import styles from './lesson.module.css'
 import LessonTabs from '@/components/LessonTabs'
-import LessonVideoPlayer from '@/components/LessonVideoPlayer'
+import LessonPlayer from '@/components/LessonPlayer'
+import { signPlaybackToken } from '@/utils/mux/server'
 import { getDict } from '@/utils/get-dict'
 
 export async function generateMetadata(
@@ -40,12 +40,6 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
 
   const t = await getDict();
 
-  // Create Admin Client for Storage Operations (Bypass RLS)
-  const supabaseAdmin = createSupabaseAdmin(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-
   // Batch 1: all queries that only need lessonId / courseId / userId.
   const [
     { data: lesson, error: lessonError },
@@ -56,7 +50,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     { data: assignment },
   ] = await Promise.all([
     supabase.from('lessons')
-      .select('id, title, description, video_url, video_source, media_config, course_id')
+      .select('id, title, description, mux_playback_id, mux_status, course_id')
       .eq('id', params.lessonId)
       .eq('course_id', params.courseId)
       .single(),
@@ -123,37 +117,9 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
   const completedLessonIds = new Set<string>()
   progressResult.data?.forEach(p => completedLessonIds.add(p.lesson_id))
 
-  let videoUrl = lesson.video_url;
-  let isSupabaseVideo = false;
-
-  // Route storage videos through the proxy — access is re-validated on every request
-  // and the proxy issues a short-lived (300 s) signed URL redirect.
-  if (videoUrl.startsWith('storage://')) {
-    isSupabaseVideo = true;
-    videoUrl = `/api/video/${params.lessonId}?courseId=${params.courseId}`;
-  }
-
-  // Sign audio tracks and subtitle URLs in parallel — 5-minute expiry
-  type TrackItem = { language: string; label: string; url: string }
-  let mediaConfig = lesson.media_config ? JSON.parse(JSON.stringify(lesson.media_config)) : null;
-
-  if (mediaConfig) {
-    const signUrl = async (item: TrackItem) => {
-      if (!item.url?.startsWith('storage://')) return item;
-      const path = item.url.replace('storage://', '');
-      const { data, error } = await supabaseAdmin.storage.from('course-content').createSignedUrl(path, 300);
-      if (error || !data?.signedUrl) return null;
-      return { ...item, url: data.signedUrl };
-    };
-
-    const [signedTracks, signedSubtitles] = await Promise.all([
-      Promise.all((mediaConfig.tracks ?? []).map(signUrl)),
-      Promise.all((mediaConfig.subtitles ?? []).map(signUrl)),
-    ]);
-
-    mediaConfig.tracks = signedTracks.filter(Boolean);
-    mediaConfig.subtitles = signedSubtitles.filter(Boolean);
-  }
+  const playbackToken = hasAccess && lesson.mux_status === 'ready' && lesson.mux_playback_id
+    ? await signPlaybackToken(lesson.mux_playback_id)
+    : null
 
   return (
     <div className={styles.container}>
@@ -196,16 +162,20 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
 
         <div className={styles.contentWrapper}>
           <div className={styles.videoWrapper}>
-            {hasAccess ? (
-              <LessonVideoPlayer 
-                videoUrl={videoUrl}
-                isSupabaseVideo={isSupabaseVideo}
+            {hasAccess && lesson.mux_status === 'ready' && lesson.mux_playback_id ? (
+              <LessonPlayer
+                playbackId={lesson.mux_playback_id}
+                playbackToken={playbackToken!}
                 lessonId={params.lessonId}
+                lessonTitle={lesson.title}
                 courseId={params.courseId}
-                title={lesson.title}
-                mediaConfig={mediaConfig}
-                videoSource={lesson.video_source} // Pass explicit source type
+                viewerUserId={user.id}
               />
+            ) : hasAccess && lesson.mux_status !== 'ready' ? (
+              <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
+                <h2>Vídeo en preparación</h2>
+                <p>El vídeo de esta lección todavía se está procesando. Vuelve en unos minutos.</p>
+              </div>
             ) : (
               <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
                 <h2 style={{ marginBottom: '1rem' }}>{t.lesson.lockedContent}</h2>

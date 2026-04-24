@@ -1,0 +1,17 @@
+.container { padding: var(--spacing-md); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.section { }
+.sectionTitle { font-size: 1.05rem; margin: 0 0 var(--spacing-sm); color: var(--text-main); }
+.empty { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 var(--spacing-sm); }
+.list { list-style: none; padding: 0; margin: 0 0 var(--spacing-sm); }
+.item { display: flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-sm); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.25rem; }
+.flag { font-size: 1.2rem; }
+.name { flex: 1; color: var(--text-main); }
+.status { font-size: 0.8rem; color: var(--text-muted); }
+.deleteBtn { padding: 0.25rem 0.75rem; background: transparent; color: #e53e3e; border: 1px solid #e53e3e; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; }
+.deleteBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.addBtn { padding: 0.5rem 1rem; background: transparent; color: var(--primary); border: 1px dashed var(--primary); border-radius: var(--radius-sm); cursor: pointer; }
+.form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; padding: var(--spacing-sm); background: #1a1a1a; border-radius: var(--radius-sm); }
+.form select, .form input[type="file"] { padding: 0.35rem; background: #222; color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.form button { padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer; border: none; background: var(--primary); color: #000; }
+.form button[type="button"] { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.error { flex-basis: 100%; color: #e53e3e; margin: 0.25rem 0 0; font-size: 0.85rem; }

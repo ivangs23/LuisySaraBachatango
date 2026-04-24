@@ -40,7 +40,7 @@ Two course types control access:
 - `membership` — accessible if user has an active subscription whose period covers the course's `month`/`year`
 - `complete` — accessible via one-time purchase recorded in `course_purchases`
 
-Video access is validated in [app/api/video/[lessonId]/route.ts](app/api/video/%5BlessonId%5D/route.ts). Videos stored in Supabase Storage use the `storage://` prefix in `video_url`. The API generates 5-minute signed URLs and redirects (307). External videos (Vimeo/YouTube URLs) are served directly.
+Videos are served by Mux. The `lessons` table stores a `mux_asset_id` + `mux_playback_id`. The lesson page (server component) checks access (admin, purchase, or subscription covering the course's month/year), then signs a short-lived JWT via `signPlaybackToken()` (`utils/mux/server.ts`) and passes it to `<MuxPlayer>`.
 
 ### Data Flow Pattern
 
@@ -99,4 +99,8 @@ SUPABASE_SERVICE_ROLE_KEY      # Required for admin ops and user deletion
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 NEXT_PUBLIC_BASE_URL           # Used for password reset redirect URL
+MUX_TOKEN_ID                   # Mux Access Token (Settings → Access Tokens)
+MUX_TOKEN_SECRET               # Mux Access Token secret
+MUX_SIGNING_KEY_ID             # Mux Signing Key ID (Settings → Signing Keys), used for playback JWTs
+MUX_SIGNING_KEY_PRIVATE        # Base64-encoded PEM of the Mux signing private key
 ```
