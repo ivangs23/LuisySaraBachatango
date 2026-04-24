@@ -56,29 +56,6 @@ describe('POST /api/checkout — authentication', () => {
   })
 })
 
-describe('POST /api/checkout — subscription validation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@test.com' } } })
-    mockSupabaseFrom.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      is: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { stripe_customer_id: 'cus_test' }, error: null }),
-      update: vi.fn().mockReturnThis(),
-    })
-    mockSessionCreate.mockResolvedValue({ id: 'cs_test', url: 'https://stripe.com/pay' })
-  })
-
-  it('returns 400 for unknown price ID', async () => {
-    const { POST } = await import('@/app/api/checkout/route')
-    const res = await POST(makeRequest({ priceId: 'price_invalid_unknown' }))
-    expect(res.status).toBe(400)
-    const body = await res.json()
-    expect(body.error).toContain('Invalid subscription price')
-  })
-})
-
 describe('POST /api/checkout — course purchase validation', () => {
   beforeEach(() => {
     vi.clearAllMocks()

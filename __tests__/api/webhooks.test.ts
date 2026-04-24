@@ -132,8 +132,9 @@ describe('POST /api/webhooks/stripe — subscription updates', () => {
     const mockSub = {
       id: 'sub_test',
       status: 'active',
-      current_period_start: 1700000000,
-      current_period_end: 1702592000,
+      items: {
+        data: [{ current_period_start: 1700000000, current_period_end: 1702592000 }],
+      },
     }
     mockConstructEvent.mockReturnValueOnce({
       type: 'customer.subscription.updated',
@@ -154,8 +155,9 @@ describe('POST /api/webhooks/stripe — subscription updates', () => {
     const mockSub = {
       id: 'sub_test',
       status: 'canceled',
-      current_period_start: 1700000000,
-      current_period_end: 1702592000,
+      items: {
+        data: [{ current_period_start: 1700000000, current_period_end: 1702592000 }],
+      },
     }
     mockConstructEvent.mockReturnValueOnce({
       type: 'customer.subscription.deleted',
