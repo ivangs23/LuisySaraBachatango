@@ -357,7 +357,7 @@ export async function gradeSubmission(
       type: 'assignment_graded',
       entity_type: 'submission',
       entity_id: submissionId,
-      link: `/courses/${courseId}/lessons/${lessonId}`,
+      link: `/courses/${courseId}/${lessonId}`,
       actor_ids: [user.id],
       is_read: false,
       updated_at: new Date().toISOString(),

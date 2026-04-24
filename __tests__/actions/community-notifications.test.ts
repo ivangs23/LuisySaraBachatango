@@ -54,16 +54,11 @@ describe('submitComment — notifications', () => {
     })
   })
 
-  it('also notifies the parent comment author when parentId is given', async () => {
+  it('notifies only the parent comment author when parentId is given (no post_comment spam)', async () => {
     const insertChain = {
       insert: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: { id: 'reply-1' }, error: null }),
-    }
-    const postChain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { user_id: 'post-author-1' }, error: null }),
     }
     const parentChain = {
       select: vi.fn().mockReturnThis(),
@@ -77,7 +72,6 @@ describe('submitComment — notifications', () => {
         commentsCalls += 1
         return commentsCalls === 1 ? insertChain : parentChain
       }
-      if (table === 'posts') return postChain
       throw new Error(`unexpected: ${table}`)
     })
 
@@ -94,11 +88,7 @@ describe('submitComment — notifications', () => {
       parentId: 'parent-comment-1',
     }))
 
-    expect(mockNotify).toHaveBeenCalledTimes(2)
-    expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({
-      type: 'post_comment',
-      recipientId: 'post-author-1',
-    }))
+    expect(mockNotify).toHaveBeenCalledTimes(1)
     expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({
       type: 'comment_reply',
       recipientId: 'parent-author-1',

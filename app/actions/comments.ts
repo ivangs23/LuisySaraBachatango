@@ -152,7 +152,7 @@ export async function addComment(lessonId: string, content: string, parentId: st
         type: 'comment_reply',
         entityType: 'comment',
         entityId: inserted.id,
-        link: `/courses/${lesson?.course_id ?? courseId ?? ''}/lessons/${parent.lesson_id}#comment-${inserted.id}`,
+        link: `/courses/${lesson?.course_id ?? courseId ?? ''}/${parent.lesson_id}#comment-${inserted.id}`,
       });
     }
   }
@@ -191,10 +191,13 @@ export async function toggleLike(commentId: string) {
     return { success: true };
   }
 
-  await supabase.from('comment_likes').insert({
+  const { error: insertError } = await supabase.from('comment_likes').insert({
     comment_id: commentId,
     user_id: user.id,
   });
+  if (insertError) {
+    return { success: true };
+  }
 
   let link: string;
   if (comment.lesson_id) {
@@ -203,7 +206,7 @@ export async function toggleLike(commentId: string) {
       .select('course_id')
       .eq('id', comment.lesson_id)
       .single();
-    link = `/courses/${lesson?.course_id ?? ''}/lessons/${comment.lesson_id}#comment-${commentId}`;
+    link = `/courses/${lesson?.course_id ?? ''}/${comment.lesson_id}#comment-${commentId}`;
   } else if (comment.post_id) {
     link = `/community/${comment.post_id}#comment-${commentId}`;
   } else {

@@ -62,7 +62,7 @@ describe('toggleLike — notifications', () => {
       type: 'comment_like',
       entityType: 'comment',
       entityId: 'comment-1',
-      link: '/courses/course-1/lessons/lesson-1#comment-comment-1',
+      link: '/courses/course-1/lesson-1#comment-comment-1',
     })
   })
 
@@ -145,7 +145,7 @@ describe('addComment — notifications', () => {
       type: 'comment_reply',
       entityType: 'comment',
       entityId: insertedId,
-      link: '/courses/course-1/lessons/lesson-1#comment-reply-1',
+      link: '/courses/course-1/lesson-1#comment-reply-1',
     })
   })
 

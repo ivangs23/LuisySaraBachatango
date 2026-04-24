@@ -162,19 +162,32 @@ export async function verifyStripeSession(sessionId: string) {
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           });
       } else {
-        // One-time payment logic
-        const { error: upsertError } = await supabaseAdmin
-          .from('subscriptions')
-          .upsert({
-            id: session.id,
-            user_id: user.id,
-            status: 'active',
-            current_period_start: new Date().toISOString(),
-            current_period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 100)).toISOString(),
-          });
+        // One-time course purchase — write to course_purchases (the table that gates lesson access).
+        // Mirrors the webhook at app/api/webhooks/stripe/route.ts; idempotent on stripe_session_id.
+        const courseId = session.metadata?.courseId;
+        if (!courseId) {
+          return { success: false, error: 'No course associated with this session' };
+        }
 
-        if (upsertError) {
-          return { success: false, error: 'Error al procesar el pago' };
+        const { data: existing } = await supabaseAdmin
+          .from('course_purchases')
+          .select('id')
+          .eq('stripe_session_id', session.id)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error: upsertError } = await supabaseAdmin
+            .from('course_purchases')
+            .upsert({
+              user_id: user.id,
+              course_id: courseId,
+              stripe_session_id: session.id,
+              amount_paid: session.amount_total ?? null,
+            });
+
+          if (upsertError) {
+            return { success: false, error: 'Error al procesar el pago' };
+          }
         }
       }
 

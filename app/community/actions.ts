@@ -76,21 +76,24 @@ export async function submitComment(formData: FormData): Promise<void> {
     return
   }
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select('user_id')
-    .eq('id', postId)
-    .single()
+  // Notify post author only for top-level comments (replies notify the parent author below).
+  if (!parentId) {
+    const { data: post } = await supabase
+      .from('posts')
+      .select('user_id')
+      .eq('id', postId)
+      .single()
 
-  if (post) {
-    await notify({
-      recipientId: post.user_id,
-      actorId: user.id,
-      type: 'post_comment',
-      entityType: 'post',
-      entityId: postId,
-      link: `/community/${postId}#comment-${inserted.id}`,
-    })
+    if (post) {
+      await notify({
+        recipientId: post.user_id,
+        actorId: user.id,
+        type: 'post_comment',
+        entityType: 'post',
+        entityId: postId,
+        link: `/community/${postId}#comment-${inserted.id}`,
+      })
+    }
   }
 
   if (parentId) {
