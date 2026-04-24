@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { notify } from '@/utils/notifications/server'
 
 export async function submitPost(formData: FormData): Promise<void> {
   const supabase = await createClient()
@@ -51,6 +52,7 @@ export async function submitComment(formData: FormData): Promise<void> {
 
   const postId = formData.get('postId') as string
   const content = formData.get('content') as string
+  const parentId = (formData.get('parentId') as string | null) || null
 
   if (!postId || !content) {
     return
@@ -59,14 +61,55 @@ export async function submitComment(formData: FormData): Promise<void> {
     return
   }
 
-  const { error } = await supabase.from('comments').insert({
-    user_id: user.id,
-    post_id: postId,
-    content: content.trim(),
-  })
+  const { data: inserted, error } = await supabase
+    .from('comments')
+    .insert({
+      user_id: user.id,
+      post_id: postId,
+      content: content.trim(),
+      parent_id: parentId,
+    })
+    .select('id')
+    .single()
 
-  if (error) {
+  if (error || !inserted) {
     return
+  }
+
+  const { data: post } = await supabase
+    .from('posts')
+    .select('user_id')
+    .eq('id', postId)
+    .single()
+
+  if (post) {
+    await notify({
+      recipientId: post.user_id,
+      actorId: user.id,
+      type: 'post_comment',
+      entityType: 'post',
+      entityId: postId,
+      link: `/community/${postId}#comment-${inserted.id}`,
+    })
+  }
+
+  if (parentId) {
+    const { data: parent } = await supabase
+      .from('comments')
+      .select('user_id')
+      .eq('id', parentId)
+      .single()
+
+    if (parent) {
+      await notify({
+        recipientId: parent.user_id,
+        actorId: user.id,
+        type: 'comment_reply',
+        entityType: 'comment',
+        entityId: inserted.id,
+        link: `/community/${postId}#comment-${inserted.id}`,
+      })
+    }
   }
 
   revalidatePath(`/community/${postId}`)
