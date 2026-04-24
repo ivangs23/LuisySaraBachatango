@@ -8,6 +8,7 @@ import {
   buildSubtitleTrackPayload,
   validateLanguageCode,
 } from '@/utils/mux/validation'
+import { normalizeVtt } from '@/utils/vtt'
 import { revalidatePath } from 'next/cache'
 
 async function requireAdmin() {
@@ -146,10 +147,40 @@ export async function addMuxTextTrack(
     .single()
   if (!lesson?.mux_asset_id) return { error: 'La lección no tiene un asset de Mux listo.' }
 
+  // Fetch the VTT, normalize it (handles DaVinci 01:00:00 offset + strips
+  // invalid <font> tags). If the content changed, upload the normalized
+  // version and point Mux at that URL instead.
+  let trackUrl = fileUrl
+  try {
+    const res = await fetch(fileUrl)
+    if (res.ok) {
+      const text = await res.text()
+      const { normalized, changed } = normalizeVtt(text)
+      if (changed) {
+        const prefix = '/storage/v1/object/public/mux-track-sources/'
+        const idx = new URL(fileUrl).pathname.indexOf(prefix)
+        if (idx >= 0) {
+          const originalPath = new URL(fileUrl).pathname.slice(idx + prefix.length)
+          const normalizedPath = originalPath.replace(/\.vtt$/i, '.normalized.vtt')
+          const { error: upErr } = await supabase.storage
+            .from('mux-track-sources')
+            .upload(normalizedPath, normalized, { contentType: 'text/vtt', upsert: true })
+          if (!upErr) {
+            trackUrl = supabase.storage.from('mux-track-sources').getPublicUrl(normalizedPath).data.publicUrl
+          } else {
+            console.warn('VTT normalization upload failed, using original URL:', upErr.message)
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('VTT normalization skipped:', e)
+  }
+
   try {
     const track = await mux.video.assets.createTrack(
       lesson.mux_asset_id,
-      buildSubtitleTrackPayload(fileUrl, languageCode, name),
+      buildSubtitleTrackPayload(trackUrl, languageCode, name),
     )
     revalidatePath(`/courses/${lesson.course_id}/${lessonId}/edit`)
     return { trackId: track.id, status: track.status }
