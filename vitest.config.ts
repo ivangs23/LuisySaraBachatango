@@ -13,7 +13,7 @@ export default defineConfig({
       ['__tests__/hooks/**', 'jsdom'],
     ],
     // Playwright E2E tests live under e2e/ and are run via `npm run test:e2e`.
-    exclude: ['e2e/**', 'node_modules/**', '.next/**', 'test-results/**', 'playwright-report/**'],
+    exclude: ['e2e/**', 'node_modules/**', '.next/**', 'test-results/**', 'playwright-report/**', '.claude/**'],
     setupFiles: ['./vitest.setup.ts'],
     coverage: {
       reporter: ['text', 'lcov'],
