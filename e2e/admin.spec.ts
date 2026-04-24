@@ -31,12 +31,16 @@ test.describe('Admin flows', () => {
     await loginAs(page, adminEmail!, adminPassword!)
     await page.goto('/courses')
 
-    const firstCourse = page.locator('a[href^="/courses/"]').first()
-    if ((await firstCourse.count()) === 0) {
+    // Find the first course-card link whose href is /courses/:uuid (not /courses/create).
+    const href = await page.evaluate(() => {
+      const anchors = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="/courses/"]'))
+      const match = anchors.find(a => /^\/courses\/[0-9a-f-]{10,}$/i.test(a.getAttribute('href') || ''))
+      return match?.getAttribute('href') || null
+    })
+    if (!href) {
       test.skip(true, 'No published courses — create one first')
       return
     }
-    const href = await firstCourse.getAttribute('href')
 
     await page.goto(`${href}/add-lesson`)
 
