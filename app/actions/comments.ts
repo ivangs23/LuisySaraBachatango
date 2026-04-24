@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { notify } from '@/utils/notifications/server';
 
 export type Comment = {
   id: string;
@@ -143,7 +144,14 @@ export async function toggleLike(commentId: string) {
     return { error: 'Debes iniciar sesión' };
   }
 
-  // check if liked
+  const { data: comment } = await supabase
+    .from('comments')
+    .select('id, user_id, lesson_id, post_id')
+    .eq('id', commentId)
+    .single();
+
+  if (!comment) return { error: 'Comentario no encontrado' };
+
   const { data: existingLike } = await supabase
     .from('comment_likes')
     .select('id')
@@ -152,20 +160,37 @@ export async function toggleLike(commentId: string) {
     .single();
 
   if (existingLike) {
-    // Unlike
-    await supabase
-      .from('comment_likes')
-      .delete()
-      .eq('id', existingLike.id);
-  } else {
-    // Like
-    await supabase
-      .from('comment_likes')
-      .insert({
-        comment_id: commentId,
-        user_id: user.id
-      });
+    await supabase.from('comment_likes').delete().eq('id', existingLike.id);
+    return { success: true };
   }
+
+  await supabase.from('comment_likes').insert({
+    comment_id: commentId,
+    user_id: user.id,
+  });
+
+  let link: string;
+  if (comment.lesson_id) {
+    const { data: lesson } = await supabase
+      .from('lessons')
+      .select('course_id')
+      .eq('id', comment.lesson_id)
+      .single();
+    link = `/courses/${lesson?.course_id ?? ''}/lessons/${comment.lesson_id}#comment-${commentId}`;
+  } else if (comment.post_id) {
+    link = `/community/${comment.post_id}#comment-${commentId}`;
+  } else {
+    link = '/';
+  }
+
+  await notify({
+    recipientId: comment.user_id,
+    actorId: user.id,
+    type: 'comment_like',
+    entityType: 'comment',
+    entityId: commentId,
+    link,
+  });
 
   return { success: true };
 }
