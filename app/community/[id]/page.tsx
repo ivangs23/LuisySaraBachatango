@@ -3,6 +3,8 @@ import { submitComment } from '../actions'
 import Link from 'next/link'
 import styles from '../community.module.css'
 import { notFound } from 'next/navigation'
+import PostLikeButton from '@/components/PostLikeButton'
+import CommunityCommentTree, { type CommunityComment } from '@/components/CommunityCommentTree'
 
 export default async function PostDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -20,11 +22,69 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
     notFound()
   }
 
-  const { data: comments } = await supabase
+  // Likes for this post
+  const { data: likes } = await supabase
+    .from('post_likes')
+    .select('user_id')
+    .eq('post_id', params.id)
+
+  const likeCount = likes?.length ?? 0
+  const userLiked = !!user && !!likes?.some((l: { user_id: string }) => l.user_id === user.id)
+
+  // Comments: fetch raw, then enrich with profile + likes, then build tree
+  const { data: rawComments } = await supabase
     .from('comments')
-    .select('*, profiles(full_name)')
+    .select('id, content, user_id, parent_id, created_at')
     .eq('post_id', params.id)
     .order('created_at', { ascending: true })
+
+  const userIds = Array.from(new Set((rawComments ?? []).map((c: { user_id: string }) => c.user_id)))
+  const safeUserIds = userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000']
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', safeUserIds)
+
+  const commentIds = (rawComments ?? []).map((c: { id: string }) => c.id)
+  const safeCommentIds = commentIds.length ? commentIds : ['00000000-0000-0000-0000-000000000000']
+  const { data: commentLikes } = await supabase
+    .from('comment_likes')
+    .select('comment_id, user_id')
+    .in('comment_id', safeCommentIds)
+
+  const profileMap = new Map<string, { full_name: string | null; avatar_url: string | null }>(
+    (profiles ?? []).map((p: { id: string; full_name: string | null; avatar_url: string | null }) => [p.id, p])
+  )
+
+  const enriched = (rawComments ?? []).map((c) => {
+    const cl = (commentLikes ?? []).filter((l: { comment_id: string }) => l.comment_id === c.id)
+    const profile = profileMap.get(c.user_id)
+    const node: CommunityComment = {
+      id: c.id,
+      content: c.content,
+      user_id: c.user_id,
+      parent_id: c.parent_id,
+      created_at: c.created_at,
+      author_name: profile?.full_name ?? 'Usuario',
+      author_avatar: profile?.avatar_url ?? null,
+      likes_count: cl.length,
+      user_has_liked: !!user && cl.some((l: { user_id: string }) => l.user_id === user.id),
+      replies: [],
+    }
+    return node
+  })
+
+  const byId = new Map(enriched.map(c => [c.id, c]))
+  const roots: CommunityComment[] = []
+  enriched.forEach(c => {
+    if (c.parent_id) {
+      const parent = byId.get(c.parent_id)
+      if (parent) parent.replies.push(c)
+      else roots.push(c)
+    } else {
+      roots.push(c)
+    }
+  })
 
   return (
     <div className={styles.detailContainer}>
@@ -40,8 +100,12 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
         {post.content}
       </div>
 
+      <div style={{ margin: '1rem 0' }}>
+        <PostLikeButton postId={post.id} initialLiked={userLiked} initialCount={likeCount} />
+      </div>
+
       <div className={styles.commentsSection}>
-        <h2 className={styles.commentsTitle}>Comentarios ({comments?.length || 0})</h2>
+        <h2 className={styles.commentsTitle}>Comentarios ({rawComments?.length || 0})</h2>
 
         {user ? (
           <form action={submitComment} className={styles.commentForm}>
@@ -61,21 +125,15 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
           </p>
         )}
 
-        <div className={styles.commentList}>
-          {comments?.map((comment) => (
-            <div key={comment.id} className={styles.commentCard}>
-              <div className={styles.commentHeader}>
-                <span className={styles.commentAuthor}>{comment.profiles?.full_name || 'Usuario'}</span>
-                <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-              </div>
-              <p className={styles.commentText}>{comment.content}</p>
-            </div>
-          ))}
-
-          {comments?.length === 0 && (
-            <p style={{ color: 'var(--text-muted)' }}>No hay comentarios aún.</p>
-          )}
-        </div>
+        {roots.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)' }}>No hay comentarios aún.</p>
+        ) : (
+          <CommunityCommentTree
+            postId={post.id}
+            comments={roots}
+            currentUserId={user?.id ?? null}
+          />
+        )}
       </div>
     </div>
   )

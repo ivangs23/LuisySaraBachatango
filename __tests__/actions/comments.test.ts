@@ -45,7 +45,11 @@ function makeSupabaseMock(userOverride?: unknown, fromOverride?: unknown) {
       order: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: null, error: null }),
       maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      insert: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: { id: 'inserted-id' }, error: null }),
+        }),
+      }),
       delete: vi.fn().mockReturnThis(),
     }),
   }

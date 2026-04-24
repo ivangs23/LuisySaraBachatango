@@ -72,8 +72,34 @@
   border-bottom: 1px solid var(--border);
   color: var(--text-main);
   font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .item:last-child {
   border-bottom: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem 0.5rem;
+}
+
+.markAllBtn {
+  background: none;
+  border: none;
+  color: var(--primary, #d4a85a);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.markAllBtn:hover {
+  text-decoration: underline;
+}
+
+.item.unread {
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
 }
