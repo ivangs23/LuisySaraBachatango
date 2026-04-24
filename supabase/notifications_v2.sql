@@ -8,6 +8,10 @@ ALTER TABLE notifications
   ADD COLUMN IF NOT EXISTS actor_ids uuid[] DEFAULT '{}',
   ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
+-- Allow nulls for legacy title/message (new typed notifications render from `type` + actor_ids).
+ALTER TABLE notifications ALTER COLUMN title DROP NOT NULL;
+ALTER TABLE notifications ALTER COLUMN message DROP NOT NULL;
+
 CREATE UNIQUE INDEX IF NOT EXISTS notifications_dedupe_key
   ON notifications (user_id, type, entity_type, entity_id)
   WHERE entity_type IS NOT NULL AND entity_id IS NOT NULL;
@@ -32,5 +36,7 @@ CREATE POLICY "Users can like posts"
   ON post_likes FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can unlike own"
   ON post_likes FOR DELETE USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS post_likes_post_id_idx ON post_likes (post_id);
 
 NOTIFY pgrst, 'reload schema';

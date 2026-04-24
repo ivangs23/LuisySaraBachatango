@@ -22,16 +22,17 @@ BEGIN
     updated_at = now(),
     link = EXCLUDED.link;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 REVOKE ALL ON FUNCTION upsert_notification(uuid, uuid, text, text, uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION upsert_notification(uuid, uuid, text, text, uuid, text) TO service_role;
 
-CREATE OR REPLACE VIEW notifications_with_actor AS
+CREATE OR REPLACE VIEW notifications_with_actor
+  WITH (security_invoker = true) AS
   SELECT n.*,
     p.full_name AS actor_name,
     p.avatar_url AS actor_avatar,
-    array_length(n.actor_ids, 1) AS actor_count
+    COALESCE(array_length(n.actor_ids, 1), 0) AS actor_count
   FROM notifications n
   LEFT JOIN profiles p ON p.id = n.actor_ids[1];
 
