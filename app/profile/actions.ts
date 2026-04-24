@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { sanitizeUrl } from '@/utils/sanitize'
+import { sanitizeUrl, safeAvatarUrl } from '@/utils/sanitize'
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
@@ -15,7 +15,12 @@ export async function updateProfile(formData: FormData) {
 
   const fullName = formData.get('fullName') as string
   const avatarMode = formData.get('avatarMode') as string
-  let avatarUrl = formData.get('avatarUrl') as string
+  // URL mode: validate against the allowlisted hosts (next.config.ts remotePatterns).
+  // Anything else returns null so the user falls back to the placeholder rather
+  // than crashing the page with a Next/Image runtime error.
+  let avatarUrl: string | null = avatarMode === 'upload'
+    ? null
+    : safeAvatarUrl(formData.get('avatarUrl'))
   
   // Handle Avatar Upload
   const avatarFile = formData.get('avatarFile') as File
@@ -162,32 +167,27 @@ export async function verifyStripeSession(sessionId: string) {
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           });
       } else {
-        // One-time course purchase — write to course_purchases (the table that gates lesson access).
-        // Mirrors the webhook at app/api/webhooks/stripe/route.ts; idempotent on stripe_session_id.
+        // One-time course purchase — idempotent on stripe_session_id (UNIQUE).
+        // Mirrors the webhook at app/api/webhooks/stripe/route.ts.
         const courseId = session.metadata?.courseId;
         if (!courseId) {
           return { success: false, error: 'No course associated with this session' };
         }
 
-        const { data: existing } = await supabaseAdmin
+        const { error: upsertError } = await supabaseAdmin
           .from('course_purchases')
-          .select('id')
-          .eq('stripe_session_id', session.id)
-          .maybeSingle();
-
-        if (!existing) {
-          const { error: upsertError } = await supabaseAdmin
-            .from('course_purchases')
-            .upsert({
+          .upsert(
+            {
               user_id: user.id,
               course_id: courseId,
               stripe_session_id: session.id,
               amount_paid: session.amount_total ?? null,
-            });
+            },
+            { onConflict: 'stripe_session_id', ignoreDuplicates: true }
+          );
 
-          if (upsertError) {
-            return { success: false, error: 'Error al procesar el pago' };
-          }
+        if (upsertError) {
+          return { success: false, error: 'Error al procesar el pago' };
         }
       }
 

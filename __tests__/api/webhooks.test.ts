@@ -93,35 +93,24 @@ describe('POST /api/webhooks/stripe — checkout.session.completed', () => {
     expect(res.status).toBe(400)
   })
 
-  it('processes a course purchase and calls upsert', async () => {
+  it('processes a course purchase via idempotent upsert on stripe_session_id', async () => {
     mockConstructEvent.mockReturnValueOnce({
       type: 'checkout.session.completed',
       data: { object: makeSession({ metadata: { userId: 'user-1', courseId: 'course-1' } }) },
     })
-    // No existing purchase (idempotency check)
-    mockMaybySingle.mockResolvedValueOnce({ data: null, error: null })
     mockUpsert.mockResolvedValueOnce({ error: null })
 
     const { POST } = await import('@/app/api/webhooks/stripe/route')
     const res = await POST(makeWebhookRequest())
     expect(res.status).toBe(200)
     expect(mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({ user_id: 'user-1', course_id: 'course-1' })
+      expect.objectContaining({
+        user_id: 'user-1',
+        course_id: 'course-1',
+        stripe_session_id: 'cs_test_session',
+      }),
+      expect.objectContaining({ onConflict: 'stripe_session_id', ignoreDuplicates: true }),
     )
-  })
-
-  it('skips upsert for duplicate course purchase (idempotency)', async () => {
-    mockConstructEvent.mockReturnValueOnce({
-      type: 'checkout.session.completed',
-      data: { object: makeSession({ metadata: { userId: 'user-1', courseId: 'course-1' } }) },
-    })
-    // Existing purchase found
-    mockMaybySingle.mockResolvedValueOnce({ data: { id: 'existing-purchase' }, error: null })
-
-    const { POST } = await import('@/app/api/webhooks/stripe/route')
-    const res = await POST(makeWebhookRequest())
-    expect(res.status).toBe(200)
-    expect(mockUpsert).not.toHaveBeenCalled()
   })
 })
 

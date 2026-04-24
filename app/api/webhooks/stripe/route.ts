@@ -51,28 +51,24 @@ export async function POST(req: Request) {
     }
 
     if (courseId) {
-      // One-time course purchase — idempotency: skip if session already processed
+      // One-time course purchase — idempotent on stripe_session_id (UNIQUE).
+      // No pre-check needed: concurrent Stripe retries collapse via ON CONFLICT.
       if (session.payment_status === 'paid') {
-        const { data: existing } = await supabase
+        const { error } = await supabase
           .from('course_purchases')
-          .select('id')
-          .eq('stripe_session_id', session.id)
-          .maybeSingle();
-
-        if (!existing) {
-          const { error } = await supabase
-            .from('course_purchases')
-            .upsert({
+          .upsert(
+            {
               user_id: userId,
               course_id: courseId,
               stripe_session_id: session.id,
               amount_paid: session.amount_total ?? null,
-            });
+            },
+            { onConflict: 'stripe_session_id', ignoreDuplicates: true }
+          );
 
-          if (error) {
-            console.error('Error saving course purchase:', error);
-            return new NextResponse('Database Error', { status: 500 });
-          }
+        if (error) {
+          console.error('Error saving course purchase:', error);
+          return new NextResponse('Database Error', { status: 500 });
         }
       }
     } else {

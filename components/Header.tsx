@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { User } from '@supabase/supabase-js';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
+import { safeAvatarUrl } from '@/utils/sanitize';
 
 type HeaderProps = {
   user: User | null;
@@ -69,12 +70,12 @@ export default function Header({ user, profile }: HeaderProps) {
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
             >
-              {profile?.avatar_url ? (
-                <Image 
-                  src={profile.avatar_url} 
-                  alt={profile.full_name || 'User'} 
-                  width={40} 
-                  height={40} 
+              {safeAvatarUrl(profile?.avatar_url) ? (
+                <Image
+                  src={safeAvatarUrl(profile.avatar_url)!}
+                  alt={profile.full_name || 'User'}
+                  width={40}
+                  height={40}
                   className={styles.avatar}
                 />
               ) : (
