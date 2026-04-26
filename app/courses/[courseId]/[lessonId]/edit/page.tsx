@@ -18,20 +18,28 @@ export default async function EditLessonPage(props: {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (profile?.role !== 'admin') redirect(`/courses/${params.courseId}`)
 
-  const { data: lesson } = await supabase
-    .from('lessons')
-    .select('id, title, description, "order", thumbnail_url, duration, is_free, mux_asset_id, mux_playback_id, mux_status')
-    .eq('id', params.lessonId)
-    .eq('course_id', params.courseId)
-    .single()
+  const [{ data: lesson }, { data: topLevelLessons }, { data: assignment }] = await Promise.all([
+    supabase
+      .from('lessons')
+      .select('id, title, description, "order", thumbnail_url, duration, is_free, mux_asset_id, mux_playback_id, mux_status, parent_lesson_id')
+      .eq('id', params.lessonId)
+      .eq('course_id', params.courseId)
+      .single(),
+    supabase
+      .from('lessons')
+      .select('id, title, "order"')
+      .eq('course_id', params.courseId)
+      .is('parent_lesson_id', null)
+      .neq('id', params.lessonId)
+      .order('order', { ascending: true }),
+    supabase
+      .from('assignments')
+      .select('id, title, description')
+      .eq('lesson_id', params.lessonId)
+      .maybeSingle(),
+  ])
 
   if (!lesson) notFound()
-
-  const { data: assignment } = await supabase
-    .from('assignments')
-    .select('id, title, description')
-    .eq('lesson_id', params.lessonId)
-    .maybeSingle()
 
   const tracks = lesson.mux_asset_id ? await listMuxTracks(lesson.mux_asset_id) : []
 
@@ -39,7 +47,12 @@ export default async function EditLessonPage(props: {
     <div style={{ padding: '2rem 10%', maxWidth: 1000, margin: '0 auto' }}>
       <h1>Editar Lección</h1>
 
-      <LessonForm courseId={params.courseId} initialData={lesson} action={updateLesson} />
+      <LessonForm
+        courseId={params.courseId}
+        initialData={lesson}
+        availableParents={topLevelLessons ?? []}
+        action={updateLesson}
+      />
 
       <VideoUploadWidget
         lessonId={lesson.id}

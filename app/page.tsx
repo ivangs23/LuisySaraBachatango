@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
 import Features from "@/components/Features";
@@ -17,6 +16,11 @@ export default function Home() {
     <div className={styles.container}>
       {/* Hero Section */}
       <section className={styles.hero}>
+        {/* Ambient floating orbs */}
+        <span className={styles.orb1} aria-hidden="true" />
+        <span className={styles.orb2} aria-hidden="true" />
+        <span className={styles.orb3} aria-hidden="true" />
+
         <div className={styles.heroContent}>
           <h1 className={styles.title} style={{ whiteSpace: 'pre-line' }}>
             {t.hero.title}
@@ -27,6 +31,10 @@ export default function Home() {
           <Link href="/courses" className={styles.ctaButton}>
             {t.hero.cta}
           </Link>
+        </div>
+
+        <div className={styles.scrollIndicator} aria-hidden="true">
+          <div className={styles.scrollDot} />
         </div>
       </section>
 

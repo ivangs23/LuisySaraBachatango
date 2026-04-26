@@ -12,10 +12,21 @@ export default async function AddLessonPage(props: { params: Promise<{ courseId:
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (profile?.role !== 'admin') redirect(`/courses/${params.courseId}`)
 
+  const { data: topLevelLessons } = await supabase
+    .from('lessons')
+    .select('id, title, "order"')
+    .eq('course_id', params.courseId)
+    .is('parent_lesson_id', null)
+    .order('order', { ascending: true })
+
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Añadir Nueva Lección</h1>
-      <LessonForm courseId={params.courseId} action={createLesson} />
+      <LessonForm
+        courseId={params.courseId}
+        availableParents={topLevelLessons ?? []}
+        action={createLesson}
+      />
     </div>
   )
 }

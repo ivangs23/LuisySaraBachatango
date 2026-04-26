@@ -49,7 +49,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   ] = await Promise.all([
     supabase.from('courses').select('*').eq('id', params.courseId).single(),
     supabase.from('lessons')
-      .select('id, title, order, release_date')
+      .select('id, title, order, release_date, parent_lesson_id')
       .eq('course_id', params.courseId)
       .order('order', { ascending: true }),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -124,27 +124,51 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
         </div>
       ) : (
         <div className={styles.lessonList}>
-          {lessons && lessons.map((lesson) => {
-            const isCompleted = completedLessonIds.has(lesson.id)
-            return (
-              <Link href={`/courses/${course.id}/${lesson.id}`} key={lesson.id} className={styles.lessonCard}>
-                <div className={styles.lessonNumber}>{lesson.order}</div>
-                <div className={styles.lessonInfo}>
-                  <h3 className={styles.lessonTitle}>{lesson.title}</h3>
-                  <p className={styles.lessonDate}>
-                    Disponible: {new Date(lesson.release_date).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className={styles.playIcon}>
-                  {isCompleted ? (
-                    <span style={{ color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 'bold' }}>✓</span>
-                  ) : (
-                    '▶'
-                  )}
-                </div>
-              </Link>
-            )
-          })}
+          {lessons && (() => {
+            const parents = lessons.filter(l => !l.parent_lesson_id).sort((a, b) => a.order - b.order)
+            const childrenByParent = new Map<string, typeof lessons>()
+            lessons.filter(l => l.parent_lesson_id).forEach(l => {
+              const key = l.parent_lesson_id!
+              if (!childrenByParent.has(key)) childrenByParent.set(key, [])
+              childrenByParent.get(key)!.push(l)
+            })
+
+            const items: { lesson: typeof lessons[0]; displayOrder: string; isChild: boolean }[] = []
+            for (const parent of parents) {
+              items.push({ lesson: parent, displayOrder: `${parent.order}`, isChild: false })
+              const children = (childrenByParent.get(parent.id) ?? []).sort((a, b) => a.order - b.order)
+              for (const child of children) {
+                items.push({ lesson: child, displayOrder: `${parent.order}.${child.order}`, isChild: true })
+              }
+            }
+
+            return items.map(({ lesson, displayOrder, isChild }) => {
+              const isCompleted = completedLessonIds.has(lesson.id)
+              return (
+                <Link
+                  href={`/courses/${course.id}/${lesson.id}`}
+                  key={lesson.id}
+                  className={styles.lessonCard}
+                  style={isChild ? { paddingLeft: '2.5rem' } : undefined}
+                >
+                  <div className={styles.lessonNumber}>{displayOrder}</div>
+                  <div className={styles.lessonInfo}>
+                    <h3 className={styles.lessonTitle}>{lesson.title}</h3>
+                    <p className={styles.lessonDate}>
+                      Disponible: {new Date(lesson.release_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className={styles.playIcon}>
+                    {isCompleted ? (
+                      <span style={{ color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 'bold' }}>✓</span>
+                    ) : (
+                      '▶'
+                    )}
+                  </div>
+                </Link>
+              )
+            })
+          })()}
         </div>
       )}
     </div>

@@ -13,21 +13,26 @@ type Lesson = {
   thumbnail_url?: string | null
   duration?: number | null
   is_free?: boolean
+  parent_lesson_id?: string | null
 }
+
+type LessonOption = { id: string; title: string; order: number }
 
 interface Props {
   courseId: string
   initialData?: Lesson
+  availableParents?: LessonOption[]
   action: (formData: FormData) => Promise<{ error?: string } | void>
 }
 
-export default function LessonForm({ courseId, initialData, action }: Props) {
+export default function LessonForm({ courseId, initialData, availableParents, action }: Props) {
   const router = useRouter()
   const [title, setTitle] = useState(initialData?.title ?? '')
   const [description, setDescription] = useState(initialData?.description ?? '')
   const [order, setOrder] = useState(initialData?.order?.toString() ?? '1')
   const [duration, setDuration] = useState(initialData?.duration?.toString() ?? '')
   const [isFree, setIsFree] = useState(initialData?.is_free ?? false)
+  const [parentLessonId, setParentLessonId] = useState(initialData?.parent_lesson_id ?? '')
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(initialData?.thumbnail_url ?? null)
   const [submitting, setSubmitting] = useState(false)
@@ -73,6 +78,7 @@ export default function LessonForm({ courseId, initialData, action }: Props) {
     if (duration) fd.append('duration', duration)
     if (isFree) fd.append('isFree', 'on')
     if (thumbnailUrl) fd.append('thumbnailUrl', thumbnailUrl)
+    if (parentLessonId) fd.append('parentLessonId', parentLessonId)
 
     const result = await action(fd)
     if (result && 'error' in result && result.error) {
@@ -93,8 +99,19 @@ export default function LessonForm({ courseId, initialData, action }: Props) {
         <label>Descripción</label>
         <textarea value={description ?? ''} onChange={e => setDescription(e.target.value)} rows={4} />
       </div>
+      {availableParents && availableParents.length > 0 && (
+        <div className={styles.field}>
+          <label>Lección padre (opcional)</label>
+          <select value={parentLessonId} onChange={e => setParentLessonId(e.target.value)}>
+            <option value="">— Ninguna (lección de nivel superior) —</option>
+            {availableParents.map(p => (
+              <option key={p.id} value={p.id}>{p.order}. {p.title}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className={styles.field}>
-        <label>Orden</label>
+        <label>{parentLessonId ? 'Sub-orden (1, 2, 3…)' : 'Orden'}</label>
         <input type="number" min="1" value={order} onChange={e => setOrder(e.target.value)} required />
       </div>
       <div className={styles.field}>

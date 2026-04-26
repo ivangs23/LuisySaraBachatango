@@ -1,4 +1,3 @@
-import NextClassPopup from '@/components/NextClassPopup';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import Image from 'next/image';
@@ -199,7 +198,6 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <NextClassPopup />
     </div>
   );
 }

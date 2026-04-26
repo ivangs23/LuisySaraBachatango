@@ -24,6 +24,7 @@ export async function createLesson(formData: FormData) {
   const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
   const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
   const isFree = formData.get('isFree') === 'on'
+  const parentLessonId = (formData.get('parentLessonId') as string | null) || null
 
   const { data: inserted, error } = await supabase
     .from('lessons')
@@ -36,6 +37,7 @@ export async function createLesson(formData: FormData) {
       thumbnail_url: thumbnailUrl || null,
       duration,
       is_free: isFree,
+      parent_lesson_id: parentLessonId,
       mux_status: 'pending_upload',
     })
     .select('id')
@@ -69,6 +71,7 @@ export async function updateLesson(formData: FormData) {
   const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
   const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
   const isFree = formData.get('isFree') === 'on'
+  const parentLessonId = (formData.get('parentLessonId') as string | null) || null
 
   const update: Record<string, unknown> = {
     title,
@@ -76,6 +79,7 @@ export async function updateLesson(formData: FormData) {
     "order": order,
     duration,
     is_free: isFree,
+    parent_lesson_id: parentLessonId,
   }
   if (thumbnailUrl) update.thumbnail_url = thumbnailUrl
 

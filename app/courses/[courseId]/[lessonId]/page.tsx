@@ -62,7 +62,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
       .eq('course_id', params.courseId)
       .maybeSingle(),
     supabase.from('lessons')
-      .select('id, title, order')
+      .select('id, title, order, parent_lesson_id')
       .eq('course_id', params.courseId)
       .order('order', { ascending: true }),
     supabase.from('assignments')
@@ -137,30 +137,49 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
         <aside className={styles.sidebar}>
           <h3 className={styles.sidebarTitle}>{t.lesson.courseLessons}</h3>
           <div className={styles.lessonList}>
-            {allLessons?.map((l) => {
-              const isCompleted = completedLessonIds.has(l.id)
-              const isActive = l.id === params.lessonId
-              
-              return (
-                <Link 
-                  key={l.id} 
-                  href={`/courses/${params.courseId}/${l.id}`}
-                  className={`${styles.lessonItem} ${isActive ? styles.activeLesson : ''}`}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                    <span className={styles.lessonOrder}>{l.order}.</span>
-                    <span className={styles.lessonTitleText}>{l.title}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {isCompleted ? (
-                       <span style={{ color: isActive ? 'white' : 'var(--primary)', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
-                    ) : (
-                       isActive && <span className={styles.playingIndicator}>▶</span>
-                    )}
-                  </div>
-                </Link>
-              )
-            })}
+            {allLessons && (() => {
+              const parents = allLessons.filter(l => !l.parent_lesson_id).sort((a, b) => a.order - b.order)
+              const childrenByParent = new Map<string, typeof allLessons>()
+              allLessons.filter(l => l.parent_lesson_id).forEach(l => {
+                const key = l.parent_lesson_id!
+                if (!childrenByParent.has(key)) childrenByParent.set(key, [])
+                childrenByParent.get(key)!.push(l)
+              })
+
+              const items: { l: typeof allLessons[0]; displayOrder: string; isChild: boolean }[] = []
+              for (const parent of parents) {
+                items.push({ l: parent, displayOrder: `${parent.order}`, isChild: false })
+                const children = (childrenByParent.get(parent.id) ?? []).sort((a, b) => a.order - b.order)
+                for (const child of children) {
+                  items.push({ l: child, displayOrder: `${parent.order}.${child.order}`, isChild: true })
+                }
+              }
+
+              return items.map(({ l, displayOrder, isChild }) => {
+                const isCompleted = completedLessonIds.has(l.id)
+                const isActive = l.id === params.lessonId
+                return (
+                  <Link
+                    key={l.id}
+                    href={`/courses/${params.courseId}/${l.id}`}
+                    className={`${styles.lessonItem} ${isActive ? styles.activeLesson : ''}`}
+                    style={isChild ? { paddingLeft: '2rem' } : undefined}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                      <span className={styles.lessonOrder}>{displayOrder}.</span>
+                      <span className={styles.lessonTitleText}>{l.title}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {isCompleted ? (
+                        <span style={{ color: isActive ? 'white' : 'var(--primary)', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
+                      ) : (
+                        isActive && <span className={styles.playingIndicator}>▶</span>
+                      )}
+                    </div>
+                  </Link>
+                )
+              })
+            })()}
           </div>
         </aside>
 
