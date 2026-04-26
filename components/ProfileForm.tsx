@@ -1,6 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { LayoutGroup, motion } from 'motion/react';
+import {
+  User,
+  Image as ImageIcon,
+  Instagram,
+  Facebook,
+  Music2,
+  Youtube,
+  Save,
+} from 'lucide-react';
 import { updateProfile } from '@/app/profile/actions';
 import styles from '@/app/profile/profile.module.css';
 
@@ -16,12 +26,19 @@ type Profile = {
 };
 
 export default function ProfileForm({ profile }: { profile: Profile }) {
-  const [avatarMode, setAvatarMode] = useState<'url' | 'upload'>(profile.avatar_url?.startsWith('http') && !profile.avatar_url.includes('supabase') ? 'url' : 'upload');
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url || null);
+  const initialMode: 'url' | 'upload' =
+    profile.avatar_url?.startsWith('http') &&
+    !profile.avatar_url.includes('supabase')
+      ? 'url'
+      : 'upload';
+
+  const [avatarMode, setAvatarMode] = useState<'url' | 'upload'>(initialMode);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    profile.avatar_url || null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Controlled inputs
   const [fullName, setFullName] = useState(profile.full_name || '');
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -30,33 +47,31 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   const [tiktok, setTikTok] = useState(profile.tiktok || '');
   const [youtube, setYoutube] = useState(profile.youtube || '');
 
-  // Dirty check
   useEffect(() => {
-    // Determine if effective avatar has changed
-    // If upload mode and a file is selected -> dirty
-    // If url mode and url != initial -> dirty
-    // If mode changed (e.g. was url, now upload but no file?) - actually if mode changes and we have a new input, yes.
-    
-    // Simplification: Check if any field differs from initial
-    const isAvatarChanged = 
-        (avatarMode === 'upload' && !!avatarFile) ||
-        (avatarMode === 'url' && avatarUrl !== (profile.avatar_url || ''));
+    const isAvatarChanged =
+      (avatarMode === 'upload' && !!avatarFile) ||
+      (avatarMode === 'url' && avatarUrl !== (profile.avatar_url || ''));
 
-    // Special case: if initial was URL and we switch to upload without file -> not dirty relative to image content till file selected,
-    // BUT if we want to enforce re-uploading, maybe not.
-    // Let's stick to simple field comparison.
-    
-    const hasChanges = 
-        fullName !== (profile.full_name || '') ||
-        instagram !== (profile.instagram || '') ||
-        facebook !== (profile.facebook || '') ||
-        tiktok !== (profile.tiktok || '') ||
-        youtube !== (profile.youtube || '') ||
-        isAvatarChanged;
+    const hasChanges =
+      fullName !== (profile.full_name || '') ||
+      instagram !== (profile.instagram || '') ||
+      facebook !== (profile.facebook || '') ||
+      tiktok !== (profile.tiktok || '') ||
+      youtube !== (profile.youtube || '') ||
+      isAvatarChanged;
 
     setIsDirty(hasChanges);
-  }, [fullName, instagram, facebook, tiktok, youtube, avatarMode, avatarUrl, avatarFile, profile]);
-
+  }, [
+    fullName,
+    instagram,
+    facebook,
+    tiktok,
+    youtube,
+    avatarMode,
+    avatarUrl,
+    avatarFile,
+    profile,
+  ]);
 
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,178 +88,219 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   };
 
   const handleSubmit = async (formData: FormData) => {
-    // Prevent default form action behavior if we want custom handling, 
-    // but here we are using `action={handleSubmit}` which in Next.js with Server Actions behaves like a form handler.
-    // However, since we need to prevent submission if not dirty (though disabled button handles UI),
-    // and we want to control the formData being sent (specifically appending state values if not in inputs).
-    // Note: Inputs with `name` attribute are automatically in formData.
-    // Since we use controlled inputs, we just need to ensure they have `name` and `value`.
-    
     setIsSubmitting(true);
-    // Append the active mode so server knows whether to look for file or url
     formData.append('avatarMode', avatarMode);
-    
-    // If we have a file in state but inputs might not handle it perfectly in all browsers if controlled? 
-    // File inputs are uncontrolled by definition in React. `defaultValue` or no value.
-    // We rely on the input ref/name for the file. 
-    
+
     try {
-        await updateProfile(formData);
-        // On success, we should probably reset dirty state or re-init with new profile.
-        // But since this is a server action that revalidates path, the page component will re-render
-        // with new `profile` prop, causing this component to re-mount or update.
-        // We might want to wait for that.
-        setIsDirty(false); // Optimistic until re-render
+      await updateProfile(formData);
+      setIsDirty(false);
     } catch (e) {
-        console.error(e);
-        // Error handling if needed, or rely on server action global error boundary
+      console.error(e);
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <form action={handleSubmit} className={styles.form}>
-      <div className={styles.group}>
-        <label htmlFor="fullName">Nombre Completo</label>
-        <input 
-          id="fullName" 
-          name="fullName" 
-          type="text" 
+      {/* Nombre */}
+      <div className={styles.formGroup}>
+        <label htmlFor="fullName" className={styles.formLabel}>
+          <User size={12} strokeWidth={2.4} aria-hidden="true" />
+          Nombre completo
+        </label>
+        <input
+          id="fullName"
+          name="fullName"
+          type="text"
+          className={styles.formInput}
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Tu nombre"
         />
       </div>
 
-      <div className={styles.group}>
-        <label>Avatar</label>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
-          <button 
-            type="button" 
-            onClick={() => setAvatarMode('upload')}
-            style={{ 
-                padding: '0.5rem 1rem', 
-                borderRadius: '4px', 
-                border: 'none', 
-                backgroundColor: avatarMode === 'upload' ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                color: 'white',
-                cursor: 'pointer'
-            }}
-          >
-            Subir Foto
-          </button>
-          <button 
-            type="button" 
-            onClick={() => setAvatarMode('url')}
-             style={{ 
-                padding: '0.5rem 1rem', 
-                borderRadius: '4px', 
-                border: 'none', 
-                backgroundColor: avatarMode === 'url' ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                color: 'white',
-                cursor: 'pointer'
-            }}
-          >
-            URL Externa
-          </button>
-        </div>
+      {/* Avatar */}
+      <div className={styles.formGroup}>
+        <span className={styles.formLabel}>
+          <ImageIcon size={12} strokeWidth={2.4} aria-hidden="true" />
+          Avatar
+        </span>
+
+        <LayoutGroup id="avatar-mode-tabs">
+          <div className={styles.avatarModes} role="tablist" aria-label="Modo de avatar">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={avatarMode === 'upload'}
+              onClick={() => setAvatarMode('upload')}
+              className={`${styles.avatarModeBtn} ${
+                avatarMode === 'upload' ? styles.avatarModeActive : ''
+              }`}
+            >
+              {avatarMode === 'upload' && (
+                <motion.span
+                  layoutId="avatar-mode-indicator"
+                  className={styles.avatarModeIndicator}
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span style={{ position: 'relative', zIndex: 1 }}>Subir foto</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={avatarMode === 'url'}
+              onClick={() => setAvatarMode('url')}
+              className={`${styles.avatarModeBtn} ${
+                avatarMode === 'url' ? styles.avatarModeActive : ''
+              }`}
+            >
+              {avatarMode === 'url' && (
+                <motion.span
+                  layoutId="avatar-mode-indicator"
+                  className={styles.avatarModeIndicator}
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span style={{ position: 'relative', zIndex: 1 }}>URL externa</span>
+            </button>
+          </div>
+        </LayoutGroup>
 
         {avatarMode === 'upload' ? (
-           <div style={{ border: '2px dashed rgba(255,255,255,0.2)', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-             <input 
-               type="file" 
-               name="avatarFile"
-               accept="image/*" 
-               onChange={handleAvatarFileChange}
-               style={{ width: '100%', marginBottom: '1rem' }}
-             />
-           </div>
+          <div className={styles.avatarUploadDrop}>
+            <input
+              type="file"
+              name="avatarFile"
+              accept="image/*"
+              onChange={handleAvatarFileChange}
+              className={styles.avatarUploadInput}
+            />
+          </div>
         ) : (
-           <input 
-             id="avatarUrl" 
-             name="avatarUrl" 
-             type="url" 
-             value={avatarUrl}
-             onChange={handleAvatarUrlChange}
-             placeholder="https://example.com/avatar.jpg"
-           />
+          <input
+            id="avatarUrl"
+            name="avatarUrl"
+            type="url"
+            className={styles.formInput}
+            value={avatarUrl}
+            onChange={handleAvatarUrlChange}
+            placeholder="https://example.com/avatar.jpg"
+          />
         )}
-        
-        {avatarPreview && (
-            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                <img 
-                    src={avatarPreview} 
-                    alt="Avatar Preview" 
-                    style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} 
-                />
-            </div>
+
+        {avatarPreview && avatarPreview.startsWith('http') && (
+          <div className={styles.avatarPreview}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={avatarPreview}
+              alt="Vista previa del avatar"
+              className={styles.avatarPreviewImg}
+            />
+          </div>
+        )}
+        {avatarPreview && avatarPreview.startsWith('blob:') && (
+          <div className={styles.avatarPreview}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={avatarPreview}
+              alt="Vista previa del avatar"
+              className={styles.avatarPreviewImg}
+            />
+          </div>
         )}
       </div>
 
-      <h3 className={styles.subHeader} style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-main)' }}>Redes Sociales</h3>
-      
-      <div className={styles.group}>
-        <label htmlFor="instagram">Instagram</label>
-        <input 
-          id="instagram" 
-          name="instagram" 
-          type="url" 
+      {/* Divider redes */}
+      <div className={styles.formDivider}>
+        <span className={styles.formDividerLine} aria-hidden="true" />
+        <span className={styles.formDividerLabel}>Redes sociales</span>
+        <span className={styles.formDividerLine} aria-hidden="true" />
+      </div>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="instagram" className={styles.formLabel}>
+          <Instagram size={12} strokeWidth={2.4} aria-hidden="true" />
+          Instagram
+        </label>
+        <input
+          id="instagram"
+          name="instagram"
+          type="url"
+          className={styles.formInput}
           value={instagram}
           onChange={(e) => setInstagram(e.target.value)}
           placeholder="https://instagram.com/tu_usuario"
         />
       </div>
-      
-      <div className={styles.group}>
-        <label htmlFor="facebook">Facebook</label>
-        <input 
-          id="facebook" 
-          name="facebook" 
-          type="url" 
+
+      <div className={styles.formGroup}>
+        <label htmlFor="facebook" className={styles.formLabel}>
+          <Facebook size={12} strokeWidth={2.4} aria-hidden="true" />
+          Facebook
+        </label>
+        <input
+          id="facebook"
+          name="facebook"
+          type="url"
+          className={styles.formInput}
           value={facebook}
           onChange={(e) => setFacebook(e.target.value)}
           placeholder="https://facebook.com/tu_usuario"
         />
       </div>
 
-      <div className={styles.group}>
-        <label htmlFor="tiktok">TikTok</label>
-        <input 
-          id="tiktok" 
-          name="tiktok" 
-          type="url" 
+      <div className={styles.formGroup}>
+        <label htmlFor="tiktok" className={styles.formLabel}>
+          <Music2 size={12} strokeWidth={2.4} aria-hidden="true" />
+          TikTok
+        </label>
+        <input
+          id="tiktok"
+          name="tiktok"
+          type="url"
+          className={styles.formInput}
           value={tiktok}
           onChange={(e) => setTikTok(e.target.value)}
           placeholder="https://tiktok.com/@tu_usuario"
         />
       </div>
 
-      <div className={styles.group}>
-        <label htmlFor="youtube">YouTube</label>
-        <input 
-          id="youtube" 
-          name="youtube" 
-          type="url" 
+      <div className={styles.formGroup}>
+        <label htmlFor="youtube" className={styles.formLabel}>
+          <Youtube size={12} strokeWidth={2.4} aria-hidden="true" />
+          YouTube
+        </label>
+        <input
+          id="youtube"
+          name="youtube"
+          type="url"
+          className={styles.formInput}
           value={youtube}
           onChange={(e) => setYoutube(e.target.value)}
           placeholder="https://youtube.com/@tu_canal"
         />
       </div>
 
-      <button 
-        type="submit" 
-        disabled={!isDirty || isSubmitting} 
-        className={styles.buttonPrimary}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '150px' }}
+      <motion.button
+        type="submit"
+        disabled={!isDirty || isSubmitting}
+        className={styles.formSubmit}
+        whileTap={!isDirty || isSubmitting ? undefined : { scale: 0.97 }}
       >
         {isSubmitting ? (
           <>
-            <span className={styles.spinner}></span>
+            <span className={styles.spinner} aria-hidden="true" />
             Guardando...
           </>
-        ) : 'Guardar Cambios'}
-      </button>
+        ) : (
+          <>
+            <Save size={14} strokeWidth={2.4} aria-hidden="true" />
+            Guardar cambios
+          </>
+        )}
+      </motion.button>
     </form>
   );
 }
