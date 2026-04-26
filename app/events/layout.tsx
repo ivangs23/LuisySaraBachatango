@@ -7,6 +7,7 @@ export const metadata: Metadata = {
     title: "Eventos | Luis y Sara Bachatango",
     description: "Próximos eventos, festivales y workshops de Luis y Sara Bachatango. Encuéntranos en directo.",
     url: "/events",
+    images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630, alt: 'Eventos y workshops de Luis y Sara Bachatango' }],
   },
   alternates: { canonical: "/events" },
 };

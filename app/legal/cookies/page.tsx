@@ -1,3 +1,13 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Política de Cookies",
+  description: "Información sobre el uso de cookies en la plataforma de Luis y Sara Bachatango.",
+  openGraph: { title: "Política de Cookies | Luis y Sara Bachatango", url: "/legal/cookies" },
+  alternates: { canonical: "/legal/cookies" },
+  robots: { index: true, follow: false },
+};
+
 export default function CookiesPage() {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '4rem 2rem' }}>

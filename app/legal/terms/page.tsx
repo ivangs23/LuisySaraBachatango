@@ -1,3 +1,13 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Términos y Condiciones",
+  description: "Consulta los términos y condiciones de uso de la plataforma de cursos online de Luis y Sara Bachatango.",
+  openGraph: { title: "Términos y Condiciones | Luis y Sara Bachatango", url: "/legal/terms" },
+  alternates: { canonical: "/legal/terms" },
+  robots: { index: true, follow: false },
+};
+
 export default function TermsPage() {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '4rem 2rem' }}>

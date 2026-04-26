@@ -1,6 +1,12 @@
+import type { Metadata } from 'next'
 import { login } from './actions'
 import styles from './login.module.css'
 import { getDict } from '@/utils/get-dict'
+
+export const metadata: Metadata = {
+  title: "Iniciar sesión",
+  robots: { index: false, follow: false },
+};
 
 export default async function LoginPage(props: { searchParams: Promise<{ message: string, error: string }> }) {
   const searchParams = await props.searchParams;

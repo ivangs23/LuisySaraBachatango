@@ -1,6 +1,12 @@
+import type { Metadata } from 'next'
 import { resetPassword } from '../login/actions'
 import styles from '../login/login.module.css'
 import { getDict } from '@/utils/get-dict'
+
+export const metadata: Metadata = {
+  title: "Recuperar contraseña",
+  robots: { index: false, follow: false },
+};
 
 export default async function ForgotPasswordPage(props: { searchParams: Promise<{ message: string, error: string }> }) {
   const searchParams = await props.searchParams;

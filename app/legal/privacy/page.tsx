@@ -1,3 +1,13 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Política de Privacidad",
+  description: "Consulta nuestra política de privacidad. Información sobre el tratamiento de tus datos personales en la plataforma de cursos de Luis y Sara Bachatango.",
+  openGraph: { title: "Política de Privacidad | Luis y Sara Bachatango", url: "/legal/privacy" },
+  alternates: { canonical: "/legal/privacy" },
+  robots: { index: true, follow: false },
+};
+
 export default function PrivacyPage() {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '4rem 2rem' }}>

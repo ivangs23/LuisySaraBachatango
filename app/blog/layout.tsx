@@ -7,6 +7,7 @@ export const metadata: Metadata = {
     title: "Blog | Luis y Sara Bachatango",
     description: "Artículos sobre técnica de Bachata y Bachatango, musicalidad y conexión con Luis y Sara.",
     url: "/blog",
+    images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630, alt: 'Blog de Bachatango con Luis y Sara' }],
   },
   alternates: { canonical: "/blog" },
 };

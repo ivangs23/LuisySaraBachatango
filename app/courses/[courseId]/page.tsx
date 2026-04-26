@@ -96,7 +96,27 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   const completedLessonIds = new Set<string>()
   progressResult.data?.forEach(p => completedLessonIds.add(p.lesson_id))
 
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://luisysarabachatango.com'
+  const courseJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course.title,
+    description: course.description ?? `Curso de Bachatango con Luis y Sara.`,
+    url: `${BASE_URL}/courses/${course.id}`,
+    provider: {
+      '@type': 'Organization',
+      name: 'Luis y Sara Bachatango',
+      url: BASE_URL,
+    },
+    ...(course.image_url ? { image: course.image_url } : {}),
+  }
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
+      />
     <div className={styles.container}>
       <div className={styles.header}>
         <Link href="/courses" className={styles.backLink}>&larr; Volver a Cursos</Link>
@@ -172,5 +192,6 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
         </div>
       )}
     </div>
+    </>
   )
 }

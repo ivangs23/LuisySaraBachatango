@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     title: "Comunidad | Luis y Sara Bachatango",
     description: "Únete a la comunidad de bailarines de Bachatango. Comparte tu progreso y conecta con otros alumnos.",
     url: "/community",
+    images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630, alt: 'Comunidad de bailarines de Bachatango' }],
   },
   alternates: { canonical: "/community" },
 };

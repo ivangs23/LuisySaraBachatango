@@ -7,6 +7,7 @@ export const metadata: Metadata = {
     title: "Contacto | Luis y Sara Bachatango",
     description: "Contacta con Luis y Sara para actuaciones, workshops o festivales. Disponibles para eventos en todo el mundo.",
     url: "/contact",
+    images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630, alt: 'Contacto Luis y Sara Bachatango' }],
   },
   alternates: { canonical: "/contact" },
 };

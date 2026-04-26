@@ -34,6 +34,7 @@ export const metadata: Metadata = {
     title: "Cursos | Luis y Sara Bachatango",
     description: "Explora todos los cursos de Bachata y Bachatango de Luis y Sara.",
     url: "/courses",
+    images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630, alt: 'Cursos de Bachatango con Luis y Sara' }],
   },
   alternates: { canonical: "/courses" },
 };

@@ -1,3 +1,13 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Aviso Legal",
+  description: "Aviso legal de Luis y Sara Bachatango. Información sobre el titular de la plataforma y las condiciones de uso.",
+  openGraph: { title: "Aviso Legal | Luis y Sara Bachatango", url: "/legal/notice" },
+  alternates: { canonical: "/legal/notice" },
+  robots: { index: true, follow: false },
+};
+
 export default function LegalNoticePage() {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '4rem 2rem' }}>

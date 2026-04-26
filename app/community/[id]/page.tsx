@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/utils/supabase/server'
 import { submitComment } from '../actions'
 import Link from 'next/link'
@@ -5,6 +6,38 @@ import styles from '../community.module.css'
 import { notFound } from 'next/navigation'
 import PostLikeButton from '@/components/PostLikeButton'
 import CommunityCommentTree, { type CommunityComment } from '@/components/CommunityCommentTree'
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: post } = await supabase
+    .from('posts')
+    .select('title, content, profiles(full_name)')
+    .eq('id', id)
+    .single()
+
+  if (!post) return { title: 'Post no encontrado' }
+
+  const description = post.content?.slice(0, 160) ?? 'Publicación de la comunidad de Luis y Sara Bachatango.'
+  const profilesData = post.profiles as { full_name: string | null } | { full_name: string | null }[] | null
+  const author = (Array.isArray(profilesData) ? profilesData[0]?.full_name : profilesData?.full_name) ?? 'Un miembro'
+
+  return {
+    title: post.title,
+    description,
+    openGraph: {
+      title: `${post.title} | Comunidad Bachatango`,
+      description,
+      url: `/community/${id}`,
+      type: 'article',
+      images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630, alt: post.title }],
+    },
+    alternates: { canonical: `/community/${id}` },
+    authors: [{ name: author }],
+  }
+}
 
 export default async function PostDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;

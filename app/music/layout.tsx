@@ -7,6 +7,7 @@ export const metadata: Metadata = {
     title: "Música | Luis y Sara Bachatango",
     description: "Escucha la playlist oficial de Luis y Sara Bachatango. La música que usamos en nuestras clases.",
     url: "/music",
+    images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630, alt: 'Playlists de Bachatango de Luis y Sara' }],
   },
   alternates: { canonical: "/music" },
 };
