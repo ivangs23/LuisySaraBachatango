@@ -1,89 +1,215 @@
 'use client';
 
-import Link from 'next/link'
-import Image from 'next/image'
-import styles from './Footer.module.css'
-import { useLanguage } from '@/context/LanguageContext'
-import { safeSocialUrl } from '@/utils/sanitize'
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  ArrowUpRight,
+  Facebook,
+  Instagram,
+  Music2,
+  Youtube,
+} from 'lucide-react';
+
+import Reveal from './Reveal';
+import styles from './Footer.module.css';
+import { useLanguage } from '@/context/LanguageContext';
+import { safeSocialUrl } from '@/utils/sanitize';
 
 type FooterClientProps = {
-  adminProfile: { instagram?: string | null; facebook?: string | null; tiktok?: string | null; youtube?: string | null } | null
-}
+  adminProfile: {
+    instagram?: string | null;
+    facebook?: string | null;
+    tiktok?: string | null;
+    youtube?: string | null;
+  } | null;
+};
 
 export default function FooterClient({ adminProfile }: FooterClientProps) {
-  const { t } = useLanguage()
+  const { t } = useLanguage();
 
-  const instagramUrl = safeSocialUrl(adminProfile?.instagram, "https://www.instagram.com/luisysarabachatango/")
-  const facebookUrl = safeSocialUrl(adminProfile?.facebook, "https://www.facebook.com/LuisySaraBachatango")
-  const tiktokUrl = safeSocialUrl(adminProfile?.tiktok, "https://www.tiktok.com/@luisysarabachatango")
-  const youtubeUrl = safeSocialUrl(adminProfile?.youtube, "https://www.youtube.com/@LuisySaraBachatango")
+  const instagramUrl = safeSocialUrl(
+    adminProfile?.instagram,
+    'https://www.instagram.com/luisysarabachatango/'
+  );
+  const facebookUrl = safeSocialUrl(
+    adminProfile?.facebook,
+    'https://www.facebook.com/LuisySaraBachatango'
+  );
+  const tiktokUrl = safeSocialUrl(
+    adminProfile?.tiktok,
+    'https://www.tiktok.com/@luisysarabachatango'
+  );
+  const youtubeUrl = safeSocialUrl(
+    adminProfile?.youtube,
+    'https://www.youtube.com/@LuisySaraBachatango'
+  );
+
+  const exploreLinks = [
+    { href: '/', label: t.footer.home },
+    { href: '/courses', label: t.header.courses },
+    { href: '/events', label: t.header.events },
+    { href: '/music', label: t.header.music },
+    { href: '/blog', label: t.footer.blog },
+    { href: '/community', label: t.header.community },
+    { href: '/contact', label: t.footer.contact },
+    { href: '/sobre-nosotros', label: t.header.about },
+  ];
+
+  const legalLinks = [
+    { href: '/legal/privacy', label: t.footer.privacy },
+    { href: '/legal/terms', label: t.footer.terms },
+    { href: '/legal/cookies', label: t.footer.cookies },
+    { href: '/legal/notice', label: t.footer.notice },
+  ];
+
+  const socials = [
+    { href: instagramUrl, label: 'Instagram', Icon: Instagram },
+    { href: facebookUrl, label: 'Facebook', Icon: Facebook },
+    { href: tiktokUrl, label: 'TikTok', Icon: Music2 },
+    { href: youtubeUrl, label: 'YouTube', Icon: Youtube },
+  ];
 
   return (
     <footer className={styles.footer}>
+      <span className={styles.footerBg} aria-hidden="true" />
+      <span className={styles.footerGrid} aria-hidden="true" />
+      <span className={styles.footerCornerTL} aria-hidden="true" />
+      <span className={styles.footerCornerTR} aria-hidden="true" />
+
+      {/* ===== Closing block ===== */}
+      <Reveal>
+        <div className={styles.closing}>
+          <div className={styles.closingTitleBlock}>
+            <span className={styles.closingEyebrow}>
+              <span className={styles.closingEyebrowLine} aria-hidden="true" />
+              ÚLTIMO COMPÁS · ANTES DE IRTE
+            </span>
+            <h2 className={styles.closingTitle}>
+              ¿Listo para llevarnos a tu{' '}
+              <span className={styles.closingAccent}>ciudad</span>?
+            </h2>
+          </div>
+          <Link href="/contact" className={styles.closingCta}>
+            {t.footer.contact}
+            <ArrowUpRight size={14} strokeWidth={2.4} aria-hidden="true" />
+          </Link>
+        </div>
+      </Reveal>
+
+      {/* ===== Columns ===== */}
       <div className={styles.container}>
-        <div className={styles.column}>
-          <div style={{ marginBottom: '1.5rem', backgroundColor: 'white', borderRadius: '50%', padding: '0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', overflow: 'hidden' }}>
-            <Image src="/logo.png" alt="Luis y Sara Bachatango" width={80} height={80} style={{ objectFit: 'contain', transform: 'scale(2.0)', transformOrigin: 'center', objectPosition: 'center' }} />
+        {/* Brand */}
+        <Reveal>
+          <div className={`${styles.column} ${styles.brandColumn}`}>
+            <div className={styles.brandHeader}>
+              <span className={styles.logoMark}>
+                <Image
+                  src="/logo.png"
+                  alt="Luis y Sara Bachatango"
+                  fill
+                  sizes="56px"
+                  style={{
+                    objectFit: 'contain',
+                    objectPosition: 'center',
+                    padding: '4px',
+                    transform: 'scale(2)',
+                  }}
+                />
+              </span>
+              <span className={styles.brandText}>
+                <span className={styles.brandTitle}>Luis &amp; Sara</span>
+                <span className={styles.brandSub}>Bachatango</span>
+              </span>
+            </div>
+            <p className={styles.brandDescription}>{t.footer.description}</p>
+            <div className={styles.socialLinks}>
+              {socials.map(({ href, label, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.socialIcon}
+                  aria-label={label}
+                >
+                  <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
+                </a>
+              ))}
+            </div>
           </div>
-          <p style={{ lineHeight: '1.6', marginBottom: '1.5rem' }}>
-            {t.footer.description}
-          </p>
-          <div className={styles.socialLinks}>
-            <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="Instagram">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-              </svg>
-            </a>
-            <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="Facebook">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-              </svg>
-            </a>
-            <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="TikTok">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
-              </svg>
-            </a>
-            <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="YouTube">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path>
-                <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
-              </svg>
-            </a>
+        </Reveal>
+
+        {/* Explorar */}
+        <Reveal delay={0.05}>
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>
+              <span className={styles.columnEyebrow}>
+                <span className={styles.columnEyebrowLine} aria-hidden="true" />
+                MAPA
+              </span>
+              <h3 className={styles.columnTitle}>{t.footer.explore}</h3>
+            </div>
+            <ul className={styles.linkList}>
+              {exploreLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className={styles.link}>
+                    {link.label}
+                    <ArrowUpRight
+                      size={12}
+                      strokeWidth={2.4}
+                      className={styles.linkArrow}
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+        </Reveal>
 
-        <div className={styles.column}>
-          <h3>{t.footer.explore}</h3>
-          <ul className={styles.linkList}>
-            <li><Link href="/" className={styles.link}>{t.footer.home}</Link></li>
-            <li><Link href="/courses" className={styles.link}>{t.header.courses}</Link></li>
-            <li><Link href="/events" className={styles.link}>{t.header.events}</Link></li>
-            <li><Link href="/music" className={styles.link}>{t.header.music}</Link></li>
-            <li><Link href="/blog" className={styles.link}>{t.footer.blog}</Link></li>
-            <li><Link href="/community" className={styles.link}>{t.header.community}</Link></li>
-            <li><Link href="/contact" className={styles.link}>{t.footer.contact}</Link></li>
-            <li><Link href="/sobre-nosotros" className={styles.link}>{t.header.about}</Link></li>
-            <li><Link href="/login" className={styles.link}>{t.header.login}</Link></li>
-          </ul>
-        </div>
-
-        <div className={styles.column}>
-          <h3>{t.footer.legal}</h3>
-          <ul className={styles.linkList}>
-            <li><Link href="/legal/privacy" className={styles.link}>{t.footer.privacy}</Link></li>
-            <li><Link href="/legal/terms" className={styles.link}>{t.footer.terms}</Link></li>
-            <li><Link href="/legal/cookies" className={styles.link}>{t.footer.cookies}</Link></li>
-            <li><Link href="/legal/notice" className={styles.link}>{t.footer.notice}</Link></li>
-          </ul>
-        </div>
+        {/* Legal */}
+        <Reveal delay={0.1}>
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>
+              <span className={styles.columnEyebrow}>
+                <span className={styles.columnEyebrowLine} aria-hidden="true" />
+                LETRA PEQUEÑA
+              </span>
+              <h3 className={styles.columnTitle}>{t.footer.legal}</h3>
+            </div>
+            <ul className={styles.linkList}>
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className={styles.link}>
+                    {link.label}
+                    <ArrowUpRight
+                      size={12}
+                      strokeWidth={2.4}
+                      className={styles.linkArrow}
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
       </div>
 
+      {/* ===== Bottom ===== */}
       <div className={styles.bottom}>
-        <p>&copy; {new Date().getFullYear()} Luis y Sara Bachatango. {t.footer.rights}</p>
+        <p className={styles.copyright}>
+          &copy; {new Date().getFullYear()}{' '}
+          <span className={styles.copyrightHighlight}>
+            Luis &amp; Sara Bachatango
+          </span>
+          . {t.footer.rights}
+        </p>
+        <span className={styles.bottomMeta}>
+          <span className={styles.bottomMetaDot} aria-hidden="true" />
+          MADRID · MUNDO
+        </span>
       </div>
     </footer>
-  )
+  );
 }

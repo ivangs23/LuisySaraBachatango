@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ArrowLeft, ArrowUpRight, CalendarDays, Clock } from 'lucide-react';
 import styles from './page.module.css';
 
 type Article = {
@@ -20,7 +21,8 @@ const ARTICLES: Record<string, Article> = {
     slug: 'que-es-bachatango',
     title: '¿Qué es realmente el Bachatango?',
     category: 'Historia',
-    excerpt: 'Descubre los orígenes de esta fusión controversial y bella. No es solo bachata con pausas, es una conversación entre dos géneros.',
+    excerpt:
+      'Descubre los orígenes de esta fusión controversial y bella. No es solo bachata con pausas, es una conversación entre dos géneros.',
     image: '/about-hero.png',
     date: '2024-01-15',
     readTime: '5 min',
@@ -35,7 +37,8 @@ const ARTICLES: Record<string, Article> = {
     slug: 'errores-postura',
     title: '5 Errores Comunes en la Postura',
     category: 'Técnica',
-    excerpt: 'La base de una buena conexión empieza en tu propio eje. Analizamos los fallos más habituales que te impiden fluir con tu pareja.',
+    excerpt:
+      'La base de una buena conexión empieza en tu propio eje. Analizamos los fallos más habituales que te impiden fluir con tu pareja.',
     image: '/luis-sara-about.jpg',
     date: '2024-02-10',
     readTime: '7 min',
@@ -52,7 +55,8 @@ const ARTICLES: Record<string, Article> = {
     slug: 'musicalidad-tango-bachata',
     title: 'La Musicalidad en el Tango vs Bachata',
     category: 'Musicalidad',
-    excerpt: 'Entender los tiempos fuertes y las melodías es clave. Aprende a diferenciar cuándo pisar con fuerza y cuándo deslizarte.',
+    excerpt:
+      'Entender los tiempos fuertes y las melodías es clave. Aprende a diferenciar cuándo pisar con fuerza y cuándo deslizarte.',
     image: '/hero-bg.png',
     date: '2024-03-05',
     readTime: '6 min',
@@ -70,9 +74,11 @@ export function generateStaticParams() {
   return Object.keys(ARTICLES).map((slug) => ({ slug }));
 }
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> }
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const article = ARTICLES[slug];
 
@@ -86,53 +92,180 @@ export async function generateMetadata(
       description: article.excerpt,
       url: `/blog/${slug}`,
       type: 'article',
-      images: [{ url: article.image, width: 1200, height: 630, alt: article.title }],
+      images: [
+        { url: article.image, width: 1200, height: 630, alt: article.title },
+      ],
     },
     alternates: { canonical: `/blog/${slug}` },
   };
 }
 
-export default async function BlogArticlePage(
-  { params }: { params: Promise<{ slug: string }> }
-) {
+function splitTitleAccent(title: string) {
+  const words = title.split(' ');
+  if (words.length <= 1) {
+    return { head: '', tail: title };
+  }
+  return {
+    head: words.slice(0, -1).join(' '),
+    tail: words.slice(-1)[0] ?? '',
+  };
+}
+
+export default async function BlogArticlePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const article = ARTICLES[slug];
 
   if (!article) notFound();
 
+  const { head, tail } = splitTitleAccent(article.title);
+  const related = Object.values(ARTICLES).filter((a) => a.slug !== slug);
+
+  const formattedDate = new Date(article.date).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return (
     <article className={styles.container}>
-      <div className={styles.hero}>
-        <Image
-          src={article.image}
-          alt={article.title}
-          fill
-          style={{ objectFit: 'cover', opacity: 0.4 }}
-          priority
-        />
-        <div className={styles.heroContent}>
-          <span className={styles.category}>{article.category}</span>
-          <h1 className={styles.title}>{article.title}</h1>
+      {/* ============== HERO ============== */}
+      <header className={styles.hero}>
+        <div className={styles.heroImage}>
+          <Image
+            src={article.image}
+            alt={article.title}
+            fill
+            sizes="100vw"
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        </div>
+        <div className={styles.heroOverlay} aria-hidden="true" />
+        <div className={styles.heroGrid} aria-hidden="true" />
+        <span className={styles.heroCornerTL} aria-hidden="true" />
+        <span className={styles.heroCornerTR} aria-hidden="true" />
+        <span className={styles.heroCornerBL} aria-hidden="true" />
+        <span className={styles.heroCornerBR} aria-hidden="true" />
+
+        <div className={styles.heroInner}>
+          <span className={styles.eyebrow}>
+            <span className={styles.eyebrowLine} aria-hidden="true" />
+            REVISTA · ARTÍCULO
+          </span>
+
+          <span className={styles.categoryPill}>
+            <span className={styles.categoryPillDot} aria-hidden="true" />
+            {article.category}
+          </span>
+
+          <h1 className={styles.title}>
+            {head ? (
+              <>
+                {head} <span className={styles.titleAccent}>{tail}</span>
+              </>
+            ) : (
+              <span className={styles.titleAccent}>{tail}</span>
+            )}
+          </h1>
+
           <div className={styles.meta}>
-            <span>
-              {new Date(article.date).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+            <span className={styles.metaItem}>
+              <CalendarDays size={13} strokeWidth={2} aria-hidden="true" />
+              {formattedDate}
             </span>
-            <span>·</span>
-            <span>{article.readTime} de lectura</span>
+            <span className={styles.metaDivider} aria-hidden="true" />
+            <span className={styles.metaItem}>
+              <Clock size={13} strokeWidth={2} aria-hidden="true" />
+              {article.readTime} de lectura
+            </span>
           </div>
+        </div>
+      </header>
+
+      {/* ============== CONTENT ============== */}
+      <div className={styles.contentWrap}>
+        <Link href="/blog" className={styles.backLink}>
+          <ArrowLeft size={13} strokeWidth={2.4} aria-hidden="true" />
+          Volver al Blog
+        </Link>
+
+        <div className={styles.article}>
+          <div className={styles.articleHalo} aria-hidden="true" />
+          {article.content.map((paragraph, i) => (
+            <p key={i} className={styles.paragraph}>
+              {paragraph}
+            </p>
+          ))}
         </div>
       </div>
 
-      <div className={styles.content}>
-        <Link href="/blog" className={styles.backLink}>← Volver al Blog</Link>
-        {article.content.map((paragraph, i) => (
-          <p key={i} className={styles.paragraph}>{paragraph}</p>
-        ))}
-      </div>
+      {/* ============== RELATED ============== */}
+      {related.length > 0 && (
+        <nav className={styles.footerNav} aria-label="Más artículos">
+          <span className={styles.divider} aria-hidden="true" />
+          <div className={styles.relatedHeader}>
+            <div className={styles.relatedTitleBlock}>
+              <span className={styles.relatedEyebrow}>
+                <span
+                  className={styles.relatedEyebrowLine}
+                  aria-hidden="true"
+                />
+                CONTINÚA LEYENDO
+              </span>
+              <h2 className={styles.relatedTitle}>
+                Más{' '}
+                <span className={styles.relatedTitleAccent}>lecturas</span>
+              </h2>
+            </div>
+          </div>
+
+          <div className={styles.relatedGrid}>
+            {related.map((rel) => (
+              <Link
+                key={rel.slug}
+                href={`/blog/${rel.slug}`}
+                className={styles.relatedCard}
+              >
+                <div className={styles.relatedImageWrap}>
+                  <Image
+                    src={rel.image}
+                    alt={rel.title}
+                    fill
+                    sizes="(max-width: 720px) 100vw, 33vw"
+                    style={{ objectFit: 'cover', opacity: 0.9 }}
+                  />
+                  <span
+                    className={styles.relatedImageOverlay}
+                    aria-hidden="true"
+                  />
+                  <span className={styles.relatedBadge}>
+                    <span
+                      className={styles.relatedBadgeDot}
+                      aria-hidden="true"
+                    />
+                    {rel.category}
+                  </span>
+                </div>
+                <div className={styles.relatedContent}>
+                  <h3 className={styles.relatedCardTitle}>{rel.title}</h3>
+                  <span className={styles.relatedReadMore}>
+                    Leer Artículo
+                    <ArrowUpRight
+                      size={13}
+                      strokeWidth={2.6}
+                      aria-hidden="true"
+                    />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
     </article>
   );
 }

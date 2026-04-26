@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { login } from './actions'
-import styles from './login.module.css'
 import { getDict } from '@/utils/get-dict'
+import AuthShell from '@/components/AuthShell'
+import LoginForm from '@/components/LoginForm'
 
 export const metadata: Metadata = {
   title: "Iniciar sesión",
@@ -20,42 +20,37 @@ export default async function LoginPage(props: { searchParams: Promise<{ message
     : null;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>{t.login.title}</h1>
-        <p className={styles.subtitle}>{t.login.subtitle}</p>
-
-        {successMsg && (
-          <div className={styles.message}>{successMsg}</div>
-        )}
-        {errorMsg && (
-          <div className={styles.error}>{errorMsg}</div>
-        )}
-
-        <form className={styles.form}>
-          <div className={styles.group}>
-            <label htmlFor="email">{t.login.email}</label>
-            <input id="email" name="email" type="email" required placeholder="tu@email.com" />
-          </div>
-
-          <div className={styles.group}>
-            <label htmlFor="password">{t.login.password}</label>
-            <input id="password" name="password" type="password" required placeholder="••••••••" />
-          </div>
-
-          <div className={styles.actions}>
-            <button formAction={login} className={styles.buttonPrimary}>{t.login.submit}</button>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'center', marginTop: '10px' }}>
-              <a href="/signup" className={styles.buttonSecondary} style={{ textDecoration: 'none', display: 'block' }}>
-                {t.login.noAccount}
-              </a>
-              <a href="/forgot-password" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none' }}>
-                {t.login.forgotPassword}
-              </a>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+    <AuthShell
+      panelEyebrow="ACCESO PRIVADO"
+      panelTitle={
+        <>
+          Bailar es <em>recordar</em> con el cuerpo.
+        </>
+      }
+      panelLead="Vuelve a tu sitio en la academia: clases nuevas, comunidad activa y todo el archivo de Luis y Sara esperándote."
+      panelFeatures={[
+        'Clases en vídeo en alta calidad',
+        'Comunidad de bailarines y eventos',
+        'Tu progreso, guardado lección a lección',
+      ]}
+      panelQuote="La bachata no se aprende, se siente. Pero se practica."
+      panelQuoteAuthor="LUIS Y SARA"
+      cardEyebrow="ENTRAR"
+      cardTitle={t.login.title}
+      cardSubtitle={t.login.subtitle}
+      errorMsg={errorMsg}
+      successMsg={successMsg}
+    >
+      <LoginForm
+        labels={{
+          email: t.login.email,
+          password: t.login.password,
+          submit: t.login.submit,
+          noAccount: t.login.noAccount,
+          forgotPassword: t.login.forgotPassword,
+          or: 'O',
+        }}
+      />
+    </AuthShell>
   )
 }

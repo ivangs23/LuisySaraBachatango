@@ -1,0 +1,255 @@
+/* ============================================================
+   SUBMISSIONS — entregas para corregir (admin)
+   ============================================================ */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.4rem);
+}
+
+/* ============== Submission Card ============== */
+
+.card {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(1.2rem, 2.4vw, 1.6rem) clamp(1.2rem, 2.4vw, 1.7rem);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.018);
+  overflow: hidden;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--primary-rgb), 0.55),
+    transparent
+  );
+}
+
+.cardReviewed {
+  border-color: rgba(76, 175, 80, 0.28);
+}
+
+.cardReviewed::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(76, 175, 80, 0.55),
+    transparent
+  );
+}
+
+/* ============== Header ============== */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.student {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.studentName {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.7vw, 1.1rem);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.studentMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.studentMeta svg {
+  opacity: 0.75;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.statusBadgeReviewed {
+  background: rgba(76, 175, 80, 0.12);
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.32);
+}
+
+.statusBadgePending {
+  background: rgba(255, 165, 0, 0.12);
+  color: #f4a623;
+  border-color: rgba(255, 165, 0, 0.3);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+}
+
+/* ============== Field blocks ============== */
+
+.fieldBlock {
+  margin-bottom: 1rem;
+}
+
+.fieldLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin: 0 0 0.5rem;
+}
+
+.fieldLabelLine {
+  width: 1.2rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+}
+
+.fieldText {
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+  line-height: 1.7;
+  color: var(--text-main);
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.fieldFileRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(var(--primary-rgb), 0.05);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.fieldFileRow svg {
+  opacity: 0.85;
+}
+
+/* ============== Reviewed pane ============== */
+
+.reviewedPane {
+  position: relative;
+  margin: 1.2rem 0;
+  padding: 1rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(76, 175, 80, 0.24);
+  background: rgba(76, 175, 80, 0.06);
+}
+
+.reviewedHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #4caf50;
+  margin: 0 0 0.45rem;
+}
+
+.reviewedGrade {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  margin: 0 0 0.3rem;
+}
+
+.reviewedFeedback {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ============== Empty state ============== */
+
+.empty {
+  position: relative;
+  padding: clamp(2.5rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 2.5rem);
+  text-align: center;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--primary-rgb), 0.35);
+  color: var(--primary);
+  margin: 0 auto 1rem;
+  background: rgba(var(--primary-rgb), 0.06);
+}
+
+.emptyTitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  color: var(--text-main);
+  margin: 0 0 0.4rem;
+}
+
+.emptySub {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 42ch;
+  margin: 0 auto;
+  line-height: 1.6;
+}

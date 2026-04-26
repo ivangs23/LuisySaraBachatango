@@ -162,37 +162,64 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
 
   const totalCount = courses.length;
 
+  // Title with italic gold accent on the last word
+  const titleWords = tc.title.trim().split(/\s+/);
+  const titleLast = titleWords.slice(-1)[0] ?? '';
+  const titleHead = titleWords.slice(0, -1).join(' ');
+
   return (
     <div className={styles.container}>
-      {/* Header / hero pequeño */}
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Reveal direction="left" distance={32}>
+      {/* ============== HERO ============== */}
+      <section className={styles.hero}>
+        <div className={styles.heroBg} aria-hidden="true" />
+        <div className={styles.heroGrid} aria-hidden="true" />
+        <span className={styles.heroCornerTL} aria-hidden="true" />
+        <span className={styles.heroCornerTR} aria-hidden="true" />
+
+        <div className={styles.heroInner}>
+          <Reveal>
             <span className={styles.headerEyebrow}>
               <span className={styles.headerKickerLine} aria-hidden="true" />
-              CATÁLOGO · {totalCount} {totalCount === 1 ? 'CURSO' : 'CURSOS'}
+              CATÁLOGO · TEMPORADA EN CURSO
+              <span className={styles.headerKickerLine} aria-hidden="true" />
             </span>
           </Reveal>
 
-          <Reveal delay={0.1}>
-            <h1 className={styles.headerTitle}>{tc.title}</h1>
+          <Reveal delay={0.05}>
+            <h1 className={styles.headerTitle}>
+              {titleHead ? (
+                <>
+                  {titleHead}{' '}
+                  <span className={styles.headerTitleAccent}>{titleLast}</span>
+                </>
+              ) : (
+                <span className={styles.headerTitleAccent}>{titleLast}</span>
+              )}
+            </h1>
           </Reveal>
 
-          <Reveal delay={0.2}>
+          <Reveal delay={0.1}>
             <p className={styles.headerSub}>
               {tc.completeSub} · {tc.monthlySub}
             </p>
           </Reveal>
-        </div>
 
-        {isAdmin && (
-          <Reveal direction="right" delay={0.15}>
-            <Link href="/courses/create" className={styles.createButton}>
-              {tc.create}
-            </Link>
+          <Reveal delay={0.15}>
+            <span className={styles.heroMeta}>
+              <span className={styles.heroMetaDot} aria-hidden="true" />
+              {totalCount} {totalCount === 1 ? 'CURSO DISPONIBLE' : 'CURSOS DISPONIBLES'}
+            </span>
           </Reveal>
-        )}
-      </header>
+
+          {isAdmin && (
+            <Reveal delay={0.2}>
+              <Link href="/courses/create" className={styles.createButton}>
+                {tc.create}
+              </Link>
+            </Reveal>
+          )}
+        </div>
+      </section>
 
       {courses.length === 0 && (
         <Reveal>
@@ -207,17 +234,23 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
       {/* ── Cursos Completos ───────────────────────────────────────── */}
       {completeCourses.length > 0 && (
         <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <Reveal>
-              <div className={styles.sectionHeading}>
-                <span className={styles.sectionNum}>01</span>
-                <div>
-                  <h2 className={styles.sectionTitle}>{tc.completeCourses}</h2>
-                  <p className={styles.sectionSub}>{tc.completeSub}</p>
-                </div>
+          <Reveal>
+            <header className={styles.sectionHeader}>
+              <div className={styles.sectionTitleBlock}>
+                <span className={styles.sectionEyebrow}>
+                  <span className={styles.sectionEyebrowLine} aria-hidden="true" />
+                  CATÁLOGO · COMPLETOS
+                </span>
+                <h2 className={styles.sectionTitle}>
+                  {tc.completeCourses}
+                  <span className={styles.sectionCount}>
+                    ({String(filteredComplete.length).padStart(2, '0')})
+                  </span>
+                </h2>
+                <p className={styles.sectionSub}>{tc.completeSub}</p>
               </div>
-            </Reveal>
-          </div>
+            </header>
+          </Reveal>
 
           {/* Filtros con indicator deslizante */}
           {categories.length > 2 && (
@@ -271,17 +304,23 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
       {/* ── Clases Mensuales (membership) ──────────────────────────── */}
       {membershipCourses.length > 0 && (
         <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <Reveal>
-              <div className={styles.sectionHeading}>
-                <span className={styles.sectionNum}>02</span>
-                <div>
-                  <h2 className={styles.sectionTitle}>{tc.monthlyClasses}</h2>
-                  <p className={styles.sectionSub}>{tc.monthlySub}</p>
-                </div>
+          <Reveal>
+            <header className={styles.sectionHeader}>
+              <div className={styles.sectionTitleBlock}>
+                <span className={styles.sectionEyebrow}>
+                  <span className={styles.sectionEyebrowLine} aria-hidden="true" />
+                  AGENDA · MENSUALES
+                </span>
+                <h2 className={styles.sectionTitle}>
+                  {tc.monthlyClasses}
+                  <span className={styles.sectionCount}>
+                    ({String(membershipCourses.length).padStart(2, '0')})
+                  </span>
+                </h2>
+                <p className={styles.sectionSub}>{tc.monthlySub}</p>
               </div>
-            </Reveal>
-          </div>
+            </header>
+          </Reveal>
 
           <div className={styles.grid}>
             {membershipCourses.map((course, i) => (
