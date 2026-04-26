@@ -149,7 +149,9 @@ export default function Header({ user, profile }: HeaderProps) {
           </LayoutGroup>
 
           <div className={styles.actions}>
-            <LanguageSwitcher />
+            <span className={styles.languageDesktop}>
+              <LanguageSwitcher />
+            </span>
 
             {user && (
               <>

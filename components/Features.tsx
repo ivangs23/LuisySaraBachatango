@@ -3,6 +3,7 @@
 import styles from './Features.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { useInView } from '@/hooks/useInView';
+import Reveal from './Reveal';
 
 export default function Features() {
   const { t } = useLanguage();
@@ -45,6 +46,28 @@ export default function Features() {
       ref={ref as React.RefObject<HTMLElement>}
       className={`${styles.features} ${inView ? styles.visible : ''}`}
     >
+      {/* Capítulo / número decorativo */}
+      <Reveal direction="left" distance={48}>
+        <div className={styles.chapter} aria-hidden="true">
+          <span className={styles.chapterNum}>02</span>
+          <span className={styles.chapterLine} />
+          <span className={styles.chapterLabel}>EL MÉTODO</span>
+        </div>
+      </Reveal>
+
+      {/* Intro editorial */}
+      <Reveal delay={0.08}>
+        <div className={styles.intro}>
+          <h2 className={styles.introTitle}>
+            Tres claves para entrar al universo <em>Bachatango</em>
+          </h2>
+          <p className={styles.introText}>
+            Una propuesta cuidada, mes a mes. Lo que necesitas para crecer en
+            pista, sin saturarte de contenido.
+          </p>
+        </div>
+      </Reveal>
+
       <div className={styles.container}>
         {features.map((feature, idx) => (
           <div
@@ -52,6 +75,9 @@ export default function Features() {
             className={`${styles.featureCard} ${inView ? styles.cardRevealed : ''}`}
             style={{ '--delay': `${idx * 0.16 + 0.05}s` } as React.CSSProperties}
           >
+            <span className={styles.featureIndex} aria-hidden="true">
+              {String(idx + 1).padStart(2, '0')}
+            </span>
             <div className={styles.iconWrapper}>{feature.icon}</div>
             <h3 className={styles.title}>{feature.title}</h3>
             <p className={styles.description}>{feature.desc}</p>

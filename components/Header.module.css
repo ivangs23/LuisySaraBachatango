@@ -206,6 +206,14 @@
 @media (max-width: 900px) {
   .hamburger {
     display: inline-flex;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .hamburger:hover,
+  .hamburger[data-open="true"] {
+    border-color: transparent;
+    background: rgba(var(--primary-rgb), 0.06);
   }
 }
 
@@ -261,8 +269,34 @@
   z-index: -1;
 }
 
+/* Wrapper del language switcher en el header — sólo desktop. */
+.languageDesktop {
+  display: inline-flex;
+}
+
 @media (max-width: 900px) {
   .navLinks {
+    display: none;
+  }
+
+  /* Empujamos el <nav> al borde derecho para que la campana
+     (único elemento visible dentro) quede pegada al hamburguesa. */
+  .nav {
+    gap: 0.4rem;
+    margin-left: auto;
+  }
+
+  .actions {
+    gap: 0.35rem;
+  }
+
+  /* En móvil: el cluster de la derecha se mantiene minimal —
+     idioma, avatar y CTA viven en el drawer; sólo dejamos campana
+     visible (cuando hay sesión) junto al hamburguesa. */
+  .languageDesktop,
+  .divider,
+  .userMenu,
+  .cta {
     display: none;
   }
 }
