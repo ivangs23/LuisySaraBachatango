@@ -1,45 +1,27 @@
 'use client';
 
-import Link from "next/link";
 import styles from "./page.module.css";
+import Hero from "@/components/Hero";
+import AboutSection from "@/components/AboutSection";
 import Features from "@/components/Features";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import Newsletter from "@/components/Newsletter";
 import InstagramGallery from "@/components/InstagramGallery";
-import { useLanguage } from "@/context/LanguageContext";
 
 export default function Home() {
-  const { t } = useLanguage();
-
   return (
     <div className={styles.container}>
-      {/* Hero Section */}
-      <section className={styles.hero}>
-        {/* Ambient floating orbs */}
-        <span className={styles.orb1} aria-hidden="true" />
-        <span className={styles.orb2} aria-hidden="true" />
-        <span className={styles.orb3} aria-hidden="true" />
+      {/* Hero cinemático con vídeo de fondo y animaciones de entrada */}
+      <Hero />
 
-        <div className={styles.heroContent}>
-          <h1 className={styles.title} style={{ whiteSpace: 'pre-line' }}>
-            {t.hero.title}
-          </h1>
-          <p className={styles.subtitle}>
-            {t.hero.subtitle}
-          </p>
-          <Link href="/courses" className={styles.ctaButton}>
-            {t.hero.cta}
-          </Link>
-        </div>
+      {/* Quiénes somos — bloque cinemático con parallax */}
+      <AboutSection />
 
-        <div className={styles.scrollIndicator} aria-hidden="true">
-          <div className={styles.scrollDot} />
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <Features />
+      {/* Features (con anchor para el scroll-indicator del hero) */}
+      <div id="features">
+        <Features />
+      </div>
 
       {/* Testimonials */}
       <Testimonials />

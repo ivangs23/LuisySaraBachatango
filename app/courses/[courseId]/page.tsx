@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
-import BuyCourseButton from '@/components/BuyCourseButton';
 import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import styles from './course-detail.module.css'
+import CourseDetailView from '@/components/CourseDetailView'
 
 export async function generateMetadata(
   props: { params: Promise<{ courseId: string }> }
@@ -93,8 +91,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
 
   const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription
 
-  const completedLessonIds = new Set<string>()
-  progressResult.data?.forEach(p => completedLessonIds.add(p.lesson_id))
+  const completedLessonIds = (progressResult.data ?? []).map(p => p.lesson_id)
 
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://luisysarabachatango.com'
   const courseJsonLd = {
@@ -117,81 +114,23 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
       />
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Link href="/courses" className={styles.backLink}>&larr; Volver a Cursos</Link>
-        <h1 className={styles.title}>{course.title}</h1>
-        <p className={styles.description}>{course.description}</p>
-        {isAdmin && (
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <Link href={`/courses/${course.id}/edit`} className={styles.adminButton} style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--text-secondary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
-              Editar Curso
-            </Link>
-            <Link href={`/courses/${course.id}/add-lesson`} className={styles.adminButton} style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
-              + Añadir Lección
-            </Link>
-          </div>
-        )}
-      </div>
-
-      {!hasAccess ? (
-        <div className={styles.lockedState}>
-          <h2>Contenido Bloqueado</h2>
-          <p>Compra este curso o suscríbete para acceder a las lecciones.</p>
-          <div style={{ marginTop: '1rem' }}>
-            <BuyCourseButton courseId={params.courseId} label="Comprar este curso" />
-          </div>
-        </div>
-      ) : (
-        <div className={styles.lessonList}>
-          {lessons && (() => {
-            const parents = lessons.filter(l => !l.parent_lesson_id).sort((a, b) => a.order - b.order)
-            const childrenByParent = new Map<string, typeof lessons>()
-            lessons.filter(l => l.parent_lesson_id).forEach(l => {
-              const key = l.parent_lesson_id!
-              if (!childrenByParent.has(key)) childrenByParent.set(key, [])
-              childrenByParent.get(key)!.push(l)
-            })
-
-            const items: { lesson: typeof lessons[0]; displayOrder: string; isChild: boolean }[] = []
-            for (const parent of parents) {
-              items.push({ lesson: parent, displayOrder: `${parent.order}`, isChild: false })
-              const children = (childrenByParent.get(parent.id) ?? []).sort((a, b) => a.order - b.order)
-              for (const child of children) {
-                items.push({ lesson: child, displayOrder: `${parent.order}.${child.order}`, isChild: true })
-              }
-            }
-
-            return items.map(({ lesson, displayOrder, isChild }) => {
-              const isCompleted = completedLessonIds.has(lesson.id)
-              return (
-                <Link
-                  href={`/courses/${course.id}/${lesson.id}`}
-                  key={lesson.id}
-                  className={styles.lessonCard}
-                  style={isChild ? { paddingLeft: '2.5rem' } : undefined}
-                >
-                  <div className={styles.lessonNumber}>{displayOrder}</div>
-                  <div className={styles.lessonInfo}>
-                    <h3 className={styles.lessonTitle}>{lesson.title}</h3>
-                    <p className={styles.lessonDate}>
-                      Disponible: {new Date(lesson.release_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className={styles.playIcon}>
-                    {isCompleted ? (
-                      <span style={{ color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 'bold' }}>✓</span>
-                    ) : (
-                      '▶'
-                    )}
-                  </div>
-                </Link>
-              )
-            })
-          })()}
-        </div>
-      )}
-    </div>
+      <CourseDetailView
+        course={{
+          id: course.id,
+          title: course.title,
+          description: course.description ?? null,
+          image_url: course.image_url ?? null,
+          month: course.month ?? null,
+          year: course.year ?? null,
+          course_type: course.course_type ?? 'complete',
+          category: course.category ?? null,
+          price_eur: course.price_eur ?? null,
+        }}
+        lessons={lessons ?? []}
+        hasAccess={hasAccess}
+        isAdmin={isAdmin}
+        completedLessonIds={completedLessonIds}
+      />
     </>
   )
 }
