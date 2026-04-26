@@ -1,0 +1,365 @@
+.hero {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding-block: clamp(4rem, 10vh, 8rem);
+  padding-inline: clamp(1.5rem, 6vw, 6rem);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--text-main);
+}
+
+/* ---------- Capa de fondo (vídeo + poster + overlays) ---------- */
+
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-color: #000;
+  background-image: url('/hero-bg.png');
+  background-size: cover;
+  background-position: center 20%;
+}
+
+.bgVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  opacity: 0;
+  transition: opacity 1.4s ease-out;
+  /* Empuja el vídeo ligeramente abajo en escala para evitar bandas en bordes */
+  transform: scale(1.04);
+  filter: saturate(1.05) contrast(1.05);
+}
+
+.bgVideoVisible {
+  opacity: 1;
+}
+
+.bgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 5, 5, 0.55) 0%,
+    rgba(5, 5, 5, 0.35) 35%,
+    rgba(5, 5, 5, 0.55) 65%,
+    rgba(5, 5, 5, 0.95) 100%
+  );
+}
+
+.bgVignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 30% 50%,
+    transparent 0%,
+    transparent 35%,
+    rgba(5, 5, 5, 0.6) 100%
+  );
+  mix-blend-mode: multiply;
+}
+
+/* ---------- Decoración SVG (waveform) ---------- */
+
+.waveDeco {
+  position: absolute;
+  top: clamp(2rem, 6vh, 4rem);
+  right: clamp(1.5rem, 6vw, 5rem);
+  width: clamp(160px, 18vw, 260px);
+  height: auto;
+  color: var(--primary);
+  z-index: 1;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ---------- Contenido ---------- */
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vh, 1.5rem);
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--primary);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.28em;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.kickerLine {
+  display: inline-block;
+  width: 3rem;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--primary) 100%
+  );
+}
+
+.kickerText {
+  white-space: nowrap;
+}
+
+.title {
+  font: var(--h1);
+  font-size: clamp(2.75rem, 6.5vw, 5.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  white-space: pre-line;
+  margin: 0;
+}
+
+.title em,
+.title .accent {
+  font-style: italic;
+  color: var(--primary);
+}
+
+/* Wrapper inline-block por palabra para que el blur+slide no rompa el wrap */
+.wordWrap {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.word {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: clamp(1.05rem, 1.4vw, 1.25rem);
+  line-height: 1.55;
+  max-width: 56ch;
+  margin: 0;
+}
+
+/* ---------- CTAs ---------- */
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1rem;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+
+.ctaPrimary {
+  --shine-x: -120%;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: linear-gradient(135deg, var(--primary) 0%, #e6c885 100%);
+  color: #000;
+  padding: 1rem 2rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    color 0.2s ease;
+  box-shadow: 0 10px 30px -10px rgba(var(--primary-rgb), 0.5);
+}
+
+.ctaPrimary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  transform: translateX(var(--shine-x));
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.ctaPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px -12px rgba(var(--primary-rgb), 0.65);
+  color: #000;
+}
+
+.ctaPrimary:hover::before {
+  --shine-x: 120%;
+}
+
+.ctaArrow {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ctaPrimary:hover .ctaArrow {
+  transform: translateX(4px);
+}
+
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.95rem 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  background-color: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.2s ease;
+}
+
+.ctaSecondary:hover {
+  border-color: var(--primary);
+  background-color: rgba(var(--primary-rgb), 0.08);
+  color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.ctaSecondary svg {
+  color: var(--primary);
+}
+
+/* ---------- Stats strip ---------- */
+
+.stats {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 clamp(1.5rem, 4vw, 3.5rem);
+  padding: 0;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: clamp(1rem, 2.5vh, 1.5rem);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.statValue {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 2.8vw, 2.1rem);
+  color: var(--primary);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.statLabel {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.22em;
+  font-weight: 500;
+}
+
+/* ---------- Scroll indicator ---------- */
+
+.scrollIndicator {
+  position: absolute;
+  bottom: clamp(1.25rem, 4vh, 2.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  font-weight: 600;
+  z-index: 3;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.scrollIndicator:hover {
+  color: var(--primary);
+}
+
+.scrollText {
+  display: inline-block;
+}
+
+.scrollIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  color: var(--primary);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 768px) {
+  .hero {
+    padding-block: 6rem 5rem;
+    padding-inline: 1.5rem;
+  }
+
+  .content {
+    max-width: none;
+  }
+
+  .waveDeco {
+    width: 130px;
+    top: 5.5rem;
+    right: 1rem;
+    opacity: 0.4;
+  }
+
+  .ctaPrimary,
+  .ctaSecondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats {
+    gap: 1.25rem 2rem;
+  }
+
+  .scrollIndicator {
+    display: none; /* en móvil quita ruido */
+  }
+}
