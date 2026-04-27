@@ -359,3 +359,183 @@ export async function listStudents(args: {
 
   return { rows, total: count ?? rows.length, pageSize: PAGE_SIZE }
 }
+
+export type StudentDetail = {
+  profile: {
+    id: string; full_name: string | null; email: string | null
+    avatar_url: string | null; role: StudentRole
+    instagram: string | null; facebook: string | null
+    tiktok: string | null; youtube: string | null
+    created_at: string
+    stripe_customer_id: string | null
+  }
+  subscription: {
+    plan_type: string | null; status: string | null
+    current_period_start: string | null; current_period_end: string | null
+  } | null
+  purchases: Array<{
+    id: string; course_id: string; course_title: string
+    amount_paid: number | null; created_at: string
+  }>
+  membershipCourses: Array<{ id: string; title: string }>
+  lessonProgress: Array<{
+    course_id: string; course_title: string
+    total: number; completed: number
+    lessons: Array<{ id: string; title: string; completed: boolean; updated_at: string | null }>
+  }>
+  submissions: Array<{
+    id: string; assignment_id: string; lesson_id: string; course_id: string
+    course_title: string; lesson_title: string; assignment_title: string
+    status: string; grade: string | null; feedback: string | null
+    created_at: string; updated_at: string
+  }>
+  community: {
+    posts: Array<{ id: string; content: string; created_at: string }>
+    comments: Array<{ id: string; content: string; post_id: string; created_at: string }>
+  }
+}
+
+export async function getStudentDetail(userId: string): Promise<StudentDetail | null> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+
+  const profileRes = await sb
+    .from('profiles')
+    .select('id, full_name, email, avatar_url, role, instagram, facebook, tiktok, youtube, updated_at, stripe_customer_id')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (!profileRes.data) return null
+
+  const [subRes, purchasesRes, allCoursesRes, progressRes, submissionsRes, postsRes, commentsRes] = await Promise.all([
+    sb.from('subscriptions')
+      .select('plan_type, status, current_period_start, current_period_end')
+      .eq('user_id', userId)
+      .order('current_period_end', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    sb.from('course_purchases')
+      .select('id, course_id, amount_paid, created_at, courses(title)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false }),
+    sb.from('courses').select('id, title, course_type, month, year, is_published'),
+    sb.from('lesson_progress')
+      .select('lesson_id, is_completed, updated_at, lessons(id, title, course_id, courses(id, title))')
+      .eq('user_id', userId),
+    sb.from('submissions')
+      .select('id, assignment_id, status, grade, feedback, created_at, updated_at, assignments(title, lesson_id, course_id, lessons(title), courses(title))')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false }),
+    sb.from('posts').select('id, content, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+    sb.from('comments').select('id, content, post_id, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+  ])
+
+  const pickFirst = <T,>(v: T | T[] | null | undefined): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+
+  // Membership courses derived from active subscription period
+  const sub = subRes.data
+  const membershipCourses: { id: string; title: string }[] = []
+  if (sub?.status === 'active' || sub?.status === 'trialing') {
+    const start = sub.current_period_start ? new Date(sub.current_period_start) : null
+    const end = sub.current_period_end ? new Date(sub.current_period_end) : null
+    for (const c of (allCoursesRes.data ?? []) as Array<{
+      id: string; title: string; course_type: string; month: number | null; year: number | null; is_published: boolean
+    }>) {
+      if (c.course_type !== 'membership' || !c.is_published || !c.month || !c.year) continue
+      const first = new Date(Date.UTC(c.year, c.month - 1, 1))
+      const last = new Date(Date.UTC(c.year, c.month, 0, 23, 59, 59))
+      if (start && end && start <= last && end >= first) {
+        membershipCourses.push({ id: c.id, title: c.title })
+      }
+    }
+  }
+
+  // Lesson progress aggregation per course
+  type ProgRow = {
+    lesson_id: string; is_completed: boolean | null; updated_at: string | null
+    lessons: {
+      id: string; title: string; course_id: string;
+      courses: { id: string; title: string } | { id: string; title: string }[] | null
+    } | { id: string; title: string; course_id: string;
+      courses: { id: string; title: string } | { id: string; title: string }[] | null
+    }[] | null
+  }
+  const progressByCourse = new Map<string, StudentDetail['lessonProgress'][number]>()
+  for (const r of (progressRes.data ?? []) as ProgRow[]) {
+    const lesson = pickFirst(r.lessons)
+    if (!lesson) continue
+    const course = pickFirst(lesson.courses)
+    if (!course) continue
+    let bucket = progressByCourse.get(course.id)
+    if (!bucket) {
+      bucket = { course_id: course.id, course_title: course.title, total: 0, completed: 0, lessons: [] }
+      progressByCourse.set(course.id, bucket)
+    }
+    bucket.total += 1
+    if (r.is_completed) bucket.completed += 1
+    bucket.lessons.push({
+      id: lesson.id, title: lesson.title,
+      completed: !!r.is_completed, updated_at: r.updated_at,
+    })
+  }
+
+  type SubmRow = {
+    id: string; assignment_id: string; status: string;
+    grade: string | null; feedback: string | null
+    created_at: string; updated_at: string
+    assignments: {
+      title: string; lesson_id: string; course_id: string;
+      lessons: { title: string } | { title: string }[] | null
+      courses: { title: string } | { title: string }[] | null
+    } | { title: string; lesson_id: string; course_id: string;
+      lessons: { title: string } | { title: string }[] | null
+      courses: { title: string } | { title: string }[] | null
+    }[] | null
+  }
+
+  type PurchaseRow = {
+    id: string; course_id: string; amount_paid: number | null; created_at: string;
+    courses: { title: string } | { title: string }[] | null
+  }
+
+  return {
+    profile: {
+      id: profileRes.data.id as string,
+      full_name: profileRes.data.full_name as string | null,
+      email: profileRes.data.email as string | null,
+      avatar_url: profileRes.data.avatar_url as string | null,
+      role: profileRes.data.role as StudentRole,
+      instagram: profileRes.data.instagram as string | null,
+      facebook: profileRes.data.facebook as string | null,
+      tiktok: profileRes.data.tiktok as string | null,
+      youtube: profileRes.data.youtube as string | null,
+      created_at: profileRes.data.updated_at as string,
+      stripe_customer_id: profileRes.data.stripe_customer_id as string | null,
+    },
+    subscription: sub ?? null,
+    purchases: ((purchasesRes.data ?? []) as PurchaseRow[]).map((p) => ({
+      id: p.id, course_id: p.course_id,
+      course_title: pickFirst(p.courses)?.title ?? '—',
+      amount_paid: p.amount_paid, created_at: p.created_at,
+    })),
+    membershipCourses,
+    lessonProgress: [...progressByCourse.values()],
+    submissions: ((submissionsRes.data ?? []) as SubmRow[]).map((s) => {
+      const a = pickFirst(s.assignments)
+      return {
+        id: s.id, assignment_id: s.assignment_id,
+        lesson_id: a?.lesson_id ?? '', course_id: a?.course_id ?? '',
+        course_title: pickFirst(a?.courses)?.title ?? '—',
+        lesson_title: pickFirst(a?.lessons)?.title ?? '—',
+        assignment_title: a?.title ?? '—',
+        status: s.status, grade: s.grade, feedback: s.feedback,
+        created_at: s.created_at, updated_at: s.updated_at,
+      }
+    }),
+    community: {
+      posts: (postsRes.data ?? []).map(p => ({ id: p.id as string, content: p.content as string, created_at: p.created_at as string })),
+      comments: (commentsRes.data ?? []).map(c => ({ id: c.id as string, content: c.content as string, post_id: c.post_id as string, created_at: c.created_at as string })),
+    },
+  }
+}
