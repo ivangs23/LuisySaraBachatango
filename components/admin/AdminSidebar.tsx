@@ -75,9 +75,13 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
         </nav>
 
         <div className={styles.footer}>
-          <Link href="/dashboard" className={styles.backLink}>
-            <ArrowLeft size={14} strokeWidth={2} aria-hidden />
-            Volver al sitio
+          <Link
+            href="/dashboard"
+            className={styles.backLink}
+            onClick={() => setOpen(false)}
+          >
+            <ArrowLeft size={16} strokeWidth={2} aria-hidden />
+            <span>Volver al sitio</span>
           </Link>
         </div>
       </aside>
