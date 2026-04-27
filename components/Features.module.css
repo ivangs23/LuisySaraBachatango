@@ -1,4 +1,5 @@
 .features {
+  position: relative;
   background-color: #000;
   padding: var(--spacing-2xl) var(--page-pad);
   background-image: radial-gradient(
@@ -6,7 +7,87 @@
     rgba(30, 30, 30, 0.4) 0%,
     transparent 70%
   );
+  isolation: isolate;
+  overflow: hidden;
 }
+
+/* ---------- Capítulo / número ---------- */
+
+.chapter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: var(--page-max);
+  margin: 0 auto clamp(1.4rem, 4vh, 2.4rem);
+}
+
+.chapterNum {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--primary);
+  letter-spacing: -0.03em;
+  flex-shrink: 0;
+}
+
+.chapterLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    transparent 100%
+  );
+  max-width: 6rem;
+}
+
+.chapterLabel {
+  font-family: var(--font-sans);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+/* ---------- Intro editorial ---------- */
+
+.intro {
+  max-width: var(--page-max);
+  margin: 0 auto clamp(2.5rem, 7vh, 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.introTitle {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.75rem, 3.6vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  margin: 0;
+  max-width: 28ch;
+}
+
+.introTitle em {
+  font-style: italic;
+  color: var(--primary);
+}
+
+.introText {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+  line-height: 1.65;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 56ch;
+}
+
+/* ---------- Container ---------- */
 
 .container {
   max-width: var(--page-max);
@@ -14,6 +95,41 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--spacing-lg);
+}
+
+/* ---------- Index editorial sobre cada card ---------- */
+
+.featureIndex {
+  position: absolute;
+  top: 0.9rem;
+  left: 1.1rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: var(--primary);
+  opacity: 0.55;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.featureCard:hover .featureIndex {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  .chapter {
+    margin-bottom: 1.4rem;
+  }
+
+  .chapterLine {
+    max-width: 4rem;
+  }
+
+  .intro {
+    margin-bottom: 2.5rem;
+  }
 }
 
 /* ---- Card base ---- */

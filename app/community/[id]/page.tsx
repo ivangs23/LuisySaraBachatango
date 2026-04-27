@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/utils/supabase/server'
 import { submitComment } from '../actions'
 import Link from 'next/link'
+import { ArrowLeft, MessageCircleMore, Send } from 'lucide-react'
 import styles from '../community.module.css'
 import { notFound } from 'next/navigation'
 import PostLikeButton from '@/components/PostLikeButton'
@@ -39,8 +40,18 @@ export async function generateMetadata(
   }
 }
 
+function formatDate(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 export default async function PostDetailPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+  const params = await props.params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -55,7 +66,6 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
     notFound()
   }
 
-  // Likes for this post
   const { data: likes } = await supabase
     .from('post_likes')
     .select('user_id')
@@ -64,7 +74,6 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
   const likeCount = likes?.length ?? 0
   const userLiked = !!user && !!likes?.some((l: { user_id: string }) => l.user_id === user.id)
 
-  // Comments: fetch raw, then enrich with profile + likes, then build tree
   const { data: rawComments } = await supabase
     .from('comments')
     .select('id, content, user_id, parent_id, created_at')
@@ -119,26 +128,57 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
     }
   })
 
+  const authorName = post.profiles?.full_name || 'Usuario'
+  const initial = authorName[0]?.toUpperCase() || 'U'
+  const commentCount = rawComments?.length || 0
+
   return (
     <div className={styles.detailContainer}>
-      <Link href="/community" className={styles.backLink}>← Volver a la comunidad</Link>
+      <section className={styles.detailHero}>
+        <div className={styles.heroBg} aria-hidden="true" />
+        <div className={styles.detailInner}>
+          <Link href="/community" className={styles.backLink}>
+            <ArrowLeft size={14} strokeWidth={2.4} aria-hidden="true" />
+            <span>Volver a la comunidad</span>
+          </Link>
 
-      <h1 className={styles.detailTitle}>{post.title}</h1>
-      <div className={styles.detailMeta}>
-        <span>Por {post.profiles?.full_name || 'Usuario'}</span>
-        <span> • {new Date(post.created_at).toLocaleDateString()}</span>
+          <span className={styles.eyebrow}>
+            <span className={styles.eyebrowLine} aria-hidden="true" />
+            POST DE LA COMUNIDAD
+          </span>
+
+          <h1 className={styles.detailTitle}>{post.title}</h1>
+
+          <div className={styles.detailMeta}>
+            <span className={styles.detailAvatar} aria-hidden="true">
+              {initial}
+            </span>
+            <span className={styles.detailMetaText}>
+              <span className={styles.detailMetaAuthor}>{authorName}</span>
+              <span>{formatDate(post.created_at)}</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.detailBody}>
+        <div className={styles.detailContent}>{post.content}</div>
+
+        <div className={styles.detailActions}>
+          <PostLikeButton postId={post.id} initialLiked={userLiked} initialCount={likeCount} />
+        </div>
       </div>
 
-      <div className={styles.detailContent}>
-        {post.content}
-      </div>
-
-      <div style={{ margin: '1rem 0' }}>
-        <PostLikeButton postId={post.id} initialLiked={userLiked} initialCount={likeCount} />
-      </div>
-
-      <div className={styles.commentsSection}>
-        <h2 className={styles.commentsTitle}>Comentarios ({rawComments?.length || 0})</h2>
+      <section className={styles.commentsSection}>
+        <div className={styles.commentsHeader}>
+          <span className={styles.commentsEyebrow}>
+            <span className={styles.commentsEyebrowLine} aria-hidden="true" />
+            CONVERSACIÓN
+          </span>
+          <h2 className={styles.commentsTitle}>
+            Comentarios ({commentCount})
+          </h2>
+        </div>
 
         {user ? (
           <form action={submitComment} className={styles.commentForm}>
@@ -148,18 +188,28 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
               className={styles.textarea}
               placeholder="Escribe un comentario..."
               required
-              style={{ minHeight: '80px' }}
             />
-            <button type="submit" className={styles.submitButton}>Comentar</button>
+            <button type="submit" className={styles.submitButton}>
+              <Send size={13} strokeWidth={2.4} aria-hidden="true" />
+              Comentar
+            </button>
           </form>
         ) : (
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-            <Link href="/login?next=/community" style={{ color: 'var(--primary)' }}>Inicia sesión</Link> para dejar un comentario.
-          </p>
+          <div className={styles.commentLoginPrompt}>
+            <Link href="/login?next=/community">Inicia sesión</Link> para dejar un comentario.
+          </div>
         )}
 
         {roots.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)' }}>No hay comentarios aún.</p>
+          <div className={styles.commentsEmpty}>
+            <MessageCircleMore
+              size={20}
+              strokeWidth={1.8}
+              style={{ marginBottom: 6, opacity: 0.7 }}
+              aria-hidden="true"
+            />
+            <p style={{ margin: 0 }}>No hay comentarios todavía. Sé el primero en participar.</p>
+          </div>
         ) : (
           <CommunityCommentTree
             postId={post.id}
@@ -167,7 +217,7 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
             currentUserId={user?.id ?? null}
           />
         )}
-      </div>
+      </section>
     </div>
   )
 }

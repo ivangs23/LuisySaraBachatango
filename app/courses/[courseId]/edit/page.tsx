@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import CourseForm from '@/components/CourseForm';
+import AdminShell, { AdminPanel } from '../../_components/AdminShell';
 
 export default async function EditCoursePage(props: { params: Promise<{ courseId: string }> }) {
   const params = await props.params;
@@ -35,9 +36,21 @@ export default async function EditCoursePage(props: { params: Promise<{ courseId
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-      <h1 style={{ marginBottom: '2rem', fontSize: '2rem', color: 'var(--text-main)' }}>Editar Curso</h1>
-      <CourseForm initialData={course} />
-    </div>
+    <AdminShell
+      chapter="ADMIN · CURSOS"
+      eyebrow="EDITAR · CURSO"
+      title={`Editar ${course.title}`}
+      intro="Actualiza la información del curso, su modalidad y disponibilidad. Los cambios se publican al guardar."
+      back={{ href: `/courses/${courseId}`, label: 'Volver al curso' }}
+      narrow
+    >
+      <AdminPanel
+        number="01"
+        title="Información del curso"
+        subtitle="Cualquier modificación afectará a la ficha pública del curso."
+      >
+        <CourseForm initialData={course} />
+      </AdminPanel>
+    </AdminShell>
   );
 }

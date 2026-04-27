@@ -1,7 +1,52 @@
 .testimonials {
+  position: relative;
   padding: var(--spacing-2xl) var(--page-pad);
   background-color: var(--background);
   text-align: center;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* ---------- Capítulo / número ---------- */
+
+.chapter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: var(--page-max);
+  margin: 0 auto clamp(1.4rem, 4vh, 2.4rem);
+  text-align: left;
+}
+
+.chapterNum {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--primary);
+  letter-spacing: -0.03em;
+  flex-shrink: 0;
+}
+
+.chapterLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    transparent 100%
+  );
+  max-width: 6rem;
+}
+
+.chapterLabel {
+  font-family: var(--font-sans);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
 }
 
 /* ---- Title block ---- */
@@ -67,6 +112,26 @@
   box-shadow: 0 12px 32px -12px rgba(var(--primary-rgb), 0.22);
 }
 
+/* ---- Index editorial sobre la card ---- */
+.cardIndex {
+  position: absolute;
+  top: 0.85rem;
+  left: 1.05rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 0.9rem;
+  color: var(--primary);
+  opacity: 0.55;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover .cardIndex {
+  opacity: 1;
+}
+
 /* ---- Decorative quote mark ---- */
 .quoteMark {
   font-family: var(--font-serif);
@@ -109,4 +174,14 @@
 @keyframes cardReveal {
   from { opacity: 0; transform: translateY(35px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .chapter {
+    margin-bottom: 1.4rem;
+  }
+
+  .chapterLine {
+    max-width: 4rem;
+  }
 }

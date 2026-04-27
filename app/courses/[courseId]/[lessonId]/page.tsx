@@ -1,12 +1,8 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import styles from './lesson.module.css'
-import LessonTabs from '@/components/LessonTabs'
-import LessonPlayer from '@/components/LessonPlayer'
+import LessonView from '@/components/LessonView'
 import { signPlaybackToken, signThumbnailToken } from '@/utils/mux/server'
-import { getDict } from '@/utils/get-dict'
 
 export async function generateMetadata(
   props: { params: Promise<{ courseId: string; lessonId: string }> }
@@ -37,8 +33,6 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
   if (!user) {
     redirect('/login')
   }
-
-  const t = await getDict();
 
   // Batch 1: all queries that only need lessonId / courseId / userId.
   const [
@@ -114,8 +108,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
 
   const submission = submissionResult.data
 
-  const completedLessonIds = new Set<string>()
-  progressResult.data?.forEach(p => completedLessonIds.add(p.lesson_id))
+  const completedLessonIds = (progressResult.data ?? []).map(p => p.lesson_id)
 
   const canPlay = hasAccess && lesson.mux_status === 'ready' && lesson.mux_playback_id
   const [playbackToken, thumbnailToken] = canPlay
@@ -126,133 +119,26 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     : [null, null]
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Link href={`/courses/${params.courseId}`} className={styles.backLink}>
-          {t.lesson.backToCourse}
-        </Link>
-      </div>
-
-      <div className={styles.mainLayout}>
-        <aside className={styles.sidebar}>
-          <h3 className={styles.sidebarTitle}>{t.lesson.courseLessons}</h3>
-          <div className={styles.lessonList}>
-            {allLessons && (() => {
-              const parents = allLessons.filter(l => !l.parent_lesson_id).sort((a, b) => a.order - b.order)
-              const childrenByParent = new Map<string, typeof allLessons>()
-              allLessons.filter(l => l.parent_lesson_id).forEach(l => {
-                const key = l.parent_lesson_id!
-                if (!childrenByParent.has(key)) childrenByParent.set(key, [])
-                childrenByParent.get(key)!.push(l)
-              })
-
-              const items: { l: typeof allLessons[0]; displayOrder: string; isChild: boolean }[] = []
-              for (const parent of parents) {
-                items.push({ l: parent, displayOrder: `${parent.order}`, isChild: false })
-                const children = (childrenByParent.get(parent.id) ?? []).sort((a, b) => a.order - b.order)
-                for (const child of children) {
-                  items.push({ l: child, displayOrder: `${parent.order}.${child.order}`, isChild: true })
-                }
-              }
-
-              return items.map(({ l, displayOrder, isChild }) => {
-                const isCompleted = completedLessonIds.has(l.id)
-                const isActive = l.id === params.lessonId
-                return (
-                  <Link
-                    key={l.id}
-                    href={`/courses/${params.courseId}/${l.id}`}
-                    className={`${styles.lessonItem} ${isActive ? styles.activeLesson : ''}`}
-                    style={isChild ? { paddingLeft: '2rem' } : undefined}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                      <span className={styles.lessonOrder}>{displayOrder}.</span>
-                      <span className={styles.lessonTitleText}>{l.title}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {isCompleted ? (
-                        <span style={{ color: isActive ? 'white' : 'var(--primary)', fontSize: '1.2rem', fontWeight: 'bold' }}>✓</span>
-                      ) : (
-                        isActive && <span className={styles.playingIndicator}>▶</span>
-                      )}
-                    </div>
-                  </Link>
-                )
-              })
-            })()}
-          </div>
-        </aside>
-
-        <div className={styles.contentWrapper}>
-          <div className={styles.videoWrapper}>
-            {hasAccess && lesson.mux_status === 'ready' && lesson.mux_playback_id ? (
-              <LessonPlayer
-                playbackId={lesson.mux_playback_id}
-                playbackToken={playbackToken!}
-                thumbnailToken={thumbnailToken ?? undefined}
-                posterUrl={lesson.thumbnail_url}
-                lessonId={params.lessonId}
-                lessonTitle={lesson.title}
-                courseId={params.courseId}
-                viewerUserId={user.id}
-              />
-            ) : hasAccess && lesson.mux_status !== 'ready' ? (
-              <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
-                <h2>Vídeo en preparación</h2>
-                <p>El vídeo de esta lección todavía se está procesando. Vuelve en unos minutos.</p>
-              </div>
-            ) : (
-              <div className={styles.lockedContent} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#1a1a1a', color: 'white', textAlign: 'center', padding: '2rem' }}>
-                <h2 style={{ marginBottom: '1rem' }}>{t.lesson.lockedContent}</h2>
-                <p style={{ marginBottom: '1.5rem' }}>{t.lesson.lockedMessage}</p>
-                <Link href={`/courses/${params.courseId}`} style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
-                  {t.lesson.getPremium}
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div className={styles.content}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h1 className={styles.title}>{lesson.title}</h1>
-              {isAdmin && (
-                <Link
-                  href={`/courses/${params.courseId}/${params.lessonId}/edit`}
-                  className={styles.adminButton}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: 'var(--primary)',
-                    color: 'white',
-                    borderRadius: '4px',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  {t.lesson.editLesson}
-                </Link>
-              )}
-            </div>
-
-            {hasAccess ? (
-              <LessonTabs
-                description={lesson.description}
-                courseId={params.courseId}
-                lessonId={params.lessonId}
-                assignment={assignment}
-                submission={submission}
-                isAdmin={isAdmin}
-              />
-            ) : (
-              <div style={{ marginTop: '2rem', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', textAlign: 'center' }}>
-                <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>{t.lesson.exclusiveContent}</p>
-                <Link href={`/courses/${params.courseId}`} style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
-                  {t.lesson.getPremium}
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+    <LessonView
+      courseId={params.courseId}
+      lessonId={params.lessonId}
+      lesson={{
+        id: lesson.id,
+        title: lesson.title,
+        description: lesson.description ?? null,
+        thumbnail_url: lesson.thumbnail_url ?? null,
+        mux_playback_id: lesson.mux_playback_id ?? null,
+        mux_status: lesson.mux_status ?? null,
+      }}
+      allLessons={allLessons ?? []}
+      completedLessonIds={completedLessonIds}
+      hasAccess={hasAccess}
+      isAdmin={isAdmin}
+      playbackToken={playbackToken}
+      thumbnailToken={thumbnailToken}
+      assignment={assignment ?? null}
+      submission={submission ?? null}
+      viewerUserId={user.id}
+    />
   )
 }

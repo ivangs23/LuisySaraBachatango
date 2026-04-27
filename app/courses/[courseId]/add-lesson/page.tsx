@@ -1,7 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import LessonForm from '@/components/LessonForm'
 import { createLesson } from '@/app/courses/actions'
+import AdminShell, { AdminPanel } from '../../_components/AdminShell'
 
 export default async function AddLessonPage(props: { params: Promise<{ courseId: string }> }) {
   const params = await props.params
@@ -12,21 +13,43 @@ export default async function AddLessonPage(props: { params: Promise<{ courseId:
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (profile?.role !== 'admin') redirect(`/courses/${params.courseId}`)
 
-  const { data: topLevelLessons } = await supabase
-    .from('lessons')
-    .select('id, title, "order"')
-    .eq('course_id', params.courseId)
-    .is('parent_lesson_id', null)
-    .order('order', { ascending: true })
+  const [{ data: course }, { data: topLevelLessons }] = await Promise.all([
+    supabase.from('courses').select('id, title').eq('id', params.courseId).single(),
+    supabase
+      .from('lessons')
+      .select('id, title, "order"')
+      .eq('course_id', params.courseId)
+      .is('parent_lesson_id', null)
+      .order('order', { ascending: true }),
+  ])
+
+  if (!course) notFound()
+
+  const total = topLevelLessons?.length ?? 0
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Añadir Nueva Lección</h1>
-      <LessonForm
-        courseId={params.courseId}
-        availableParents={topLevelLessons ?? []}
-        action={createLesson}
-      />
-    </div>
+    <AdminShell
+      chapter="ADMIN · LECCIONES"
+      eyebrow="NUEVA · LECCIÓN"
+      title="Añadir Nueva Lección"
+      intro={`Vas a añadir una lección al curso "${course.title}". Define el orden, la jerarquía y el material; el vídeo y las tareas se configuran después.`}
+      back={{ href: `/courses/${params.courseId}`, label: 'Volver al curso' }}
+      meta={[
+        { icon: 'file', label: `${total} ${total === 1 ? 'lección' : 'lecciones'} previas` },
+      ]}
+      narrow
+    >
+      <AdminPanel
+        number="01"
+        title="Datos de la lección"
+        subtitle="Lo esencial para que aparezca en el índice del curso."
+      >
+        <LessonForm
+          courseId={params.courseId}
+          availableParents={topLevelLessons ?? []}
+          action={createLesson}
+        />
+      </AdminPanel>
+    </AdminShell>
   )
 }

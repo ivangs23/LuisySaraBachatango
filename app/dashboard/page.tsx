@@ -1,13 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import Image from 'next/image';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
-import styles from './dashboard.module.css';
-import coursesStyles from '@/app/courses/courses.module.css';
-import cardStyles from '@/components/CoursesClient.module.css';
 import { getDict } from '@/utils/get-dict';
+import DashboardClient from '@/components/DashboardClient';
 
 type Course = {
   id: string;
@@ -19,14 +15,6 @@ type Course = {
   course_type: 'membership' | 'complete';
   category: string | null;
   price_eur: number | null;
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  bachatango: 'BachaTango',
-  bachata:    'Bachata',
-  tango:      'Tango',
-  chachacha:  'Chachachá',
-  otro:       'Otro',
 };
 
 const getPublishedCourses = unstable_cache(
@@ -46,65 +34,6 @@ const getPublishedCourses = unstable_cache(
   { revalidate: 300, tags: ['courses'] },
 );
 
-function CourseCard({
-  course,
-  tc,
-  accessible,
-}: {
-  course: Course;
-  tc: Awaited<ReturnType<typeof getDict>>['coursesPage'];
-  accessible: boolean;
-}) {
-  return (
-    <Link href={`/courses/${course.id}`} className={coursesStyles.card}>
-      <div className={coursesStyles.imageContainer}>
-        {course.image_url?.startsWith('http') ? (
-          <Image
-            src={course.image_url}
-            alt={course.title}
-            className={coursesStyles.image}
-            width={400}
-            height={225}
-            style={{ objectFit: 'cover' }}
-          />
-        ) : (
-          <div className={coursesStyles.placeholderImage}>
-            {course.course_type === 'membership' && course.month && course.year
-              ? <span>{tc.months[course.month - 1]} {course.year}</span>
-              : <span>{course.title}</span>}
-          </div>
-        )}
-        <div className={cardStyles.badgeOverlay}>
-          {course.course_type === 'complete' && course.category && (
-            <span className={cardStyles.badgeCategory}>
-              {CATEGORY_LABELS[course.category] ?? course.category}
-            </span>
-          )}
-          {accessible && <span className={cardStyles.badgeAccess}>{tc.hasAccess}</span>}
-        </div>
-      </div>
-
-      <div className={coursesStyles.content}>
-        <h2 className={coursesStyles.courseTitle}>{course.title}</h2>
-        {course.course_type === 'membership' && course.month && course.year && (
-          <p className={coursesStyles.courseDate}>{tc.months[course.month - 1]} {course.year}</p>
-        )}
-        <p className={coursesStyles.description}>{course.description}</p>
-        <div className={cardStyles.cardFooter}>
-          {!accessible && (
-            <span className={cardStyles.priceTag}>
-              {course.price_eur ? `€${course.price_eur}` : tc.priceNA}
-            </span>
-          )}
-          <span className={coursesStyles.cta}>
-            {accessible ? tc.view : course.price_eur ? tc.buy : tc.viewMore}
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -113,20 +42,33 @@ export default async function DashboardPage() {
   const t = await getDict();
   const courses = await getPublishedCourses();
 
-  const [purchasesResult, subscriptionsResult] = await Promise.all([
+  const [
+    purchasesResult,
+    subscriptionsResult,
+    profileResult,
+    completedResult,
+  ] = await Promise.all([
     supabase.from('course_purchases').select('course_id').eq('user_id', user.id),
     supabase
       .from('subscriptions')
-      .select('current_period_start, current_period_end')
+      .select('status, current_period_start, current_period_end')
       .eq('user_id', user.id)
       .in('status', ['active', 'trialing']),
+    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+    supabase
+      .from('lesson_progress')
+      .select('lesson_id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_completed', true),
   ]);
 
   const accessibleIds = new Set<string>();
-  purchasesResult.data?.forEach(p => accessibleIds.add(p.course_id));
+  purchasesResult.data?.forEach((p: { course_id: string }) => accessibleIds.add(p.course_id));
 
   const subscriptions = subscriptionsResult.data ?? [];
-  if (subscriptions.length > 0) {
+  const hasActiveSubscription = subscriptions.length > 0;
+
+  if (hasActiveSubscription) {
     for (const course of courses) {
       if (course.course_type !== 'membership') continue;
       if (accessibleIds.has(course.id)) continue;
@@ -135,7 +77,7 @@ export default async function DashboardPage() {
       const firstDay = new Date(Date.UTC(course.year, course.month - 1, 1));
       const lastDay = new Date(Date.UTC(course.year, course.month, 0, 23, 59, 59));
 
-      const covered = subscriptions.some(sub => {
+      const covered = subscriptions.some((sub: { current_period_start: string | null; current_period_end: string | null }) => {
         if (!sub.current_period_start || !sub.current_period_end) return false;
         const start = new Date(sub.current_period_start);
         const end = new Date(sub.current_period_end);
@@ -151,53 +93,21 @@ export default async function DashboardPage() {
     .filter(c => !accessibleIds.has(c.id) && c.course_type === 'complete')
     .slice(0, 3);
 
+  const fullName = (profileResult.data?.full_name as string | null) ?? null;
+  const firstName = fullName?.trim().split(/\s+/)[0] ?? null;
+
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>{t.dashboard.title}</h1>
-      </div>
-
-      {myCourses.length > 0 ? (
-        <section className={styles.section}>
-          <div className={coursesStyles.grid}>
-            {myCourses.map(course => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                tc={t.coursesPage}
-                accessible
-              />
-            ))}
-          </div>
-        </section>
-      ) : (
-        <div className={coursesStyles.emptyState}>
-          <p>{t.dashboard.empty}</p>
-          <p className={coursesStyles.subtext}>{t.dashboard.emptySub}</p>
-        </div>
-      )}
-
-      {suggested.length > 0 && (
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>{t.dashboard.discover}</h2>
-            <Link href="/courses" className={styles.sectionLink}>
-              {t.dashboard.exploreAll}
-            </Link>
-          </div>
-          <div className={coursesStyles.grid}>
-            {suggested.map(course => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                tc={t.coursesPage}
-                accessible={false}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-    </div>
+    <DashboardClient
+      greetingName={firstName}
+      myCourses={myCourses}
+      suggested={suggested}
+      stats={{
+        coursesCount: myCourses.length,
+        completedLessons: completedResult.count ?? 0,
+        hasActiveSubscription,
+      }}
+      t={t.dashboard}
+      tc={t.coursesPage}
+    />
   );
 }

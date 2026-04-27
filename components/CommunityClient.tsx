@@ -1,14 +1,30 @@
 'use client';
 
 import Link from 'next/link';
+import { Plus, Users, ArrowRight } from 'lucide-react';
 import styles from '@/app/community/community.module.css';
-import subscribeStyles from '@/components/SubscribeButton.module.css';
 import CommunityFeed from '@/app/community/CommunityFeed';
+import Reveal from '@/components/Reveal';
 import { useLanguage } from '@/context/LanguageContext';
 
+type Profile = { full_name: string | null } | null;
+
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  profiles: Profile;
+  category?: string;
+  likes_count?: number;
+  comments_count?: number;
+};
+
+type User = { id: string } | null;
+
 type Props = {
-  user: any;
-  posts: any[];
+  user: User;
+  posts: Post[];
 };
 
 export default function CommunityClient({ user, posts }: Props) {
@@ -16,29 +32,63 @@ export default function CommunityClient({ user, posts }: Props) {
 
   if (!user) {
     return (
-      <div className={styles.container} style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-        <h1 className={styles.title} style={{ marginBottom: '1.5rem' }}>{t.communityPage.joinTitle}</h1>
-        <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: '2.5rem', maxWidth: '600px', margin: '0 auto 2.5rem' }}>
-          {t.communityPage.joinDesc}
-        </p>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-          <Link href="/login" className={subscribeStyles.button} style={{ textAlign: 'center' }}>
-            {t.communityPage.login}
-          </Link>
+      <div className={styles.container}>
+        <div className={styles.hero}>
+          <div className={styles.heroBg} aria-hidden="true" />
+          <Reveal>
+            <div className={styles.authGate}>
+              <div className={styles.authGateHalo} aria-hidden="true" />
+              <div className={styles.authGateIcon} aria-hidden="true">
+                <Users size={26} strokeWidth={1.8} />
+              </div>
+              <h1 className={styles.authGateTitle}>{t.communityPage.joinTitle}</h1>
+              <p className={styles.authGateDesc}>{t.communityPage.joinDesc}</p>
+              <Link href="/login?next=/community" className={styles.authGateButton}>
+                {t.communityPage.login}
+                <ArrowRight size={14} strokeWidth={2.4} aria-hidden="true" />
+              </Link>
+            </div>
+          </Reveal>
         </div>
       </div>
     );
   }
 
+  const totalPosts = posts.length;
+
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>{t.communityPage.title}</h1>
-        <Link href="/community/create" className={styles.createButton}>
-          {t.communityPage.create}
-        </Link>
-      </div>
+      <section className={styles.hero}>
+        <div className={styles.heroBg} aria-hidden="true" />
+        <div className={styles.heroInner}>
+          <Reveal direction="left" distance={20}>
+            <span className={styles.eyebrow}>
+              <span className={styles.eyebrowLine} aria-hidden="true" />
+              FORO · {totalPosts} {totalPosts === 1 ? 'POST' : 'POSTS'}
+            </span>
+          </Reveal>
+
+          <div className={styles.heroTopRow}>
+            <div className={styles.heroBlock}>
+              <Reveal delay={0.06}>
+                <h1 className={styles.title}>{t.communityPage.title}</h1>
+              </Reveal>
+              <Reveal delay={0.14}>
+                <p className={styles.heroSub}>
+                  Comparte tu progreso, resuelve dudas y conecta con otros bailarines de Bachatango.
+                </p>
+              </Reveal>
+            </div>
+
+            <Reveal direction="right" delay={0.1}>
+              <Link href="/community/create" className={styles.createButton}>
+                <Plus size={14} strokeWidth={2.6} aria-hidden="true" />
+                {t.communityPage.create}
+              </Link>
+            </Reveal>
+          </div>
+        </div>
+      </section>
 
       <CommunityFeed initialPosts={posts || []} />
     </div>

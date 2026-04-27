@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { resetPassword } from '../login/actions'
-import styles from '../login/login.module.css'
 import { getDict } from '@/utils/get-dict'
+import AuthShell from '@/components/AuthShell'
+import ForgotPasswordForm from '@/components/ForgotPasswordForm'
 
 export const metadata: Metadata = {
   title: "Recuperar contraseña",
@@ -20,34 +20,32 @@ export default async function ForgotPasswordPage(props: { searchParams: Promise<
     : null;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>{t.forgotPassword.title}</h1>
-        <p className={styles.subtitle}>{t.forgotPassword.subtitle}</p>
-
-        {successMsg && (
-          <div className={styles.message}>{successMsg}</div>
-        )}
-        {errorMsg && (
-          <div className={styles.error}>{errorMsg}</div>
-        )}
-
-        <form className={styles.form}>
-          <div className={styles.group}>
-            <label htmlFor="email">{t.forgotPassword.email}</label>
-            <input id="email" name="email" type="email" required placeholder="tu@email.com" />
-          </div>
-
-          <div className={styles.actions}>
-            <button formAction={resetPassword} className={styles.buttonPrimary}>{t.forgotPassword.submit}</button>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'center', marginTop: '10px' }}>
-              <a href="/login" className={styles.buttonSecondary} style={{ textDecoration: 'none', display: 'block' }}>
-                {t.forgotPassword.backToLogin}
-              </a>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+    <AuthShell
+      panelEyebrow="RECUPERAR ACCESO"
+      panelTitle={
+        <>
+          Vuelve a la <em>pista</em> en un par de pasos.
+        </>
+      }
+      panelLead="Te enviamos un enlace seguro a tu email para que crees una nueva contraseña sin perder nada de tu progreso."
+      panelFeatures={[
+        'Enlace válido durante un tiempo limitado',
+        'Tu cuenta y tus clases siguen intactas',
+        'Si no llega, revisa la carpeta de spam',
+      ]}
+      cardEyebrow="RECUPERAR"
+      cardTitle={t.forgotPassword.title}
+      cardSubtitle={t.forgotPassword.subtitle}
+      errorMsg={errorMsg}
+      successMsg={successMsg}
+    >
+      <ForgotPasswordForm
+        labels={{
+          email: t.forgotPassword.email,
+          submit: t.forgotPassword.submit,
+          backToLogin: t.forgotPassword.backToLogin,
+        }}
+      />
+    </AuthShell>
   )
 }

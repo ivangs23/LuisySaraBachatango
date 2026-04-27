@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { signup } from '../login/actions'
-import styles from '../login/login.module.css'
 import { getDict } from '@/utils/get-dict'
+import AuthShell from '@/components/AuthShell'
+import SignupForm from '@/components/SignupForm'
 
 export const metadata: Metadata = {
   title: "Crear cuenta",
@@ -20,47 +20,39 @@ export default async function SignupPage(props: { searchParams: Promise<{ messag
     : null;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>{t.signup.title}</h1>
-        <p className={styles.subtitle}>{t.signup.subtitle}</p>
-
-        {successMsg && (
-          <div className={styles.message}>{successMsg}</div>
-        )}
-        {errorMsg && (
-          <div className={styles.error}>{errorMsg}</div>
-        )}
-
-        <form className={styles.form}>
-          <div className={styles.group}>
-            <label htmlFor="email">{t.signup.email}</label>
-            <input id="email" name="email" type="email" required placeholder="tu@email.com" />
-          </div>
-
-          <div className={styles.group}>
-            <label htmlFor="fullName">{t.signup.fullName}</label>
-            <input id="fullName" name="fullName" type="text" required placeholder={t.signup.fullNamePlaceholder} />
-          </div>
-
-          <div className={styles.group}>
-            <label htmlFor="password">{t.signup.password}</label>
-            <input id="password" name="password" type="password" required placeholder="••••••••" />
-          </div>
-
-          <div className={styles.actions}>
-            <button formAction={signup} className={styles.buttonPrimary}>{t.signup.submit}</button>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'center', marginTop: '10px' }}>
-              <a href="/login" className={styles.buttonSecondary} style={{ textDecoration: 'none', display: 'block' }}>
-                {t.signup.hasAccount}
-              </a>
-              <a href="/forgot-password" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none' }}>
-                {t.signup.forgotPassword}
-              </a>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+    <AuthShell
+      panelEyebrow="ÚNETE A LA ACADEMIA"
+      panelTitle={
+        <>
+          Tu primera <em>clase</em> empieza con un paso.
+        </>
+      }
+      panelLead="Crea tu cuenta y desbloquea acceso a las clases, los retos mensuales y la comunidad de Luis y Sara Bachatango."
+      panelFeatures={[
+        'Acceso a clases para todos los niveles',
+        'Eventos, quedadas y música cuidada',
+        'Una comunidad cálida y sin postureo',
+      ]}
+      panelQuote="Lo que se baila despacio, se entiende rápido."
+      panelQuoteAuthor="LUIS Y SARA"
+      cardEyebrow="CREAR CUENTA"
+      cardTitle={t.signup.title}
+      cardSubtitle={t.signup.subtitle}
+      errorMsg={errorMsg}
+      successMsg={successMsg}
+    >
+      <SignupForm
+        labels={{
+          email: t.signup.email,
+          fullName: t.signup.fullName,
+          fullNamePlaceholder: t.signup.fullNamePlaceholder,
+          password: t.signup.password,
+          submit: t.signup.submit,
+          hasAccount: t.signup.hasAccount,
+          forgotPassword: t.signup.forgotPassword,
+          or: 'O',
+        }}
+      />
+    </AuthShell>
   )
 }

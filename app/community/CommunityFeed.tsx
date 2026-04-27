@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { LayoutGroup, motion } from 'motion/react';
+import { Search, Heart, MessageCircle, ArrowUpRight } from 'lucide-react';
+import Reveal from '@/components/Reveal';
 import styles from './community.module.css';
 
 type Post = {
@@ -17,7 +20,17 @@ type Post = {
   comments_count?: number;
 };
 
-const CATEGORIES = ["Todos", "General", "Dudas de Clase", "Música", "Eventos", "Quedadas"];
+const CATEGORIES = ['Todos', 'General', 'Dudas de Clase', 'Música', 'Eventos', 'Quedadas'];
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
 
 export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,85 +38,134 @@ export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }
 
   const filteredPosts = useMemo(() => {
     return initialPosts.filter(post => {
-      const matchesSearch = 
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        post.content.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // For now, since we don't have categories in DB, we ignore category filter or implement dummy logic
-      const matchesCategory = selectedCategory === 'Todos' || true; 
-
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        post.title.toLowerCase().includes(term) ||
+        post.content.toLowerCase().includes(term);
+      // Category filter is a stub for now (no category column in DB)
+      const matchesCategory = selectedCategory === 'Todos' || true;
       return matchesSearch && matchesCategory;
     });
   }, [initialPosts, searchTerm, selectedCategory]);
 
   return (
-    <div>
-      {/* Search and Filter Section */}
-      <div className={styles.filterSection}>
-        <div className={styles.searchWrapper}>
-          <input 
-            type="text" 
-            placeholder="Buscar en la comunidad..." 
-            className={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <svg className={styles.searchIcon} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </div>
-        
-        <div className={styles.categories}>
-          {CATEGORIES.map(cat => (
-            <button 
-              key={cat} 
-              className={`${styles.categoryChip} ${selectedCategory === cat ? styles.activeChip : ''}`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className={styles.postList}>
-        {filteredPosts.map((post) => (
-          <Link key={post.id} href={`/community/${post.id}`} className={styles.postCard}>
-            <div className={styles.cardHeader}>
-               {/* Avatar Placeholder */}
-               <div className={styles.avatarMini}>
-                  {post.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
-               </div>
-               <div className={styles.headerInfo}>
-                  <h2 className={styles.postTitle}>{post.title}</h2>
-                  <div className={styles.postMeta}>
-                    <span className={styles.authorName}>{post.profiles?.full_name || 'Usuario'}</span>
-                    <span className={styles.dot}>•</span>
-                    <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                  </div>
-               </div>
-            </div>
-            
-            <p className={styles.postContent}>{post.content.substring(0, 150)}...</p>
-            
-            <div className={styles.cardFooter}>
-              <span className={styles.interaction} aria-label="likes">
-                ♥ {post.likes_count ?? 0}
-              </span>
-              <span className={styles.interaction} aria-label="comentarios">
-                💬 {post.comments_count ?? 0}
-              </span>
-            </div>
-          </Link>
-        ))}
-
-        {filteredPosts.length === 0 && (
-          <div className={styles.emptyState}>
-            <p>No se encontraron resultados para "{searchTerm}"</p>
+    <>
+      <section className={styles.filterSection}>
+        <Reveal>
+          <div className={styles.searchWrapper}>
+            <Search
+              className={styles.searchIcon}
+              size={18}
+              strokeWidth={2.2}
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              placeholder="Buscar en la comunidad..."
+              className={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        )}
-      </div>
-    </div>
+        </Reveal>
+
+        <Reveal delay={0.05}>
+          <LayoutGroup id="community-categories">
+            <div className={styles.categories} role="tablist" aria-label="Categorías">
+              {CATEGORIES.map((cat) => {
+                const active = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`${styles.categoryChip} ${active ? styles.activeChip : ''}`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="community-chip-indicator"
+                        className={styles.chipIndicator}
+                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </LayoutGroup>
+        </Reveal>
+      </section>
+
+      <section className={styles.feedSection}>
+        <div className={styles.postList}>
+          {filteredPosts.map((post, i) => {
+            const initial = post.profiles?.full_name?.[0]?.toUpperCase() || 'U';
+            return (
+              <Reveal
+                key={post.id}
+                delay={Math.min(i * 0.05, 0.4)}
+                direction="up"
+                distance={20}
+              >
+                <Link href={`/community/${post.id}`} className={styles.postCard}>
+                  <div className={styles.cardHeader}>
+                    <div className={styles.avatarMini} aria-hidden="true">
+                      {initial}
+                    </div>
+                    <div className={styles.headerInfo}>
+                      <h2 className={styles.postTitle}>{post.title}</h2>
+                      <div className={styles.postMeta}>
+                        <span className={styles.authorName}>
+                          {post.profiles?.full_name || 'Usuario'}
+                        </span>
+                        <span className={styles.dot}>•</span>
+                        <span>{formatDate(post.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className={styles.postContent}>{post.content}</p>
+
+                  <div className={styles.cardFooter}>
+                    <span className={styles.interaction} aria-label="Me gusta">
+                      <Heart size={14} strokeWidth={2.2} />
+                      {post.likes_count ?? 0}
+                    </span>
+                    <span className={styles.interaction} aria-label="Comentarios">
+                      <MessageCircle size={14} strokeWidth={2.2} />
+                      {post.comments_count ?? 0}
+                    </span>
+                    <span className={styles.cardCta}>
+                      Leer
+                      <ArrowUpRight size={12} strokeWidth={2.6} aria-hidden="true" />
+                    </span>
+                  </div>
+                </Link>
+              </Reveal>
+            );
+          })}
+
+          {filteredPosts.length === 0 && (
+            <Reveal>
+              <div className={styles.emptyState}>
+                <p className={styles.emptyTitle}>
+                  {searchTerm
+                    ? `Sin resultados para "${searchTerm}"`
+                    : 'Todavía no hay posts'}
+                </p>
+                <p>
+                  {searchTerm
+                    ? 'Prueba con otra búsqueda o publica el primer post sobre el tema.'
+                    : 'Sé el primero en compartir algo con la comunidad.'}
+                </p>
+              </div>
+            </Reveal>
+          )}
+        </div>
+      </section>
+    </>
   );
 }
