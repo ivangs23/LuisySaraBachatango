@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import Reveal from '@/components/Reveal';
+import AdminBanner from '@/components/admin/AdminBanner';
 import styles from '@/app/dashboard/dashboard.module.css';
 import coursesStyles from '@/app/courses/courses.module.css';
 import cardStyles from '@/components/CoursesClient.module.css';
@@ -53,6 +54,7 @@ type Props = {
     completedLessons: number;
     hasActiveSubscription: boolean;
   };
+  role: 'member' | 'premium' | 'admin';
   t: DashboardDict;
   tc: CoursesPageDict;
 };
@@ -137,6 +139,7 @@ export default function DashboardClient({
   myCourses,
   suggested,
   stats,
+  role,
   t,
   tc,
 }: Props) {
@@ -166,6 +169,14 @@ export default function DashboardClient({
               PANEL · ACCESO PRIVADO
             </span>
           </Reveal>
+
+          {role === 'admin' && (
+            <Reveal delay={0.02}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <AdminBanner />
+              </div>
+            </Reveal>
+          )}
 
           {greetingName && (
             <Reveal delay={0.05}>
