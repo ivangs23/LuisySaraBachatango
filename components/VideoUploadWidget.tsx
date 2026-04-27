@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import * as UpChunk from '@mux/upchunk'
-import { createMuxUpload, deleteMuxAsset } from '@/app/courses/mux-actions'
+import { createMuxUpload, deleteMuxAsset, cancelMuxUpload } from '@/app/courses/mux-actions'
 import styles from './VideoUploadWidget.module.css'
 
 type Status = 'idle' | 'creating' | 'uploading' | 'polling' | 'ready' | 'errored'
@@ -31,6 +31,7 @@ export default function VideoUploadWidget({ lessonId, currentStatus, currentPlay
   const pollTimerRef = useRef<number | null>(null)
   const isCancelledRef = useRef(false)
   const isPollingRef = useRef(false)
+  const uploadRef = useRef<UpChunk.UpChunk | null>(null)
 
   const startPolling = useCallback(() => {
     if (isPollingRef.current) return
@@ -104,8 +105,18 @@ export default function VideoUploadWidget({ lessonId, currentStatus, currentPlay
     }
     setStatus('uploading')
     setProgress(0)
-    const upload = UpChunk.createUpload({ endpoint: result.uploadUrl ?? '', file, chunkSize: 5120 })
+    const upload = UpChunk.createUpload({
+      endpoint: result.uploadUrl ?? '',
+      file,
+      dynamicChunkSize: true,
+      // 500 covers transient OCI direct-upload errors that UpChunk doesn't retry by default.
+      retryCodes: [408, 500, 502, 503, 504],
+    })
+    uploadRef.current = upload
     upload.on('progress', (e) => setProgress(Math.round((e.detail as number))))
+    upload.on('attemptFailure', (e) => {
+      console.warn('[mux-upload] chunk retry:', (e.detail as { message?: string })?.message)
+    })
     upload.on('error', (e) => {
       setStatus('errored')
       setError((e.detail as { message?: string })?.message ?? 'Error de subida.')
@@ -115,6 +126,35 @@ export default function VideoUploadWidget({ lessonId, currentStatus, currentPlay
       setProgress(100)
       startPolling()
     })
+  }
+
+  const handleCancel = async () => {
+    if (!confirm('¿Cancelar la subida y borrar el vídeo?')) return
+
+    // Stop the local upload (if still going) and the polling loop.
+    if (uploadRef.current) {
+      try { uploadRef.current.abort() } catch {}
+      uploadRef.current = null
+    }
+    isPollingRef.current = false
+    if (pollTimerRef.current !== null) {
+      clearTimeout(pollTimerRef.current)
+      pollTimerRef.current = null
+    }
+
+    setStatus('creating')
+    const res = await cancelMuxUpload(lessonId)
+    if ('error' in res) {
+      setStatus('errored')
+      setError(res.error ?? 'No se pudo cancelar.')
+      return
+    }
+    setStatus('idle')
+    setProgress(0)
+    setPlaybackId(null)
+    setError(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    router.refresh()
   }
 
   const handleReplace = async () => {
@@ -164,9 +204,19 @@ export default function VideoUploadWidget({ lessonId, currentStatus, currentPlay
           <div className={styles.progressBar}>
             <div className={styles.progressFill} style={{ width: `${progress}%` }} />
           </div>
+          <button type="button" onClick={handleCancel} className={styles.replaceBtn}>
+            Cancelar y borrar
+          </button>
         </div>
       )}
-      {status === 'polling' && <p>Procesando vídeo en Mux (puede tardar 1-5 min)…</p>}
+      {status === 'polling' && (
+        <div>
+          <p>Procesando vídeo en Mux (puede tardar 1-5 min)…</p>
+          <button type="button" onClick={handleCancel} className={styles.replaceBtn}>
+            Cancelar y borrar
+          </button>
+        </div>
+      )}
     </div>
   )
 }

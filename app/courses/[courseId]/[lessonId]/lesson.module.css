@@ -85,6 +85,7 @@
   grid-template-columns: 320px 1fr;
   gap: clamp(1.25rem, 2.4vw, 2rem);
   align-items: start;
+  container-type: inline-size;
 }
 
 @media (max-width: 1024px) {
@@ -99,6 +100,8 @@
   position: sticky;
   top: 1.5rem;
   align-self: start;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.03) 0%,
@@ -106,33 +109,24 @@
   );
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 1.1rem 1rem 0.9rem;
-  max-height: calc(100vh - 3rem);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(var(--primary-rgb), 0.3) transparent;
-}
-
-.sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(var(--primary-rgb), 0.25);
-  border-radius: 999px;
+  /* Match the 16:9 video player height: video width = 100cqw - sidebar - gap */
+  height: calc((100cqw - 320px - clamp(1.25rem, 2.4vw, 2rem)) * 9 / 16);
+  overflow: hidden;
 }
 
 @media (max-width: 1024px) {
   .sidebar {
     position: static;
+    height: auto;
     max-height: none;
+    overflow: visible;
     order: 2;
   }
 }
 
 .sidebarHeader {
-  padding-bottom: 0.85rem;
-  margin-bottom: 0.85rem;
+  flex: 0 0 auto;
+  padding: 1.1rem 1rem 0.85rem;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -188,10 +182,30 @@
 .lessonList {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0.85rem 1rem 0.9rem;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--primary-rgb), 0.3) transparent;
+}
+
+.lessonList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lessonList::-webkit-scrollbar-thumb {
+  background: rgba(var(--primary-rgb), 0.25);
+  border-radius: 999px;
+}
+
+@media (max-width: 1024px) {
+  .lessonList {
+    overflow-y: visible;
+  }
 }
 
 .lessonItem {
