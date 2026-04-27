@@ -138,6 +138,22 @@ export default async function AdminHome() {
           </ul>
         </div>
       </section>
+
+      <section className={styles.actions} aria-label="Accesos rápidos">
+        <Link href="/courses/create" className={styles.actionBtn}>
+          <span className={styles.actionPlus}>+</span> Crear curso
+        </Link>
+        <Link href="/admin/cursos" className={styles.actionBtn}>
+          <span className={styles.actionPlus}>+</span> Crear lección
+        </Link>
+        <Link href="/admin/alumnos" className={styles.actionBtn}>
+          <ArrowRight size={14} aria-hidden /> Ver alumnos
+        </Link>
+        <Link href="/admin/entregas" className={styles.actionBtn}>
+          <ArrowRight size={14} aria-hidden /> Entregas pendientes
+          {k.pendingSubmissions > 0 ? <span className={styles.actionBadge}>{k.pendingSubmissions}</span> : null}
+        </Link>
+      </section>
     </div>
   )
 }
