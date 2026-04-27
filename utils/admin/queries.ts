@@ -303,7 +303,7 @@ export async function listStudents(args: {
   const to = from + PAGE_SIZE - 1
 
   let q = sb.from('profiles')
-    .select('id, full_name, email, avatar_url, role, updated_at, subscriptions(plan_type, status, current_period_end)', { count: 'exact' })
+    .select('id, full_name, email, avatar_url, role, updated_at', { count: 'exact' })
 
   if (args.q && args.q.trim()) {
     const term = `%${args.q.trim().replace(/[%_]/g, m => '\\' + m)}%`
@@ -331,16 +331,31 @@ export async function listStudents(args: {
   const { data, count, error } = await q
   if (error) throw error
 
-  type RawSub = { plan_type: string | null; status: string | null; current_period_end: string | null }
   type RawRow = {
     id: string; full_name: string | null; email: string | null; avatar_url: string | null
     role: StudentRole; updated_at: string
-    subscriptions: RawSub[] | RawSub | null
+  }
+  const profiles = (data ?? []) as RawRow[]
+
+  // Fetch subscriptions separately (no FK from profiles → subscriptions in this schema).
+  const userIds = profiles.map(p => p.id)
+  const subsByUser = new Map<string, { plan_type: string | null; current_period_end: string | null }>()
+  if (userIds.length > 0) {
+    const { data: subsData } = await sb
+      .from('subscriptions')
+      .select('user_id, plan_type, status, current_period_end')
+      .in('user_id', userIds)
+      .in('status', ['active', 'trialing'])
+    for (const s of (subsData ?? []) as { user_id: string; plan_type: string | null; status: string | null; current_period_end: string | null }[]) {
+      const existing = subsByUser.get(s.user_id)
+      if (!existing || (s.current_period_end ?? '') > (existing.current_period_end ?? '')) {
+        subsByUser.set(s.user_id, { plan_type: s.plan_type, current_period_end: s.current_period_end })
+      }
+    }
   }
 
-  let rows: StudentRow[] = ((data ?? []) as RawRow[]).map((r) => {
-    const subs = Array.isArray(r.subscriptions) ? r.subscriptions : r.subscriptions ? [r.subscriptions] : []
-    const active = subs.find(s => s.status === 'active' || s.status === 'trialing') ?? null
+  let rows: StudentRow[] = profiles.map((r) => {
+    const active = subsByUser.get(r.id) ?? null
     return {
       id: r.id,
       full_name: r.full_name,
