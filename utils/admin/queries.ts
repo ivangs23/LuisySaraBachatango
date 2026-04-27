@@ -539,3 +539,170 @@ export async function getStudentDetail(userId: string): Promise<StudentDetail | 
     },
   }
 }
+
+export type Range = 30 | 90 | 365 | 'all'
+
+function rangeStartIso(range: Range): string | null {
+  if (range === 'all') return null
+  const d = new Date(Date.now() - range * 86_400_000)
+  d.setUTCHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
+export type IncomeMonthRow = { month: string; subscriptions: number; purchases: number }
+export type CountMonthRow = { month: string; value: number }
+export type ActiveSubsDay = { date: string; count: number }
+export type TopCourseRow = { course: string; purchases: number; learners: number }
+export type PlanSlice = { plan: string; count: number }
+export type EngagementWeek = { week: string; completions: number }
+
+export async function getStatsIncomeByMonth(range: Range): Promise<IncomeMonthRow[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { centsToEur, groupByMonth } = await import('@/utils/admin/metrics')
+  const { PLAN_PRICES_EUR } = await import('@/utils/admin/plan-prices')
+  const since = rangeStartIso(range)
+
+  let pq = sb.from('course_purchases').select('amount_paid, created_at')
+  let sq = sb.from('subscriptions').select('plan_type, created_at')
+  if (since) { pq = pq.gte('created_at', since); sq = sq.gte('created_at', since) }
+  const [purchases, subs] = await Promise.all([pq, sq])
+
+  const purchaseMonths = groupByMonth(
+    (purchases.data ?? []) as { amount_paid: number | null; created_at: string }[],
+    r => r.created_at,
+    r => centsToEur(r.amount_paid),
+  )
+  const subMonths = groupByMonth(
+    (subs.data ?? []) as { plan_type: keyof typeof PLAN_PRICES_EUR | null; created_at: string }[],
+    r => r.created_at,
+    r => (r.plan_type ? PLAN_PRICES_EUR[r.plan_type] ?? 0 : 0),
+  )
+  const months = new Set([...purchaseMonths.map(m => m.month), ...subMonths.map(m => m.month)])
+  const pmap = new Map(purchaseMonths.map(m => [m.month, m.value]))
+  const smap = new Map(subMonths.map(m => [m.month, m.value]))
+  return [...months].sort().map(m => ({
+    month: m,
+    purchases: pmap.get(m) ?? 0,
+    subscriptions: smap.get(m) ?? 0,
+  }))
+}
+
+export async function getStatsSignupsByMonth(range: Range): Promise<CountMonthRow[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { groupByMonth } = await import('@/utils/admin/metrics')
+  const since = rangeStartIso(range)
+
+  let q = sb.from('profiles').select('updated_at')
+  if (since) q = q.gte('updated_at', since)
+  const { data } = await q
+
+  return groupByMonth(
+    (data ?? []) as { updated_at: string }[],
+    r => r.updated_at,
+    () => 1,
+  )
+}
+
+export async function getStatsActiveSubsTimeseries(range: Range): Promise<ActiveSubsDay[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+
+  const { data } = await sb
+    .from('subscriptions')
+    .select('current_period_start, current_period_end')
+
+  const subs = (data ?? []) as { current_period_start: string | null; current_period_end: string | null }[]
+
+  const days = range === 'all' ? 365 : range
+  const out: ActiveSubsDay[] = []
+  const start = new Date(Date.now() - days * 86_400_000)
+  start.setUTCHours(0, 0, 0, 0)
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start.getTime() + i * 86_400_000)
+    const iso = d.toISOString()
+    const count = subs.filter(s =>
+      s.current_period_start && s.current_period_end &&
+      s.current_period_start <= iso && s.current_period_end >= iso
+    ).length
+    out.push({ date: iso.slice(0, 10), count })
+  }
+  return out
+}
+
+export async function getStatsTopCourses(): Promise<TopCourseRow[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+
+  const [purchases, progress, courses] = await Promise.all([
+    sb.from('course_purchases').select('course_id'),
+    sb.from('lesson_progress').select('user_id, lessons!inner(course_id)').eq('is_completed', true),
+    sb.from('courses').select('id, title'),
+  ])
+
+  type LP = { user_id: string; lessons: { course_id: string } | { course_id: string }[] | null }
+  const purchaseCount = new Map<string, number>()
+  for (const p of (purchases.data ?? []) as { course_id: string }[]) {
+    purchaseCount.set(p.course_id, (purchaseCount.get(p.course_id) ?? 0) + 1)
+  }
+  const learners = new Map<string, Set<string>>()
+  for (const r of (progress.data ?? []) as LP[]) {
+    const lesson = Array.isArray(r.lessons) ? r.lessons[0] : r.lessons
+    const cid = lesson?.course_id; if (!cid) continue
+    if (!learners.has(cid)) learners.set(cid, new Set())
+    learners.get(cid)!.add(r.user_id)
+  }
+  const titleById = new Map((courses.data ?? []).map(c => [c.id as string, c.title as string]))
+
+  const ids = new Set([...purchaseCount.keys(), ...learners.keys()])
+  return [...ids]
+    .map(id => ({
+      course: titleById.get(id) ?? '—',
+      purchases: purchaseCount.get(id) ?? 0,
+      learners: (learners.get(id)?.size) ?? 0,
+    }))
+    .sort((a, b) => (b.purchases + b.learners) - (a.purchases + a.learners))
+    .slice(0, 8)
+}
+
+export async function getStatsPlanDistribution(): Promise<PlanSlice[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { data } = await sb
+    .from('subscriptions')
+    .select('plan_type')
+    .in('status', ['active', 'trialing'])
+
+  const counts = new Map<string, number>()
+  for (const r of (data ?? []) as { plan_type: string | null }[]) {
+    const p = r.plan_type ?? 'desconocido'
+    counts.set(p, (counts.get(p) ?? 0) + 1)
+  }
+  return [...counts.entries()].map(([plan, count]) => ({ plan, count }))
+}
+
+export async function getStatsEngagement(range: Range): Promise<EngagementWeek[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const since = rangeStartIso(range)
+  let q = sb.from('lesson_progress').select('updated_at').eq('is_completed', true)
+  if (since) q = q.gte('updated_at', since)
+  const { data } = await q
+
+  const buckets = new Map<string, number>()
+  for (const r of (data ?? []) as { updated_at: string }[]) {
+    const d = new Date(r.updated_at)
+    if (Number.isNaN(d.valueOf())) continue
+    const day = d.getUTCDay() // 0..6
+    const monday = new Date(d)
+    monday.setUTCDate(d.getUTCDate() - ((day + 6) % 7))
+    monday.setUTCHours(0, 0, 0, 0)
+    const key = monday.toISOString().slice(0, 10)
+    buckets.set(key, (buckets.get(key) ?? 0) + 1)
+  }
+  return [...buckets.entries()]
+    .map(([week, completions]) => ({ week, completions }))
+    .sort((a, b) => a.week.localeCompare(b.week))
+}
