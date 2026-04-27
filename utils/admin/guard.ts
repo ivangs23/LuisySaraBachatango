@@ -18,9 +18,13 @@ export async function requireAdmin(): Promise<AdminUser> {
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (error || !data) throw new AdminGuardError('lookup_failed')
+  if (error) {
+    console.error('[requireAdmin] profile lookup failed', { userId: user.id, error })
+    throw new AdminGuardError('lookup_failed')
+  }
+  if (!data) throw new AdminGuardError('forbidden')
   if (data.role !== 'admin') throw new AdminGuardError('forbidden')
 
   return { id: user.id }

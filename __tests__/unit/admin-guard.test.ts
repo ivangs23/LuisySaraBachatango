@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/utils/supabase/server', () => ({ createClient: vi.fn() }))
 
 const mockGetUser = vi.fn()
-const mockSingle = vi.fn()
-const mockEq = vi.fn().mockReturnValue({ single: mockSingle })
+const mockMaybeSingle = vi.fn()
+const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
 const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
 const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
 
@@ -23,20 +23,20 @@ describe('requireAdmin', () => {
   })
 
   it('returns the user when role is admin', async () => {
-    mockSingle.mockResolvedValueOnce({ data: { role: 'admin' }, error: null })
+    mockMaybeSingle.mockResolvedValueOnce({ data: { role: 'admin' }, error: null })
     const { requireAdmin } = await import('@/utils/admin/guard')
     const u = await requireAdmin()
     expect(u.id).toBe('u1')
   })
 
   it('throws AdminGuardError when role is member', async () => {
-    mockSingle.mockResolvedValueOnce({ data: { role: 'member' }, error: null })
+    mockMaybeSingle.mockResolvedValueOnce({ data: { role: 'member' }, error: null })
     const { requireAdmin, AdminGuardError } = await import('@/utils/admin/guard')
     await expect(requireAdmin()).rejects.toBeInstanceOf(AdminGuardError)
   })
 
   it('throws AdminGuardError when role is premium', async () => {
-    mockSingle.mockResolvedValueOnce({ data: { role: 'premium' }, error: null })
+    mockMaybeSingle.mockResolvedValueOnce({ data: { role: 'premium' }, error: null })
     const { requireAdmin, AdminGuardError } = await import('@/utils/admin/guard')
     await expect(requireAdmin()).rejects.toBeInstanceOf(AdminGuardError)
   })
@@ -49,7 +49,13 @@ describe('requireAdmin', () => {
   })
 
   it('throws AdminGuardError when profile lookup errors', async () => {
-    mockSingle.mockResolvedValueOnce({ data: null, error: { message: 'db' } })
+    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'db' } })
+    const { requireAdmin, AdminGuardError } = await import('@/utils/admin/guard')
+    await expect(requireAdmin()).rejects.toBeInstanceOf(AdminGuardError)
+  })
+
+  it('throws AdminGuardError when no profile row is visible (RLS-filtered)', async () => {
+    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: null })
     const { requireAdmin, AdminGuardError } = await import('@/utils/admin/guard')
     await expect(requireAdmin()).rejects.toBeInstanceOf(AdminGuardError)
   })
