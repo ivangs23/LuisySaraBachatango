@@ -31,3 +31,54 @@
 @media (max-width: 1200px) { .kpiGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 768px) { .kpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .kpiGrid { grid-template-columns: 1fr; } }
+
+.lists {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) { .lists { grid-template-columns: 1fr; } }
+
+.listCard {
+  background: rgba(var(--primary-rgb), 0.03);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.listHeader { display: flex; align-items: baseline; justify-content: space-between; }
+.listHeader h2 { font-size: 0.95rem; font-weight: 600; margin: 0; }
+.listLink { font-size: 0.8rem; color: rgba(var(--primary-rgb), 1); text-decoration: none; }
+.listLink:hover { text-decoration: underline; }
+
+.listBody { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+
+.listRow { border-radius: 6px; }
+.listRow:hover { background: rgba(var(--primary-rgb), 0.05); }
+
+.listRowLink {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.4rem;
+  text-decoration: none; color: inherit;
+}
+
+.avatar, .avatarFallback, .thumb, .thumbFallback {
+  width: 28px; height: 28px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  background: rgba(var(--primary-rgb), 0.12);
+}
+.thumb, .thumbFallback { border-radius: 6px; }
+.thumbFallback { display: inline-flex; align-items: center; justify-content: center; color: rgba(var(--primary-rgb), 1); }
+
+.rowMain { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.rowName { font-size: 0.88rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rowMeta { font-size: 0.76rem; color: rgba(var(--text-rgb, 30, 30, 30), 0.65); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.rowAside { font-size: 0.75rem; color: rgba(var(--text-rgb, 30, 30, 30), 0.6); white-space: nowrap; }
+
+.empty { padding: 0.6rem; font-size: 0.85rem; color: rgba(var(--text-rgb, 30, 30, 30), 0.55); }

@@ -94,3 +94,133 @@ export async function getOverviewKpis(): Promise<OverviewKpis> {
     oldestPendingDays: oldestDays,
   }
 }
+
+export type LatestStudent = {
+  id: string
+  full_name: string | null
+  email: string | null
+  avatar_url: string | null
+  created_at: string  // we use updated_at as proxy
+}
+
+export type RecentPayment =
+  | { kind: 'purchase'; userId: string; userName: string | null; courseTitle: string; amountEur: number; date: string }
+  | { kind: 'subscription'; userId: string; userName: string | null; planType: string | null; date: string }
+
+export type ActiveCourse = {
+  id: string
+  title: string
+  image_url: string | null
+  completedCount: number
+}
+
+export async function getLatestStudents(limit = 5): Promise<LatestStudent[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { data } = await sb
+    .from('profiles')
+    .select('id, full_name, email, avatar_url, updated_at')
+    .order('updated_at', { ascending: false })
+    .limit(limit)
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    full_name: r.full_name as string | null,
+    email: r.email as string | null,
+    avatar_url: r.avatar_url as string | null,
+    created_at: r.updated_at as string,
+  }))
+}
+
+export async function getRecentPayments(limit = 5): Promise<RecentPayment[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { centsToEur } = await import('@/utils/admin/metrics')
+
+  const [purchases, subs] = await Promise.all([
+    sb.from('course_purchases')
+      .select('user_id, amount_paid, created_at, courses(title), profiles!inner(full_name)')
+      .order('created_at', { ascending: false })
+      .limit(limit),
+    sb.from('subscriptions')
+      .select('user_id, plan_type, created_at, profiles!inner(full_name)')
+      .order('created_at', { ascending: false })
+      .limit(limit),
+  ])
+
+  type PurchaseRow = {
+    user_id: string; amount_paid: number | null; created_at: string;
+    courses: { title: string } | { title: string }[] | null;
+    profiles: { full_name: string | null } | { full_name: string | null }[] | null;
+  }
+  type SubRow = {
+    user_id: string; plan_type: string | null; created_at: string;
+    profiles: { full_name: string | null } | { full_name: string | null }[] | null;
+  }
+
+  const pickFirst = <T,>(v: T | T[] | null): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : v
+
+  const merged: RecentPayment[] = [
+    ...(purchases.data ?? []).map((r: PurchaseRow): RecentPayment => ({
+      kind: 'purchase',
+      userId: r.user_id,
+      userName: pickFirst(r.profiles)?.full_name ?? null,
+      courseTitle: pickFirst(r.courses)?.title ?? '—',
+      amountEur: centsToEur(r.amount_paid),
+      date: r.created_at,
+    })),
+    ...(subs.data ?? []).map((r: SubRow): RecentPayment => ({
+      kind: 'subscription',
+      userId: r.user_id,
+      userName: pickFirst(r.profiles)?.full_name ?? null,
+      planType: r.plan_type,
+      date: r.created_at,
+    })),
+  ]
+
+  return merged
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, limit)
+}
+
+export async function getActiveCourses(limit = 5): Promise<ActiveCourse[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+
+  const sinceIso = new Date(Date.now() - 30 * 86_400_000).toISOString()
+
+  // 1. recent completed lesson_progress with course_id via lessons join
+  const { data: progress } = await sb
+    .from('lesson_progress')
+    .select('lessons!inner(course_id)')
+    .eq('is_completed', true)
+    .gte('updated_at', sinceIso)
+
+  type Row = { lessons: { course_id: string } | { course_id: string }[] | null }
+  const counts = new Map<string, number>()
+  for (const r of (progress ?? []) as Row[]) {
+    const lessons = Array.isArray(r.lessons) ? r.lessons[0] : r.lessons
+    const cid = lessons?.course_id
+    if (!cid) continue
+    counts.set(cid, (counts.get(cid) ?? 0) + 1)
+  }
+
+  const top = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+
+  if (top.length === 0) return []
+
+  const { data: courses } = await sb
+    .from('courses')
+    .select('id, title, image_url')
+    .in('id', top.map(([id]) => id))
+
+  const byId = new Map((courses ?? []).map(c => [c.id as string, c]))
+  return top.map(([id, count]) => ({
+    id,
+    title: (byId.get(id)?.title as string) ?? '—',
+    image_url: (byId.get(id)?.image_url as string | null) ?? null,
+    completedCount: count,
+  }))
+}
