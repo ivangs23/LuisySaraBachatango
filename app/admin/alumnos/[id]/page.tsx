@@ -1,5 +1,11 @@
 import { notFound } from 'next/navigation'
 import StudentSummaryCard from '@/components/admin/StudentDetail/StudentSummaryCard'
+import StudentTabs from '@/components/admin/StudentDetail/StudentTabs'
+import TabCursos from '@/components/admin/StudentDetail/TabCursos'
+import TabProgreso from '@/components/admin/StudentDetail/TabProgreso'
+import TabEntregas from '@/components/admin/StudentDetail/TabEntregas'
+import TabComunidad from '@/components/admin/StudentDetail/TabComunidad'
+import TabPagos from '@/components/admin/StudentDetail/TabPagos'
 import { getStudentDetail } from '@/utils/admin/queries'
 import styles from '@/components/admin/StudentDetail/StudentDetail.module.css'
 
@@ -18,8 +24,15 @@ export default async function StudentDetailPage({
     <div className={styles.page}>
       <StudentSummaryCard data={data} />
       <main className={styles.tabsPane}>
-        {/* Tabs added in next task */}
-        <p>Datos cargados — pestañas en construcción.</p>
+        <StudentTabs
+          tabs={[
+            { key: 'cursos', label: 'Cursos', content: <TabCursos data={data} /> },
+            { key: 'progreso', label: 'Progreso', content: <TabProgreso data={data} /> },
+            { key: 'entregas', label: 'Entregas', content: <TabEntregas data={data} /> },
+            { key: 'comunidad', label: 'Comunidad', content: <TabComunidad data={data} /> },
+            { key: 'pagos', label: 'Pagos', content: <TabPagos data={data} /> },
+          ]}
+        />
       </main>
     </div>
   )
