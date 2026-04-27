@@ -739,21 +739,22 @@ export async function listSubmissions(status: 'pending' | 'reviewed'): Promise<S
     .order('created_at', { ascending: false })
     .limit(100)
 
+  type AssignmentRel = {
+    title: string; lesson_id: string; course_id: string
+    lessons: { id: string; title: string } | { id: string; title: string }[] | null
+    courses: { id: string; title: string } | { id: string; title: string }[] | null
+  }
   type Row = {
     id: string; user_id: string; status: string; created_at: string
     profiles: { full_name: string | null } | { full_name: string | null }[] | null
-    assignments: {
-      title: string; lesson_id: string; course_id: string
-      lessons: { id: string; title: string } | { id: string; title: string }[] | null
-      courses: { id: string; title: string } | { id: string; title: string }[] | null
-    } | null
+    assignments: AssignmentRel | AssignmentRel[] | null
   }
   const pickFirst = <T,>(v: T | T[] | null | undefined): T | null =>
     Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
 
-  return ((data ?? []) as Row[]).map(r => {
+  return ((data ?? []) as unknown as Row[]).map(r => {
     const profile = pickFirst(r.profiles)
-    const a = r.assignments
+    const a = pickFirst(r.assignments)
     const lesson = pickFirst(a?.lessons)
     const course = pickFirst(a?.courses)
     return {
@@ -842,4 +843,64 @@ export async function listCoursesWithStats(): Promise<CourseStatsRow[]> {
       revenueEur: revenueByCourse.get(c.id) ?? 0,
     }
   })
+}
+
+export type ModPostRow = {
+  id: string; user_id: string; user_name: string | null
+  content: string; created_at: string
+  likeCount: number; commentCount: number
+}
+export type ModCommentRow = {
+  id: string; user_id: string; user_name: string | null
+  post_id: string; content: string; created_at: string
+}
+
+export async function listRecentPosts(limit = 50): Promise<ModPostRow[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { data } = await sb
+    .from('posts')
+    .select('id, user_id, content, created_at, profiles!inner(full_name), post_likes(count), comments(count)')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  type Row = {
+    id: string; user_id: string; content: string; created_at: string
+    profiles: { full_name: string | null } | { full_name: string | null }[] | null
+    post_likes: { count: number }[] | null
+    comments: { count: number }[] | null
+  }
+  const pickFirst = <T,>(v: T | T[] | null | undefined): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+
+  return ((data ?? []) as Row[]).map(r => ({
+    id: r.id, user_id: r.user_id, content: r.content,
+    user_name: pickFirst(r.profiles)?.full_name ?? null,
+    created_at: r.created_at,
+    likeCount: r.post_likes?.[0]?.count ?? 0,
+    commentCount: r.comments?.[0]?.count ?? 0,
+  }))
+}
+
+export async function listRecentComments(limit = 50): Promise<ModCommentRow[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { data } = await sb
+    .from('comments')
+    .select('id, user_id, post_id, content, created_at, profiles!inner(full_name)')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  type Row = {
+    id: string; user_id: string; post_id: string; content: string; created_at: string
+    profiles: { full_name: string | null } | { full_name: string | null }[] | null
+  }
+  const pickFirst = <T,>(v: T | T[] | null | undefined): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+
+  return ((data ?? []) as Row[]).map(r => ({
+    id: r.id, user_id: r.user_id, post_id: r.post_id, content: r.content,
+    user_name: pickFirst(r.profiles)?.full_name ?? null,
+    created_at: r.created_at,
+  }))
 }
