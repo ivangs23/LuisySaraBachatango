@@ -7,18 +7,28 @@ import Image from 'next/image'
 import AdminKpiCard from '@/components/admin/AdminKpiCard'
 import {
   getOverviewKpis, getLatestStudents, getRecentPayments, getActiveCourses,
+  getRevenueTimeseries,
 } from '@/utils/admin/queries'
+import AdminRevenueChart from '@/components/admin/AdminRevenueChart'
 import { pctChange, formatRelative } from '@/utils/admin/metrics'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminHome() {
-  const [k, latestStudents, recentPayments, activeCourses] = await Promise.all([
+export default async function AdminHome({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>
+}) {
+  const sp = await searchParams
+  const range: 30 | 90 = sp.range === '90' ? 90 : 30
+
+  const [k, latestStudents, recentPayments, activeCourses, revenueSeries] = await Promise.all([
     getOverviewKpis(),
     getLatestStudents(),
     getRecentPayments(),
     getActiveCourses(),
+    getRevenueTimeseries(range),
   ])
 
   const change = pctChange(k.prevMonthRevenueEur, k.monthRevenueEur)
@@ -56,6 +66,10 @@ export default async function AdminHome() {
           sub={k.oldestPendingDays != null ? `Más antigua: hace ${k.oldestPendingDays}d` : 'Sin pendientes'}
         />
         <AdminKpiCard Icon={UserPlus} label="Nuevos esta semana" value={String(k.newThisWeek)} sub={`+${k.newToday} hoy`} />
+      </section>
+
+      <section aria-label="Tendencia de ingresos">
+        <AdminRevenueChart data={revenueSeries} range={range} />
       </section>
 
       <section className={styles.lists}>
