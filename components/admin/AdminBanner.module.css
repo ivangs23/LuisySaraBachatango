@@ -1,0 +1,23 @@
+.banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  background: rgba(var(--primary-rgb), 0.08);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  transition: background-color 120ms;
+  margin: 0 auto 1.5rem;
+}
+
+.banner:hover { background: rgba(var(--primary-rgb), 0.14); }
+
+.icon {
+  display: inline-flex;
+  color: rgba(var(--primary-rgb), 1);
+}
+.text strong { color: rgba(var(--primary-rgb), 1); font-weight: 600; }
+.arrow { color: rgba(var(--text-rgb, 30, 30, 30), 0.6); }
