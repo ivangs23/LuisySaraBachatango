@@ -770,3 +770,76 @@ export async function listSubmissions(status: 'pending' | 'reviewed'): Promise<S
     }
   })
 }
+
+export type CourseStatsRow = {
+  id: string
+  title: string
+  image_url: string | null
+  course_type: 'membership' | 'complete'
+  is_published: boolean
+  lessonsCount: number
+  studentsWithAccess: number
+  avgCompletion: number
+  revenueEur: number
+}
+
+export async function listCoursesWithStats(): Promise<CourseStatsRow[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { centsToEur } = await import('@/utils/admin/metrics')
+
+  const [coursesRes, lessonsRes, purchasesRes, progressRes] = await Promise.all([
+    sb.from('courses').select('id, title, image_url, course_type, is_published'),
+    sb.from('lessons').select('id, course_id'),
+    sb.from('course_purchases').select('course_id, user_id, amount_paid'),
+    sb.from('lesson_progress').select('lesson_id, user_id, is_completed, lessons!inner(course_id)'),
+  ])
+
+  type Lesson = { id: string; course_id: string }
+  type Purchase = { course_id: string; user_id: string; amount_paid: number | null }
+  type Progress = {
+    lesson_id: string; user_id: string; is_completed: boolean | null
+    lessons: { course_id: string } | { course_id: string }[] | null
+  }
+
+  const lessonsByCourse = new Map<string, number>()
+  for (const l of (lessonsRes.data ?? []) as Lesson[]) {
+    lessonsByCourse.set(l.course_id, (lessonsByCourse.get(l.course_id) ?? 0) + 1)
+  }
+
+  const accessByCourse = new Map<string, Set<string>>()
+  const revenueByCourse = new Map<string, number>()
+  for (const p of (purchasesRes.data ?? []) as Purchase[]) {
+    if (!accessByCourse.has(p.course_id)) accessByCourse.set(p.course_id, new Set())
+    accessByCourse.get(p.course_id)!.add(p.user_id)
+    revenueByCourse.set(p.course_id, (revenueByCourse.get(p.course_id) ?? 0) + centsToEur(p.amount_paid))
+  }
+
+  const completionsByCourse = new Map<string, { total: number; completed: number }>()
+  for (const r of (progressRes.data ?? []) as Progress[]) {
+    const lesson = Array.isArray(r.lessons) ? r.lessons[0] : r.lessons
+    const cid = lesson?.course_id; if (!cid) continue
+    const bucket = completionsByCourse.get(cid) ?? { total: 0, completed: 0 }
+    bucket.total += 1
+    if (r.is_completed) bucket.completed += 1
+    completionsByCourse.set(cid, bucket)
+  }
+
+  return ((coursesRes.data ?? []) as Array<{
+    id: string; title: string; image_url: string | null
+    course_type: 'membership' | 'complete'; is_published: boolean
+  }>).map(c => {
+    const completion = completionsByCourse.get(c.id)
+    const pct = completion && completion.total > 0
+      ? Math.round((completion.completed / completion.total) * 100)
+      : 0
+    return {
+      id: c.id, title: c.title, image_url: c.image_url,
+      course_type: c.course_type, is_published: c.is_published,
+      lessonsCount: lessonsByCourse.get(c.id) ?? 0,
+      studentsWithAccess: accessByCourse.get(c.id)?.size ?? 0,
+      avgCompletion: pct,
+      revenueEur: revenueByCourse.get(c.id) ?? 0,
+    }
+  })
+}
