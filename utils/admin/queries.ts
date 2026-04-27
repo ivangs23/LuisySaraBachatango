@@ -270,3 +270,92 @@ export async function getRevenueTimeseries(rangeDays: 30 | 90): Promise<RevenueD
 
   return [...buckets.values()].sort((a, b) => a.date.localeCompare(b.date))
 }
+
+export type StudentRole = 'member' | 'premium' | 'admin'
+export type SubFilter = 'all' | 'active' | 'none' | 'newMonth'
+export type SortKey = 'created' | 'recent' | 'name'
+
+export type StudentRow = {
+  id: string
+  full_name: string | null
+  email: string | null
+  avatar_url: string | null
+  role: StudentRole
+  created_at: string
+  lastActivity: string | null
+  subPlan: string | null
+  subPeriodEnd: string | null
+}
+
+const PAGE_SIZE = 25
+
+export async function listStudents(args: {
+  q?: string
+  role?: StudentRole | 'all'
+  sub?: SubFilter
+  sort?: SortKey
+  page?: number
+}): Promise<{ rows: StudentRow[]; total: number; pageSize: number }> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const page = Math.max(1, args.page ?? 1)
+  const from = (page - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
+  let q = sb.from('profiles')
+    .select('id, full_name, email, avatar_url, role, updated_at, subscriptions(plan_type, status, current_period_end)', { count: 'exact' })
+
+  if (args.q && args.q.trim()) {
+    const term = `%${args.q.trim().replace(/[%_]/g, m => '\\' + m)}%`
+    q = q.or(`full_name.ilike.${term},email.ilike.${term}`)
+  }
+  if (args.role && args.role !== 'all') {
+    q = q.eq('role', args.role)
+  }
+  if (args.sub === 'newMonth') {
+    const monthStart = new Date()
+    monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0)
+    q = q.gte('updated_at', monthStart.toISOString())
+  }
+
+  switch (args.sort) {
+    case 'name': q = q.order('full_name', { ascending: true, nullsFirst: false }); break
+    case 'recent': q = q.order('updated_at', { ascending: false }); break
+    case 'created':
+    default:
+      q = q.order('updated_at', { ascending: false })
+  }
+
+  q = q.range(from, to)
+
+  const { data, count, error } = await q
+  if (error) throw error
+
+  type RawSub = { plan_type: string | null; status: string | null; current_period_end: string | null }
+  type RawRow = {
+    id: string; full_name: string | null; email: string | null; avatar_url: string | null
+    role: StudentRole; updated_at: string
+    subscriptions: RawSub[] | RawSub | null
+  }
+
+  let rows: StudentRow[] = ((data ?? []) as RawRow[]).map((r) => {
+    const subs = Array.isArray(r.subscriptions) ? r.subscriptions : r.subscriptions ? [r.subscriptions] : []
+    const active = subs.find(s => s.status === 'active' || s.status === 'trialing') ?? null
+    return {
+      id: r.id,
+      full_name: r.full_name,
+      email: r.email,
+      avatar_url: r.avatar_url,
+      role: r.role,
+      created_at: r.updated_at,
+      lastActivity: r.updated_at,
+      subPlan: active?.plan_type ?? null,
+      subPeriodEnd: active?.current_period_end ?? null,
+    }
+  })
+
+  if (args.sub === 'active') rows = rows.filter(r => r.subPlan !== null)
+  if (args.sub === 'none') rows = rows.filter(r => r.subPlan === null)
+
+  return { rows, total: count ?? rows.length, pageSize: PAGE_SIZE }
+}
