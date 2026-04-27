@@ -72,18 +72,16 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
               ) : null}
             </Link>
           ))}
-        </nav>
 
-        <div className={styles.footer}>
           <Link
             href="/dashboard"
-            className={styles.backLink}
+            className={styles.item}
             onClick={() => setOpen(false)}
           >
             <ArrowLeft size={16} strokeWidth={2} aria-hidden />
             <span>Volver al sitio</span>
           </Link>
-        </div>
+        </nav>
       </aside>
 
       {open && <div className={styles.backdrop} onClick={() => setOpen(false)} />}
