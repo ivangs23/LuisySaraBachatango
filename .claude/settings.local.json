@@ -5,7 +5,8 @@
       "Bash(ls -la /c/Users/Nitropc/Desktop/Proyectos/LuisySaraBachatango/supabase/*.sql)",
       "Bash(find /Users/ivangonzalez/Documents/proyectos/LuisySaraBachatango/app -name \"*.tsx\" -exec grep -l \"searchParams\\\\|query\" {} \\\\;)",
       "Bash(wc -l /Users/ivangonzalez/Documents/proyectos/LuisySaraBachatango/supabase/*.sql)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(node -e ' *)"
     ]
   }
 }

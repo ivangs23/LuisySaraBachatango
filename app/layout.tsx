@@ -61,9 +61,11 @@ import { LanguageProvider } from '@/context/LanguageContext';
 // Safe: userId is already validated by getUser() before this is called.
 const getCachedProfile = unstable_cache(
   async (userId: string) => {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return null;
     const supabase = createSupabaseAdmin(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      serviceKey
     );
     const { data } = await supabase
       .from('profiles')
