@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import StudentSummaryCard from '@/components/admin/StudentDetail/StudentSummaryCard'
 import StudentTabs from '@/components/admin/StudentDetail/StudentTabs'
 import TabCursos from '@/components/admin/StudentDetail/TabCursos'
@@ -17,12 +18,17 @@ export default async function StudentDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const data = await getStudentDetail(id)
+  const sb = createSupabaseAdmin()
+  const [data, coursesRes] = await Promise.all([
+    getStudentDetail(id),
+    sb.from('courses').select('id, title').eq('is_published', true).order('title'),
+  ])
   if (!data) notFound()
+  const courses = (coursesRes.data ?? []).map(c => ({ id: c.id as string, title: c.title as string }))
 
   return (
     <div className={styles.page}>
-      <StudentSummaryCard data={data} />
+      <StudentSummaryCard data={data} courses={courses} />
       <main className={styles.tabsPane}>
         <StudentTabs
           tabs={[

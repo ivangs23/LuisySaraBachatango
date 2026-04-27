@@ -87,3 +87,72 @@
 .totalRow { font-weight: 600; }
 
 .summaryBlockHeading { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.16em; color: rgba(var(--text-rgb, 30, 30, 30), 0.55); margin: 0.5rem 0 0.4rem; font-weight: 500; }
+
+.actionsCol { display: flex; flex-direction: column; gap: 0.3rem; }
+.actionLine {
+  text-align: left; padding: 0.45rem 0.6rem;
+  background: rgba(var(--primary-rgb), 0.06);
+  border: 1px solid rgba(var(--primary-rgb), 0.14);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+.actionLine:hover { background: rgba(var(--primary-rgb), 0.12); }
+.actionDanger { color: rgba(180, 60, 60, 1); border-color: rgba(180, 60, 60, 0.3); background: rgba(180, 60, 60, 0.06); }
+.actionDanger:hover { background: rgba(180, 60, 60, 0.12); }
+
+.modalBackdrop {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50;
+}
+.modal {
+  background: var(--background);
+  border: 1px solid rgba(var(--primary-rgb), 0.18);
+  border-radius: 10px;
+  padding: 1.5rem;
+  width: min(420px, calc(100vw - 2rem));
+  position: relative;
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+.modal h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+
+.modalClose {
+  position: absolute; top: 8px; right: 8px;
+  background: transparent; border: 0; cursor: pointer;
+  font-size: 1.1rem; line-height: 1;
+  color: rgba(var(--text-rgb, 30, 30, 30), 0.6);
+}
+
+.input {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.btnPrimary {
+  padding: 0.55rem 1rem;
+  background: rgba(var(--primary-rgb), 1);
+  color: white;
+  border: 0; border-radius: 6px;
+  cursor: pointer; font-size: 0.9rem;
+  align-self: flex-start;
+}
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnDanger {
+  padding: 0.55rem 1rem;
+  background: rgba(180, 60, 60, 1); color: white;
+  border: 0; border-radius: 6px;
+  cursor: pointer; font-size: 0.9rem;
+  align-self: flex-start;
+}
+.btnDanger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.errorMsg { color: rgba(180, 60, 60, 1); font-size: 0.85rem; margin: 0; }

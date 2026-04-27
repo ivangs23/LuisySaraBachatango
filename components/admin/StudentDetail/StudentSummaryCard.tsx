@@ -2,11 +2,14 @@ import Image from 'next/image'
 import { sanitizeUrl } from '@/utils/sanitize'
 import { formatRelative } from '@/utils/admin/metrics'
 import type { StudentDetail } from '@/utils/admin/queries'
+import StudentActions from './StudentActions'
 import styles from './StudentDetail.module.css'
 
 const PLAN_LABEL: Record<string, string> = { '1month': 'Mensual', '6months': '6 meses', '1year': 'Anual' }
 
-export default function StudentSummaryCard({ data }: { data: StudentDetail }) {
+export default function StudentSummaryCard({
+  data, courses,
+}: { data: StudentDetail; courses: { id: string; title: string }[] }) {
   const p = data.profile
   const sub = data.subscription
   const isActive = sub && (sub.status === 'active' || sub.status === 'trialing')
@@ -68,6 +71,8 @@ export default function StudentSummaryCard({ data }: { data: StudentDetail }) {
           })}
         </ul>
       </section>
+
+      <StudentActions userId={data.profile.id} currentRole={data.profile.role} courses={courses} />
     </aside>
   )
 }
