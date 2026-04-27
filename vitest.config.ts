@@ -26,6 +26,7 @@ export default defineConfig({
         'app/courses/actions.ts',
         'app/profile/actions.ts',
         'app/auth/**',
+        'app/admin/**/actions.ts',
       ],
     },
   },
