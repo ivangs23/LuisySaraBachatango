@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { submitAssignment } from '@/app/courses/actions';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Assignment = {
   id: string;
@@ -34,6 +35,7 @@ export default function LessonAssignmentTab({
   courseId,
   lessonId,
 }: LessonAssignmentTabProps) {
+  const { t } = useLanguage();
   const supabase = createClient();
   const [isPending, startTransition] = useTransition();
   const [textContent, setTextContent] = useState(submission?.text_content ?? '');
@@ -45,9 +47,7 @@ export default function LessonAssignmentTab({
   if (!assignment) {
     return (
       <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', padding: '2rem', textAlign: 'center' }}>
-        {isAdmin
-          ? 'Aún no hay tarea para esta lección. Añade una desde "Editar Lección".'
-          : 'El profesor no ha asignado ninguna tarea para esta lección.'}
+        {isAdmin ? t.lesson.assignmentNoTaskAdmin : t.lesson.assignmentNoTask}
       </div>
     );
   }
@@ -66,7 +66,7 @@ export default function LessonAssignmentTab({
       setUploading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('No hay sesión activa');
+        if (!session) throw new Error('No active session');
 
         const fileExt = file.name.split('.').pop();
         const fileName = `${session.user.id}/${assignment.id}/${Date.now()}.${fileExt}`;
@@ -79,7 +79,7 @@ export default function LessonAssignmentTab({
 
         fileUrl = `storage://submissions/${fileName}`;
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Error al subir el archivo';
+        const msg = err instanceof Error ? err.message : t.lesson.assignmentUploading;
         setErrorMsg(msg);
         setUploading(false);
         return;
@@ -92,7 +92,7 @@ export default function LessonAssignmentTab({
       if (result?.error) {
         setErrorMsg(result.error);
       } else {
-        setSuccessMsg('¡Entrega enviada correctamente!');
+        setSuccessMsg(t.lesson.assignmentSuccess);
       }
     });
   };
@@ -110,8 +110,8 @@ export default function LessonAssignmentTab({
       {/* Submission feedback (if reviewed) */}
       {isReviewed && (
         <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(76,175,80,0.08)', borderRadius: '8px', border: '1px solid rgba(76,175,80,0.3)' }}>
-          <p style={{ margin: '0 0 0.25rem', fontWeight: 600, color: '#4CAF50', fontSize: '0.9rem' }}>✓ Tarea corregida</p>
-          {submission?.grade && <p style={{ margin: '0.25rem 0', color: 'var(--text-main)' }}>Calificación: <strong>{submission.grade}</strong></p>}
+          <p style={{ margin: '0 0 0.25rem', fontWeight: 600, color: '#4CAF50', fontSize: '0.9rem' }}>{t.lesson.assignmentReviewed}</p>
+          {submission?.grade && <p style={{ margin: '0.25rem 0', color: 'var(--text-main)' }}>{t.lesson.assignmentGradeLabel} <strong>{submission.grade}</strong></p>}
           {submission?.feedback && <p style={{ margin: '0.25rem 0', color: 'var(--text-muted)' }}>{submission.feedback}</p>}
         </div>
       )}
@@ -121,7 +121,7 @@ export default function LessonAssignmentTab({
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Tu respuesta (texto)
+              {t.lesson.assignmentResponseLabel}
             </label>
             <textarea
               value={textContent}
@@ -138,13 +138,13 @@ export default function LessonAssignmentTab({
                 resize: 'vertical',
                 boxSizing: 'border-box',
               }}
-              placeholder="Escribe tu respuesta aquí..."
+              placeholder={t.lesson.assignmentResponsePlaceholder}
             />
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Adjuntar archivo (opcional)
+              {t.lesson.assignmentFileLabel}
             </label>
             {hasSubmitted && submission?.file_url && !file && (
               <p style={{ fontSize: '0.8rem', color: '#4CAF50', marginBottom: '0.4rem' }}>
@@ -177,14 +177,14 @@ export default function LessonAssignmentTab({
               opacity: (isPending || uploading) ? 0.7 : 1,
             }}
           >
-            {uploading ? 'Subiendo archivo...' : isPending ? 'Enviando...' : hasSubmitted ? 'Actualizar entrega' : 'Enviar entrega'}
+            {uploading ? t.lesson.assignmentUploading : isPending ? t.lesson.assignmentSending : hasSubmitted ? t.lesson.assignmentUpdateBtn : t.lesson.assignmentSubmitBtn}
           </button>
         </form>
       )}
 
       {isReviewed && isAdmin && (
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Ve a <a href={`/courses/${courseId}/${lessonId}/submissions`} style={{ color: 'var(--primary)' }}>Entregas</a> para ver todas las entregas.
+          <a href={`/courses/${courseId}/${lessonId}/submissions`} style={{ color: 'var(--primary)' }}>{t.lesson.assignmentViewSubmissions}</a>
         </p>
       )}
     </div>

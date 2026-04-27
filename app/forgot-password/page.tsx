@@ -21,19 +21,11 @@ export default async function ForgotPasswordPage(props: { searchParams: Promise<
 
   return (
     <AuthShell
-      panelEyebrow="RECUPERAR ACCESO"
-      panelTitle={
-        <>
-          Vuelve a la <em>pista</em> en un par de pasos.
-        </>
-      }
-      panelLead="Te enviamos un enlace seguro a tu email para que crees una nueva contraseña sin perder nada de tu progreso."
-      panelFeatures={[
-        'Enlace válido durante un tiempo limitado',
-        'Tu cuenta y tus clases siguen intactas',
-        'Si no llega, revisa la carpeta de spam',
-      ]}
-      cardEyebrow="RECUPERAR"
+      panelEyebrow={t.forgotPassword.panelEyebrow}
+      panelTitle={t.forgotPassword.panelTitle}
+      panelLead={t.forgotPassword.panelLead}
+      panelFeatures={t.forgotPassword.panelFeatures}
+      cardEyebrow={t.forgotPassword.cardEyebrow}
       cardTitle={t.forgotPassword.title}
       cardSubtitle={t.forgotPassword.subtitle}
       errorMsg={errorMsg}

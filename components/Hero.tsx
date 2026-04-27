@@ -15,12 +15,6 @@ const STATS = [
 
 type StatKey = typeof STATS[number]['labelKey'];
 
-const STAT_LABELS_ES: Record<StatKey, string> = {
-  years: 'AÑOS BAILANDO',
-  students: 'ALUMNOS',
-  countries: 'PAÍSES',
-};
-
 export default function Hero() {
   const { t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
@@ -176,7 +170,7 @@ export default function Hero() {
           </Link>
           <Link href="/courses" className={styles.ctaSecondary}>
             <Play size={16} strokeWidth={2.5} aria-hidden="true" />
-            <span>Ver clase de muestra</span>
+            <span>{t.hero.sampleClass}</span>
           </Link>
         </motion.div>
 
@@ -192,7 +186,7 @@ export default function Hero() {
             <li key={stat.labelKey} className={styles.statItem}>
               <span className={styles.statValue}>{stat.value}</span>
               <span className={styles.statLabel}>
-                {STAT_LABELS_ES[stat.labelKey]}
+                {t.hero.stats[stat.labelKey as StatKey]}
               </span>
             </li>
           ))}
@@ -203,7 +197,7 @@ export default function Hero() {
       <motion.a
         href="#features"
         className={styles.scrollIndicator}
-        aria-label="Bajar para ver más"
+        aria-label={t.hero.scrollLabel}
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.6, duration: 0.8 }}

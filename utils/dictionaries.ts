@@ -34,7 +34,10 @@ export const dictionaries = {
     hero: {
       title: "Domina el Arte del Bachatango",
       subtitle: "Aprende con los mejores instructores, Luis y Sara. Cursos exclusivos, técnica refinada y pasión en cada paso.",
-      cta: "DESCUBRE NUESTROS CURSOS"
+      cta: "DESCUBRE NUESTROS CURSOS",
+      sampleClass: "Ver clase de muestra",
+      scrollLabel: "Bajar para ver más",
+      stats: { years: "AÑOS BAILANDO", students: "ALUMNOS", countries: "PAÍSES" }
     },
     features: {
       monthly: {
@@ -182,7 +185,20 @@ export const dictionaries = {
       musicalResources: "Recursos Musicales",
       assignment: "Tarea",
       comments: "Comentarios",
-      resourcesComingSoon: "Recursos musicales próximamente..."
+      resourcesComingSoon: "Recursos musicales próximamente...",
+      assignmentNoTask: "El profesor no ha asignado ninguna tarea para esta lección.",
+      assignmentNoTaskAdmin: "Aún no hay tarea para esta lección. Añade una desde \"Editar Lección\".",
+      assignmentReviewed: "✓ Tarea corregida",
+      assignmentGradeLabel: "Calificación:",
+      assignmentResponseLabel: "Tu respuesta (texto)",
+      assignmentFileLabel: "Adjuntar archivo (opcional)",
+      assignmentResponsePlaceholder: "Escribe tu respuesta aquí...",
+      assignmentSubmitBtn: "Enviar entrega",
+      assignmentUpdateBtn: "Actualizar entrega",
+      assignmentUploading: "Subiendo archivo...",
+      assignmentSending: "Enviando...",
+      assignmentSuccess: "¡Entrega enviada correctamente!",
+      assignmentViewSubmissions: "Ver todas las entregas"
     },
     dashboard: {
       title: "Mis Cursos",
@@ -199,7 +215,14 @@ export const dictionaries = {
       password: "Contraseña",
       submit: "Iniciar Sesión",
       noAccount: "¿No tienes cuenta? Regístrate",
-      forgotPassword: "¿Olvidaste tu contraseña?"
+      forgotPassword: "¿Olvidaste tu contraseña?",
+      or: "O",
+      panelEyebrow: "ACCESO PRIVADO",
+      panelTitle: "Bailar es <em>recordar</em> con el cuerpo.",
+      panelLead: "Vuelve a tu sitio en la academia: clases nuevas, comunidad activa y todo el archivo de Luis y Sara esperándote.",
+      panelFeatures: ["Clases en vídeo en alta calidad", "Comunidad de bailarines y eventos", "Tu progreso, guardado lección a lección"],
+      panelQuote: "La bachata no se aprende, se siente. Pero se practica.",
+      cardEyebrow: "ENTRAR"
     },
     signup: {
       title: "Regístrate",
@@ -210,14 +233,26 @@ export const dictionaries = {
       password: "Contraseña",
       submit: "Registrarse",
       hasAccount: "¿Ya tienes cuenta? Inicia Sesión",
-      forgotPassword: "¿Olvidaste tu contraseña?"
+      forgotPassword: "¿Olvidaste tu contraseña?",
+      or: "O",
+      panelEyebrow: "ÚNETE A LA ACADEMIA",
+      panelTitle: "Tu primera <em>clase</em> empieza con un paso.",
+      panelLead: "Crea tu cuenta y desbloquea acceso a las clases, los retos mensuales y la comunidad de Luis y Sara Bachatango.",
+      panelFeatures: ["Acceso a clases para todos los niveles", "Eventos, quedadas y música cuidada", "Una comunidad cálida y sin postureo"],
+      panelQuote: "Lo que se baila despacio, se entiende rápido.",
+      cardEyebrow: "CREAR CUENTA"
     },
     forgotPassword: {
       title: "Recuperar Contraseña",
       subtitle: "Ingresa tu email para recibir un enlace de recuperación",
       email: "Email",
       submit: "Enviar enlace",
-      backToLogin: "Volver al inicio de sesión"
+      backToLogin: "Volver al inicio de sesión",
+      panelEyebrow: "RECUPERAR ACCESO",
+      panelTitle: "Vuelve a la <em>pista</em> en un par de pasos.",
+      panelLead: "Te enviamos un enlace seguro a tu email para que crees una nueva contraseña sin perder nada de tu progreso.",
+      panelFeatures: ["Enlace válido durante un tiempo limitado", "Tu cuenta y tus clases siguen intactas", "Si no llega, revisa la carpeta de spam"],
+      cardEyebrow: "RECUPERAR"
     },
     profile: {
       title: "Mi Perfil",
@@ -288,7 +323,10 @@ export const dictionaries = {
     hero: {
       title: "Master the Art of Bachatango",
       subtitle: "Learn with the best instructors, Luis & Sara. Exclusive courses, refined technique, and passion in every step.",
-      cta: "DISCOVER OUR COURSES"
+      cta: "DISCOVER OUR COURSES",
+      sampleClass: "Watch sample class",
+      scrollLabel: "Scroll to see more",
+      stats: { years: "YEARS DANCING", students: "STUDENTS", countries: "COUNTRIES" }
     },
     features: {
       monthly: {
@@ -435,7 +473,20 @@ export const dictionaries = {
       musicalResources: "Musical Resources",
       assignment: "Assignment",
       comments: "Comments",
-      resourcesComingSoon: "Musical resources coming soon..."
+      resourcesComingSoon: "Musical resources coming soon...",
+      assignmentNoTask: "The instructor has not assigned any task for this lesson.",
+      assignmentNoTaskAdmin: "No task yet for this lesson. Add one from \"Edit Lesson\".",
+      assignmentReviewed: "✓ Task reviewed",
+      assignmentGradeLabel: "Grade:",
+      assignmentResponseLabel: "Your response (text)",
+      assignmentFileLabel: "Attach file (optional)",
+      assignmentResponsePlaceholder: "Write your response here...",
+      assignmentSubmitBtn: "Submit",
+      assignmentUpdateBtn: "Update submission",
+      assignmentUploading: "Uploading file...",
+      assignmentSending: "Sending...",
+      assignmentSuccess: "Submission sent successfully!",
+      assignmentViewSubmissions: "View all submissions"
     },
     dashboard: {
       title: "My Courses",
@@ -452,7 +503,14 @@ export const dictionaries = {
       password: "Password",
       submit: "Sign In",
       noAccount: "Don't have an account? Sign Up",
-      forgotPassword: "Forgot your password?"
+      forgotPassword: "Forgot your password?",
+      or: "Or",
+      panelEyebrow: "PRIVATE ACCESS",
+      panelTitle: "Dance is <em>remembering</em> with your body.",
+      panelLead: "Return to your place at the academy: new classes, active community, and the entire Luis & Sara archive waiting for you.",
+      panelFeatures: ["High quality video classes", "Dancer community and events", "Your progress, saved lesson by lesson"],
+      panelQuote: "Bachata is not learned, it is felt. But it is practiced.",
+      cardEyebrow: "SIGN IN"
     },
     signup: {
       title: "Sign Up",
@@ -463,14 +521,26 @@ export const dictionaries = {
       password: "Password",
       submit: "Sign Up",
       hasAccount: "Already have an account? Sign In",
-      forgotPassword: "Forgot your password?"
+      forgotPassword: "Forgot your password?",
+      or: "Or",
+      panelEyebrow: "JOIN THE ACADEMY",
+      panelTitle: "Your first <em>class</em> starts with one step.",
+      panelLead: "Create your account and unlock access to classes, monthly challenges, and the Luis & Sara Bachatango community.",
+      panelFeatures: ["Access to classes for all levels", "Events, meetups, and curated music", "A warm, down-to-earth community"],
+      panelQuote: "What is danced slowly, is understood quickly.",
+      cardEyebrow: "CREATE ACCOUNT"
     },
     forgotPassword: {
       title: "Recover Password",
       subtitle: "Enter your email to receive a recovery link",
       email: "Email",
       submit: "Send link",
-      backToLogin: "Back to login"
+      backToLogin: "Back to login",
+      panelEyebrow: "RECOVER ACCESS",
+      panelTitle: "Get back on the <em>floor</em> in a few steps.",
+      panelLead: "We'll send a secure link to your email so you can create a new password without losing any of your progress.",
+      panelFeatures: ["Link valid for a limited time", "Your account and classes remain intact", "If it doesn't arrive, check your spam folder"],
+      cardEyebrow: "RECOVER"
     },
     profile: {
       title: "My Profile",
@@ -525,7 +595,10 @@ export const dictionaries = {
     hero: {
       title: "Maîtrisez l'Art du Bachatango",
       subtitle: "Apprenez avec les meilleurs instructeurs, Luis et Sara. Cours exclusifs, technique raffinée et passion à chaque pas.",
-      cta: "DÉCOUVREZ NOS COURS"
+      cta: "DÉCOUVREZ NOS COURS",
+      sampleClass: "Voir la classe exemple",
+      scrollLabel: "Défiler pour voir plus",
+      stats: { years: "ANS DE DANSE", students: "ÉLÈVES", countries: "PAYS" }
     },
     features: {
       monthly: { title: "Cours Complets", desc: "Programmes complets de A à Z. Apprenez du niveau débutant à avancé avec un paiement unique et un accès à vie." },
@@ -618,7 +691,20 @@ export const dictionaries = {
       musicalResources: "Ressources Musicales",
       assignment: "Devoir",
       comments: "Commentaires",
-      resourcesComingSoon: "Ressources musicales bientôt..."
+      resourcesComingSoon: "Ressources musicales bientôt...",
+      assignmentNoTask: "Le professeur n'a assigné aucun devoir pour cette leçon.",
+      assignmentNoTaskAdmin: "Pas encore de devoir pour cette leçon. Ajoutez-en un depuis \"Modifier la leçon\".",
+      assignmentReviewed: "✓ Devoir corrigé",
+      assignmentGradeLabel: "Note :",
+      assignmentResponseLabel: "Votre réponse (texte)",
+      assignmentFileLabel: "Joindre un fichier (optionnel)",
+      assignmentResponsePlaceholder: "Écrivez votre réponse ici...",
+      assignmentSubmitBtn: "Envoyer",
+      assignmentUpdateBtn: "Mettre à jour",
+      assignmentUploading: "Téléchargement...",
+      assignmentSending: "Envoi...",
+      assignmentSuccess: "Devoir envoyé avec succès !",
+      assignmentViewSubmissions: "Voir toutes les soumissions"
     },
     dashboard: {
       title: "Mes Cours",
@@ -635,7 +721,14 @@ export const dictionaries = {
       password: "Mot de passe",
       submit: "Se connecter",
       noAccount: "Pas de compte ? S'inscrire",
-      forgotPassword: "Mot de passe oublié ?"
+      forgotPassword: "Mot de passe oublié ?",
+      or: "Ou",
+      panelEyebrow: "ACCÈS PRIVÉ",
+      panelTitle: "Danser, c'est <em>se souvenir</em> avec son corps.",
+      panelLead: "Retrouvez votre place à l'académie : de nouveaux cours, une communauté active et toute l'archive de Luis et Sara vous attendent.",
+      panelFeatures: ["Cours vidéo en haute qualité", "Communauté de danseurs et événements", "Votre progression, sauvegardée leçon par leçon"],
+      panelQuote: "La bachata ne s'apprend pas, elle se ressent. Mais elle se pratique.",
+      cardEyebrow: "SE CONNECTER"
     },
     signup: {
       title: "S'inscrire",
@@ -646,14 +739,26 @@ export const dictionaries = {
       password: "Mot de passe",
       submit: "S'inscrire",
       hasAccount: "Déjà un compte ? Connexion",
-      forgotPassword: "Mot de passe oublié ?"
+      forgotPassword: "Mot de passe oublié ?",
+      or: "Ou",
+      panelEyebrow: "REJOIGNEZ L'ACADÉMIE",
+      panelTitle: "Votre premier <em>cours</em> commence par un pas.",
+      panelLead: "Créez votre compte et débloquez l'accès aux cours, aux défis mensuels et à la communauté Luis y Sara Bachatango.",
+      panelFeatures: ["Accès aux cours pour tous les niveaux", "Événements, rencontres et musique sélectionnée", "Une communauté chaleureuse et authentique"],
+      panelQuote: "Ce qui est dansé lentement est compris rapidement.",
+      cardEyebrow: "CRÉER UN COMPTE"
     },
     forgotPassword: {
       title: "Récupérer le Mot de Passe",
       subtitle: "Entrez votre email pour recevoir un lien de récupération",
       email: "Email",
       submit: "Envoyer le lien",
-      backToLogin: "Retour à la connexion"
+      backToLogin: "Retour à la connexion",
+      panelEyebrow: "RÉCUPÉRER L'ACCÈS",
+      panelTitle: "Revenez sur la <em>piste</em> en quelques étapes.",
+      panelLead: "Nous vous envoyons un lien sécurisé à votre email pour créer un nouveau mot de passe sans perdre votre progression.",
+      panelFeatures: ["Lien valide pendant un temps limité", "Votre compte et vos cours restent intacts", "S'il n'arrive pas, vérifiez vos spams"],
+      cardEyebrow: "RÉCUPÉRER"
     },
     profile: {
       title: "Mon Profil",
@@ -708,7 +813,10 @@ export const dictionaries = {
     hero: {
       title: "Meistere die Kunst des Bachatango",
       subtitle: "Lerne von den besten Lehrern, Luis und Sara. Exklusive Kurse, verfeinerte Technik und Leidenschaft in jedem Schritt.",
-      cta: "ENTDECKE UNSERE KURSE"
+      cta: "ENTDECKE UNSERE KURSE",
+      sampleClass: "Musterklasse ansehen",
+      scrollLabel: "Nach unten scrollen",
+      stats: { years: "JAHRE TANZEND", students: "SCHÜLER", countries: "LÄNDER" }
     },
     features: {
       monthly: { title: "Komplette Kurse", desc: "Umfassende Programme von Anfang bis Ende. Lerne vom Anfänger bis zum Fortgeschrittenen mit einer einmaligen Zahlung und lebenslangem Zugang." },
@@ -801,7 +909,20 @@ export const dictionaries = {
       musicalResources: "Musikalische Ressourcen",
       assignment: "Aufgabe",
       comments: "Kommentare",
-      resourcesComingSoon: "Musikalische Ressourcen demnächst..."
+      resourcesComingSoon: "Musikalische Ressourcen demnächst...",
+      assignmentNoTask: "Der Lehrer hat für diese Lektion keine Aufgabe zugewiesen.",
+      assignmentNoTaskAdmin: "Noch keine Aufgabe für diese Lektion. Füge eine in \"Lektion bearbeiten\" hinzu.",
+      assignmentReviewed: "✓ Aufgabe bewertet",
+      assignmentGradeLabel: "Bewertung:",
+      assignmentResponseLabel: "Deine Antwort (Text)",
+      assignmentFileLabel: "Datei anhängen (optional)",
+      assignmentResponsePlaceholder: "Schreibe deine Antwort hier...",
+      assignmentSubmitBtn: "Einreichen",
+      assignmentUpdateBtn: "Einreichung aktualisieren",
+      assignmentUploading: "Datei wird hochgeladen...",
+      assignmentSending: "Wird gesendet...",
+      assignmentSuccess: "Einreichung erfolgreich gesendet!",
+      assignmentViewSubmissions: "Alle Einreichungen ansehen"
     },
     dashboard: {
       title: "Meine Kurse",
@@ -818,7 +939,14 @@ export const dictionaries = {
       password: "Passwort",
       submit: "Anmelden",
       noAccount: "Kein Konto? Registrieren",
-      forgotPassword: "Passwort vergessen?"
+      forgotPassword: "Passwort vergessen?",
+      or: "Oder",
+      panelEyebrow: "PRIVATER ZUGANG",
+      panelTitle: "Tanzen ist <em>erinnern</em> mit dem Körper.",
+      panelLead: "Kehr zu deinem Platz in der Akademie zurück: neue Kurse, aktive Community und das gesamte Archiv von Luis und Sara warten auf dich.",
+      panelFeatures: ["Videoklassen in hoher Qualität", "Tänzergemeinschaft und Events", "Dein Fortschritt, Lektion für Lektion gespeichert"],
+      panelQuote: "Bachata wird nicht gelernt, sie wird gefühlt. Aber sie wird geübt.",
+      cardEyebrow: "ANMELDEN"
     },
     signup: {
       title: "Registrieren",
@@ -829,14 +957,26 @@ export const dictionaries = {
       password: "Passwort",
       submit: "Registrieren",
       hasAccount: "Schon ein Konto? Anmelden",
-      forgotPassword: "Passwort vergessen?"
+      forgotPassword: "Passwort vergessen?",
+      or: "Oder",
+      panelEyebrow: "TRITT DER AKADEMIE BEI",
+      panelTitle: "Deine erste <em>Stunde</em> beginnt mit einem Schritt.",
+      panelLead: "Erstelle dein Konto und schalte Zugang zu Kursen, monatlichen Herausforderungen und der Luis y Sara Bachatango-Community frei.",
+      panelFeatures: ["Zugang zu Kursen für alle Levels", "Events, Treffen und kuratierte Musik", "Eine herzliche und authentische Community"],
+      panelQuote: "Was langsam getanzt wird, wird schnell verstanden.",
+      cardEyebrow: "KONTO ERSTELLEN"
     },
     forgotPassword: {
       title: "Passwort Wiederherstellen",
       subtitle: "Gib deine E-Mail ein, um einen Wiederherstellungslink zu erhalten",
       email: "Email",
       submit: "Link senden",
-      backToLogin: "Zurück zur Anmeldung"
+      backToLogin: "Zurück zur Anmeldung",
+      panelEyebrow: "ZUGANG WIEDERHERSTELLEN",
+      panelTitle: "Zurück auf die <em>Tanzfläche</em> in wenigen Schritten.",
+      panelLead: "Wir senden dir einen sicheren Link an deine E-Mail, damit du ein neues Passwort erstellen kannst, ohne deinen Fortschritt zu verlieren.",
+      panelFeatures: ["Link für begrenzte Zeit gültig", "Dein Konto und deine Kurse bleiben unversehrt", "Falls er nicht ankommt, überprüfe deinen Spam-Ordner"],
+      cardEyebrow: "WIEDERHERSTELLEN"
     },
     profile: {
       title: "Mein Profil",
@@ -891,7 +1031,10 @@ export const dictionaries = {
     hero: {
       title: "Domina l'Arte del Bachatango",
       subtitle: "Impara con i migliori istruttori. Corsi esclusivi, tecnica raffinata e passione in ogni passo.",
-      cta: "SCOPRI I NOSTRI CORSI"
+      cta: "SCOPRI I NOSTRI CORSI",
+      sampleClass: "Guarda la classe di esempio",
+      scrollLabel: "Scorri per vedere di più",
+      stats: { years: "ANNI DI BALLO", students: "STUDENTI", countries: "PAESI" }
     },
     features: {
       monthly: { title: "Corsi Completi", desc: "Programmi integrali dall'inizio alla fine. Impara dal livello principiante ad avanzato con un unico pagamento e accesso a vita." },
@@ -983,7 +1126,20 @@ export const dictionaries = {
       musicalResources: "Risorse Musicali",
       assignment: "Compito",
       comments: "Commenti",
-      resourcesComingSoon: "Risorse musicali prossimamente..."
+      resourcesComingSoon: "Risorse musicali prossimamente...",
+      assignmentNoTask: "Il professore non ha assegnato nessun compito per questa lezione.",
+      assignmentNoTaskAdmin: "Nessun compito ancora per questa lezione. Aggiungine uno da \"Modifica Lezione\".",
+      assignmentReviewed: "✓ Compito corretto",
+      assignmentGradeLabel: "Voto:",
+      assignmentResponseLabel: "La tua risposta (testo)",
+      assignmentFileLabel: "Allega file (opzionale)",
+      assignmentResponsePlaceholder: "Scrivi qui la tua risposta...",
+      assignmentSubmitBtn: "Invia",
+      assignmentUpdateBtn: "Aggiorna invio",
+      assignmentUploading: "Caricamento file...",
+      assignmentSending: "Invio in corso...",
+      assignmentSuccess: "Compito inviato con successo!",
+      assignmentViewSubmissions: "Vedi tutti gli invii"
     },
     dashboard: {
       title: "I Miei Corsi",
@@ -1000,7 +1156,14 @@ export const dictionaries = {
       password: "Password",
       submit: "Accedi",
       noAccount: "Non hai un account? Registrati",
-      forgotPassword: "Hai dimenticato la password?"
+      forgotPassword: "Hai dimenticato la password?",
+      or: "O",
+      panelEyebrow: "ACCESSO PRIVATO",
+      panelTitle: "Ballare è <em>ricordare</em> con il corpo.",
+      panelLead: "Torna al tuo posto nell'accademia: nuove lezioni, comunità attiva e tutto l'archivio di Luis e Sara ti aspettano.",
+      panelFeatures: ["Lezioni video in alta qualità", "Comunità di ballerini ed eventi", "I tuoi progressi, salvati lezione per lezione"],
+      panelQuote: "La bachata non si impara, si sente. Ma si pratica.",
+      cardEyebrow: "ACCEDI"
     },
     signup: {
       title: "Registrati",
@@ -1011,14 +1174,26 @@ export const dictionaries = {
       password: "Password",
       submit: "Registrati",
       hasAccount: "Hai già un account? Accedi",
-      forgotPassword: "Hai dimenticato la password?"
+      forgotPassword: "Hai dimenticato la password?",
+      or: "O",
+      panelEyebrow: "UNISCITI ALL'ACCADEMIA",
+      panelTitle: "La tua prima <em>lezione</em> inizia con un passo.",
+      panelLead: "Crea il tuo account e sblocca l'accesso alle lezioni, alle sfide mensili e alla comunità di Luis y Sara Bachatango.",
+      panelFeatures: ["Accesso alle lezioni per tutti i livelli", "Eventi, incontri e musica curata", "Una comunità calorosa e autentica"],
+      panelQuote: "Ciò che si balla lentamente, si capisce rapidamente.",
+      cardEyebrow: "CREA ACCOUNT"
     },
     forgotPassword: {
       title: "Recupera Password",
       subtitle: "Inserisci la tua email per ricevere un link di recupero",
       email: "Email",
       submit: "Invia link",
-      backToLogin: "Torna al login"
+      backToLogin: "Torna al login",
+      panelEyebrow: "RECUPERA L'ACCESSO",
+      panelTitle: "Torna in <em>pista</em> in pochi passi.",
+      panelLead: "Ti inviamo un link sicuro alla tua email per creare una nuova password senza perdere i tuoi progressi.",
+      panelFeatures: ["Link valido per un tempo limitato", "Il tuo account e le tue lezioni rimangono intatti", "Se non arriva, controlla la cartella spam"],
+      cardEyebrow: "RECUPERA"
     },
     profile: {
       title: "Il Mio Profilo",
@@ -1073,7 +1248,10 @@ export const dictionaries = {
     hero: {
       title: "バチャタンゴの芸術をマスターする",
       subtitle: "最高のインストラクター、ルイスとサラから学びましょう。独占コース、洗練されたテクニック、そして情熱を一歩一歩。",
-      cta: "コースを見る"
+      cta: "コースを見る",
+      sampleClass: "サンプルクラスを見る",
+      scrollLabel: "スクロールして詳細を見る",
+      stats: { years: "ダンス歴", students: "受講生", countries: "訪問国" }
     },
     features: {
       monthly: { title: "完全コース", desc: "初心者から上級者まで、最初から最後まで学べる総合プログラム。一度のお支払いで生涯アクセス可能。" },
@@ -1166,7 +1344,20 @@ export const dictionaries = {
       musicalResources: "音楽リソース",
       assignment: "課題",
       comments: "コメント",
-      resourcesComingSoon: "音楽リソース近日公開..."
+      resourcesComingSoon: "音楽リソース近日公開...",
+      assignmentNoTask: "先生はこのレッスンにタスクを割り当てていません。",
+      assignmentNoTaskAdmin: "このレッスンにはまだタスクがありません。「レッスンを編集」から追加してください。",
+      assignmentReviewed: "✓ 課題採点済み",
+      assignmentGradeLabel: "評価：",
+      assignmentResponseLabel: "あなたの回答（テキスト）",
+      assignmentFileLabel: "ファイルを添付（任意）",
+      assignmentResponsePlaceholder: "ここに回答を書いてください...",
+      assignmentSubmitBtn: "提出する",
+      assignmentUpdateBtn: "提出を更新",
+      assignmentUploading: "ファイルをアップロード中...",
+      assignmentSending: "送信中...",
+      assignmentSuccess: "提出が正常に送信されました！",
+      assignmentViewSubmissions: "すべての提出を見る"
     },
     dashboard: {
       title: "マイコース",
@@ -1183,7 +1374,14 @@ export const dictionaries = {
       password: "パスワード",
       submit: "ログイン",
       noAccount: "アカウントがない？登録する",
-      forgotPassword: "パスワードをお忘れですか？"
+      forgotPassword: "パスワードをお忘れですか？",
+      or: "または",
+      panelEyebrow: "プライベートアクセス",
+      panelTitle: "踊ることは体で<em>思い出す</em>こと。",
+      panelLead: "アカデミーに戻りましょう：新しいクラス、活発なコミュニティ、ルイスとサラのアーカイブ全体があなたを待っています。",
+      panelFeatures: ["高画質ビデオクラス", "ダンサーコミュニティとイベント", "あなたの進捗、レッスンごとに保存"],
+      panelQuote: "バチャータは学ぶものではなく、感じるものです。でも練習が必要です。",
+      cardEyebrow: "ログイン"
     },
     signup: {
       title: "登録する",
@@ -1194,14 +1392,26 @@ export const dictionaries = {
       password: "パスワード",
       submit: "登録する",
       hasAccount: "すでにアカウントをお持ちですか？ログイン",
-      forgotPassword: "パスワードをお忘れですか？"
+      forgotPassword: "パスワードをお忘れですか？",
+      or: "または",
+      panelEyebrow: "アカデミーに参加",
+      panelTitle: "最初の<em>クラス</em>は一歩から始まります。",
+      panelLead: "アカウントを作成して、クラス、月間チャレンジ、ルイス・イ・サラ・バチャタンゴコミュニティへのアクセスを開放しましょう。",
+      panelFeatures: ["全レベルのクラスへのアクセス", "イベント、集まり、厳選された音楽", "温かくて親しみやすいコミュニティ"],
+      panelQuote: "ゆっくり踊ることで、素早く理解できる。",
+      cardEyebrow: "アカウント作成"
     },
     forgotPassword: {
       title: "パスワードの回復",
       subtitle: "回復リンクを受け取るためにメールアドレスを入力",
       email: "メール",
       submit: "リンクを送る",
-      backToLogin: "ログインに戻る"
+      backToLogin: "ログインに戻る",
+      panelEyebrow: "アクセスを回復",
+      panelTitle: "数ステップで<em>フロア</em>に戻りましょう。",
+      panelLead: "進捗を失わずに新しいパスワードを作成できるよう、メールに安全なリンクを送ります。",
+      panelFeatures: ["リンクは限られた時間有効です", "アカウントとクラスは無傷のままです", "届かない場合はスパムフォルダを確認してください"],
+      cardEyebrow: "回復する"
     },
     profile: {
       title: "マイプロフィール",

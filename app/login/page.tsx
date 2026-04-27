@@ -21,21 +21,13 @@ export default async function LoginPage(props: { searchParams: Promise<{ message
 
   return (
     <AuthShell
-      panelEyebrow="ACCESO PRIVADO"
-      panelTitle={
-        <>
-          Bailar es <em>recordar</em> con el cuerpo.
-        </>
-      }
-      panelLead="Vuelve a tu sitio en la academia: clases nuevas, comunidad activa y todo el archivo de Luis y Sara esperándote."
-      panelFeatures={[
-        'Clases en vídeo en alta calidad',
-        'Comunidad de bailarines y eventos',
-        'Tu progreso, guardado lección a lección',
-      ]}
-      panelQuote="La bachata no se aprende, se siente. Pero se practica."
+      panelEyebrow={t.login.panelEyebrow}
+      panelTitle={t.login.panelTitle}
+      panelLead={t.login.panelLead}
+      panelFeatures={t.login.panelFeatures}
+      panelQuote={t.login.panelQuote}
       panelQuoteAuthor="LUIS Y SARA"
-      cardEyebrow="ENTRAR"
+      cardEyebrow={t.login.cardEyebrow}
       cardTitle={t.login.title}
       cardSubtitle={t.login.subtitle}
       errorMsg={errorMsg}
@@ -48,7 +40,7 @@ export default async function LoginPage(props: { searchParams: Promise<{ message
           submit: t.login.submit,
           noAccount: t.login.noAccount,
           forgotPassword: t.login.forgotPassword,
-          or: 'O',
+          or: t.login.or,
         }}
       />
     </AuthShell>

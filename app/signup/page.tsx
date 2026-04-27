@@ -21,21 +21,13 @@ export default async function SignupPage(props: { searchParams: Promise<{ messag
 
   return (
     <AuthShell
-      panelEyebrow="ÚNETE A LA ACADEMIA"
-      panelTitle={
-        <>
-          Tu primera <em>clase</em> empieza con un paso.
-        </>
-      }
-      panelLead="Crea tu cuenta y desbloquea acceso a las clases, los retos mensuales y la comunidad de Luis y Sara Bachatango."
-      panelFeatures={[
-        'Acceso a clases para todos los niveles',
-        'Eventos, quedadas y música cuidada',
-        'Una comunidad cálida y sin postureo',
-      ]}
-      panelQuote="Lo que se baila despacio, se entiende rápido."
+      panelEyebrow={t.signup.panelEyebrow}
+      panelTitle={t.signup.panelTitle}
+      panelLead={t.signup.panelLead}
+      panelFeatures={t.signup.panelFeatures}
+      panelQuote={t.signup.panelQuote}
       panelQuoteAuthor="LUIS Y SARA"
-      cardEyebrow="CREAR CUENTA"
+      cardEyebrow={t.signup.cardEyebrow}
       cardTitle={t.signup.title}
       cardSubtitle={t.signup.subtitle}
       errorMsg={errorMsg}
@@ -50,7 +42,7 @@ export default async function SignupPage(props: { searchParams: Promise<{ messag
           submit: t.signup.submit,
           hasAccount: t.signup.hasAccount,
           forgotPassword: t.signup.forgotPassword,
-          or: 'O',
+          or: t.signup.or,
         }}
       />
     </AuthShell>
