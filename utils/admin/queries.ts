@@ -224,3 +224,49 @@ export async function getActiveCourses(limit = 5): Promise<ActiveCourse[]> {
     completedCount: count,
   }))
 }
+
+export type RevenueDay = {
+  date: string         // YYYY-MM-DD (UTC)
+  purchases: number    // €
+  subscriptions: number // €  (one-shot recognition on `created_at`, simple v1)
+}
+
+export async function getRevenueTimeseries(rangeDays: 30 | 90): Promise<RevenueDay[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+  const { centsToEur } = await import('@/utils/admin/metrics')
+  const { PLAN_PRICES_EUR } = await import('@/utils/admin/plan-prices')
+
+  const since = new Date(Date.now() - rangeDays * 86_400_000)
+  since.setUTCHours(0, 0, 0, 0)
+  const sinceIso = since.toISOString()
+
+  const [purchases, subs] = await Promise.all([
+    sb.from('course_purchases').select('amount_paid, created_at').gte('created_at', sinceIso),
+    sb.from('subscriptions').select('plan_type, created_at').gte('created_at', sinceIso),
+  ])
+
+  const buckets = new Map<string, RevenueDay>()
+  for (let i = 0; i < rangeDays; i++) {
+    const d = new Date(since)
+    d.setUTCDate(d.getUTCDate() + i)
+    const key = d.toISOString().slice(0, 10)
+    buckets.set(key, { date: key, purchases: 0, subscriptions: 0 })
+  }
+
+  for (const r of purchases.data ?? []) {
+    const key = (r.created_at as string).slice(0, 10)
+    const b = buckets.get(key); if (!b) continue
+    b.purchases += centsToEur(r.amount_paid as number | null)
+  }
+
+  for (const r of subs.data ?? []) {
+    const pt = r.plan_type as keyof typeof PLAN_PRICES_EUR | null
+    if (!pt) continue
+    const key = (r.created_at as string).slice(0, 10)
+    const b = buckets.get(key); if (!b) continue
+    b.subscriptions += PLAN_PRICES_EUR[pt] ?? 0
+  }
+
+  return [...buckets.values()].sort((a, b) => a.date.localeCompare(b.date))
+}
