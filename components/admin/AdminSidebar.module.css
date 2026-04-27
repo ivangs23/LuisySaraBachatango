@@ -34,7 +34,7 @@
 
 .close { display: none; margin-left: auto; background: transparent; border: 0; color: inherit; cursor: pointer; }
 
-.nav { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+.nav { display: flex; flex-direction: column; gap: 0.15rem; }
 
 .item {
   display: flex;
@@ -80,9 +80,10 @@
 }
 
 .footer {
+  margin-top: auto;
   padding-top: 0.85rem;
-  margin-top: 0.5rem;
   border-top: 1px solid rgba(var(--primary-rgb), 0.1);
+  flex-shrink: 0;
 }
 
 .backLink {
