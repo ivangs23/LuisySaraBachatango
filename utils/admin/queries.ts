@@ -706,3 +706,67 @@ export async function getStatsEngagement(range: Range): Promise<EngagementWeek[]
     .map(([week, completions]) => ({ week, completions }))
     .sort((a, b) => a.week.localeCompare(b.week))
 }
+
+export type SubmissionRow = {
+  id: string
+  user_id: string
+  user_name: string | null
+  course_id: string
+  course_title: string
+  lesson_id: string
+  lesson_title: string
+  assignment_title: string
+  status: 'pending' | 'reviewed'
+  created_at: string
+}
+
+export async function listSubmissions(status: 'pending' | 'reviewed'): Promise<SubmissionRow[]> {
+  await requireAdmin()
+  const sb = createSupabaseAdmin()
+
+  const { data } = await sb
+    .from('submissions')
+    .select(`
+      id, user_id, status, created_at,
+      profiles!inner(full_name),
+      assignments!inner(
+        title, lesson_id, course_id,
+        lessons(id, title),
+        courses(id, title)
+      )
+    `)
+    .eq('status', status)
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  type Row = {
+    id: string; user_id: string; status: string; created_at: string
+    profiles: { full_name: string | null } | { full_name: string | null }[] | null
+    assignments: {
+      title: string; lesson_id: string; course_id: string
+      lessons: { id: string; title: string } | { id: string; title: string }[] | null
+      courses: { id: string; title: string } | { id: string; title: string }[] | null
+    } | null
+  }
+  const pickFirst = <T,>(v: T | T[] | null | undefined): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+
+  return ((data ?? []) as Row[]).map(r => {
+    const profile = pickFirst(r.profiles)
+    const a = r.assignments
+    const lesson = pickFirst(a?.lessons)
+    const course = pickFirst(a?.courses)
+    return {
+      id: r.id,
+      user_id: r.user_id,
+      user_name: profile?.full_name ?? null,
+      course_id: course?.id ?? a?.course_id ?? '',
+      course_title: course?.title ?? '—',
+      lesson_id: lesson?.id ?? a?.lesson_id ?? '',
+      lesson_title: lesson?.title ?? '—',
+      assignment_title: a?.title ?? '—',
+      status: (r.status as 'pending' | 'reviewed'),
+      created_at: r.created_at,
+    }
+  })
+}
