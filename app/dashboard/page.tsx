@@ -54,7 +54,7 @@ export default async function DashboardPage() {
       .select('status, current_period_start, current_period_end')
       .eq('user_id', user.id)
       .in('status', ['active', 'trialing']),
-    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+    supabase.from('profiles').select('full_name, role').eq('id', user.id).single(),
     supabase
       .from('lesson_progress')
       .select('lesson_id', { count: 'exact', head: true })
@@ -95,6 +95,7 @@ export default async function DashboardPage() {
 
   const fullName = (profileResult.data?.full_name as string | null) ?? null;
   const firstName = fullName?.trim().split(/\s+/)[0] ?? null;
+  const role = (profileResult.data?.role as 'member' | 'premium' | 'admin' | undefined) ?? 'member';
 
   return (
     <DashboardClient
@@ -106,6 +107,7 @@ export default async function DashboardPage() {
         completedLessons: completedResult.count ?? 0,
         hasActiveSubscription,
       }}
+      role={role}
       t={t.dashboard}
       tc={t.coursesPage}
     />
