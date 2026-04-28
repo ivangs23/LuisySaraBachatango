@@ -72,6 +72,7 @@ All translations live in `utils/dictionaries.ts` as a single typed object with k
 |---|---|
 | `profiles` | Extends `auth.users`; holds `role`, `stripe_customer_id`, social links |
 | `courses` | Course metadata; `course_type` (`membership`\|`complete`), `month`/`year` for subscription matching |
+| `events` | Public agenda; localized `title`/`description` JSONB (es/en/fr/de/it/ja), `start_date`/`end_date`, `is_published` |
 | `lessons` | Belong to courses; `video_source` (`url`\|`upload`), `is_free`, `media_config` (multi-track video) |
 | `subscriptions` | Synced from Stripe; `status` and period dates used for access gating |
 | `course_purchases` | One-time purchase records; keyed by `stripe_session_id` for idempotency |
