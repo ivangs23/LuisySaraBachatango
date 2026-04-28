@@ -6,6 +6,8 @@ import { ArrowLeft, Lock, Check, Play, Clock, Edit3 } from 'lucide-react';
 import LessonTabs from '@/components/LessonTabs';
 import LessonPlayer from '@/components/LessonPlayer';
 import Reveal from '@/components/Reveal';
+import LessonNavigation from '@/components/LessonNavigation';
+import { findAdjacentAccessibleLessons } from '@/utils/lesson-navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from '@/app/courses/[courseId]/[lessonId]/lesson.module.css';
 
@@ -14,6 +16,7 @@ type LessonItem = {
   title: string;
   order: number;
   parent_lesson_id?: string | null;
+  is_free: boolean;
 };
 
 type LessonNode = LessonItem & {
@@ -122,6 +125,11 @@ export default function LessonView({
   const progressPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
 
   const lessonTree = buildLessonTree(allLessons);
+  const { prev: prevLesson, next: nextLesson } = findAdjacentAccessibleLessons(
+    lessonTree,
+    lessonId,
+    isAdmin || hasAccess,
+  );
   const currentNode = lessonTree.find(n => n.id === lessonId);
   const positionLabel = currentNode
     ? `Lección ${currentNode.displayNumber} de ${total}`
@@ -271,6 +279,12 @@ export default function LessonView({
               )}
             </div>
           </Reveal>
+
+          <LessonNavigation
+            courseId={courseId}
+            prev={prevLesson ? { id: prevLesson.id, title: prevLesson.title, displayNumber: prevLesson.displayNumber } : null}
+            next={nextLesson ? { id: nextLesson.id, title: nextLesson.title, displayNumber: nextLesson.displayNumber } : null}
+          />
 
           {/* Lesson info */}
           <Reveal delay={0.08}>
