@@ -200,7 +200,10 @@ export const dictionaries = {
       assignmentUploading: "Subiendo archivo...",
       assignmentSending: "Enviando...",
       assignmentSuccess: "¡Entrega enviada correctamente!",
-      assignmentViewSubmissions: "Ver todas las entregas"
+      assignmentViewSubmissions: "Ver todas las entregas",
+      previousLesson: "Anterior",
+      nextLesson: "Siguiente",
+      lessonNavigation: "Navegación entre lecciones"
     },
     dashboard: {
       title: "Mis Cursos",
@@ -490,7 +493,10 @@ export const dictionaries = {
       assignmentUploading: "Uploading file...",
       assignmentSending: "Sending...",
       assignmentSuccess: "Submission sent successfully!",
-      assignmentViewSubmissions: "View all submissions"
+      assignmentViewSubmissions: "View all submissions",
+      previousLesson: "Previous",
+      nextLesson: "Next",
+      lessonNavigation: "Lesson navigation"
     },
     dashboard: {
       title: "My Courses",
@@ -710,7 +716,10 @@ export const dictionaries = {
       assignmentUploading: "Téléchargement...",
       assignmentSending: "Envoi...",
       assignmentSuccess: "Devoir envoyé avec succès !",
-      assignmentViewSubmissions: "Voir toutes les soumissions"
+      assignmentViewSubmissions: "Voir toutes les soumissions",
+      previousLesson: "Précédent",
+      nextLesson: "Suivant",
+      lessonNavigation: "Navigation entre leçons"
     },
     dashboard: {
       title: "Mes Cours",
@@ -930,7 +939,10 @@ export const dictionaries = {
       assignmentUploading: "Datei wird hochgeladen...",
       assignmentSending: "Wird gesendet...",
       assignmentSuccess: "Einreichung erfolgreich gesendet!",
-      assignmentViewSubmissions: "Alle Einreichungen ansehen"
+      assignmentViewSubmissions: "Alle Einreichungen ansehen",
+      previousLesson: "Vorherige",
+      nextLesson: "Nächste",
+      lessonNavigation: "Lektionsnavigation"
     },
     dashboard: {
       title: "Meine Kurse",
@@ -1149,7 +1161,10 @@ export const dictionaries = {
       assignmentUploading: "Caricamento file...",
       assignmentSending: "Invio in corso...",
       assignmentSuccess: "Compito inviato con successo!",
-      assignmentViewSubmissions: "Vedi tutti gli invii"
+      assignmentViewSubmissions: "Vedi tutti gli invii",
+      previousLesson: "Precedente",
+      nextLesson: "Successivo",
+      lessonNavigation: "Navigazione tra le lezioni"
     },
     dashboard: {
       title: "I Miei Corsi",
@@ -1369,7 +1384,10 @@ export const dictionaries = {
       assignmentUploading: "ファイルをアップロード中...",
       assignmentSending: "送信中...",
       assignmentSuccess: "提出が正常に送信されました！",
-      assignmentViewSubmissions: "すべての提出を見る"
+      assignmentViewSubmissions: "すべての提出を見る",
+      previousLesson: "前へ",
+      nextLesson: "次へ",
+      lessonNavigation: "レッスン切り替え"
     },
     dashboard: {
       title: "マイコース",

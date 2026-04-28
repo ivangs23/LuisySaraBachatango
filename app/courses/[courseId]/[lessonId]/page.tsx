@@ -56,7 +56,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
       .eq('course_id', params.courseId)
       .maybeSingle(),
     supabase.from('lessons')
-      .select('id, title, order, parent_lesson_id')
+      .select('id, title, order, parent_lesson_id, is_free')
       .eq('course_id', params.courseId)
       .order('order', { ascending: true }),
     supabase.from('assignments')
