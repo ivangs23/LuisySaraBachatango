@@ -280,11 +280,13 @@ export default function LessonView({
             </div>
           </Reveal>
 
-          <LessonNavigation
-            courseId={courseId}
-            prev={prevLesson ? { id: prevLesson.id, title: prevLesson.title, displayNumber: prevLesson.displayNumber } : null}
-            next={nextLesson ? { id: nextLesson.id, title: nextLesson.title, displayNumber: nextLesson.displayNumber } : null}
-          />
+          <Reveal delay={0.04}>
+            <LessonNavigation
+              courseId={courseId}
+              prev={prevLesson ? { id: prevLesson.id, title: prevLesson.title, displayNumber: prevLesson.displayNumber } : null}
+              next={nextLesson ? { id: nextLesson.id, title: nextLesson.title, displayNumber: nextLesson.displayNumber } : null}
+            />
+          </Reveal>
 
           {/* Lesson info */}
           <Reveal delay={0.08}>
