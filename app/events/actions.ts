@@ -51,8 +51,13 @@ export async function updateEvent(id: string, formData: FormData): Promise<{ err
     .from('events')
     .update(parsed.payload)
     .eq('id', id)
+    .select('id')
+    .single()
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      return { error: 'Evento no encontrado' }
+    }
     console.error('[updateEvent] update failed', { id, error })
     return { error: error.message }
   }

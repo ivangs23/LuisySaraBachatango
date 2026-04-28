@@ -180,7 +180,9 @@ import { updateEvent } from '@/app/events/actions'
 
 describe('updateEvent', () => {
   it('updates the row by id, revalidates, and redirects to /admin/eventos', async () => {
-    const eqFn = vi.fn().mockResolvedValue({ error: null })
+    const single = vi.fn().mockResolvedValue({ data: { id: 'event-123' }, error: null })
+    const select = vi.fn().mockReturnValue({ single })
+    const eqFn = vi.fn().mockReturnValue({ select })
     const updateFn = vi.fn().mockReturnValue({ eq: eqFn })
     mockFrom.mockReturnValue({ update: updateFn })
 
@@ -211,12 +213,26 @@ describe('updateEvent', () => {
   })
 
   it('returns DB error message when update fails', async () => {
-    const eqFn = vi.fn().mockResolvedValue({ error: { message: 'update failed' } })
+    const single = vi.fn().mockResolvedValue({ data: null, error: { message: 'update failed', code: '42P01' } })
+    const select = vi.fn().mockReturnValue({ single })
+    const eqFn = vi.fn().mockReturnValue({ select })
     const updateFn = vi.fn().mockReturnValue({ eq: eqFn })
     mockFrom.mockReturnValue({ update: updateFn })
 
     const result = await updateEvent('id-1', buildFormData())
     expect(result).toEqual({ error: 'update failed' })
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+
+  it('returns "Evento no encontrado" when the id matches no row (PGRST116)', async () => {
+    const single = vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116', message: 'no rows' } })
+    const select = vi.fn().mockReturnValue({ single })
+    const eqFn = vi.fn().mockReturnValue({ select })
+    const updateFn = vi.fn().mockReturnValue({ eq: eqFn })
+    mockFrom.mockReturnValue({ update: updateFn })
+
+    const result = await updateEvent('missing-id', buildFormData())
+    expect(result).toEqual({ error: 'Evento no encontrado' })
     expect(mockRedirect).not.toHaveBeenCalled()
   })
 })
@@ -238,6 +254,7 @@ describe('deleteEvent', () => {
     expect(mockRevalidatePath).toHaveBeenCalledWith('/events')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/eventos')
     expect(result).toBeUndefined()
+    expect(mockRedirect).not.toHaveBeenCalled()
   })
 
   it('returns { error } when not admin', async () => {
