@@ -38,10 +38,11 @@ export default function EventForm({ initialData }: Props) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Auto-fill end_date if user only sets start_date
+  // Auto-fill end_date in create mode only — never overwrite the user's choice in edit mode.
   useEffect(() => {
+    if (initialData) return
     if (startDate && !endDate) setEndDate(startDate)
-  }, [startDate, endDate])
+  }, [initialData, startDate, endDate])
 
   const isDirty = useMemo(() => {
     if (!initialData) return true
@@ -148,9 +149,11 @@ export default function EventForm({ initialData }: Props) {
         {LOCALES.map(loc => (
           <button
             key={loc}
+            id={`event-tab-${loc}`}
             type="button"
             role="tab"
             aria-selected={activeLocale === loc}
+            aria-controls={`event-panel-${loc}`}
             aria-label={LOCALE_LABEL[loc]}
             onClick={() => setActiveLocale(loc)}
             className={`${styles.tab} ${activeLocale === loc ? styles.tabActive : ''}`}
@@ -168,7 +171,9 @@ export default function EventForm({ initialData }: Props) {
       {LOCALES.map(loc => (
         <div
           key={loc}
+          id={`event-panel-${loc}`}
           role="tabpanel"
+          aria-labelledby={`event-tab-${loc}`}
           hidden={activeLocale !== loc}
           className={styles.localePanel}
         >
@@ -199,7 +204,7 @@ export default function EventForm({ initialData }: Props) {
       <div className={styles.actions}>
         <button
           type="submit"
-          disabled={isSubmitting || (initialData && !isDirty)}
+          disabled={isSubmitting || (!!initialData && !isDirty)}
           className={styles.submit}
         >
           {isSubmitting ? 'Guardando…' : 'Guardar'}
