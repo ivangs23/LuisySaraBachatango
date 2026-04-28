@@ -61,3 +61,19 @@ export async function updateEvent(id: string, formData: FormData): Promise<{ err
   revalidatePath('/admin/eventos')
   redirect('/admin/eventos')
 }
+
+export async function deleteEvent(id: string): Promise<{ error: string } | void> {
+  const auth = await ensureAdmin()
+  if (!auth.ok) return { error: auth.error }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('events').delete().eq('id', id)
+
+  if (error) {
+    console.error('[deleteEvent] delete failed', { id, error })
+    return { error: error.message }
+  }
+
+  revalidatePath('/events')
+  revalidatePath('/admin/eventos')
+}

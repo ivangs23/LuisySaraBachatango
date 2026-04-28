@@ -220,3 +220,39 @@ describe('updateEvent', () => {
     expect(mockRedirect).not.toHaveBeenCalled()
   })
 })
+
+// ── deleteEvent ───────────────────────────────────────────────────────────────
+
+import { deleteEvent } from '@/app/events/actions'
+
+describe('deleteEvent', () => {
+  it('deletes the row by id and revalidates the public + admin paths', async () => {
+    const eqFn = vi.fn().mockResolvedValue({ error: null })
+    const deleteFn = vi.fn().mockReturnValue({ eq: eqFn })
+    mockFrom.mockReturnValue({ delete: deleteFn })
+
+    const result = await deleteEvent('event-xyz')
+
+    expect(deleteFn).toHaveBeenCalled()
+    expect(eqFn).toHaveBeenCalledWith('id', 'event-xyz')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/events')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/eventos')
+    expect(result).toBeUndefined()
+  })
+
+  it('returns { error } when not admin', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const result = await deleteEvent('event-xyz')
+    expect(result).toEqual({ error: 'No autorizado' })
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns DB error message when delete fails', async () => {
+    const eqFn = vi.fn().mockResolvedValue({ error: { message: 'delete failed' } })
+    const deleteFn = vi.fn().mockReturnValue({ eq: eqFn })
+    mockFrom.mockReturnValue({ delete: deleteFn })
+
+    const result = await deleteEvent('event-xyz')
+    expect(result).toEqual({ error: 'delete failed' })
+  })
+})
