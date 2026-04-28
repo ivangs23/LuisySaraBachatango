@@ -98,12 +98,14 @@ export const dictionaries = {
       title: "Agenda & Eventos",
       desc: "Descubre dónde estaremos próximamente. Ven a aprender, bailar y disfrutar con nosotros en vivo.",
       details: "Más Información",
-      items: {
-        e1: { t: "Madrid Bachata Congress", d: "Tres días de puro baile. Estaremos impartiendo dos talleres de Bachatango Fusión y ofreciendo un show exclusivo el sábado noche.", l: "Madrid, España", date: "15 - 17 FEB 2026" },
-        e2: { t: "Masterclass Técnica de Giros", d: "Clase intensiva online de 2 horas enfocada en el equilibrio y la fluidez en los giros. Incluye sesión de preguntas y respuestas.", l: "Online", date: "05 MAR 2026" },
-        e3: { t: "Paris Sensual Weekend", d: "Vuelve el evento más elegante del año. Únete a nosotros en la ciudad del amor para aprender a conectar a otro nivel.", l: "París, Francia", date: "20 - 22 ABR 2026" },
-        e4: { t: "Taller Intensivo Coreográfico", d: "Aprende nuestra última coreografía en un taller de 4 horas. Nivel intermedio/avanzado.", l: "Sevilla, España", date: "10 MAY 2026" }
-      }
+      create: "Nuevo evento",
+      edit: "Editar",
+      delete: "Borrar",
+      deleteConfirm: "¿Borrar este evento?",
+      draft: "Borrador",
+      empty: { title: "Estamos preparando nuevas fechas", text: "Vuelve pronto o síguenos en redes para enterarte de la próxima parada." },
+      upcoming: { eyebrow: "AGENDA", heading: "Próximas paradas", pill: "Próxima", singular: "PRÓXIMA FECHA", plural: "PRÓXIMAS FECHAS" },
+      past: { eyebrow: "ARCHIVO", heading: "Fechas pasadas", pill: "Pasado" }
     },
     music: {
       title: "Nuestras Playlists",
@@ -386,12 +388,14 @@ export const dictionaries = {
       title: "Agenda & Events",
       desc: "Discover where we will be next. Come learn, dance, and enjoy with us live.",
       details: "More Info",
-      items: {
-        e1: { t: "Madrid Bachata Congress", d: "Three days of pure dance. We will be teaching two Bachatango Fusion workshops and performing an exclusive show on Saturday night.", l: "Madrid, Spain", date: "15 - 17 FEB 2026" },
-        e2: { t: "Turn Technique Masterclass", d: "Intensive 2-hour online class focused on balance and fluidity directly applied to turns. Includes Q&A session.", l: "Online", date: "05 MAR 2026" },
-        e3: { t: "Paris Sensual Weekend", d: "The most elegant event of the year returns. Join us in the city of love to learn to connect on another level.", l: "Paris, France", date: "20 - 22 APR 2026" },
-        e4: { t: "Choreography Intensive Workshop", d: "Learn our latest choreography in a 4-hour workshop. Intermediate/Advanced level.", l: "Seville, Spain", date: "10 MAY 2026" }
-      }
+      create: "New event",
+      edit: "Edit",
+      delete: "Delete",
+      deleteConfirm: "Delete this event?",
+      draft: "Draft",
+      empty: { title: "We're preparing new dates", text: "Come back soon or follow us on social media for the next stop." },
+      upcoming: { eyebrow: "AGENDA", heading: "Next stops", pill: "Upcoming", singular: "UPCOMING DATE", plural: "UPCOMING DATES" },
+      past: { eyebrow: "ARCHIVE", heading: "Past dates", pill: "Past" }
     },
     music: {
       title: "Our Playlists",
@@ -623,12 +627,14 @@ export const dictionaries = {
     },
     events: {
       title: "Agenda & Événements", desc: "Découvrez où nous serons prochainement. Venez apprendre, danser et profiter avec nous en direct.", details: "Plus d'infos",
-      items: {
-        e1: { t: "Madrid Bachata Congress", d: "Trois jours de pure danse. Nous donnerons deux ateliers de Bachatango Fusion et un show exclusif samedi soir.", l: "Madrid, Espagne", date: "15 - 17 FÉV 2026" },
-        e2: { t: "Masterclass Technique de Tours", d: "Cours intensif en ligne de 2h axé sur l'équilibre et la fluidité. Inclut une session Q&R.", l: "En ligne", date: "05 MAR 2026" },
-        e3: { t: "Paris Sensual Weekend", d: "L'événement le plus élégant de l'année revient. Rejoignez-nous dans la ville de l'amour.", l: "Paris, France", date: "20 - 22 AVR 2026" },
-        e4: { t: "Atelier Intensif Chorégraphique", d: "Apprenez notre dernière chorégraphie dans un atelier de 4h. Niveau intermédiaire/avancé.", l: "Séville, Espagne", date: "10 MAI 2026" }
-      }
+      create: "Nouvel événement",
+      edit: "Modifier",
+      delete: "Supprimer",
+      deleteConfirm: "Supprimer cet événement ?",
+      draft: "Brouillon",
+      empty: { title: "Nous préparons de nouvelles dates", text: "Revenez bientôt ou suivez-nous sur les réseaux sociaux pour la prochaine étape." },
+      upcoming: { eyebrow: "AGENDA", heading: "Prochaines étapes", pill: "À venir", singular: "DATE À VENIR", plural: "DATES À VENIR" },
+      past: { eyebrow: "ARCHIVES", heading: "Dates passées", pill: "Passé" }
     },
     music: { title: "Nos Playlists", desc: "La musique est le cœur de la danse. Voici les listes que nous utilisons dans nos cours." },
     blog: {
@@ -841,12 +847,14 @@ export const dictionaries = {
     },
     events: {
       title: "Agenda & Events", desc: "Entdecke, wo wir als nächstes sind.", details: "Mehr Infos",
-      items: {
-        e1: { t: "Madrid Bachata Congress", d: "Drei Tage purer Tanz. Wir geben zwei Workshops.", l: "Madrid, Spanien", date: "15 - 17 FEB 2026" },
-        e2: { t: "Drehtechnik Masterclass", d: "Intensiver Online-Kurs über 2 Stunden.", l: "Online", date: "05 MÄR 2026" },
-        e3: { t: "Paris Sensual Weekend", d: "Das eleganteste Event des Jahres.", l: "Paris, Frankreich", date: "20 - 22 APR 2026" },
-        e4: { t: "Choreographie Workshop", d: "Lerne unsere neueste Choreographie.", l: "Sevilla, Spanien", date: "10 MAI 2026" }
-      }
+      create: "Neue Veranstaltung",
+      edit: "Bearbeiten",
+      delete: "Löschen",
+      deleteConfirm: "Diese Veranstaltung löschen?",
+      draft: "Entwurf",
+      empty: { title: "Wir bereiten neue Termine vor", text: "Schauen Sie bald wieder vorbei oder folgen Sie uns in den sozialen Medien für den nächsten Termin." },
+      upcoming: { eyebrow: "AGENDA", heading: "Nächste Stationen", pill: "Bevorstehend", singular: "KOMMENDER TERMIN", plural: "KOMMENDE TERMINE" },
+      past: { eyebrow: "ARCHIV", heading: "Vergangene Termine", pill: "Vergangen" }
     },
     music: { title: "Unsere Playlists", desc: "Musik ist das Herz des Tanzes." },
     blog: {
@@ -1059,12 +1067,14 @@ export const dictionaries = {
     },
     events: {
       title: "Agenda & Eventi", desc: "Scopri dove saremo.", details: "Più Info",
-      items: {
-        e1: { t: "Madrid Bachata Congress", d: "Tre giorni di puro ballo.", l: "Madrid, Spagna", date: "15 - 17 FEB 2026" },
-        e2: { t: "Masterclass Tecnica Giri", d: "Classe intensiva online.", l: "Online", date: "05 MAR 2026" },
-        e3: { t: "Paris Sensual Weekend", d: "L'evento più elegante.", l: "Parigi, Francia", date: "20 - 22 APR 2026" },
-        e4: { t: "Workshop Coreografico", d: "Impara la nostra coreografia.", l: "Siviglia, Spagna", date: "10 MAG 2026" }
-      }
+      create: "Nuovo evento",
+      edit: "Modifica",
+      delete: "Elimina",
+      deleteConfirm: "Eliminare questo evento?",
+      draft: "Bozza",
+      empty: { title: "Stiamo preparando nuove date", text: "Torna presto o seguici sui social per la prossima tappa." },
+      upcoming: { eyebrow: "AGENDA", heading: "Prossime tappe", pill: "Prossimo", singular: "DATA IN ARRIVO", plural: "DATE IN ARRIVO" },
+      past: { eyebrow: "ARCHIVIO", heading: "Date passate", pill: "Passato" }
     },
     music: { title: "Le Nostre Playlist", desc: "La musica è il cuore del ballo." },
     blog: {
@@ -1276,12 +1286,14 @@ export const dictionaries = {
     },
     events: {
       title: "アジェンダ＆イベント", desc: "次に行く場所をチェック。", details: "詳細",
-      items: {
-        e1: { t: "マドリード・バチャータ・コングレス", d: "ダンス漬けの3日間。", l: "マドリード、スペイン", date: "2026年2月15日-17日" },
-        e2: { t: "ターン・テクニック・マスタークラス", d: "2時間の集中オンラインクラス。", l: "オンライン", date: "2026年3月5日" },
-        e3: { t: "パリ・センシュアル・ウィークエンド", d: "今年最もエレガントなイベント。", l: "パリ、フランス", date: "2026年4月20日-22日" },
-        e4: { t: "振付集中ワークショップ", d: "最新の振付を学ぶ。", l: "セビリア、スペイン", date: "2026年5月10日" }
-      }
+      create: "新しいイベント",
+      edit: "編集",
+      delete: "削除",
+      deleteConfirm: "このイベントを削除しますか？",
+      draft: "下書き",
+      empty: { title: "新しい日程を準備中です", text: "近日中にまたチェックしてください。次の開催情報はSNSでお知らせします。" },
+      upcoming: { eyebrow: "アジェンダ", heading: "次の開催地", pill: "まもなく", singular: "まもなく開催", plural: "今後の予定" },
+      past: { eyebrow: "アーカイブ", heading: "過去の日程", pill: "終了" }
     },
     music: { title: "プレイリスト", desc: "音楽はダンスの心臓です。" },
     blog: {
