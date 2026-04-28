@@ -28,6 +28,7 @@ export default async function EventosAdminPage() {
     .order('start_date', { ascending: false })
 
   const events = (rows ?? []) as Row[]
+  // eslint-disable-next-line react-hooks/purity -- Server Component runs once per request; Date.now() is fine
   const now = Date.now()
 
   return (

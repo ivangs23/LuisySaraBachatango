@@ -83,6 +83,9 @@ export async function deleteEvent(id: string): Promise<{ error: string } | void>
   revalidatePath('/admin/eventos')
 }
 
+// Wrapper for `<form action={deleteEventForm.bind(null, id)}>` — Next.js form actions are
+// invoked with a FormData arg we don't need. Underscore-prefixed; suppress the lint rule.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deleteEventForm(id: string, _formData?: FormData): Promise<void> {
   await deleteEvent(id)
 }
