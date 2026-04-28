@@ -173,3 +173,50 @@ describe('createEvent', () => {
     expect(mockRedirect).not.toHaveBeenCalled()
   })
 })
+
+// ── updateEvent ───────────────────────────────────────────────────────────────
+
+import { updateEvent } from '@/app/events/actions'
+
+describe('updateEvent', () => {
+  it('updates the row by id, revalidates, and redirects to /admin/eventos', async () => {
+    const eqFn = vi.fn().mockResolvedValue({ error: null })
+    const updateFn = vi.fn().mockReturnValue({ eq: eqFn })
+    mockFrom.mockReturnValue({ update: updateFn })
+
+    const fd = buildFormData()
+    const url = await updateEvent('event-123', fd).catch((err: Error) => err.message)
+
+    expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({
+      start_date: '2026-06-01',
+      location: 'Madrid, España',
+    }))
+    expect(eqFn).toHaveBeenCalledWith('id', 'event-123')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/events')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/eventos')
+    expect(url).toBe('REDIRECT:/admin/eventos')
+  })
+
+  it('returns { error: "No autorizado" } when not admin', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const result = await updateEvent('id-1', buildFormData())
+    expect(result).toEqual({ error: 'No autorizado' })
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns validation { error } and skips DB write', async () => {
+    const result = await updateEvent('id-1', buildFormData({ description_es: '' }))
+    expect(result && 'error' in result).toBe(true)
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns DB error message when update fails', async () => {
+    const eqFn = vi.fn().mockResolvedValue({ error: { message: 'update failed' } })
+    const updateFn = vi.fn().mockReturnValue({ eq: eqFn })
+    mockFrom.mockReturnValue({ update: updateFn })
+
+    const result = await updateEvent('id-1', buildFormData())
+    expect(result).toEqual({ error: 'update failed' })
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+})

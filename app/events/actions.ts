@@ -38,3 +38,26 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
   revalidatePath('/admin/eventos')
   redirect('/admin/eventos')
 }
+
+export async function updateEvent(id: string, formData: FormData): Promise<{ error: string } | void> {
+  const auth = await ensureAdmin()
+  if (!auth.ok) return { error: auth.error }
+
+  const parsed = parseEventForm(formData)
+  if ('error' in parsed) return { error: parsed.error }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('events')
+    .update(parsed.payload)
+    .eq('id', id)
+
+  if (error) {
+    console.error('[updateEvent] update failed', { id, error })
+    return { error: error.message }
+  }
+
+  revalidatePath('/events')
+  revalidatePath('/admin/eventos')
+  redirect('/admin/eventos')
+}
