@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { requireAdmin } from '@/utils/admin/guard'
+// Lives in _lib because 'use server' modules cannot export sync helpers.
 import { parseEventForm } from '@/app/events/_lib/parse'
 
 async function ensureAdmin(): Promise<{ ok: true } | { ok: false; error: string }> {
