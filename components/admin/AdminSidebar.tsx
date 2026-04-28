@@ -10,6 +10,7 @@ import {
   Inbox,
   GraduationCap,
   MessagesSquare,
+  CalendarDays,
   ArrowLeft,
   Menu,
   X,
@@ -28,6 +29,7 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
     { href: '/admin/estadisticas', label: 'Estadísticas', Icon: BarChart3 },
     { href: '/admin/entregas', label: 'Entregas', Icon: Inbox, badge: pendingSubmissions },
     { href: '/admin/cursos', label: 'Cursos', Icon: GraduationCap },
+    { href: '/admin/eventos', label: 'Eventos', Icon: CalendarDays },
     { href: '/admin/comunidad', label: 'Comunidad', Icon: MessagesSquare },
   ]
 
