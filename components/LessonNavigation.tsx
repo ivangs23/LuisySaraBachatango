@@ -23,7 +23,7 @@ export default function LessonNavigation({ courseId, prev, next }: Props) {
   if (!prev && !next) return null;
 
   return (
-    <nav className={styles.bar} aria-label="Navegación entre lecciones">
+    <nav className={styles.bar} aria-label={t.lesson.lessonNavigation}>
       {prev && (
         <Link
           href={`/courses/${courseId}/${prev.id}`}

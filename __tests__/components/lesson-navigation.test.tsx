@@ -6,7 +6,7 @@ vi.mock('@/context/LanguageContext', () => ({
   useLanguage: () => ({
     locale: 'es',
     setLocale: () => {},
-    t: { lesson: { previousLesson: 'Anterior', nextLesson: 'Siguiente' } },
+    t: { lesson: { previousLesson: 'Anterior', nextLesson: 'Siguiente', lessonNavigation: 'Navegación entre lecciones' } },
   }),
 }))
 
@@ -44,5 +44,12 @@ describe('LessonNavigation', () => {
       'href',
       '/courses/course-1/lesson-a',
     )
+  })
+
+  it('renders nothing when both prev and next are null', () => {
+    const { container } = render(
+      <LessonNavigation courseId="course-1" prev={null} next={null} />,
+    )
+    expect(container).toBeEmptyDOMElement()
   })
 })

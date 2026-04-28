@@ -202,7 +202,8 @@ export const dictionaries = {
       assignmentSuccess: "¡Entrega enviada correctamente!",
       assignmentViewSubmissions: "Ver todas las entregas",
       previousLesson: "Anterior",
-      nextLesson: "Siguiente"
+      nextLesson: "Siguiente",
+      lessonNavigation: "Navegación entre lecciones"
     },
     dashboard: {
       title: "Mis Cursos",
@@ -494,7 +495,8 @@ export const dictionaries = {
       assignmentSuccess: "Submission sent successfully!",
       assignmentViewSubmissions: "View all submissions",
       previousLesson: "Previous",
-      nextLesson: "Next"
+      nextLesson: "Next",
+      lessonNavigation: "Lesson navigation"
     },
     dashboard: {
       title: "My Courses",
@@ -716,7 +718,8 @@ export const dictionaries = {
       assignmentSuccess: "Devoir envoyé avec succès !",
       assignmentViewSubmissions: "Voir toutes les soumissions",
       previousLesson: "Précédent",
-      nextLesson: "Suivant"
+      nextLesson: "Suivant",
+      lessonNavigation: "Navigation entre leçons"
     },
     dashboard: {
       title: "Mes Cours",
@@ -938,7 +941,8 @@ export const dictionaries = {
       assignmentSuccess: "Einreichung erfolgreich gesendet!",
       assignmentViewSubmissions: "Alle Einreichungen ansehen",
       previousLesson: "Vorherige",
-      nextLesson: "Nächste"
+      nextLesson: "Nächste",
+      lessonNavigation: "Lektionsnavigation"
     },
     dashboard: {
       title: "Meine Kurse",
@@ -1159,7 +1163,8 @@ export const dictionaries = {
       assignmentSuccess: "Compito inviato con successo!",
       assignmentViewSubmissions: "Vedi tutti gli invii",
       previousLesson: "Precedente",
-      nextLesson: "Successivo"
+      nextLesson: "Successivo",
+      lessonNavigation: "Navigazione tra le lezioni"
     },
     dashboard: {
       title: "I Miei Corsi",
@@ -1381,7 +1386,8 @@ export const dictionaries = {
       assignmentSuccess: "提出が正常に送信されました！",
       assignmentViewSubmissions: "すべての提出を見る",
       previousLesson: "前へ",
-      nextLesson: "次へ"
+      nextLesson: "次へ",
+      lessonNavigation: "レッスン切り替え"
     },
     dashboard: {
       title: "マイコース",
