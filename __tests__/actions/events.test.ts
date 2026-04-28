@@ -120,3 +120,56 @@ describe('parseEventForm', () => {
     expect('error' in r2 && r2.error).toMatch(/fecha|date/i)
   })
 })
+
+// ── createEvent ───────────────────────────────────────────────────────────────
+
+import { createEvent } from '@/app/events/actions'
+
+describe('createEvent', () => {
+  it('inserts the row, revalidates paths, and redirects to /admin/eventos on success', async () => {
+    const insertSingle = vi.fn().mockResolvedValue({ data: { id: 'new-id' }, error: null })
+    const insertSelect = vi.fn().mockReturnValue({ single: insertSingle })
+    const insertFn = vi.fn().mockReturnValue({ select: insertSelect })
+    mockFrom.mockReturnValue({ insert: insertFn })
+
+    const fd = buildFormData()
+
+    const url = await createEvent(fd).catch((err: Error) => err.message)
+
+    expect(insertFn).toHaveBeenCalledWith(expect.objectContaining({
+      start_date: '2026-06-01',
+      end_date: '2026-06-03',
+      location: 'Madrid, España',
+      is_published: true,
+    }))
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/events')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/eventos')
+    expect(url).toBe('REDIRECT:/admin/eventos')
+  })
+
+  it('returns { error: "No autorizado" } when not admin', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const fd = buildFormData()
+    const result = await createEvent(fd)
+    expect(result).toEqual({ error: 'No autorizado' })
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns validation { error } and skips DB write', async () => {
+    const fd = buildFormData({ title_es: '' })
+    const result = await createEvent(fd)
+    expect(result && 'error' in result).toBe(true)
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns DB error message when Supabase insert errors', async () => {
+    const insertSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'db boom' } })
+    const insertSelect = vi.fn().mockReturnValue({ single: insertSingle })
+    const insertFn = vi.fn().mockReturnValue({ select: insertSelect })
+    mockFrom.mockReturnValue({ insert: insertFn })
+
+    const result = await createEvent(buildFormData())
+    expect(result).toEqual({ error: 'db boom' })
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+})
