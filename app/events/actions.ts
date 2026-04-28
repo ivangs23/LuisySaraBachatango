@@ -82,3 +82,7 @@ export async function deleteEvent(id: string): Promise<{ error: string } | void>
   revalidatePath('/events')
   revalidatePath('/admin/eventos')
 }
+
+export async function deleteEventForm(id: string, _formData?: FormData): Promise<void> {
+  await deleteEvent(id)
+}
