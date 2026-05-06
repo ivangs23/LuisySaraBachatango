@@ -23,11 +23,14 @@ export const mux = new Mux({
  * in the lesson server component after the access check passes.
  * RS256 with the key from MUX_SIGNING_KEY_PRIVATE (base64 PEM).
  *
+ * Default expiration is 30m (short-lived) so that revoked access takes effect
+ * quickly. Pass an explicit expiration string to override.
+ *
  * Returns a Promise<string> — await at the call site.
  */
 export async function signPlaybackToken(
   playbackId: string,
-  expiration: string = '4h',
+  expiration: string = '30m',
 ): Promise<string> {
   return mux.jwt.signPlaybackId(playbackId, {
     type: 'video',
@@ -39,10 +42,12 @@ export async function signPlaybackToken(
  * Sign a thumbnail JWT for a given Mux playback ID. Used as a poster fallback
  * when the lesson has no custom thumbnail_url — Mux Player fetches the auto-
  * extracted frame from image.mux.com using this token.
+ *
+ * Default expiration is 30m (short-lived) to match the playback token TTL.
  */
 export async function signThumbnailToken(
   playbackId: string,
-  expiration: string = '4h',
+  expiration: string = '30m',
 ): Promise<string> {
   return mux.jwt.signPlaybackId(playbackId, {
     type: 'thumbnail',
