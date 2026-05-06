@@ -64,22 +64,24 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
-    let cancelled = false;
-    let cleanupChannel: (() => void) | null = null;
+    const controller = new AbortController()
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
     // Fallback poll every 5 min in case Realtime fails to connect.
     const fallbackInterval = setInterval(() => {
-      if (!cancelled) fetchAll();
-    }, 5 * 60 * 1000);
+      if (controller.signal.aborted) return
+      fetchAll()
+    }, 5 * 60 * 1000)
 
-    (async () => {
-      await fetchAll();
-      if (cancelled) return;
+    ;(async () => {
+      if (controller.signal.aborted) return
+      await fetchAll()
+      if (controller.signal.aborted) return
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || cancelled) return;
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || controller.signal.aborted) return
 
-      const channel = supabase
+      channel = supabase
         .channel(`notifications:${user.id}`)
         .on(
           'postgres_changes',
@@ -90,21 +92,25 @@ export default function NotificationBell() {
             filter: `user_id=eq.${user.id}`,
           },
           () => {
-            if (!cancelled) fetchAll();
+            if (!controller.signal.aborted) fetchAll()
           }
         )
-        .subscribe();
+        .subscribe()
 
-      cleanupChannel = () => {
-        supabase.removeChannel(channel);
-      };
-    })();
+      // If cleanup ran while we were awaiting subscribe, tear down now.
+      if (controller.signal.aborted && channel) {
+        supabase.removeChannel(channel)
+        channel = null
+      }
+    })()
 
     return () => {
-      cancelled = true;
-      clearInterval(fallbackInterval);
-      if (cleanupChannel) cleanupChannel();
-    };
+      controller.abort()
+      clearInterval(fallbackInterval)
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
