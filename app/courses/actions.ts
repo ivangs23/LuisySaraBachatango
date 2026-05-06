@@ -366,6 +366,23 @@ export async function markLessonAsCompleted(courseId: string, lessonId: string) 
 
   if (!user) return
 
+  if (!(await hasCourseAccess(user.id, courseId))) {
+    return { error: 'forbidden' }
+  }
+
+  // Verify the lesson actually belongs to this course (defense in depth
+  // against a forged courseId/lessonId pair where the user has access to
+  // courseId but lessonId is in a different course).
+  const { data: lesson } = await supabase
+    .from('lessons')
+    .select('course_id')
+    .eq('id', lessonId)
+    .maybeSingle()
+
+  if (!lesson || lesson.course_id !== courseId) {
+    return { error: 'lesson_mismatch' }
+  }
+
   const { error } = await supabase
     .from('lesson_progress')
     .upsert({

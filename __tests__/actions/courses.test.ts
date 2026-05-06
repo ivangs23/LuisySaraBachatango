@@ -349,6 +349,81 @@ describe('submitAssignment', () => {
   })
 })
 
+// ── markLessonAsCompleted ─────────────────────────────────────────────────────
+
+describe('markLessonAsCompleted', () => {
+  let fromMock: ReturnType<typeof vi.fn>
+  let upsertMock: ReturnType<typeof vi.fn>
+  let getUserMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(hasCourseAccess).mockResolvedValue(true)
+
+    upsertMock = vi.fn().mockResolvedValue({ error: null })
+    getUserMock = vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } })
+    fromMock = vi.fn()
+
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: getUserMock },
+      from: fromMock,
+    })
+  })
+
+  it('returns silently when no user (no error)', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null } })
+    const { markLessonAsCompleted } = await import('@/app/courses/actions')
+    const result = await markLessonAsCompleted('c1', 'l1')
+    expect(result).toBeUndefined()
+  })
+
+  it('returns forbidden when user has no access', async () => {
+    vi.mocked(hasCourseAccess).mockResolvedValue(false)
+    const { markLessonAsCompleted } = await import('@/app/courses/actions')
+    const result = await markLessonAsCompleted('c1', 'l1')
+    expect(result).toEqual({ error: 'forbidden' })
+    expect(upsertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns lesson_mismatch when lesson belongs to a different course', async () => {
+    const lessonSingle = vi.fn().mockResolvedValue({ data: { course_id: 'OTHER' } })
+    fromMock.mockReturnValueOnce({
+      select: () => ({ eq: () => ({ maybeSingle: lessonSingle }) }),
+    })
+    const { markLessonAsCompleted } = await import('@/app/courses/actions')
+    const result = await markLessonAsCompleted('c1', 'l1')
+    expect(result).toEqual({ error: 'lesson_mismatch' })
+    expect(upsertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns lesson_mismatch when lesson does not exist', async () => {
+    const lessonSingle = vi.fn().mockResolvedValue({ data: null })
+    fromMock.mockReturnValueOnce({
+      select: () => ({ eq: () => ({ maybeSingle: lessonSingle }) }),
+    })
+    const { markLessonAsCompleted } = await import('@/app/courses/actions')
+    const result = await markLessonAsCompleted('c1', 'l1')
+    expect(result).toEqual({ error: 'lesson_mismatch' })
+  })
+
+  it('upserts progress when access granted and lesson matches', async () => {
+    const lessonSingle = vi.fn().mockResolvedValue({ data: { course_id: 'c1' } })
+    fromMock.mockReturnValueOnce({
+      select: () => ({ eq: () => ({ maybeSingle: lessonSingle }) }),
+    })
+    fromMock.mockReturnValueOnce({ upsert: upsertMock })
+    upsertMock.mockResolvedValue({ error: null })
+    const { markLessonAsCompleted } = await import('@/app/courses/actions')
+    const result = await markLessonAsCompleted('c1', 'l1')
+    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({
+      user_id: 'u1',
+      lesson_id: 'l1',
+      is_completed: true,
+    }))
+    expect(result).toBeUndefined()
+  })
+})
+
 // ── File upload validation (pure logic, extracted for testing) ────────────────
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
