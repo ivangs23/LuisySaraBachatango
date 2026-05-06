@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
               `img-src 'self' data: blob: https://${SUPABASE_HOST} https://image.mux.com https://*.googleusercontent.com https://flagcdn.com`,
               "media-src 'self' blob: https://stream.mux.com https://*.mux.com",
               `connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.mux.com`,
-              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://open.spotify.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
