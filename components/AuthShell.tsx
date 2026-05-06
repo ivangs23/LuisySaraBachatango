@@ -10,6 +10,8 @@ const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 type AuthShellProps = {
   panelEyebrow: string;
   panelTitle: string;
+  panelTitleEmphasis: string;
+  panelTitleSuffix: string;
   panelLead: string;
   panelFeatures: string[];
   panelQuote?: string;
@@ -25,6 +27,8 @@ type AuthShellProps = {
 export default function AuthShell({
   panelEyebrow,
   panelTitle,
+  panelTitleEmphasis,
+  panelTitleSuffix,
   panelLead,
   panelFeatures,
   panelQuote,
@@ -80,7 +84,11 @@ export default function AuthShell({
         </motion.div>
 
         <motion.div className={styles.panelMiddle} {...fadeUp(0.1)}>
-          <h2 className={styles.panelHeadline} dangerouslySetInnerHTML={{ __html: panelTitle }} />
+          <h2 className={styles.panelHeadline}>
+              {panelTitle}
+              {panelTitleEmphasis && <em className={styles.panelHeadlineAccent}>{panelTitleEmphasis}</em>}
+              {panelTitleSuffix}
+            </h2>
           <p className={styles.panelLead}>{panelLead}</p>
           <ul className={styles.panelFeatures}>
             {panelFeatures.map((feature, i) => {

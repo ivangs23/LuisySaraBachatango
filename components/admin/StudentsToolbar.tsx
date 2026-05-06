@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { Search } from 'lucide-react'
 import styles from './StudentsToolbar.module.css'
 
@@ -12,6 +12,7 @@ export default function StudentsToolbar({
   const params = useSearchParams()
   const [, startTransition] = useTransition()
   const [q, setQ] = useState(initialQ)
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function update(patch: Record<string, string>) {
     const sp = new URLSearchParams(params?.toString() ?? '')
@@ -23,11 +24,10 @@ export default function StudentsToolbar({
     startTransition(() => router.replace(`?${sp.toString()}`))
   }
 
-  let typingTimer: ReturnType<typeof setTimeout> | null = null
   function onSearchChange(v: string) {
     setQ(v)
-    if (typingTimer) clearTimeout(typingTimer)
-    typingTimer = setTimeout(() => update({ q: v }), 300)
+    if (typingTimer.current) clearTimeout(typingTimer.current)
+    typingTimer.current = setTimeout(() => update({ q: v }), 300)
   }
 
   return (

@@ -31,8 +31,9 @@ describe('submitPost — length validation', () => {
     const fd = new FormData()
     fd.set('title', 'a'.repeat(201))
     fd.set('content', 'Valid content')
-    await submitPost(fd)
+    const result = await submitPost(fd)
     expect(mockInsert).not.toHaveBeenCalled()
+    expect(result).toEqual({ success: false, error: 'Título demasiado largo.' })
   })
 
   it('does not insert when content exceeds 10000 characters', async () => {
@@ -40,8 +41,9 @@ describe('submitPost — length validation', () => {
     const fd = new FormData()
     fd.set('title', 'Valid title')
     fd.set('content', 'a'.repeat(10001))
-    await submitPost(fd)
+    const result = await submitPost(fd)
     expect(mockInsert).not.toHaveBeenCalled()
+    expect(result).toEqual({ success: false, error: 'Contenido demasiado largo.' })
   })
 
   it('does not insert when title is empty', async () => {
@@ -49,8 +51,9 @@ describe('submitPost — length validation', () => {
     const fd = new FormData()
     fd.set('title', '')
     fd.set('content', 'Valid content')
-    await submitPost(fd)
+    const result = await submitPost(fd)
     expect(mockInsert).not.toHaveBeenCalled()
+    expect(result.success).toBe(false)
   })
 
   it('does not insert when content is empty', async () => {
@@ -58,18 +61,20 @@ describe('submitPost — length validation', () => {
     const fd = new FormData()
     fd.set('title', 'Valid title')
     fd.set('content', '')
-    await submitPost(fd)
+    const result = await submitPost(fd)
     expect(mockInsert).not.toHaveBeenCalled()
+    expect(result.success).toBe(false)
   })
 
   it('accepts title of exactly 200 characters', async () => {
+    mockInsert.mockResolvedValue({ error: null })
     const { submitPost } = await import('@/app/community/actions')
     const fd = new FormData()
     fd.set('title', 'a'.repeat(200))
     fd.set('content', 'Valid content')
-    try { await submitPost(fd) } catch { /* redirect throws */ }
-    // It should have attempted to insert (or redirect after success)
+    const result = await submitPost(fd)
     expect(mockInsert).toHaveBeenCalled()
+    expect(result).toEqual({ success: true })
   })
 })
 
@@ -85,15 +90,17 @@ describe('submitComment — length validation', () => {
     const fd = new FormData()
     fd.set('postId', 'post-1')
     fd.set('content', 'a'.repeat(5001))
-    await submitComment(fd)
+    const result = await submitComment(fd)
     expect(mockInsert).not.toHaveBeenCalled()
+    expect(result).toEqual({ success: false, error: 'Comentario demasiado largo.' })
   })
 
   it('does not insert when postId is missing', async () => {
     const { submitComment } = await import('@/app/community/actions')
     const fd = new FormData()
     fd.set('content', 'Valid comment')
-    await submitComment(fd)
+    const result = await submitComment(fd)
     expect(mockInsert).not.toHaveBeenCalled()
+    expect(result.success).toBe(false)
   })
 })

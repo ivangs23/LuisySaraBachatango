@@ -3,6 +3,9 @@ import { stripe } from '@/utils/stripe/server';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { assertStripeEnvForProduction } from '@/utils/stripe/validate-env';
+
+assertStripeEnvForProduction();
 
 export const dynamic = 'force-dynamic';
 
@@ -78,16 +81,21 @@ export async function POST(req: Request) {
       if (subscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-        const item = subscription.items.data[0]
+        const item = subscription.items.data[0];
+        if (!item || !item.current_period_start || !item.current_period_end) {
+          console.error('Webhook: subscription has no usable item', { subscriptionId });
+          return new NextResponse(null, { status: 200 });
+        }
+
         const { error } = await supabase
           .from('subscriptions')
           .upsert({
             id: subscriptionId,
             user_id: userId,
             status: subscription.status,
-            plan_type: item?.price.id ?? null,
-            current_period_start: new Date((item?.current_period_start ?? 0) * 1000).toISOString(),
-            current_period_end: new Date((item?.current_period_end ?? 0) * 1000).toISOString(),
+            plan_type: item.price.id,
+            current_period_start: new Date(item.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(item.current_period_end * 1000).toISOString(),
           });
 
         if (error) {
@@ -101,13 +109,18 @@ export async function POST(req: Request) {
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object as Stripe.Subscription;
 
-    const item = subscription.items.data[0]
+    const item = subscription.items.data[0];
+    if (!item || !item.current_period_start || !item.current_period_end) {
+      console.error('Webhook: subscription update with no usable item', { id: subscription.id });
+      return new NextResponse(null, { status: 200 });
+    }
+
     const { error } = await supabase
       .from('subscriptions')
       .update({
         status: subscription.status,
-        current_period_start: new Date((item?.current_period_start ?? 0) * 1000).toISOString(),
-        current_period_end: new Date((item?.current_period_end ?? 0) * 1000).toISOString(),
+        current_period_start: new Date(item.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(item.current_period_end * 1000).toISOString(),
       })
       .eq('id', subscription.id);
 

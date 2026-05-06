@@ -3,8 +3,19 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { stripe } from '@/utils/stripe/server';
 import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
+import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 
 export async function POST(req: Request) {
+  const xff = req.headers.get('x-forwarded-for') ?? ''
+  const ip = xff.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'anon'
+  const rl = rateLimit(rateLimitKey([ip, 'checkout']), 10, 60_000) // 10/min per IP
+  if (!rl.ok) {
+    return new NextResponse('Too Many Requests', {
+      status: 429,
+      headers: { 'Retry-After': String(rl.retryAfter) },
+    })
+  }
+
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

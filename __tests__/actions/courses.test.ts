@@ -1,5 +1,292 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// ─── Integration tests for courses actions ────────────────────────────────────
+// Mocks must be declared before any module imports.
+
+const { mockRevalidatePath, mockRedirect, mockRequireAdmin, mockCreateClient } = vi.hoisted(() => ({
+  mockRevalidatePath: vi.fn(),
+  mockRedirect: vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`) }),
+  mockRequireAdmin: vi.fn(),
+  mockCreateClient: vi.fn(),
+}))
+
+vi.mock('next/cache', () => ({ revalidatePath: mockRevalidatePath }))
+vi.mock('next/navigation', () => ({ redirect: mockRedirect }))
+vi.mock('@/utils/auth/require-admin', () => ({
+  requireAdmin: mockRequireAdmin,
+  getCurrentRole: vi.fn(),
+}))
+vi.mock('@/utils/supabase/server', () => ({
+  createClient: mockCreateClient,
+}))
+// createSupabaseAdmin is used by gradeSubmission only; not needed for these three actions.
+vi.mock('@/utils/supabase/admin', () => ({
+  createSupabaseAdmin: vi.fn(() => ({
+    from: vi.fn().mockReturnValue({ upsert: vi.fn().mockResolvedValue({ error: null }) }),
+  })),
+}))
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function fd(values: Record<string, string>): FormData {
+  const f = new FormData()
+  Object.entries(values).forEach(([k, v]) => f.append(k, v))
+  return f
+}
+
+function makeInsert(result: { data?: unknown; error: unknown } = { data: { id: 'lesson-1' }, error: null }) {
+  const singleMock = vi.fn().mockResolvedValue(result)
+  const selectMock = vi.fn().mockReturnValue({ single: singleMock })
+  const insertMock = vi.fn().mockReturnValue({ select: selectMock })
+  return { insertMock, selectMock, singleMock }
+}
+
+function makeUpdate(result: { error: unknown } = { error: null }) {
+  const eqMock = vi.fn().mockResolvedValue(result)
+  const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+  return { updateMock, eqMock }
+}
+
+function makeUpsert(result: { error: unknown } = { error: null }) {
+  const upsertMock = vi.fn().mockResolvedValue(result)
+  return { upsertMock }
+}
+
+// ── createLesson ──────────────────────────────────────────────────────────────
+
+describe('createLesson', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+  })
+
+  it('returns validation error when order is not a positive integer', async () => {
+    const { createLesson } = await import('@/app/courses/actions')
+    const result = await createLesson(fd({ courseId: 'c1', title: 'T', description: '', order: '0', thumbnailUrl: '' }))
+    expect(result).toEqual({ error: 'El orden de la lección debe ser un número positivo' })
+  })
+
+  it('returns validation error when order is NaN', async () => {
+    const { createLesson } = await import('@/app/courses/actions')
+    const result = await createLesson(fd({ courseId: 'c1', title: 'T', description: '', order: 'abc', thumbnailUrl: '' }))
+    expect(result).toEqual({ error: 'El orden de la lección debe ser un número positivo' })
+  })
+
+  it('throws when requireAdmin rejects (non-admin)', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const { createLesson } = await import('@/app/courses/actions')
+    await expect(
+      createLesson(fd({ courseId: 'c1', title: 'T', description: '', order: '1' }))
+    ).rejects.toThrow('forbidden')
+  })
+
+  it('inserts a lesson row with correct fields when admin', async () => {
+    const { insertMock, selectMock, singleMock } = makeInsert({ data: { id: 'lesson-new' }, error: null })
+    const fromMock = vi.fn().mockReturnValue({ insert: insertMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: fromMock,
+    })
+
+    const { createLesson } = await import('@/app/courses/actions')
+    await expect(
+      createLesson(fd({ courseId: 'c1', title: 'Lesson 1', description: 'desc', order: '2', thumbnailUrl: '', isFree: 'on' }))
+    ).rejects.toThrow('REDIRECT:/courses/c1/lesson-new/edit')
+
+    expect(fromMock).toHaveBeenCalledWith('lessons')
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+      course_id: 'c1',
+      title: 'Lesson 1',
+      description: 'desc',
+      order: 2,
+      is_free: true,
+      mux_status: 'pending_upload',
+    }))
+    expect(selectMock).toHaveBeenCalledWith('id')
+    expect(singleMock).toHaveBeenCalled()
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1')
+  })
+
+  it('returns error when Supabase insert fails', async () => {
+    const singleMock = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } })
+    const selectMock = vi.fn().mockReturnValue({ single: singleMock })
+    const insertMock = vi.fn().mockReturnValue({ select: selectMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: vi.fn().mockReturnValue({ insert: insertMock }),
+    })
+
+    const { createLesson } = await import('@/app/courses/actions')
+    const result = await createLesson(fd({ courseId: 'c1', title: 'T', description: '', order: '1' }))
+    expect(result).toEqual({ error: 'DB error' })
+  })
+
+  it('sets is_free to false when isFree field is absent', async () => {
+    const { insertMock } = makeInsert({ data: { id: 'lesson-x' }, error: null })
+    const fromMock = vi.fn().mockReturnValue({ insert: insertMock })
+    mockCreateClient.mockResolvedValue({ auth: { getUser: vi.fn() }, from: fromMock })
+
+    const { createLesson } = await import('@/app/courses/actions')
+    await createLesson(fd({ courseId: 'c1', title: 'T', description: '', order: '3' })).catch(() => {})
+
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({ is_free: false }))
+  })
+})
+
+// ── updateCourse ──────────────────────────────────────────────────────────────
+
+describe('updateCourse', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+  })
+
+  it('throws when requireAdmin rejects (non-admin)', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const { updateCourse } = await import('@/app/courses/actions')
+    await expect(
+      updateCourse(fd({ courseId: 'c1', title: 'T', description: '', courseType: 'membership' }))
+    ).rejects.toThrow('forbidden')
+  })
+
+  it('updates the course row and redirects when admin', async () => {
+    const { updateMock, eqMock } = makeUpdate()
+    const fromMock = vi.fn().mockReturnValue({ update: updateMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: fromMock,
+      storage: {
+        from: vi.fn().mockReturnValue({
+          upload: vi.fn().mockResolvedValue({ error: null }),
+          getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://storage/img.jpg' } }),
+        }),
+      },
+    })
+
+    const { updateCourse } = await import('@/app/courses/actions')
+    await expect(
+      updateCourse(fd({
+        courseId: 'c1',
+        title: 'New Title',
+        description: 'desc',
+        courseType: 'complete',
+        isPublished: 'on',
+        imageUrl: 'https://existing.jpg',
+        priceEur: '49',
+        year: '2026',
+        month: '5',
+      }))
+    ).rejects.toThrow('REDIRECT:/courses/c1')
+
+    expect(fromMock).toHaveBeenCalledWith('courses')
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'New Title',
+      description: 'desc',
+      course_type: 'complete',
+      is_published: true,
+      price_eur: 49,
+      year: 2026,
+      month: 5,
+    }))
+    expect(eqMock).toHaveBeenCalledWith('id', 'c1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1')
+  })
+
+  it('returns error when Supabase update fails', async () => {
+    const eqMock = vi.fn().mockResolvedValue({ error: { message: 'update failed' } })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: vi.fn().mockReturnValue({ update: updateMock }),
+    })
+
+    const { updateCourse } = await import('@/app/courses/actions')
+    const result = await updateCourse(fd({ courseId: 'c1', title: 'T', description: '', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'update failed' })
+  })
+
+  it('sets is_published false when isPublished field is absent', async () => {
+    const { updateMock } = makeUpdate()
+    const fromMock = vi.fn().mockReturnValue({ update: updateMock })
+    mockCreateClient.mockResolvedValue({ auth: { getUser: vi.fn() }, from: fromMock })
+
+    const { updateCourse } = await import('@/app/courses/actions')
+    await updateCourse(fd({ courseId: 'c1', title: 'T', description: '', courseType: 'membership' })).catch(() => {})
+
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ is_published: false }))
+  })
+})
+
+// ── submitAssignment ──────────────────────────────────────────────────────────
+
+describe('submitAssignment', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('redirects to /login when no authenticated user', async () => {
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+      from: vi.fn(),
+    })
+
+    const { submitAssignment } = await import('@/app/courses/actions')
+    await expect(submitAssignment('a1', 'my work', null)).rejects.toThrow('REDIRECT:/login')
+  })
+
+  it('upserts a submission row for the authenticated user', async () => {
+    const { upsertMock } = makeUpsert()
+    const fromMock = vi.fn().mockReturnValue({ upsert: upsertMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
+      from: fromMock,
+    })
+
+    const { submitAssignment } = await import('@/app/courses/actions')
+    const result = await submitAssignment('a1', 'my work text', null)
+
+    expect(fromMock).toHaveBeenCalledWith('submissions')
+    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({
+      assignment_id: 'a1',
+      user_id: 'user-1',
+      text_content: 'my work text',
+      file_url: null,
+      status: 'pending',
+    }))
+    expect(result).toEqual({ success: true })
+  })
+
+  it('passes file_url when provided', async () => {
+    const { upsertMock } = makeUpsert()
+    const fromMock = vi.fn().mockReturnValue({ upsert: upsertMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-2' } } }) },
+      from: fromMock,
+    })
+
+    const { submitAssignment } = await import('@/app/courses/actions')
+    await submitAssignment('a2', '', 'https://storage/file.pdf')
+
+    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({
+      file_url: 'https://storage/file.pdf',
+      text_content: null, // empty string becomes null
+    }))
+  })
+
+  it('returns error when Supabase upsert fails', async () => {
+    const upsertMock = vi.fn().mockResolvedValue({ error: { message: 'upsert failed' } })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-3' } } }) },
+      from: vi.fn().mockReturnValue({ upsert: upsertMock }),
+    })
+
+    const { submitAssignment } = await import('@/app/courses/actions')
+    const result = await submitAssignment('a3', 'text', null)
+    expect(result).toEqual({ error: 'upsert failed' })
+  })
+})
+
 // ── File upload validation (pure logic, extracted for testing) ────────────────
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']

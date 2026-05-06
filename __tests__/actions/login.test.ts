@@ -8,6 +8,9 @@ const mockResetPasswordForEmail = vi.fn()
 
 vi.mock('next/navigation', () => ({ redirect: mockRedirect }))
 vi.mock('next/cache', () => ({ revalidatePath: mockRevalidatePath }))
+vi.mock('next/headers', () => ({
+  headers: vi.fn().mockResolvedValue(new Map()),
+}))
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {

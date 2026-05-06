@@ -123,6 +123,7 @@ export default function AddLessonForm({ courseId }: AddLessonFormProps) {
         <div className={styles.dropzone}>
           <input type="file" accept="image/*" onChange={handleThumbnailChange} />
           {thumbnailPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element -- blob URL from URL.createObjectURL(); incompatible with next/image loader
             <img src={thumbnailPreview} alt="Preview" className={styles.preview} />
           ) : (
             <p>Arrastra una imagen o haz clic para seleccionar</p>

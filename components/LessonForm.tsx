@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import styles from './LessonForm.module.css'
@@ -34,16 +34,18 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
   const [isFree, setIsFree] = useState(initialData?.is_free ?? false)
   const [parentLessonId, setParentLessonId] = useState(initialData?.parent_lesson_id ?? '')
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(initialData?.thumbnail_url ?? null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const thumbnailPreview = useMemo(() => {
+    if (!thumbnailFile) return initialData?.thumbnail_url ?? null
+    return URL.createObjectURL(thumbnailFile)
+  }, [thumbnailFile, initialData?.thumbnail_url])
+
   useEffect(() => {
-    if (!thumbnailFile) return
-    const url = URL.createObjectURL(thumbnailFile)
-    setThumbnailPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [thumbnailFile])
+    if (!thumbnailPreview || !thumbnailFile) return
+    return () => URL.revokeObjectURL(thumbnailPreview)
+  }, [thumbnailPreview, thumbnailFile])
 
   const uploadThumbnail = async (file: File): Promise<string | { error: string }> => {
     const supabase = createClient()
@@ -126,6 +128,7 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
       </div>
       <div className={styles.field}>
         <label>Miniatura</label>
+        {/* eslint-disable-next-line @next/next/no-img-element -- may be a blob URL (URL.createObjectURL) when a new file is selected; cannot use next/image with blob: sources */}
         {thumbnailPreview && <img src={thumbnailPreview} alt="" style={{ maxWidth: 200, marginBottom: 8 }} />}
         <input type="file" accept="image/*" onChange={e => setThumbnailFile(e.target.files?.[0] ?? null)} />
       </div>

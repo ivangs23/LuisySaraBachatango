@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import LessonView from '@/components/LessonView'
-import { signPlaybackToken, signThumbnailToken } from '@/utils/mux/server'
+import { signPlaybackTokenForUser, signThumbnailTokenForUser } from '@/utils/mux/server'
 
 export async function generateMetadata(
   props: { params: Promise<{ courseId: string; lessonId: string }> }
@@ -113,8 +113,8 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
   const canPlay = hasAccess && lesson.mux_status === 'ready' && lesson.mux_playback_id
   const [playbackToken, thumbnailToken] = canPlay
     ? await Promise.all([
-        signPlaybackToken(lesson.mux_playback_id!),
-        signThumbnailToken(lesson.mux_playback_id!),
+        signPlaybackTokenForUser(lesson.mux_playback_id!, user.id),
+        signThumbnailTokenForUser(lesson.mux_playback_id!, user.id),
       ])
     : [null, null]
 

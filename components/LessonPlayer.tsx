@@ -1,7 +1,6 @@
 'use client'
 
 import MuxPlayer from '@mux/mux-player-react'
-import { useRouter } from 'next/navigation'
 import { markLessonAsCompleted } from '@/app/courses/actions'
 import styles from './LessonPlayer.module.css'
 
@@ -20,8 +19,6 @@ export default function LessonPlayer({
   playbackId, playbackToken, thumbnailToken, posterUrl,
   lessonId, lessonTitle, courseId, viewerUserId,
 }: Props) {
-  const router = useRouter()
-
   return (
     <div className={styles.wrapper}>
       <MuxPlayer
@@ -36,7 +33,6 @@ export default function LessonPlayer({
         className={styles.player}
         onEnded={async () => {
           await markLessonAsCompleted(courseId, lessonId)
-          router.refresh()
         }}
       />
     </div>

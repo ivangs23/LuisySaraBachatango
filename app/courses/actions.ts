@@ -4,15 +4,11 @@ import { createClient } from '@/utils/supabase/server'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/utils/auth/require-admin'
 
 export async function createLesson(formData: FormData) {
+  await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can add lessons')
 
   const courseId = formData.get('courseId') as string
   const title = formData.get('title') as string
@@ -53,13 +49,8 @@ export async function createLesson(formData: FormData) {
 }
 
 export async function updateLesson(formData: FormData) {
+  await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can edit lessons')
 
   const lessonId = formData.get('lessonId') as string
   const courseId = formData.get('courseId') as string
@@ -119,12 +110,8 @@ async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClien
 }
 
 export async function createCourse(formData: FormData) {
+  await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can create courses')
 
   const courseType = (formData.get('courseType') as string) || 'membership'
   const title = formData.get('title') as string
@@ -169,12 +156,8 @@ export async function createCourse(formData: FormData) {
 }
 
 export async function updateCourse(formData: FormData) {
+  await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized: Only admins can edit courses')
 
   const courseId = formData.get('courseId') as string
   const courseType = (formData.get('courseType') as string) || 'membership'
@@ -227,12 +210,8 @@ export async function updateCourse(formData: FormData) {
 // ─── Assignment actions ──────────────────────────────────────────────��─────
 
 export async function createAssignment(lessonId: string, courseId: string, title: string, description: string) {
+  await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized')
 
   // Verify the lesson actually belongs to this course
   const { data: lesson } = await supabase
@@ -258,12 +237,8 @@ export async function createAssignment(lessonId: string, courseId: string, title
 }
 
 export async function updateAssignment(assignmentId: string, title: string, description: string, courseId: string, lessonId: string) {
+  await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized')
 
   const { error } = await supabase
     .from('assignments')
@@ -280,12 +255,8 @@ export async function updateAssignment(assignmentId: string, title: string, desc
 }
 
 export async function deleteAssignment(assignmentId: string, courseId: string, lessonId: string) {
+  await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized')
 
   const { error } = await supabase.from('assignments').delete().eq('id', assignmentId)
 
@@ -332,12 +303,8 @@ export async function gradeSubmission(
   lessonId: string,
   submittedUserId: string,
 ) {
+  const admin = await requireAdmin()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') throw new Error('Unauthorized')
 
   const { error } = await supabase
     .from('submissions')
@@ -362,7 +329,7 @@ export async function gradeSubmission(
       entity_type: 'submission',
       entity_id: submissionId,
       link: `/courses/${courseId}/${lessonId}`,
-      actor_ids: [user.id],
+      actor_ids: [admin.id],
       is_read: false,
       updated_at: new Date().toISOString(),
     },

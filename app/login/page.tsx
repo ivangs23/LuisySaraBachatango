@@ -23,6 +23,8 @@ export default async function LoginPage(props: { searchParams: Promise<{ message
     <AuthShell
       panelEyebrow={t.login.panelEyebrow}
       panelTitle={t.login.panelTitle}
+      panelTitleEmphasis={t.login.panelTitleEmphasis}
+      panelTitleSuffix={t.login.panelTitleSuffix}
       panelLead={t.login.panelLead}
       panelFeatures={t.login.panelFeatures}
       panelQuote={t.login.panelQuote}

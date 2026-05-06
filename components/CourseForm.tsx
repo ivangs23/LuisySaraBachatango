@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { createCourse, updateCourse } from '@/app/courses/actions';
 import Link from 'next/link';
 import styles from './CourseForm.module.css';
@@ -44,11 +44,10 @@ export default function CourseForm({ initialData }: CourseFormProps) {
   const [priceEur, setPriceEur] = useState<number | ''>(initialData?.price_eur ?? '');
   const [isPublished, setIsPublished] = useState(initialData?.is_published ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
 
-  useEffect(() => {
-    if (!initialData) { setIsDirty(true); return; }
-    const hasChanges =
+  const isDirty = useMemo(() => {
+    if (!initialData) return true;
+    return (
       courseType !== initialData.course_type ||
       title !== initialData.title ||
       description !== initialData.description ||
@@ -57,8 +56,8 @@ export default function CourseForm({ initialData }: CourseFormProps) {
       category !== (initialData.category ?? '') ||
       priceEur !== (initialData.price_eur ?? '') ||
       isPublished !== initialData.is_published ||
-      imageFile !== null;
-    setIsDirty(hasChanges);
+      imageFile !== null
+    );
   }, [courseType, title, description, year, month, category, priceEur, isPublished, imageFile, initialData]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

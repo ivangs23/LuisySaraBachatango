@@ -24,6 +24,15 @@ function requiresAuth(pathname: string): boolean {
 }
 
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const isAuthRoute = requiresAuth(pathname)
+  const hasSessionCookie = request.cookies.getAll().some(c => c.name.startsWith('sb-'))
+
+  // Public route + no session cookie → skip Supabase entirely.
+  if (!isAuthRoute && !hasSessionCookie) {
+    return NextResponse.next({ request: { headers: request.headers } })
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   })
@@ -52,9 +61,8 @@ export async function updateSession(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const { pathname } = request.nextUrl
 
-  if (!user && requiresAuth(pathname)) {
+  if (!user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)

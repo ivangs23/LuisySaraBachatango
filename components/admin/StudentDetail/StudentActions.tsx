@@ -8,11 +8,11 @@ import {
 import styles from './StudentDetail.module.css'
 
 type Course = { id: string; title: string }
-type Props = { userId: string; currentRole: 'member' | 'premium' | 'admin'; courses: Course[] }
+type Props = { userId: string; userEmail: string | null; currentRole: 'member' | 'premium' | 'admin'; courses: Course[] }
 
 type Modal = 'none' | 'role' | 'grant' | 'notify' | 'delete'
 
-export default function StudentActions({ userId, currentRole, courses }: Props) {
+export default function StudentActions({ userId, userEmail, currentRole, courses }: Props) {
   const [modal, setModal] = useState<Modal>('none')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -67,7 +67,8 @@ export default function StudentActions({ userId, currentRole, courses }: Props) 
             {modal === 'delete' && (
               <DeleteForm
                 disabled={isPending}
-                onSubmit={(p) => run(() => deleteUser(userId, p))}
+                targetEmail={userEmail}
+                onSubmit={(p, e) => run(() => deleteUser(userId, p, e))}
                 error={error}
               />
             )}
@@ -130,17 +131,33 @@ function NotifyForm({ disabled, error, onSubmit }: {
   )
 }
 
-function DeleteForm({ disabled, error, onSubmit }: {
-  disabled: boolean; error: string | null; onSubmit: (phrase: string) => void
+function DeleteForm({ disabled, error, targetEmail, onSubmit }: {
+  disabled: boolean; error: string | null; targetEmail: string | null
+  onSubmit: (phrase: string, email: string) => void
 }) {
   const [phrase, setPhrase] = useState('')
+  const [typedEmail, setTypedEmail] = useState('')
+  const emailMatch = typedEmail.trim().toLowerCase() === (targetEmail ?? '').toLowerCase()
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(phrase) }}>
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(phrase, typedEmail) }}>
       <h3>Eliminar alumno</h3>
       <p>Esta acción es <strong>irreversible</strong>. Escribe <code>ELIMINAR</code> para confirmar.</p>
       <input value={phrase} onChange={e => setPhrase(e.target.value)} disabled={disabled} className={styles.input} />
+      <p>
+        Para confirmar, escribe el email del usuario:{' '}
+        <strong>{targetEmail ?? '(sin email)'}</strong>
+      </p>
+      <input
+        type="email"
+        value={typedEmail}
+        onChange={e => setTypedEmail(e.target.value)}
+        disabled={disabled}
+        autoComplete="off"
+        placeholder="email@ejemplo.com"
+        className={styles.input}
+      />
       {error && <p className={styles.errorMsg}>{error}</p>}
-      <button type="submit" disabled={disabled || phrase !== 'ELIMINAR'} className={styles.btnDanger}>
+      <button type="submit" disabled={disabled || phrase !== 'ELIMINAR' || !emailMatch} className={styles.btnDanger}>
         Eliminar definitivamente
       </button>
     </form>

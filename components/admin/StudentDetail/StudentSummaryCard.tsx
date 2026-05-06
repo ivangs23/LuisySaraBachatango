@@ -72,7 +72,7 @@ export default function StudentSummaryCard({
         </ul>
       </section>
 
-      <StudentActions userId={data.profile.id} currentRole={data.profile.role} courses={courses} />
+      <StudentActions userId={data.profile.id} userEmail={data.profile.email} currentRole={data.profile.role} courses={courses} />
     </aside>
   )
 }

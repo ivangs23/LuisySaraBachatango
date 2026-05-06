@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/utils/supabase/server'
-import { submitComment } from '../actions'
 import Link from 'next/link'
-import { ArrowLeft, MessageCircleMore, Send } from 'lucide-react'
+import { ArrowLeft, MessageCircleMore } from 'lucide-react'
 import styles from '../community.module.css'
 import { notFound } from 'next/navigation'
 import PostLikeButton from '@/components/PostLikeButton'
 import CommunityCommentTree, { type CommunityComment } from '@/components/CommunityCommentTree'
+import CommentForm from './CommentForm'
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
@@ -50,9 +50,16 @@ function formatDate(iso: string): string {
   })
 }
 
-export default async function PostDetailPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params
+export default async function PostDetailPage(props: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ commentsPage?: string }>
+}) {
+  const [params, searchParamsResolved] = await Promise.all([props.params, props.searchParams])
   const supabase = await createClient()
+
+  const commentsPage = Math.max(1, parseInt(searchParamsResolved.commentsPage ?? '1') || 1)
+  const cFrom = (commentsPage - 1) * 50
+  const cTo = cFrom + 49
 
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -74,11 +81,15 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
   const likeCount = likes?.length ?? 0
   const userLiked = !!user && !!likes?.some((l: { user_id: string }) => l.user_id === user.id)
 
-  const { data: rawComments } = await supabase
+  const { data: rawComments, count: commentsTotal } = await supabase
     .from('comments')
-    .select('id, content, user_id, parent_id, created_at')
+    .select('id, content, user_id, parent_id, created_at', { count: 'exact' })
     .eq('post_id', params.id)
+    .order('parent_id', { ascending: true, nullsFirst: true })
     .order('created_at', { ascending: true })
+    .range(cFrom, cTo)
+
+  const totalCommentPages = Math.max(1, Math.ceil((commentsTotal ?? 0) / 50))
 
   const userIds = Array.from(new Set((rawComments ?? []).map((c: { user_id: string }) => c.user_id)))
   const safeUserIds = userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000']
@@ -89,7 +100,7 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
 
   const commentIds = (rawComments ?? []).map((c: { id: string }) => c.id)
   const safeCommentIds = commentIds.length ? commentIds : ['00000000-0000-0000-0000-000000000000']
-  const { data: commentLikes } = await supabase
+  const { data: commentLikeRows } = await supabase
     .from('comment_likes')
     .select('comment_id, user_id')
     .in('comment_id', safeCommentIds)
@@ -98,8 +109,14 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
     (profiles ?? []).map((p: { id: string; full_name: string | null; avatar_url: string | null }) => [p.id, p])
   )
 
+  const commentLikeCounts = new Map<string, number>()
+  const commentUserLiked = new Map<string, boolean>()
+  commentLikeRows?.forEach((r: { comment_id: string; user_id: string }) => {
+    commentLikeCounts.set(r.comment_id, (commentLikeCounts.get(r.comment_id) ?? 0) + 1)
+    if (user && r.user_id === user.id) commentUserLiked.set(r.comment_id, true)
+  })
+
   const enriched = (rawComments ?? []).map((c) => {
-    const cl = (commentLikes ?? []).filter((l: { comment_id: string }) => l.comment_id === c.id)
     const profile = profileMap.get(c.user_id)
     const node: CommunityComment = {
       id: c.id,
@@ -109,8 +126,8 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
       created_at: c.created_at,
       author_name: profile?.full_name ?? 'Usuario',
       author_avatar: profile?.avatar_url ?? null,
-      likes_count: cl.length,
-      user_has_liked: !!user && cl.some((l: { user_id: string }) => l.user_id === user.id),
+      likes_count: commentLikeCounts.get(c.id) ?? 0,
+      user_has_liked: commentUserLiked.get(c.id) ?? false,
       replies: [],
     }
     return node
@@ -130,7 +147,7 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
 
   const authorName = post.profiles?.full_name || 'Usuario'
   const initial = authorName[0]?.toUpperCase() || 'U'
-  const commentCount = rawComments?.length || 0
+  const commentCount = commentsTotal ?? 0
 
   return (
     <div className={styles.detailContainer}>
@@ -181,19 +198,7 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
         </div>
 
         {user ? (
-          <form action={submitComment} className={styles.commentForm}>
-            <input type="hidden" name="postId" value={post.id} />
-            <textarea
-              name="content"
-              className={styles.textarea}
-              placeholder="Escribe un comentario..."
-              required
-            />
-            <button type="submit" className={styles.submitButton}>
-              <Send size={13} strokeWidth={2.4} aria-hidden="true" />
-              Comentar
-            </button>
-          </form>
+          <CommentForm postId={post.id} />
         ) : (
           <div className={styles.commentLoginPrompt}>
             <Link href="/login?next=/community">Inicia sesión</Link> para dejar un comentario.
@@ -216,6 +221,18 @@ export default async function PostDetailPage(props: { params: Promise<{ id: stri
             comments={roots}
             currentUserId={user?.id ?? null}
           />
+        )}
+
+        {totalCommentPages > 1 && (
+          <nav aria-label="Paginación de comentarios" className={styles.pagination}>
+            {commentsPage > 1 ? (
+              <Link href={`/community/${post.id}?commentsPage=${commentsPage - 1}`} scroll={false}>← Anteriores</Link>
+            ) : <span aria-hidden="true" />}
+            <span>Comentarios — página {commentsPage} de {totalCommentPages}</span>
+            {commentsPage < totalCommentPages ? (
+              <Link href={`/community/${post.id}?commentsPage=${commentsPage + 1}`} scroll={false}>Siguientes →</Link>
+            ) : <span aria-hidden="true" />}
+          </nav>
         )}
       </section>
     </div>

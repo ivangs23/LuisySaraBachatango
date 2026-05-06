@@ -25,9 +25,11 @@ type User = { id: string } | null;
 type Props = {
   user: User;
   posts: Post[];
+  currentPage: number;
+  totalPages: number;
 };
 
-export default function CommunityClient({ user, posts }: Props) {
+export default function CommunityClient({ user, posts, currentPage, totalPages }: Props) {
   const { t } = useLanguage();
 
   if (!user) {
@@ -91,6 +93,18 @@ export default function CommunityClient({ user, posts }: Props) {
       </section>
 
       <CommunityFeed initialPosts={posts || []} />
+
+      {totalPages > 1 && (
+        <nav aria-label="Paginación de posts" className={styles.pagination}>
+          {currentPage > 1 ? (
+            <Link href={`/community?page=${currentPage - 1}`}>← Anterior</Link>
+          ) : <span aria-hidden="true" />}
+          <span>Página {currentPage} de {totalPages}</span>
+          {currentPage < totalPages ? (
+            <Link href={`/community?page=${currentPage + 1}`}>Siguiente →</Link>
+          ) : <span aria-hidden="true" />}
+        </nav>
+      )}
     </div>
   );
 }

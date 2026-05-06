@@ -161,3 +161,74 @@ describe('POST /api/webhooks/stripe — subscription updates', () => {
     )
   })
 })
+
+describe('POST /api/webhooks/stripe — empty subscription items guard', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('checkout.session.completed: skips upsert and returns 200 when items is empty', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: {
+        object: makeSession({
+          metadata: { userId: 'user-1' },
+          subscription: 'sub_test',
+          customer: 'cus_test',
+          payment_status: 'paid',
+        }),
+      },
+    })
+    mockSubscriptionsRetrieve.mockResolvedValueOnce({
+      id: 'sub_test',
+      status: 'active',
+      items: { data: [] },
+    })
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    // No subscription upsert should have been called with sentinel 1970 date
+    expect(mockUpsert).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        current_period_start: '1970-01-01T00:00:00.000Z',
+      })
+    )
+    // Specifically: when items is empty we skip the subscription upsert entirely
+    expect(mockUpsert).not.toHaveBeenCalled()
+  })
+
+  it('customer.subscription.updated: skips update and returns 200 when items is empty', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_test',
+          status: 'active',
+          items: { data: [] },
+        },
+      },
+    })
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('customer.subscription.deleted: skips update and returns 200 when items is empty', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'customer.subscription.deleted',
+      data: {
+        object: {
+          id: 'sub_test',
+          status: 'canceled',
+          items: { data: [] },
+        },
+      },
+    })
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+})

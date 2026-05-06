@@ -350,7 +350,18 @@ export default function ProfileView({
                 </motion.button>
               </form>
 
-              <form action={deleteAccountAction}>
+              <form action={deleteAccountAction} className={styles.deleteForm}>
+                <label className={styles.deletePasswordLabel}>
+                  Contraseña
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    autoComplete="current-password"
+                    placeholder="Tu contraseña actual"
+                    className={styles.deletePasswordInput}
+                  />
+                </label>
                 <motion.button
                   type="submit"
                   className={styles.deleteButton}

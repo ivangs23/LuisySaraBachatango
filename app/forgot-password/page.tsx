@@ -23,6 +23,8 @@ export default async function ForgotPasswordPage(props: { searchParams: Promise<
     <AuthShell
       panelEyebrow={t.forgotPassword.panelEyebrow}
       panelTitle={t.forgotPassword.panelTitle}
+      panelTitleEmphasis={t.forgotPassword.panelTitleEmphasis}
+      panelTitleSuffix={t.forgotPassword.panelTitleSuffix}
       panelLead={t.forgotPassword.panelLead}
       panelFeatures={t.forgotPassword.panelFeatures}
       cardEyebrow={t.forgotPassword.cardEyebrow}

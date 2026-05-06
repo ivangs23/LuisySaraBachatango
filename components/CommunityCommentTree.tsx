@@ -30,7 +30,8 @@ function CommentNode({
   const [liked, setLiked] = useState(comment.user_has_liked)
   const [count, setCount] = useState(comment.likes_count)
   const [showReply, setShowReply] = useState(false)
-  const [, startTransition] = useTransition()
+  const [replyError, setReplyError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const onLike = () => {
     if (!currentUserId) return
@@ -38,6 +39,18 @@ function CommentNode({
     setLiked(next)
     setCount(c => c + (next ? 1 : -1))
     startTransition(() => { void toggleLike(comment.id) })
+  }
+
+  function handleReplySubmit(formData: FormData) {
+    setReplyError(null)
+    startTransition(async () => {
+      const result = await submitComment(formData)
+      if (result.success) {
+        setShowReply(false)
+      } else {
+        setReplyError(result.error)
+      }
+    })
   }
 
   return (
@@ -59,11 +72,12 @@ function CommentNode({
       </div>
 
       {showReply && (
-        <form action={submitComment} className={styles.replyForm}>
+        <form action={handleReplySubmit} className={styles.replyForm}>
+          {replyError && <p role="alert">{replyError}</p>}
           <input type="hidden" name="postId" value={postId} />
           <input type="hidden" name="parentId" value={comment.id} />
-          <textarea name="content" required maxLength={5000} placeholder="Escribe tu respuesta…" />
-          <button type="submit">Publicar</button>
+          <textarea name="content" required maxLength={5000} placeholder="Escribe tu respuesta…" disabled={isPending} />
+          <button type="submit" disabled={isPending}>{isPending ? 'Enviando…' : 'Publicar'}</button>
         </form>
       )}
 

@@ -23,6 +23,8 @@ export default async function SignupPage(props: { searchParams: Promise<{ messag
     <AuthShell
       panelEyebrow={t.signup.panelEyebrow}
       panelTitle={t.signup.panelTitle}
+      panelTitleEmphasis={t.signup.panelTitleEmphasis}
+      panelTitleSuffix={t.signup.panelTitleSuffix}
       panelLead={t.signup.panelLead}
       panelFeatures={t.signup.panelFeatures}
       panelQuote={t.signup.panelQuote}

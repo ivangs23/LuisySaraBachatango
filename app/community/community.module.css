@@ -794,3 +794,37 @@
   background: rgba(0, 0, 0, 0.55);
   box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.08);
 }
+
+/* ============== PAGINATION ============== */
+
+.pagination {
+  max-width: 980px;
+  margin: clamp(1.5rem, 3vw, 2rem) auto 0;
+  padding: 0 clamp(1rem, 4vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pagination a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+.pagination a:hover {
+  border-color: rgba(var(--primary-rgb), 0.5);
+  color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.06);
+}
