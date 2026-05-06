@@ -41,8 +41,14 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
   useEffect(() => {
     if (!thumbnailFile) return
     const url = URL.createObjectURL(thumbnailFile)
-    setThumbnailPreview(url)
-    return () => URL.revokeObjectURL(url)
+    let revoked = false
+    queueMicrotask(() => {
+      if (!revoked) setThumbnailPreview(url)
+    })
+    return () => {
+      revoked = true
+      URL.revokeObjectURL(url)
+    }
   }, [thumbnailFile])
 
   const uploadThumbnail = async (file: File): Promise<string | { error: string }> => {

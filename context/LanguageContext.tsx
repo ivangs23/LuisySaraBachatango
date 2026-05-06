@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { dictionaries, Locale } from '@/utils/dictionaries';
 
@@ -13,17 +13,16 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('es');
-  const router = useRouter();
-
-  useEffect(() => {
-    // Load preference from localStorage (fallback to cookie)
-    const saved = localStorage.getItem('language') as Locale;
+  const [locale, setLocale] = useState<Locale>(() => {
+    if (typeof window === 'undefined') return 'es';
+    const saved = localStorage.getItem('language') as Locale | null;
     if (saved && ['es', 'en', 'fr', 'de', 'it', 'ja'].includes(saved)) {
-      setLocale(saved);
       document.cookie = `locale=${saved}; path=/; max-age=31536000; SameSite=Lax`;
+      return saved;
     }
-  }, []);
+    return 'es';
+  });
+  const router = useRouter();
 
   const changeLocale = (newLocale: Locale) => {
     setLocale(newLocale);

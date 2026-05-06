@@ -25,8 +25,14 @@ export default function CommentsSection({ lessonId, courseId }: CommentsSectionP
   }, [lessonId]);
 
   useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
+    let cancelled = false;
+    getComments(lessonId).then(({ data }) => {
+      if (cancelled) return;
+      if (data) setComments(data);
+      setIsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [lessonId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
