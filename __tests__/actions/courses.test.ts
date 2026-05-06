@@ -10,7 +10,7 @@ const { mockRevalidatePath, mockRedirect, mockRequireAdmin, mockCreateClient } =
   mockCreateClient: vi.fn(),
 }))
 
-vi.mock('next/cache', () => ({ revalidatePath: mockRevalidatePath }))
+vi.mock('next/cache', () => ({ revalidatePath: mockRevalidatePath, revalidateTag: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: mockRedirect }))
 vi.mock('@/utils/auth/require-admin', () => ({
   requireAdmin: mockRequireAdmin,
