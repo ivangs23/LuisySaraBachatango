@@ -26,18 +26,27 @@ end;
 $$;
 
 -- Refresh the view so it only returns active (non-archived) notifications.
+-- Columns are listed explicitly (instead of n.*) so CREATE OR REPLACE VIEW
+-- doesn't reorder existing columns when the new deleted_at is added to the
+-- base table.
 -- security_invoker = true is preserved so RLS on notifications still applies.
 CREATE OR REPLACE VIEW notifications_with_actor
   WITH (security_invoker = true) AS
-  SELECT n.*,
-    p.full_name AS actor_name,
-    p.avatar_url AS actor_avatar,
-    COALESCE(array_length(n.actor_ids, 1), 0) AS actor_count
+  SELECT n.id, n.user_id, n.title, n.message, n.is_read, n.created_at,
+         n.type, n.entity_type, n.entity_id, n.link, n.actor_ids, n.updated_at,
+         p.full_name AS actor_name,
+         p.avatar_url AS actor_avatar,
+         COALESCE(array_length(n.actor_ids, 1), 0) AS actor_count
   FROM notifications n
   LEFT JOIN profiles p ON p.id = n.actor_ids[1]
   WHERE n.deleted_at IS NULL;
 
 GRANT SELECT ON notifications_with_actor TO authenticated;
+
+-- archive_old_notifications is intended to be called only by pg_cron / service
+-- role. Revoke EXECUTE from anon and authenticated so it's not callable via
+-- /rest/v1/rpc.
+REVOKE EXECUTE ON FUNCTION public.archive_old_notifications() FROM PUBLIC, anon, authenticated;
 
 -- Schedule daily archive at 03:00 UTC if pg_cron is available.
 -- Wrapped in DO block so the migration succeeds even when the extension
