@@ -219,6 +219,8 @@ export const it: Dictionary = {
   errors: {
     invalid_credentials: "Credenziali errate. Controlla la tua email e la password.",
     signup_failed: "Impossibile creare l'account. Riprova.",
+    invalid_email: "Email non valida.",
+    password_too_short: "La password deve contenere almeno 8 caratteri.",
     reset_failed: "Impossibile inviare il link. Riprova.",
     rate_limit: "Troppi tentativi. Attendi un minuto e riprova.",
     unknown: "Si è verificato un errore. Riprova."

@@ -63,8 +63,13 @@ export async function rateLimit(
       retryAfter: success ? 0 : Math.max(0, Math.ceil((reset - Date.now()) / 1000)),
     }
   } catch (err) {
-    // If Upstash is unreachable, fall back to local instead of failing the request.
-    console.error('[rate-limit] Upstash error, falling back to local', err)
+    console.error('[rate-limit] Upstash error', err)
+    if (process.env.NODE_ENV === 'production') {
+      // Fail closed in production rather than serving requests without rate
+      // limiting at scale (the local Map fallback is per-instance only on
+      // Vercel and provides no real protection across the fleet).
+      return { ok: false, retryAfter: 60 }
+    }
     return localRateLimit(key, limit, windowMs)
   }
 }
@@ -74,6 +79,7 @@ export function rateLimitKey(parts: (string | null | undefined)[]): string {
 }
 
 export function _resetRateLimitForTest(): void {
+  if (process.env.NODE_ENV === 'production') return
   localBuckets.clear()
   ratelimitCache.clear()
 }

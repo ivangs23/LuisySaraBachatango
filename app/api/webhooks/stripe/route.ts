@@ -3,9 +3,9 @@ import { stripe } from '@/utils/stripe/server';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { assertStripeEnvForProduction } from '@/utils/stripe/validate-env';
+import { assertProdEnv } from '@/utils/env/validate-prod';
 
-assertStripeEnvForProduction();
+assertProdEnv();
 
 export const dynamic = 'force-dynamic';
 

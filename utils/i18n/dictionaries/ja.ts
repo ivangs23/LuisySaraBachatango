@@ -220,6 +220,8 @@ export const ja: Dictionary = {
   errors: {
     invalid_credentials: "認証情報が正しくありません。メールとパスワードを確認してください。",
     signup_failed: "アカウントの作成に失敗しました。もう一度お試しください。",
+    invalid_email: "メールアドレスが無効です。",
+    password_too_short: "パスワードは8文字以上である必要があります。",
     reset_failed: "リンクの送信に失敗しました。もう一度お試しください。",
     rate_limit: "試行回数が多すぎます。1分待ってから再試行してください。",
     unknown: "エラーが発生しました。もう一度お試しください。"

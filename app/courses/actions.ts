@@ -5,6 +5,7 @@ import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/utils/auth/require-admin'
+import { hasCourseAccess } from '@/utils/auth/course-access'
 
 export async function createLesson(formData: FormData) {
   await requireAdmin()
@@ -278,6 +279,22 @@ export async function submitAssignment(assignmentId: string, textContent: string
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Resolve assignment → lesson → course and verify access.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id, lessons(course_id)')
+    .eq('id', assignmentId)
+    .single()
+
+  const courseId = (assignment?.lessons as { course_id?: string } | null)?.course_id
+  if (!courseId) {
+    return { error: 'assignment_not_found' }
+  }
+
+  if (!(await hasCourseAccess(user.id, courseId))) {
+    return { error: 'forbidden' }
+  }
+
   const { error } = await supabase
     .from('submissions')
     .upsert({
@@ -341,6 +358,58 @@ export async function gradeSubmission(
   revalidatePath(`/courses/${courseId}/${lessonId}/submissions`)
 }
 
+// ─── Assignment file upload ────────────────────────────────────────────────
+
+const ALLOWED_SUBMISSION_TYPES = [
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'application/pdf',
+  'video/mp4', 'video/webm',
+]
+const MAX_SUBMISSION_SIZE = 50 * 1024 * 1024 // 50 MB
+
+export async function uploadAssignmentFile(
+  assignmentId: string,
+  file: File,
+): Promise<{ fileUrl?: string; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'auth' }
+
+  if (!ALLOWED_SUBMISSION_TYPES.includes(file.type)) {
+    return { error: 'unsupported_type' }
+  }
+  if (file.size > MAX_SUBMISSION_SIZE) {
+    return { error: 'too_large' }
+  }
+
+  // Verify access via assignment → lesson → course chain.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id, lessons(course_id)')
+    .eq('id', assignmentId)
+    .single()
+
+  const courseId = (assignment?.lessons as { course_id?: string } | null)?.course_id
+  if (!courseId) return { error: 'assignment_not_found' }
+  if (!(await hasCourseAccess(user.id, courseId))) return { error: 'forbidden' }
+
+  // Sanitize extension: take only the last segment, alphanumeric+lowercase only.
+  const rawExt = file.name.split('.').pop() ?? 'bin'
+  const ext = rawExt.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'bin'
+  const fileName = `${user.id}/${assignmentId}/${Date.now()}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('submissions')
+    .upload(fileName, file, { upsert: true })
+
+  if (uploadError) {
+    console.error('uploadAssignmentFile error', uploadError)
+    return { error: uploadError.message }
+  }
+
+  return { fileUrl: `storage://submissions/${fileName}` }
+}
+
 // ─── Lesson progress ───────────────────────────────────────────────────────
 
 export async function markLessonAsCompleted(courseId: string, lessonId: string) {
@@ -348,6 +417,23 @@ export async function markLessonAsCompleted(courseId: string, lessonId: string) 
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return
+
+  if (!(await hasCourseAccess(user.id, courseId))) {
+    return { error: 'forbidden' }
+  }
+
+  // Verify the lesson actually belongs to this course (defense in depth
+  // against a forged courseId/lessonId pair where the user has access to
+  // courseId but lessonId is in a different course).
+  const { data: lesson } = await supabase
+    .from('lessons')
+    .select('course_id')
+    .eq('id', lessonId)
+    .maybeSingle()
+
+  if (!lesson || lesson.course_id !== courseId) {
+    return { error: 'lesson_mismatch' }
+  }
 
   const { error } = await supabase
     .from('lesson_progress')

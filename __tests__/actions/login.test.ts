@@ -20,6 +20,10 @@ vi.mock('@/utils/supabase/server', () => ({
     },
   }),
 }))
+vi.mock('@/utils/rate-limit', () => ({
+  rateLimit: vi.fn().mockResolvedValue({ ok: true }),
+  rateLimitKey: vi.fn((...args: unknown[]) => args.join(':')),
+}))
 
 // Helper to read redirect destination from thrown error
 function getRedirectUrl(err: unknown): string {
@@ -108,11 +112,52 @@ describe('signup action', () => {
 
     const fd = new FormData()
     fd.set('email', 'x@x.com')
-    fd.set('password', 'x')
+    fd.set('password', 'validpass1')
     fd.set('fullName', 'x')
 
     const url = await signup(fd).catch(getRedirectUrl)
     expect(url).not.toContain('already exists')
+  })
+
+  it('rejects invalid email format', async () => {
+    const { signup } = await import('@/app/login/actions')
+
+    const fd = new FormData()
+    fd.set('email', 'not-an-email')
+    fd.set('password', 'secret123')
+    fd.set('fullName', 'X')
+
+    const url = await signup(fd).catch(getRedirectUrl)
+    expect(url).toContain('invalid_email')
+  })
+
+  it('rejects password shorter than 8 chars', async () => {
+    const { signup } = await import('@/app/login/actions')
+
+    const fd = new FormData()
+    fd.set('email', 'test@example.com')
+    fd.set('password', 'short')
+    fd.set('fullName', 'X')
+
+    const url = await signup(fd).catch(getRedirectUrl)
+    expect(url).toContain('password_too_short')
+  })
+
+  it('passes valid input to supabase.auth.signUp', async () => {
+    mockSignUp.mockResolvedValueOnce({ error: null })
+    const { signup } = await import('@/app/login/actions')
+
+    const fd = new FormData()
+    fd.set('email', 'test@example.com')
+    fd.set('password', 'longenough')
+    fd.set('fullName', 'X')
+
+    const url = await signup(fd).catch(getRedirectUrl)
+    expect(url).toContain('email_confirmation')
+    expect(mockSignUp).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'test@example.com',
+      password: 'longenough',
+    }))
   })
 })
 
@@ -131,7 +176,7 @@ describe('resetPassword action', () => {
     expect(url).toContain('message')
   })
 
-  it('redirects to /forgot-password?error=reset_failed on error', async () => {
+  it('redirects to same destination on error to prevent account enumeration', async () => {
     mockResetPasswordForEmail.mockResolvedValueOnce({ error: new Error('User not found') })
     const { resetPassword } = await import('@/app/login/actions')
 
@@ -139,6 +184,7 @@ describe('resetPassword action', () => {
     fd.set('email', 'noone@example.com')
 
     const url = await resetPassword(fd).catch(getRedirectUrl)
-    expect(url).toBe('/forgot-password?error=reset_failed')
+    // Should redirect to the same success URL regardless of whether email exists
+    expect(url).toBe('/login?message=email_reset')
   })
 })

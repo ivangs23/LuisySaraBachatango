@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { notify } from '@/utils/notifications/server';
+import { hasCourseAccess } from '@/utils/auth/course-access';
 
 export type Comment = {
   id: string;
@@ -115,6 +116,21 @@ export async function addComment(lessonId: string, content: string, parentId: st
   }
   if (content.length > 5000) {
     return { error: 'El comentario no puede superar los 5000 caracteres' };
+  }
+
+  // Verify the lesson exists and the user has access to its course.
+  const { data: lesson } = await supabase
+    .from('lessons')
+    .select('course_id')
+    .eq('id', lessonId)
+    .maybeSingle();
+
+  if (!lesson) {
+    return { error: 'lesson_not_found' };
+  }
+
+  if (!(await hasCourseAccess(user.id, lesson.course_id))) {
+    return { error: 'forbidden' };
   }
 
   const { data: inserted, error } = await supabase
