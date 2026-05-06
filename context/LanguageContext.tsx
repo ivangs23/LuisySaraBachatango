@@ -17,7 +17,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return 'es';
     const saved = localStorage.getItem('language') as Locale | null;
     if (saved && ['es', 'en', 'fr', 'de', 'it', 'ja'].includes(saved)) {
-      document.cookie = `locale=${saved}; path=/; max-age=31536000; SameSite=Lax`;
+      document.cookie = `locale=${encodeURIComponent(saved)}; path=/; max-age=${60 * 60 * 24 * 365}; secure; samesite=lax`;
       return saved;
     }
     return 'es';
@@ -27,7 +27,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const changeLocale = (newLocale: Locale) => {
     setLocale(newLocale);
     localStorage.setItem('language', newLocale);
-    document.cookie = `locale=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    document.cookie = `locale=${encodeURIComponent(newLocale)}; path=/; max-age=${60 * 60 * 24 * 365}; secure; samesite=lax`;
     // Re-render server components so getDict() picks up the new cookie
     router.refresh();
   };
