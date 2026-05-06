@@ -1,4 +1,5 @@
 import Mux from '@mux/mux-node';
+import { unstable_cache } from 'next/cache';
 
 /**
  * Mux Node SDK singleton. Uses MUX_TOKEN_ID + MUX_TOKEN_SECRET for API calls.
@@ -53,4 +54,31 @@ export async function signThumbnailToken(
     type: 'thumbnail',
     expiration,
   });
+}
+
+/**
+ * Cached version of signPlaybackToken. Same (playbackId, userId) reuses the JWT
+ * for 20 minutes — less than the JWT's own 30-minute lifetime so we never serve
+ * a token that's already invalid client-side. Saves CPU on repeat lesson views.
+ */
+export async function signPlaybackTokenForUser(
+  playbackId: string,
+  userId: string,
+): Promise<string> {
+  return unstable_cache(
+    () => signPlaybackToken(playbackId, '30m'),
+    ['mux-playback', playbackId, userId],
+    { revalidate: 60 * 20 }
+  )()
+}
+
+export async function signThumbnailTokenForUser(
+  playbackId: string,
+  userId: string,
+): Promise<string> {
+  return unstable_cache(
+    () => signThumbnailToken(playbackId, '30m'),
+    ['mux-thumb', playbackId, userId],
+    { revalidate: 60 * 20 }
+  )()
 }

@@ -14,7 +14,15 @@ vi.mock('@mux/mux-node', () => {
   return { default: MockMux }
 })
 
-import { signPlaybackToken, signThumbnailToken } from '@/utils/mux/server'
+// unstable_cache requires a real Next.js request context to function.
+// In unit tests we replace it with an identity wrapper so the inner
+// sign function is called directly — this lets us assert on signPlaybackId
+// without standing up the full Next runtime.
+vi.mock('next/cache', () => ({
+  unstable_cache: <Args extends unknown[], R>(fn: (...args: Args) => Promise<R>) => fn,
+}))
+
+import { signPlaybackToken, signThumbnailToken, signPlaybackTokenForUser, signThumbnailTokenForUser } from '@/utils/mux/server'
 
 describe('Mux JWT defaults', () => {
   it('signPlaybackToken uses 30m expiration by default', async () => {
@@ -42,5 +50,19 @@ describe('Mux JWT defaults', () => {
       type: 'video',
       expiration: '5m',
     })
+  })
+})
+
+describe('Cached Mux JWT wrappers', () => {
+  it('signPlaybackTokenForUser delegates to signPlaybackId with 30m', async () => {
+    signPlaybackId.mockClear()
+    await signPlaybackTokenForUser('plybk', 'user-1')
+    expect(signPlaybackId).toHaveBeenCalledWith('plybk', { type: 'video', expiration: '30m' })
+  })
+
+  it('signThumbnailTokenForUser delegates to signPlaybackId with 30m', async () => {
+    signPlaybackId.mockClear()
+    await signThumbnailTokenForUser('plybk', 'user-1')
+    expect(signPlaybackId).toHaveBeenCalledWith('plybk', { type: 'thumbnail', expiration: '30m' })
   })
 })
