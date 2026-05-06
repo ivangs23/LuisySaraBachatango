@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/utils/supabase/server'
-import { submitComment } from '../actions'
 import Link from 'next/link'
-import { ArrowLeft, MessageCircleMore, Send } from 'lucide-react'
+import { ArrowLeft, MessageCircleMore } from 'lucide-react'
 import styles from '../community.module.css'
 import { notFound } from 'next/navigation'
 import PostLikeButton from '@/components/PostLikeButton'
 import CommunityCommentTree, { type CommunityComment } from '@/components/CommunityCommentTree'
+import CommentForm from './CommentForm'
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
@@ -198,19 +198,7 @@ export default async function PostDetailPage(props: {
         </div>
 
         {user ? (
-          <form action={submitComment} className={styles.commentForm}>
-            <input type="hidden" name="postId" value={post.id} />
-            <textarea
-              name="content"
-              className={styles.textarea}
-              placeholder="Escribe un comentario..."
-              required
-            />
-            <button type="submit" className={styles.submitButton}>
-              <Send size={13} strokeWidth={2.4} aria-hidden="true" />
-              Comentar
-            </button>
-          </form>
+          <CommentForm postId={post.id} />
         ) : (
           <div className={styles.commentLoginPrompt}>
             <Link href="/login?next=/community">Inicia sesión</Link> para dejar un comentario.
