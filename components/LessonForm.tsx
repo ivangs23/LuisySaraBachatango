@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import styles from './LessonForm.module.css'
@@ -34,22 +34,18 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
   const [isFree, setIsFree] = useState(initialData?.is_free ?? false)
   const [parentLessonId, setParentLessonId] = useState(initialData?.parent_lesson_id ?? '')
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(initialData?.thumbnail_url ?? null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const thumbnailPreview = useMemo(() => {
+    if (!thumbnailFile) return initialData?.thumbnail_url ?? null
+    return URL.createObjectURL(thumbnailFile)
+  }, [thumbnailFile, initialData?.thumbnail_url])
+
   useEffect(() => {
-    if (!thumbnailFile) return
-    const url = URL.createObjectURL(thumbnailFile)
-    let revoked = false
-    queueMicrotask(() => {
-      if (!revoked) setThumbnailPreview(url)
-    })
-    return () => {
-      revoked = true
-      URL.revokeObjectURL(url)
-    }
-  }, [thumbnailFile])
+    if (!thumbnailPreview || !thumbnailFile) return
+    return () => URL.revokeObjectURL(thumbnailPreview)
+  }, [thumbnailPreview, thumbnailFile])
 
   const uploadThumbnail = async (file: File): Promise<string | { error: string }> => {
     const supabase = createClient()
