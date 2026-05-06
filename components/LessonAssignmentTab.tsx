@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { submitAssignment } from '@/app/courses/actions';
+import { submitAssignment, uploadAssignmentFile } from '@/app/courses/actions';
 import { useLanguage } from '@/context/LanguageContext';
 
 type Assignment = {
@@ -36,7 +35,6 @@ export default function LessonAssignmentTab({
   lessonId,
 }: LessonAssignmentTabProps) {
   const { t } = useLanguage();
-  const supabase = createClient();
   const [isPending, startTransition] = useTransition();
   const [textContent, setTextContent] = useState(submission?.text_content ?? '');
   const [file, setFile] = useState<File | null>(null);
@@ -64,27 +62,13 @@ export default function LessonAssignmentTab({
 
     if (file) {
       setUploading(true);
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('No active session');
-
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${session.user.id}/${assignment.id}/${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('submissions')
-          .upload(fileName, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        fileUrl = `storage://submissions/${fileName}`;
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : t.lesson.assignmentUploading;
-        setErrorMsg(msg);
-        setUploading(false);
+      const result = await uploadAssignmentFile(assignment.id, file);
+      setUploading(false);
+      if (result.error || !result.fileUrl) {
+        setErrorMsg(result.error ?? 'upload_failed');
         return;
       }
-      setUploading(false);
+      fileUrl = result.fileUrl;
     }
 
     startTransition(async () => {

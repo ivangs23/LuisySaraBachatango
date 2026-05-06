@@ -358,6 +358,58 @@ export async function gradeSubmission(
   revalidatePath(`/courses/${courseId}/${lessonId}/submissions`)
 }
 
+// ─── Assignment file upload ────────────────────────────────────────────────
+
+const ALLOWED_SUBMISSION_TYPES = [
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'application/pdf',
+  'video/mp4', 'video/webm',
+]
+const MAX_SUBMISSION_SIZE = 50 * 1024 * 1024 // 50 MB
+
+export async function uploadAssignmentFile(
+  assignmentId: string,
+  file: File,
+): Promise<{ fileUrl?: string; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'auth' }
+
+  if (!ALLOWED_SUBMISSION_TYPES.includes(file.type)) {
+    return { error: 'unsupported_type' }
+  }
+  if (file.size > MAX_SUBMISSION_SIZE) {
+    return { error: 'too_large' }
+  }
+
+  // Verify access via assignment → lesson → course chain.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id, lessons(course_id)')
+    .eq('id', assignmentId)
+    .single()
+
+  const courseId = (assignment?.lessons as { course_id?: string } | null)?.course_id
+  if (!courseId) return { error: 'assignment_not_found' }
+  if (!(await hasCourseAccess(user.id, courseId))) return { error: 'forbidden' }
+
+  // Sanitize extension: take only the last segment, alphanumeric+lowercase only.
+  const rawExt = file.name.split('.').pop() ?? 'bin'
+  const ext = rawExt.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'bin'
+  const fileName = `${user.id}/${assignmentId}/${Date.now()}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('submissions')
+    .upload(fileName, file, { upsert: true })
+
+  if (uploadError) {
+    console.error('uploadAssignmentFile error', uploadError)
+    return { error: uploadError.message }
+  }
+
+  return { fileUrl: `storage://submissions/${fileName}` }
+}
+
 // ─── Lesson progress ───────────────────────────────────────────────────────
 
 export async function markLessonAsCompleted(courseId: string, lessonId: string) {
