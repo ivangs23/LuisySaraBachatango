@@ -15,7 +15,7 @@ export async function submitPost(formData: FormData): Promise<ActionResult> {
     return { success: false, error: 'auth' }
   }
 
-  const rl = rateLimit(rateLimitKey([user.id, 'post']), 5, 60_000) // 5 posts/min
+  const rl = await rateLimit(rateLimitKey([user.id, 'post']), 5, 60_000) // 5 posts/min
   if (!rl.ok) return { success: false, error: 'rate_limit' }
 
   const title = ((formData.get('title') as string | null) ?? '').trim()
@@ -58,7 +58,7 @@ export async function submitComment(formData: FormData): Promise<ActionResult> {
   const content = ((formData.get('content') as string | null) ?? '').trim()
   const parentId = (formData.get('parentId') as string | null) || null
 
-  const rl = rateLimit(rateLimitKey([user.id, 'comment']), 30, 60_000) // 30 comments/min
+  const rl = await rateLimit(rateLimitKey([user.id, 'comment']), 30, 60_000) // 30 comments/min
   if (!rl.ok) return { success: false, error: 'rate_limit' }
 
   if (!postId || !content) {

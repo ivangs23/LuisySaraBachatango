@@ -10,7 +10,7 @@ import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 export async function login(formData: FormData) {
   const h = await headers()
   const ip = (h.get('x-forwarded-for') ?? 'anon').split(',')[0]?.trim() || 'anon'
-  const rl = rateLimit(rateLimitKey([ip, 'login']), 5, 60_000) // 5/min per IP
+  const rl = await rateLimit(rateLimitKey([ip, 'login']), 5, 60_000) // 5/min per IP
   if (!rl.ok) {
     redirect('/login?error=rate_limit')
   }
@@ -36,7 +36,7 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const h = await headers()
   const ip = (h.get('x-forwarded-for') ?? 'anon').split(',')[0]?.trim() || 'anon'
-  const rl = rateLimit(rateLimitKey([ip, 'signup']), 3, 15 * 60_000) // 3 per 15min per IP
+  const rl = await rateLimit(rateLimitKey([ip, 'signup']), 3, 15 * 60_000) // 3 per 15min per IP
   if (!rl.ok) {
     redirect('/login?error=rate_limit')
   }
