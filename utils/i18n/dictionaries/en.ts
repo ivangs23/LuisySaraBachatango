@@ -290,6 +290,8 @@ export const en: Dictionary = {
   errors: {
     invalid_credentials: "Invalid credentials. Check your email and password.",
     signup_failed: "Failed to create account. Please try again.",
+    invalid_email: "Invalid email.",
+    password_too_short: "Password must be at least 8 characters.",
     reset_failed: "Failed to send reset link. Please try again.",
     rate_limit: "Too many attempts. Please wait a minute and try again.",
     unknown: "An error occurred. Please try again."

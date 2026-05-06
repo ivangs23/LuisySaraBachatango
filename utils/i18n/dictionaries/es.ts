@@ -289,6 +289,8 @@ export const es = {
   errors: {
     invalid_credentials: "Credenciales incorrectas. Comprueba tu email y contraseña.",
     signup_failed: "Error al crear la cuenta. Inténtalo de nuevo.",
+    invalid_email: "Email no válido.",
+    password_too_short: "La contraseña debe tener al menos 8 caracteres.",
     reset_failed: "Error al enviar el enlace. Inténtalo de nuevo.",
     rate_limit: "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
     unknown: "Ha ocurrido un error. Inténtalo de nuevo."

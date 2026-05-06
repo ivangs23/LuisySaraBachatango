@@ -8,6 +8,9 @@ import { createClient } from '@/utils/supabase/server'
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 import { assertProdEnv } from '@/utils/env/validate-prod'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_PASSWORD_LENGTH = 8
+
 assertProdEnv()
 
 export async function login(formData: FormData) {
@@ -44,11 +47,18 @@ export async function signup(formData: FormData) {
     redirect('/login?error=rate_limit')
   }
 
-  const supabase = await createClient()
+  const email = ((formData.get('email') as string | null) ?? '').trim()
+  const password = (formData.get('password') as string | null) ?? ''
+  const fullName = ((formData.get('fullName') as string | null) ?? '').trim()
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  const fullName = formData.get('fullName') as string
+  if (!EMAIL_RE.test(email)) {
+    redirect('/login?error=invalid_email')
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    redirect('/login?error=password_too_short')
+  }
+
+  const supabase = await createClient()
 
   const { error } = await supabase.auth.signUp({
     email,
