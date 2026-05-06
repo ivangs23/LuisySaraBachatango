@@ -6,6 +6,9 @@ import { headers } from 'next/headers'
 
 import { createClient } from '@/utils/supabase/server'
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
+import { assertProdEnv } from '@/utils/env/validate-prod'
+
+assertProdEnv()
 
 export async function login(formData: FormData) {
   const h = await headers()
