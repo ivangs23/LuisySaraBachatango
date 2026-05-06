@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // 24h. Avatars and thumbnails change rarely; reduces re-optimization cost.
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: 'https',
