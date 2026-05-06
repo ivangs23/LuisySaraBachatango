@@ -79,6 +79,7 @@ export function rateLimitKey(parts: (string | null | undefined)[]): string {
 }
 
 export function _resetRateLimitForTest(): void {
+  if (process.env.NODE_ENV === 'production') return
   localBuckets.clear()
   ratelimitCache.clear()
 }
