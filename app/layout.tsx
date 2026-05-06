@@ -55,6 +55,7 @@ import { createClient } from "@/utils/supabase/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 
 import { LanguageProvider } from '@/context/LanguageContext';
+import { safeJsonLd } from '@/utils/jsonld';
 
 // Cache profile per user for 60 seconds — reduces DB load on every page render.
 // Uses service role (no cookies) because unstable_cache cannot call cookies() internally.
@@ -105,7 +106,7 @@ export default async function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
         />
       </head>
       <body className={inter.className}>

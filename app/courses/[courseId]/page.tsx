@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
+import { safeJsonLd } from '@/utils/jsonld'
 import { notFound, redirect } from 'next/navigation'
 import CourseDetailView from '@/components/CourseDetailView'
 
@@ -112,7 +113,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(courseJsonLd) }}
       />
       <CourseDetailView
         course={{
