@@ -50,3 +50,6 @@ e2e/.auth/
 
 # Worktrees
 .worktrees/
+
+# Supabase CLI runtime cache
+supabase/.temp/
