@@ -112,6 +112,45 @@ describe('POST /api/webhooks/stripe — checkout.session.completed', () => {
       expect.objectContaining({ onConflict: 'stripe_session_id', ignoreDuplicates: true }),
     )
   })
+
+  it('uses expanded subscription object without calling stripe.subscriptions.retrieve', async () => {
+    mockSubscriptionsRetrieve.mockClear()
+
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: {
+        object: makeSession({
+          metadata: { userId: 'user-1' },
+          customer: 'cus_test',
+          payment_status: 'paid',
+          subscription: {
+            id: 'sub_expanded',
+            status: 'active',
+            items: {
+              data: [{
+                current_period_start: 1700000000,
+                current_period_end: 1702592000,
+                price: { id: 'price_x' },
+              }],
+            },
+          } as never,
+        }),
+      },
+    })
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockSubscriptionsRetrieve).not.toHaveBeenCalled()
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'sub_expanded',
+        user_id: 'user-1',
+        status: 'active',
+        plan_type: 'price_x',
+      }),
+    )
+  })
 })
 
 describe('POST /api/webhooks/stripe — subscription updates', () => {

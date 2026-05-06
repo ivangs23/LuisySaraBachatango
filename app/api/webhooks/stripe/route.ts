@@ -76,11 +76,22 @@ export async function POST(req: Request) {
       }
     } else {
       // Subscription purchase — upsert on subscription ID is already idempotent
-      const subscriptionId = session.subscription as string | null;
+      // session.subscription may be a string (not expanded) or an expanded
+      // Stripe.Subscription object (we now request expansion at checkout
+      // creation time). Normalize both cases.
+      const rawSubscription = session.subscription;
+      let subscription: Stripe.Subscription | null = null;
+      let subscriptionId: string | null = null;
 
-      if (subscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      if (typeof rawSubscription === 'string') {
+        subscriptionId = rawSubscription;
+        subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      } else if (rawSubscription) {
+        subscription = rawSubscription;
+        subscriptionId = rawSubscription.id;
+      }
 
+      if (subscriptionId && subscription) {
         const item = subscription.items.data[0];
         if (!item || !item.current_period_start || !item.current_period_end) {
           console.error('Webhook: subscription has no usable item', { subscriptionId });
