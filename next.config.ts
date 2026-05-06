@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from '@sentry/nextjs'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_HOST = SUPABASE_URL.replace(/^https?:\/\//, '') || '*.supabase.co';
@@ -62,4 +63,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+  org: process.env.SENTRY_ORG,
+  project: 'luis-sara-bachatango',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  disableLogger: false,
+  tunnelRoute: '/monitoring',
+})
