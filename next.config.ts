@@ -70,6 +70,5 @@ export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: 'javascript-nextjs-mx',
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  disableLogger: false,
   tunnelRoute: '/monitoring',
 })
