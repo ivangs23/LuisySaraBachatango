@@ -80,29 +80,37 @@ export async function updateProfile(formData: FormData) {
   revalidatePath('/', 'layout') // Update header avatar
 }
 
-export async function deleteAccount() {
+export async function deleteAccount(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
+  if (!user || !user.email) {
     redirect('/login')
   }
 
-  // Note: To delete a user from auth.users, we typically need the service_role key.
-  // However, for this demo, we might just delete the profile data or use a Supabase RPC.
-  // A common pattern without service_role in client code is to use a server action that initializes
-  // a supabase client with the service role key specifically for this admin task.
-  
-  // For security, we should verify the user is deleting THEIR OWN account.
-  // But standard createClient uses the user's session.
-  // We will use the SERVICE_ROLE key here to perform the deletion from auth.users.
-  
+  const email = user.email
+  const userId = user.id
+
+  const password = formData.get('password')
+  if (typeof password !== 'string' || password.length === 0) {
+    throw new Error('Contraseña requerida para confirmar el borrado.')
+  }
+
+  // Re-authenticate with the user's current session email + provided password.
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  if (reauthError) {
+    throw new Error('Contraseña incorrecta.')
+  }
+
   const supabaseAdmin = await createClientWithServiceRole()
-  
-  const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
   if (error) {
-    throw new Error('Could not delete account')
+    throw new Error('No se pudo borrar la cuenta.')
   }
 
   await supabase.auth.signOut()
