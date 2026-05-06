@@ -14,13 +14,25 @@ vi.mock('@/utils/admin/guard', () => ({
 const mockUpdate = vi.fn()
 const mockInsert = vi.fn()
 const mockDeleteUser = vi.fn()
+const mockSingle = vi.fn()
 
 vi.mock('@/utils/supabase/admin', () => ({
   createSupabaseAdmin: () => ({
-    from: vi.fn().mockImplementation(() => ({
-      update: mockUpdate.mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
-      insert: mockInsert.mockResolvedValue({ error: null }),
-    })),
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          update: mockUpdate.mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+          insert: mockInsert.mockResolvedValue({ error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({ single: mockSingle }),
+          }),
+        }
+      }
+      return {
+        update: mockUpdate.mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        insert: mockInsert.mockResolvedValue({ error: null }),
+      }
+    }),
     auth: { admin: { deleteUser: mockDeleteUser.mockResolvedValue({ error: null }) } },
   }),
 }))
@@ -79,22 +91,58 @@ describe('sendNotification', () => {
 })
 
 describe('deleteUser', () => {
-  beforeEach(() => { vi.clearAllMocks(); mockRequireAdmin.mockResolvedValue({ id: 'admin-1' }) })
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+    mockSingle.mockResolvedValue({ data: { id: 'u1', email: 'target@example.com' }, error: null })
+  })
 
-  it('calls supabase auth admin deleteUser', async () => {
+  it('calls supabase auth admin deleteUser when phrase and email are correct', async () => {
     const { deleteUser } = await import('@/app/admin/alumnos/actions')
-    await deleteUser('u1', 'ELIMINAR')
+    await deleteUser('u1', 'ELIMINAR', 'target@example.com')
+    expect(mockDeleteUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('accepts email with different casing', async () => {
+    const { deleteUser } = await import('@/app/admin/alumnos/actions')
+    await deleteUser('u1', 'ELIMINAR', 'TARGET@EXAMPLE.COM')
+    expect(mockDeleteUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('accepts email with surrounding whitespace', async () => {
+    const { deleteUser } = await import('@/app/admin/alumnos/actions')
+    await deleteUser('u1', 'ELIMINAR', '  target@example.com  ')
     expect(mockDeleteUser).toHaveBeenCalledWith('u1')
   })
 
   it('rejects without typed-confirm phrase', async () => {
     const { deleteUser } = await import('@/app/admin/alumnos/actions')
-    await expect(deleteUser('u1', 'eliminar')).rejects.toThrow()
+    await expect(deleteUser('u1', 'eliminar', 'target@example.com')).rejects.toThrow('Confirmation phrase required')
+    expect(mockDeleteUser).not.toHaveBeenCalled()
+  })
+
+  it('rejects when targetEmail is missing', async () => {
+    const { deleteUser } = await import('@/app/admin/alumnos/actions')
+    await expect(deleteUser('u1', 'ELIMINAR', '')).rejects.toThrow('Email del usuario requerido')
+    expect(mockDeleteUser).not.toHaveBeenCalled()
+  })
+
+  it('rejects when targetEmail does not match the user', async () => {
+    const { deleteUser } = await import('@/app/admin/alumnos/actions')
+    await expect(deleteUser('u1', 'ELIMINAR', 'wrong@example.com')).rejects.toThrow('El email no coincide')
+    expect(mockDeleteUser).not.toHaveBeenCalled()
+  })
+
+  it('rejects when user is not found in profiles', async () => {
+    mockSingle.mockResolvedValueOnce({ data: null, error: { message: 'not found' } })
+    const { deleteUser } = await import('@/app/admin/alumnos/actions')
+    await expect(deleteUser('u1', 'ELIMINAR', 'target@example.com')).rejects.toThrow('Usuario no encontrado')
+    expect(mockDeleteUser).not.toHaveBeenCalled()
   })
 
   it('refuses to delete the calling admin', async () => {
     mockRequireAdmin.mockResolvedValueOnce({ id: 'me' })
     const { deleteUser } = await import('@/app/admin/alumnos/actions')
-    await expect(deleteUser('me', 'ELIMINAR')).rejects.toThrow()
+    await expect(deleteUser('me', 'ELIMINAR', 'target@example.com')).rejects.toThrow('Cannot delete yourself')
   })
 })

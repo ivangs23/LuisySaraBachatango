@@ -51,11 +51,28 @@ export async function sendNotification(userId: string, title: string, body: stri
   revalidatePath(`/admin/alumnos/${userId}`)
 }
 
-export async function deleteUser(userId: string, confirmPhrase: string) {
+export async function deleteUser(userId: string, confirmPhrase: string, targetEmail: string) {
   const me = await requireAdmin()
   if (confirmPhrase !== 'ELIMINAR') throw new Error('Confirmation phrase required')
   if (userId === me.id) throw new Error('Cannot delete yourself')
+
+  const normalizedEmail = targetEmail.trim().toLowerCase()
+  if (!normalizedEmail) throw new Error('Email del usuario requerido')
+
   const sb = createSupabaseAdmin()
+
+  const { data: target, error: lookupError } = await sb
+    .from('profiles')
+    .select('id, email')
+    .eq('id', userId)
+    .single()
+
+  if (lookupError || !target) throw new Error('Usuario no encontrado')
+
+  if (!target.email || target.email.toLowerCase() !== normalizedEmail) {
+    throw new Error('El email no coincide con el usuario seleccionado')
+  }
+
   const { error } = await sb.auth.admin.deleteUser(userId)
   if (error) throw error
   revalidatePath('/admin/alumnos')
