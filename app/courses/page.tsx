@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import CoursesClient from '@/components/CoursesClient'
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import { unstable_cache } from 'next/cache'
 
 // Shared cache for the published courses list — same for all users.
@@ -40,12 +41,11 @@ export const metadata: Metadata = {
 };
 
 export default async function CoursesPage() {
+  const user = await getCurrentUser()
   const supabase = await createClient()
 
   // Courses list is shared across all users — served from cache.
   const courses = await getPublishedCourses()
-
-  const { data: { user } } = await supabase.auth.getUser()
 
   let isAdmin = false
   const accessibleCourseIds: string[] = []

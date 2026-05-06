@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import { notFound, redirect } from 'next/navigation'
 import LessonView from '@/components/LessonView'
 import { signPlaybackTokenForUser, signThumbnailTokenForUser } from '@/utils/mux/server'
@@ -27,8 +28,8 @@ export async function generateMetadata(
 
 export default async function LessonPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const params = await props.params;
+  const user = await getCurrentUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/login')

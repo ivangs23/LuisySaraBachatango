@@ -51,8 +51,8 @@ export const metadata: Metadata = {
   },
 };
 
-import { createClient } from "@/utils/supabase/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
+import { getCurrentUser } from "@/utils/supabase/get-user";
 
 import { LanguageProvider } from '@/context/LanguageContext';
 import { safeJsonLd } from '@/utils/jsonld';
@@ -84,8 +84,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   const profile = user ? await getCachedProfile(user.id) : null;
 

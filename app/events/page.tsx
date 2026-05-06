@@ -1,13 +1,14 @@
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import EventsClient, { type EventRow } from '@/components/EventsClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function EventsPage() {
+  const user = await getCurrentUser()
   const supabase = await createClient()
 
   // Auth — non-throwing admin check (page is public)
-  const { data: { user } } = await supabase.auth.getUser()
   let isAdmin = false
   if (user) {
     const { data: profile } = await supabase

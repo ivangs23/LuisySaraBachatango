@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import { safeJsonLd } from '@/utils/jsonld'
 import { notFound, redirect } from 'next/navigation'
 import CourseDetailView from '@/components/CourseDetailView'
@@ -33,8 +34,8 @@ export async function generateMetadata(
 export default async function CourseDetailPage(props: { params: Promise<{ courseId: string }> }) {
   const params = await props.params;
 
+  const user = await getCurrentUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     redirect(`/login?message=Please login to view this course&next=/courses/${params.courseId}`)

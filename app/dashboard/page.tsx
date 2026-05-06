@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { getCurrentUser } from '@/utils/supabase/get-user';
 import { redirect } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { getDict } from '@/utils/get-dict';
@@ -35,9 +36,9 @@ const getPublishedCourses = unstable_cache(
 );
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect('/login');
+  const supabase = await createClient();
 
   const t = await getDict();
   const courses = await getPublishedCourses();

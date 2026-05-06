@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import { redirect } from 'next/navigation'
 import { deleteAccount, verifyStripeSession } from './actions'
 import ProfileView from '@/components/ProfileView'
@@ -17,12 +18,13 @@ export default async function ProfilePage(props: {
     console.log('Verification Result:', result)
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/login')
   }
+
+  const supabase = await createClient()
 
   // All independent queries in parallel.
   const [

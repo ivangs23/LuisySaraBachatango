@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import CommunityClient from '@/components/CommunityClient'
 
 const POSTS_PER_PAGE = 20
@@ -24,9 +25,8 @@ export default async function CommunityPage(
   const from = (page - 1) * POSTS_PER_PAGE
   const to = from + POSTS_PER_PAGE - 1
 
+  const user = await getCurrentUser()
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: posts, count } = await supabase
     .from('posts')

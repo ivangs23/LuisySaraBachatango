@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import Link from 'next/link'
 import { ArrowLeft, MessageCircleMore } from 'lucide-react'
 import styles from '../community.module.css'
@@ -55,13 +56,12 @@ export default async function PostDetailPage(props: {
   searchParams: Promise<{ commentsPage?: string }>
 }) {
   const [params, searchParamsResolved] = await Promise.all([props.params, props.searchParams])
+  const user = await getCurrentUser()
   const supabase = await createClient()
 
   const commentsPage = Math.max(1, parseInt(searchParamsResolved.commentsPage ?? '1') || 1)
   const cFrom = (commentsPage - 1) * 50
   const cTo = cFrom + 49
-
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: post } = await supabase
     .from('posts')
