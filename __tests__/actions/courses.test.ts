@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { hasCourseAccess } from '@/utils/auth/course-access'
 
 // ─── Integration tests for courses actions ────────────────────────────────────
 // Mocks must be declared before any module imports.
@@ -24,6 +25,9 @@ vi.mock('@/utils/supabase/admin', () => ({
   createSupabaseAdmin: vi.fn(() => ({
     from: vi.fn().mockReturnValue({ upsert: vi.fn().mockResolvedValue({ error: null }) }),
   })),
+}))
+vi.mock('@/utils/auth/course-access', () => ({
+  hasCourseAccess: vi.fn(),
 }))
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -223,7 +227,22 @@ describe('updateCourse', () => {
 describe('submitAssignment', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(hasCourseAccess).mockResolvedValue(true)
   })
+
+  // Helper: builds a fromMock that returns the assignment lookup on the first
+  // call and the submissions upsert on the second call.
+  function makeAssignmentFromMock(upsertMock: ReturnType<typeof vi.fn>, courseId = 'c1') {
+    const assignmentSingle = vi.fn().mockResolvedValue({
+      data: { lesson_id: 'l1', lessons: { course_id: courseId } },
+    })
+    const fromMock = vi.fn()
+      .mockReturnValueOnce({
+        select: () => ({ eq: () => ({ single: assignmentSingle }) }),
+      })
+      .mockReturnValueOnce({ upsert: upsertMock })
+    return fromMock
+  }
 
   it('redirects to /login when no authenticated user', async () => {
     mockCreateClient.mockResolvedValue({
@@ -237,7 +256,7 @@ describe('submitAssignment', () => {
 
   it('upserts a submission row for the authenticated user', async () => {
     const { upsertMock } = makeUpsert()
-    const fromMock = vi.fn().mockReturnValue({ upsert: upsertMock })
+    const fromMock = makeAssignmentFromMock(upsertMock)
     mockCreateClient.mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
       from: fromMock,
@@ -259,7 +278,7 @@ describe('submitAssignment', () => {
 
   it('passes file_url when provided', async () => {
     const { upsertMock } = makeUpsert()
-    const fromMock = vi.fn().mockReturnValue({ upsert: upsertMock })
+    const fromMock = makeAssignmentFromMock(upsertMock)
     mockCreateClient.mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-2' } } }) },
       from: fromMock,
@@ -276,14 +295,57 @@ describe('submitAssignment', () => {
 
   it('returns error when Supabase upsert fails', async () => {
     const upsertMock = vi.fn().mockResolvedValue({ error: { message: 'upsert failed' } })
+    const fromMock = makeAssignmentFromMock(upsertMock)
     mockCreateClient.mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-3' } } }) },
-      from: vi.fn().mockReturnValue({ upsert: upsertMock }),
+      from: fromMock,
     })
 
     const { submitAssignment } = await import('@/app/courses/actions')
     const result = await submitAssignment('a3', 'text', null)
     expect(result).toEqual({ error: 'upsert failed' })
+  })
+
+  it('rejects when user has no access to the course', async () => {
+    vi.mocked(hasCourseAccess).mockResolvedValue(false)
+
+    const assignmentSingle = vi.fn().mockResolvedValue({
+      data: { lesson_id: 'l1', lessons: { course_id: 'c1' } },
+    })
+    const upsertMock = vi.fn()
+    const fromMock = vi.fn()
+      .mockReturnValueOnce({
+        select: () => ({ eq: () => ({ single: assignmentSingle }) }),
+      })
+      .mockReturnValueOnce({ upsert: upsertMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-4' } } }) },
+      from: fromMock,
+    })
+
+    const { submitAssignment } = await import('@/app/courses/actions')
+    const result = await submitAssignment('a1', 'my work', null)
+    expect(result).toEqual({ error: 'forbidden' })
+    expect(upsertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns assignment_not_found when assignment does not exist', async () => {
+    const assignmentSingle = vi.fn().mockResolvedValue({ data: null })
+    const upsertMock = vi.fn()
+    const fromMock = vi.fn()
+      .mockReturnValueOnce({
+        select: () => ({ eq: () => ({ single: assignmentSingle }) }),
+      })
+      .mockReturnValueOnce({ upsert: upsertMock })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-5' } } }) },
+      from: fromMock,
+    })
+
+    const { submitAssignment } = await import('@/app/courses/actions')
+    const result = await submitAssignment('bogus-id', 'work', null)
+    expect(result).toEqual({ error: 'assignment_not_found' })
+    expect(upsertMock).not.toHaveBeenCalled()
   })
 })
 

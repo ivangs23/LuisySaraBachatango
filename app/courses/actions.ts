@@ -5,6 +5,7 @@ import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/utils/auth/require-admin'
+import { hasCourseAccess } from '@/utils/auth/course-access'
 
 export async function createLesson(formData: FormData) {
   await requireAdmin()
@@ -277,6 +278,22 @@ export async function submitAssignment(assignmentId: string, textContent: string
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  // Resolve assignment → lesson → course and verify access.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id, lessons(course_id)')
+    .eq('id', assignmentId)
+    .single()
+
+  const courseId = (assignment?.lessons as { course_id?: string } | null)?.course_id
+  if (!courseId) {
+    return { error: 'assignment_not_found' }
+  }
+
+  if (!(await hasCourseAccess(user.id, courseId))) {
+    return { error: 'forbidden' }
+  }
 
   const { error } = await supabase
     .from('submissions')
