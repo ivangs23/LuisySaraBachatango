@@ -2,7 +2,10 @@ import { createClient } from '@/utils/supabase/server'
 import { getCurrentUser } from '@/utils/supabase/get-user'
 import EventsClient, { type EventRow } from '@/components/EventsClient'
 
-export const dynamic = 'force-dynamic'
+// ISR: regenerate this page at most every 60s. Admin mutation actions in
+// app/events/actions.ts call revalidatePath('/events') to force immediate
+// invalidation on create/update/delete.
+export const revalidate = 60
 
 export default async function EventsPage() {
   const user = await getCurrentUser()
