@@ -146,14 +146,14 @@ export async function addComment(lessonId: string, content: string, parentId: st
         .eq('id', parent.lesson_id)
         .single();
 
-      await notify({
+      void notify({
         recipientId: parent.user_id,
         actorId: user.id,
         type: 'comment_reply',
         entityType: 'comment',
         entityId: inserted.id,
         link: `/courses/${lesson?.course_id ?? courseId ?? ''}/${parent.lesson_id}#comment-${inserted.id}`,
-      });
+      }).catch(err => console.error('notify failed', err));
     }
   }
 
@@ -213,14 +213,14 @@ export async function toggleLike(commentId: string) {
     link = '/';
   }
 
-  await notify({
+  void notify({
     recipientId: comment.user_id,
     actorId: user.id,
     type: 'comment_like',
     entityType: 'comment',
     entityId: commentId,
     link,
-  });
+  }).catch(err => console.error('notify failed', err));
 
   return { success: true };
 }
