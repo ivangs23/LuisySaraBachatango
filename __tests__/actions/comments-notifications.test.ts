@@ -19,6 +19,7 @@ function makeChain(returns: Record<string, unknown>) {
 
 beforeEach(() => {
   mockNotify.mockReset()
+  mockNotify.mockResolvedValue(undefined)
 })
 
 describe('toggleLike — notifications', () => {

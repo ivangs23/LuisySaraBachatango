@@ -1,13 +1,18 @@
-type Bucket = { count: number; resetAt: number }
-const buckets = new Map<string, Bucket>()
+// utils/rate-limit.ts
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
 export type RateLimitResult = { ok: boolean; retryAfter: number }
 
-export function rateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
+// Local fallback: used when Upstash env vars are missing (tests, local dev).
+type Bucket = { count: number; resetAt: number }
+const localBuckets = new Map<string, Bucket>()
+
+function localRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
   const now = Date.now()
-  const bucket = buckets.get(key)
+  const bucket = localBuckets.get(key)
   if (!bucket || bucket.resetAt < now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs })
+    localBuckets.set(key, { count: 1, resetAt: now + windowMs })
     return { ok: true, retryAfter: 0 }
   }
   bucket.count += 1
@@ -17,11 +22,58 @@ export function rateLimit(key: string, limit: number, windowMs: number): RateLim
   return { ok: true, retryAfter: 0 }
 }
 
+// Upstash: cache Ratelimit instances by (limit, windowMs).
+const ratelimitCache = new Map<string, Ratelimit>()
+
+function getUpstashClient(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) return null
+  return new Redis({ url, token })
+}
+
+function getRatelimit(limit: number, windowMs: number): Ratelimit | null {
+  const redis = getUpstashClient()
+  if (!redis) return null
+  const cacheKey = `${limit}:${windowMs}`
+  const cached = ratelimitCache.get(cacheKey)
+  if (cached) return cached
+  const rl = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, `${windowMs} ms`),
+    analytics: false,
+    prefix: 'rl',
+  })
+  ratelimitCache.set(cacheKey, rl)
+  return rl
+}
+
+export async function rateLimit(
+  key: string,
+  limit: number,
+  windowMs: number,
+): Promise<RateLimitResult> {
+  const rl = getRatelimit(limit, windowMs)
+  if (!rl) return localRateLimit(key, limit, windowMs)
+
+  try {
+    const { success, reset } = await rl.limit(key)
+    return {
+      ok: success,
+      retryAfter: success ? 0 : Math.max(0, Math.ceil((reset - Date.now()) / 1000)),
+    }
+  } catch (err) {
+    // If Upstash is unreachable, fall back to local instead of failing the request.
+    console.error('[rate-limit] Upstash error, falling back to local', err)
+    return localRateLimit(key, limit, windowMs)
+  }
+}
+
 export function rateLimitKey(parts: (string | null | undefined)[]): string {
   return parts.map(p => p ?? 'anon').join(':')
 }
 
-// For tests only — don't use in production code.
 export function _resetRateLimitForTest(): void {
-  buckets.clear()
+  localBuckets.clear()
+  ratelimitCache.clear()
 }

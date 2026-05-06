@@ -64,9 +64,47 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
-    fetchAll();
-    const interval = setInterval(fetchAll, 30000);
-    return () => clearInterval(interval);
+    let cancelled = false;
+    let cleanupChannel: (() => void) | null = null;
+
+    // Fallback poll every 5 min in case Realtime fails to connect.
+    const fallbackInterval = setInterval(() => {
+      if (!cancelled) fetchAll();
+    }, 5 * 60 * 1000);
+
+    (async () => {
+      await fetchAll();
+      if (cancelled) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+
+      const channel = supabase
+        .channel(`notifications:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            if (!cancelled) fetchAll();
+          }
+        )
+        .subscribe();
+
+      cleanupChannel = () => {
+        supabase.removeChannel(channel);
+      };
+    })();
+
+    return () => {
+      cancelled = true;
+      clearInterval(fallbackInterval);
+      if (cleanupChannel) cleanupChannel();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

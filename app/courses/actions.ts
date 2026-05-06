@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/utils/auth/require-admin'
 
@@ -45,6 +45,7 @@ export async function createLesson(formData: FormData) {
   }
 
   revalidatePath(`/courses/${courseId}`)
+  revalidateTag(`course:${courseId}:lessons`, 'max')
   redirect(`/courses/${courseId}/${inserted.id}/edit`)
 }
 
@@ -82,6 +83,7 @@ export async function updateLesson(formData: FormData) {
 
   revalidatePath(`/courses/${courseId}`)
   revalidatePath(`/courses/${courseId}/${lessonId}/edit`)
+  revalidateTag(`course:${courseId}:lessons`, 'max')
 }
 
 async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClient>>, imageFile: File): Promise<{ url: string } | { error: string }> {

@@ -66,3 +66,35 @@ Validación post-aplicación:
 - [ ] Logs de Supabase Auth: tras Task 3.2, los hits a `/` y `/courses` sin sesión NO deben pegarle a `auth.getUser`.
 - [ ] Verificar que la cookie `locale` viene con `Secure; SameSite=Lax` desde DevTools.
 - [ ] Smoke test en producción tras merge: login, ver una lección, hacer un comentario.
+
+## Capacity verification (2026-05-06 scaling pass)
+
+### Postgres connection strategy
+
+Confirmed via grep on `2026-05-06` that the project has **zero direct
+Postgres clients**:
+- No `pg` / `postgres-js` / `drizzle-orm` / `prisma` direct imports.
+- All DB access goes through `@supabase/ssr` (server) and `@supabase/supabase-js`
+  (client), which speak PostgREST/HTTP — the requests are multiplexed against
+  Supabase's internal pool transparently.
+
+This means the current `max_connections = 60` on Supabase Pro is shielded
+by PostgREST: a 1000-concurrent-user load translates to ~1000 simultaneous
+HTTP requests, but PostgREST keeps its own DB connection pool below the
+`max_connections` ceiling. The realistic ceiling is bounded by:
+
+- Supabase's per-project Auth rate limit (project-level, not docs-published).
+- Supabase Storage egress.
+- Vercel serverless invocation concurrency (Pro plan: 1000 concurrent
+  executions per region by default).
+
+When the project crosses ~1500 sustained RPS or starts seeing PostgREST
+timeouts, the next move is the Supabase Team plan ($599/mo) which raises
+`max_connections` to 200 and provides priority Auth.
+
+### Realtime publication
+
+`notifications` was added to `supabase_realtime` publication on 2026-05-06
+(migration `audit_2026_05_notifications_realtime`). The table now broadcasts
+INSERT/UPDATE/DELETE events to subscribed clients, used by `NotificationBell`
+to replace the 30s polling.

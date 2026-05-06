@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/get-user'
 import { notFound, redirect } from 'next/navigation'
 import LessonView from '@/components/LessonView'
 import { signPlaybackTokenForUser, signThumbnailTokenForUser } from '@/utils/mux/server'
+import { getCachedLessonsForCourse } from '@/utils/courses/cached-lessons'
 
 export async function generateMetadata(
   props: { params: Promise<{ courseId: string; lessonId: string }> }
@@ -27,12 +29,15 @@ export async function generateMetadata(
 
 export default async function LessonPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const params = await props.params;
+  const user = await getCurrentUser()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/login')
   }
+
+  // Sidebar lesson list: cached per-course for 5 min (same for every viewer).
+  const allLessons = await getCachedLessonsForCourse(params.courseId)
 
   // Batch 1: all queries that only need lessonId / courseId / userId.
   const [
@@ -40,7 +45,6 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     { data: profile },
     { data: course },
     { data: coursePurchase },
-    { data: allLessons },
     { data: assignment },
   ] = await Promise.all([
     supabase.from('lessons')
@@ -55,10 +59,6 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
       .eq('user_id', user.id)
       .eq('course_id', params.courseId)
       .maybeSingle(),
-    supabase.from('lessons')
-      .select('id, title, order, parent_lesson_id, is_free')
-      .eq('course_id', params.courseId)
-      .order('order', { ascending: true }),
     supabase.from('assignments')
       .select('id, title, description')
       .eq('lesson_id', params.lessonId)
@@ -68,7 +68,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
   if (lessonError || !lesson) notFound()
 
   const isAdmin = profile?.role === 'admin'
-  const lessonIds = allLessons?.map(l => l.id) ?? []
+  const lessonIds = allLessons.map(l => l.id)
 
   // Batch 2: queries that depend on batch 1 results (course dates, lesson IDs, assignment ID).
   const courseFirstDay = course ? new Date(Date.UTC(course.year, course.month - 1, 1)).toISOString() : null
@@ -130,7 +130,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
         mux_playback_id: lesson.mux_playback_id ?? null,
         mux_status: lesson.mux_status ?? null,
       }}
-      allLessons={allLessons ?? []}
+      allLessons={allLessons}
       completedLessonIds={completedLessonIds}
       hasAccess={hasAccess}
       isAdmin={isAdmin}

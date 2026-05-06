@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from '@sentry/nextjs'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_HOST = SUPABASE_URL.replace(/^https?:\/\//, '') || '*.supabase.co';
@@ -10,6 +11,8 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // 24h. Avatars and thumbnails change rarely; reduces re-optimization cost.
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: 'https',
@@ -62,4 +65,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+  org: process.env.SENTRY_ORG,
+  project: 'javascript-nextjs-mx',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  disableLogger: false,
+  tunnelRoute: '/monitoring',
+})

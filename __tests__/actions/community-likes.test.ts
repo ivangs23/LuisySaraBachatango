@@ -5,7 +5,7 @@ vi.mock('@/utils/notifications/server', () => ({ notify: mockNotify }))
 vi.mock('@/utils/supabase/server', () => ({ createClient: vi.fn() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-beforeEach(() => mockNotify.mockReset())
+beforeEach(() => { mockNotify.mockReset(); mockNotify.mockResolvedValue(undefined) })
 
 describe('togglePostLike', () => {
   it('inserts like and notifies post author when not yet liked', async () => {

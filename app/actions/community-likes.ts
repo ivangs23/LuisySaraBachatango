@@ -34,14 +34,14 @@ export async function togglePostLike(postId: string) {
     .single()
 
   if (post) {
-    await notify({
+    void notify({
       recipientId: post.user_id,
       actorId: user.id,
       type: 'post_like',
       entityType: 'post',
       entityId: postId,
       link: `/community/${postId}`,
-    })
+    }).catch(err => console.error('notify failed', err))
   }
 
   revalidatePath(`/community/${postId}`)
