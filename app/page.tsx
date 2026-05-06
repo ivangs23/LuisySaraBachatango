@@ -1,5 +1,3 @@
-'use client';
-
 import styles from "./page.module.css";
 import Hero from "@/components/Hero";
 import AboutSection from "@/components/AboutSection";
@@ -8,6 +6,10 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import Newsletter from "@/components/Newsletter";
 import InstagramGallery from "@/components/InstagramGallery";
+
+// ISR: regenerate the HTML shell at most every 5 minutes. Subcomponents
+// that need fresh data are client components and fetch on mount.
+export const revalidate = 300;
 
 export default function Home() {
   return (
