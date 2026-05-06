@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { notify } from '@/utils/notifications/server'
+import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 
 export async function submitPost(formData: FormData): Promise<void> {
   const supabase = await createClient()
@@ -16,6 +17,9 @@ export async function submitPost(formData: FormData): Promise<void> {
 
   const title = formData.get('title') as string
   const content = formData.get('content') as string
+
+  const rl = rateLimit(rateLimitKey([user.id, 'post']), 5, 60_000) // 5 posts/min
+  if (!rl.ok) return
 
   if (!title || !content) {
     return
@@ -53,6 +57,9 @@ export async function submitComment(formData: FormData): Promise<void> {
   const postId = formData.get('postId') as string
   const content = formData.get('content') as string
   const parentId = (formData.get('parentId') as string | null) || null
+
+  const rl = rateLimit(rateLimitKey([user.id, 'comment']), 30, 60_000) // 30 comments/min
+  if (!rl.ok) return
 
   if (!postId || !content) {
     return

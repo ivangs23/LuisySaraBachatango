@@ -293,6 +293,7 @@ export const dictionaries = {
       invalid_credentials: "Credenciales incorrectas. Comprueba tu email y contraseña.",
       signup_failed: "Error al crear la cuenta. Inténtalo de nuevo.",
       reset_failed: "Error al enviar el enlace. Inténtalo de nuevo.",
+      rate_limit: "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
       unknown: "Ha ocurrido un error. Inténtalo de nuevo."
     },
     messages: {
@@ -592,6 +593,7 @@ export const dictionaries = {
       invalid_credentials: "Invalid credentials. Check your email and password.",
       signup_failed: "Failed to create account. Please try again.",
       reset_failed: "Failed to send reset link. Please try again.",
+      rate_limit: "Too many attempts. Please wait a minute and try again.",
       unknown: "An error occurred. Please try again."
     },
     messages: {
@@ -821,6 +823,7 @@ export const dictionaries = {
       invalid_credentials: "Identifiants incorrects. Vérifiez votre email et votre mot de passe.",
       signup_failed: "Échec de la création du compte. Réessayez.",
       reset_failed: "Échec de l'envoi du lien. Réessayez.",
+      rate_limit: "Trop de tentatives. Veuillez attendre une minute avant de réessayer.",
       unknown: "Une erreur s'est produite. Réessayez."
     },
     messages: {
@@ -1050,6 +1053,7 @@ export const dictionaries = {
       invalid_credentials: "Falsche Anmeldedaten. Überprüfe deine E-Mail und dein Passwort.",
       signup_failed: "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
       reset_failed: "Link konnte nicht gesendet werden. Bitte versuche es erneut.",
+      rate_limit: "Zu viele Versuche. Bitte warte eine Minute und versuche es erneut.",
       unknown: "Ein Fehler ist aufgetreten. Bitte versuche es erneut."
     },
     messages: {
@@ -1278,6 +1282,7 @@ export const dictionaries = {
       invalid_credentials: "Credenziali errate. Controlla la tua email e la password.",
       signup_failed: "Impossibile creare l'account. Riprova.",
       reset_failed: "Impossibile inviare il link. Riprova.",
+      rate_limit: "Troppi tentativi. Attendi un minuto e riprova.",
       unknown: "Si è verificato un errore. Riprova."
     },
     messages: {
@@ -1507,6 +1512,7 @@ export const dictionaries = {
       invalid_credentials: "認証情報が正しくありません。メールとパスワードを確認してください。",
       signup_failed: "アカウントの作成に失敗しました。もう一度お試しください。",
       reset_failed: "リンクの送信に失敗しました。もう一度お試しください。",
+      rate_limit: "試行回数が多すぎます。1分待ってから再試行してください。",
       unknown: "エラーが発生しました。もう一度お試しください。"
     },
     messages: {
