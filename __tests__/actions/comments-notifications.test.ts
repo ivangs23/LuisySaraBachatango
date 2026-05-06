@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { hasCourseAccess } from '@/utils/auth/course-access'
 
 const mockNotify = vi.fn()
 vi.mock('@/utils/notifications/server', () => ({ notify: mockNotify }))
 
 vi.mock('@/utils/supabase/server', () => ({ createClient: vi.fn() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('@/utils/auth/course-access', () => ({ hasCourseAccess: vi.fn() }))
 
 function makeChain(returns: Record<string, unknown>) {
   const obj: Record<string, unknown> = {
@@ -100,6 +102,10 @@ describe('toggleLike — notifications', () => {
 })
 
 describe('addComment — notifications', () => {
+  beforeEach(() => {
+    vi.mocked(hasCourseAccess).mockResolvedValue(true)
+  })
+
   it('notifies the parent comment author when posting a reply', async () => {
     const insertedId = 'reply-1'
     const insertChain = {
@@ -115,9 +121,12 @@ describe('addComment — notifications', () => {
         error: null,
       }),
     }
+    // lessonChain handles both the initial access-check lookup (maybeSingle)
+    // and the notification link lookup (single) — both return the same course_id.
     const lessonChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { course_id: 'course-1' }, error: null }),
       single: vi.fn().mockResolvedValue({ data: { course_id: 'course-1' }, error: null }),
     }
 
@@ -151,12 +160,21 @@ describe('addComment — notifications', () => {
   })
 
   it('does NOT notify when posting a top-level comment (no parentId)', async () => {
+    const lessonChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { course_id: 'course-1' }, error: null }),
+      single: vi.fn().mockResolvedValue({ data: { course_id: 'course-1' }, error: null }),
+    }
     const insertChain = {
       insert: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: { id: 'top-1' }, error: null }),
     }
-    const from = vi.fn(() => insertChain)
+    const from = vi.fn((table: string) => {
+      if (table === 'lessons') return lessonChain
+      return insertChain
+    })
 
     const { createClient } = await import('@/utils/supabase/server')
     vi.mocked(createClient).mockResolvedValue({
@@ -168,5 +186,59 @@ describe('addComment — notifications', () => {
     await addComment('lesson-1', 'Hello world', null, 'course-1')
 
     expect(mockNotify).not.toHaveBeenCalled()
+  })
+
+  it('rejects when user has no access to the course', async () => {
+    vi.mocked(hasCourseAccess).mockResolvedValue(false)
+
+    const lessonChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { course_id: 'course-1' }, error: null }),
+    }
+    const insertMock = vi.fn()
+    const from = vi.fn((table: string) => {
+      if (table === 'lessons') return lessonChain
+      return { insert: insertMock }
+    })
+
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
+      from,
+    } as never)
+
+    const { addComment } = await import('@/app/actions/comments')
+    const result = await addComment('lesson-1', 'hello', null)
+
+    expect(result).toEqual({ error: 'forbidden' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects when lesson does not exist', async () => {
+    vi.mocked(hasCourseAccess).mockResolvedValue(true)
+
+    const lessonChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }
+    const insertMock = vi.fn()
+    const from = vi.fn((table: string) => {
+      if (table === 'lessons') return lessonChain
+      return { insert: insertMock }
+    })
+
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
+      from,
+    } as never)
+
+    const { addComment } = await import('@/app/actions/comments')
+    const result = await addComment('bogus-id', 'hello', null)
+
+    expect(result).toEqual({ error: 'lesson_not_found' })
+    expect(insertMock).not.toHaveBeenCalled()
   })
 })

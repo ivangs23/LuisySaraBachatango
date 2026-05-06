@@ -30,6 +30,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`) }),
 }))
+vi.mock('@/utils/auth/course-access', () => ({ hasCourseAccess: vi.fn().mockResolvedValue(true) }))
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
