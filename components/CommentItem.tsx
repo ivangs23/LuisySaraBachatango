@@ -47,9 +47,10 @@ export default function CommentItem({ comment, courseId, lessonId, onReplyAdded 
   return (
     <div className={styles.commentContainer}>
       <div className={styles.commentHeader}>
-        <img 
-          src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || 'User')}&background=random&rounded=true`} 
-          alt={comment.profiles?.full_name || 'User'} 
+        {/* eslint-disable-next-line @next/next/no-img-element -- dynamic host (Supabase storage or ui-avatars.com fallback); cannot use next/image without allowlisting all possible avatar providers */}
+        <img
+          src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || 'User')}&background=random&rounded=true`}
+          alt={comment.profiles?.full_name || 'User'}
           className={styles.avatar}
         />
         <div className={styles.userInfo}>

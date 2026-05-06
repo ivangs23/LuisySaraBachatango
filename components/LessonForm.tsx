@@ -128,6 +128,7 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
       </div>
       <div className={styles.field}>
         <label>Miniatura</label>
+        {/* eslint-disable-next-line @next/next/no-img-element -- may be a blob URL (URL.createObjectURL) when a new file is selected; cannot use next/image with blob: sources */}
         {thumbnailPreview && <img src={thumbnailPreview} alt="" style={{ maxWidth: 200, marginBottom: 8 }} />}
         <input type="file" accept="image/*" onChange={e => setThumbnailFile(e.target.files?.[0] ?? null)} />
       </div>

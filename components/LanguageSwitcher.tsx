@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './LanguageSwitcher.module.css';
 import { Locale } from '@/utils/dictionaries';
@@ -44,13 +45,13 @@ export default function LanguageSwitcher() {
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Select Language"
       >
-        <img 
+        <Image
           src={`https://flagcdn.com/w40/${currentLang.flag}.png`}
-          srcSet={`https://flagcdn.com/w80/${currentLang.flag}.png 2x`} 
-          alt={currentLang.name} 
+          alt={currentLang.name}
           className={styles.flag}
-          width="20"
-          height="15"
+          width={20}
+          height={15}
+          unoptimized
         />
         <span className={styles.arrow}>▼</span>
       </button>
@@ -63,13 +64,13 @@ export default function LanguageSwitcher() {
               className={`${styles.option} ${locale === lang.code ? styles.active : ''}`}
               onClick={() => handleSelect(lang.code)}
             >
-               <img 
+              <Image
                 src={`https://flagcdn.com/w40/${lang.flag}.png`}
-                srcSet={`https://flagcdn.com/w80/${lang.flag}.png 2x`}
-                alt={lang.name} 
+                alt={lang.name}
                 className={styles.flag}
-                width="20"
-                height="15"
+                width={20}
+                height={15}
+                unoptimized
               />
               {lang.name}
             </button>
