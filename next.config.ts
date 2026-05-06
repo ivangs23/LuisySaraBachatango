@@ -68,7 +68,7 @@ const nextConfig: NextConfig = {
 export default withSentryConfig(nextConfig, {
   silent: !process.env.SENTRY_AUTH_TOKEN,
   org: process.env.SENTRY_ORG,
-  project: 'luis-sara-bachatango',
+  project: 'javascript-nextjs-mx',
   authToken: process.env.SENTRY_AUTH_TOKEN,
   disableLogger: false,
   tunnelRoute: '/monitoring',
