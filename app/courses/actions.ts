@@ -46,7 +46,7 @@ export async function createLesson(formData: FormData) {
   }
 
   revalidatePath(`/courses/${courseId}`)
-  revalidateTag(`course:${courseId}:lessons`)
+  revalidateTag(`course:${courseId}:lessons`, 'max')
   redirect(`/courses/${courseId}/${inserted.id}/edit`)
 }
 
@@ -84,7 +84,7 @@ export async function updateLesson(formData: FormData) {
 
   revalidatePath(`/courses/${courseId}`)
   revalidatePath(`/courses/${courseId}/${lessonId}/edit`)
-  revalidateTag(`course:${courseId}:lessons`)
+  revalidateTag(`course:${courseId}:lessons`, 'max')
 }
 
 async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClient>>, imageFile: File): Promise<{ url: string } | { error: string }> {
