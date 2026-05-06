@@ -131,7 +131,7 @@ describe('resetPassword action', () => {
     expect(url).toContain('message')
   })
 
-  it('redirects to /forgot-password?error=reset_failed on error', async () => {
+  it('redirects to same destination on error to prevent account enumeration', async () => {
     mockResetPasswordForEmail.mockResolvedValueOnce({ error: new Error('User not found') })
     const { resetPassword } = await import('@/app/login/actions')
 
@@ -139,6 +139,7 @@ describe('resetPassword action', () => {
     fd.set('email', 'noone@example.com')
 
     const url = await resetPassword(fd).catch(getRedirectUrl)
-    expect(url).toBe('/forgot-password?error=reset_failed')
+    // Should redirect to the same success URL regardless of whether email exists
+    expect(url).toBe('/login?message=email_reset')
   })
 })

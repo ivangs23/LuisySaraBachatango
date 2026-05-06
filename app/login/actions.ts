@@ -74,8 +74,10 @@ export async function resetPassword(formData: FormData) {
     redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback?next=/reset-password`,
   })
 
+  // Always redirect to the same destination — whether the email exists or not —
+  // to avoid leaking account existence (oracle).
   if (error) {
-    redirect('/forgot-password?error=reset_failed')
+    console.error('[resetPassword] internal error', error.message)
   }
 
   revalidatePath('/', 'layout')
