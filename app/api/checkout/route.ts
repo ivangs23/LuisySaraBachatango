@@ -60,8 +60,9 @@ export async function POST(req: Request) {
     if (courseId) {
       const { data: course } = await supabase
         .from('courses')
-        .select('title, price_eur')
+        .select('title, price_eur, is_published')
         .eq('id', courseId)
+        .eq('is_published', true)
         .single();
 
       if (!course) {
