@@ -54,9 +54,12 @@ export default function NotificationBell() {
   const fetchAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    // Explicit columns: omit actor_ids (uuid[]) which the UI never uses but
+    // would otherwise leak the full list of users who interacted with the
+    // notification target to the browser network tab.
     const { data } = await supabase
       .from('notifications_with_actor')
-      .select('*')
+      .select('id, type, title, message, link, is_read, actor_name, actor_avatar, actor_count, updated_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(20);
