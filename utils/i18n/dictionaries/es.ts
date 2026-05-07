@@ -89,7 +89,9 @@ export const es = {
     title: "Únete a la Comunidad",
     desc: "Recibe consejos exclusivos de baile, novedades sobre talleres y una clase gratuita al suscribirte.",
     placeholder: "Tu correo electrónico",
-    button: "Suscribirme"
+    button: "Suscribirme",
+    success: "¡Te has suscrito! Gracias.",
+    error: "No se pudo enviar."
   },
   events: {
     title: "Agenda & Eventos",
@@ -121,6 +123,8 @@ export const es = {
   contact: {
     title: "Contrataciones",
     desc: "¿Quieres llevarnos a tu ciudad? Rellena este formulario para solicitar información sobre talleres, shows y festivales.",
+    success: "¡Mensaje enviado! Te responderemos pronto.",
+    error: "No se pudo enviar el mensaje.",
     form: {
       name: "Nombre / Organizador",
       namePlace: "Tu nombre o el de tu evento",

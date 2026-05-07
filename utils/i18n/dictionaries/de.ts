@@ -41,7 +41,8 @@ export const de: Dictionary = {
     q4: { q: "Geht das auch ohne Tanzpartner?", a: "Absolut. Viele Lektionen konzentrieren sich auf individuelle Technik." }
   },
   newsletter: {
-    title: "Tritt der Community bei", desc: "Erhalte exklusive Tipps und eine kostenlose Klasse.", placeholder: "Deine Email", button: "Abonnieren"
+    title: "Tritt der Community bei", desc: "Erhalte exklusive Tipps und eine kostenlose Klasse.", placeholder: "Deine Email", button: "Abonnieren",
+    success: "Abonniert! Danke.", error: "Senden fehlgeschlagen."
   },
   events: {
     title: "Agenda & Events", desc: "Entdecke, wo wir als nächstes sind.", details: "Mehr Infos",
@@ -65,6 +66,7 @@ export const de: Dictionary = {
   },
   contact: {
     title: "Buchungen", desc: "Willst du uns buchen?",
+    success: "Nachricht gesendet! Wir melden uns bald.", error: "Senden fehlgeschlagen.",
     form: {
       name: "Name / Veranstalter", namePlace: "Dein Name",
       email: "Email", type: "Event-Typ", types: { fest: "Festival", work: "Workshop", show: "Show", other: "Andere" },

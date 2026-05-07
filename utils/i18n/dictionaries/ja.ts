@@ -41,7 +41,8 @@ export const ja: Dictionary = {
     q4: { q: "パートナーがいなくても大丈夫？", a: "もちろんです。" }
   },
   newsletter: {
-    title: "コミュニティに参加", desc: "独占的なダンスのヒントを受け取る。", placeholder: "メールアドレス", button: "登録する"
+    title: "コミュニティに参加", desc: "独占的なダンスのヒントを受け取る。", placeholder: "メールアドレス", button: "登録する",
+    success: "登録しました！ありがとうございます。", error: "送信に失敗しました。"
   },
   events: {
     title: "アジェンダ＆イベント", desc: "次に行く場所をチェック。", details: "詳細",
@@ -65,6 +66,7 @@ export const ja: Dictionary = {
   },
   contact: {
     title: "予約", desc: "あなたの街に私たちを呼びたいですか？",
+    success: "メッセージを送信しました！近日中にご連絡します。", error: "送信に失敗しました。",
     form: {
       name: "名前 / 主催者", namePlace: "あなたの名前",
       email: "メール", type: "イベントタイプ", types: { fest: "フェスティバル", work: "ワークショップ", show: "ショー", other: "その他" },

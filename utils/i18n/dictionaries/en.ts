@@ -90,7 +90,9 @@ export const en: Dictionary = {
     title: "Join the Community",
     desc: "Receive exclusive dance tips, workshop news, and a free class when you subscribe.",
     placeholder: "Your email address",
-    button: "Subscribe"
+    button: "Subscribe",
+    success: "Subscribed! Thank you.",
+    error: "Could not send."
   },
   events: {
     title: "Agenda & Events",
@@ -122,6 +124,8 @@ export const en: Dictionary = {
   contact: {
     title: "Bookings",
     desc: "Do you want to bring us to your city? Fill out this form to request information about workshops, shows, and festivals.",
+    success: "Message sent! We will get back to you soon.",
+    error: "Could not send the message.",
     form: {
       name: "Name / Organizer",
       namePlace: "Your name or event name",
