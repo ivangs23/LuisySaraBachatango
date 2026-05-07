@@ -103,3 +103,61 @@ npx lighthouse "$BASE/courses" --output=json,html --output-path=./tmp/lighthouse
 - SSO (Vercel Deployment Protection) temporalmente desactivado durante la auditoría y restaurado al final. Estado final verificado: HTTP 401 restaurado correctamente.
 - Audit corrido desde agente local (macOS Darwin 25.3.0, Lighthouse via `npx --yes`, Chrome headless).
 - Lighthouse version: instalado on-demand vía npx en el momento de la auditoría.
+
+---
+
+## Re-run después de quick wins (deploy 088d7ed)
+
+Cambios aplicados antes de esta segunda medición:
+- `hero-bg.webp` (95 KB) sustituye al PNG (1.9 MB) en backgrounds y video poster
+- Eliminados los `<source>` rotos de Hero.tsx (404 fix)
+- CSP permite ahora `instagram.com`, `*.cdninstagram.com`, `*.fbcdn.net`
+
+### Resultados — comparación
+
+| Página | Categoría | Antes | Después | Δ |
+|---|---|---|---|---|
+| / | Performance | 74 | 90 | +16 |
+| / | Accessibility | 100 | 96 | -4 |
+| / | Best Practices | 92 | 100 | +8 |
+| / | SEO | 69 | 69 | = |
+| /courses | Performance | 92 | 92 | = |
+| /courses | Accessibility | 100 | 100 | = |
+| /courses | Best Practices | 100 | 100 | = |
+| /courses | SEO | 69 | 69 | = |
+
+### Core Web Vitals — comparación
+
+| Página | Métrica | Antes | Después | Δ |
+|---|---|---|---|---|
+| / | FCP | 1.3 s | 1.2 s | -0.1 s |
+| / | LCP | 12.8 s | 3.5 s | -9.3 s |
+| / | CLS | 0 | 0 | = |
+| / | TBT | 10 ms | 0 ms | -10 ms |
+| / | Speed Index | 3.3 s | 3.3 s | = |
+| /courses | FCP | 1.0 s | 0.9 s | -0.1 s |
+| /courses | LCP | 3.4 s | 3.3 s | -0.1 s |
+| /courses | CLS | 0 | 0 | = |
+| /courses | TBT | 0 ms | 0 ms | = |
+| /courses | Speed Index | 2.5 s | 1.9 s | -0.6 s |
+
+### Issues que persisten
+
+Audits con score < 1 en home después de los fixes:
+
+| Audit | Score | Nota |
+|---|---|---|
+| `frame-title` | 0 | `<iframe>` sin atributo `title` (regresión en a11y) |
+| `unused-javascript` | 0 | ~110 KiB de JS sin usar (Next.js bundle) |
+| `is-crawlable` | 0 | `x-robots-tag: noindex` — automático de Vercel en *.vercel.app |
+| `bf-cache` | 0 | Back/forward cache bloqueado |
+| `image-delivery-insight` | 0 | Insight informativo de Lighthouse (no puntuado en categorías) |
+| `lcp-discovery-insight` | 0 | LCP element no precargado con `<link rel="preload">` |
+| `largest-contentful-paint` | 0.65 | LCP 3.5 s — mejoró desde 12.8 s pero sigue por encima del umbral "good" (<2.5 s) |
+
+La **Accessibility home bajó de 100 a 96**: el audit `frame-title` (iframes sin `title`) falló — probablemente el embed de Instagram añadido al desbloquear la CSP.
+
+### Notas
+- SEO 69 sigue por el `x-robots-tag: noindex` automático que añade Vercel a `*.vercel.app`. Desaparecerá al apuntar dominio propio.
+- El LCP en home mejoró drásticamente (12.8 s → 3.5 s) gracias al WebP. Aún supera el umbral "good" de 2.5 s; próximo paso: añadir `<link rel="preload">` para `hero-bg.webp`.
+- SSO original era `null` (no estaba configurado); el deploy de preview no requería SSO. Estado final del deploy: HTTP 200.
