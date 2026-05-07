@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { notify } from '@/utils/notifications/server';
 import { hasCourseAccess } from '@/utils/auth/course-access';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
+import { dbErrorMessage } from '@/utils/errors/db-error';
 
 export type Comment = {
   id: string;
@@ -34,8 +35,7 @@ export async function getComments(lessonId: string): Promise<{ data?: Comment[],
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('Error fetching comments:', error);
-    return { error: error.message };
+    return { error: dbErrorMessage('fetchComments', error) };
   }
 
   if (!comments || comments.length === 0) return { data: [] };
