@@ -117,26 +117,41 @@ export async function POST(req: Request) {
     }
   }
 
-  if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+  if (
+    event.type === 'customer.subscription.created' ||
+    event.type === 'customer.subscription.updated' ||
+    event.type === 'customer.subscription.deleted'
+  ) {
     const subscription = event.data.object as Stripe.Subscription;
 
     const item = subscription.items.data[0];
     if (!item || !item.current_period_start || !item.current_period_end) {
-      console.error('Webhook: subscription update with no usable item', { id: subscription.id });
+      console.error('Webhook: subscription event with no usable item', { id: subscription.id });
       return new NextResponse(null, { status: 200 });
     }
 
+    // userId from metadata (set by /api/checkout). May be missing on raw
+    // sub events; if so, omit from upsert payload so an existing user_id
+    // is preserved on update.
+    const userId = (subscription.metadata?.userId as string | undefined) ?? null;
+
+    // Upsert (not update) so out-of-order events still establish the row.
+    // For `deleted`, we still upsert to mark status='canceled' authoritatively.
+    const payload: Record<string, unknown> = {
+      id: subscription.id,
+      status: subscription.status,
+      plan_type: item.price.id,
+      current_period_start: new Date(item.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(item.current_period_end * 1000).toISOString(),
+    };
+    if (userId) payload.user_id = userId;
+
     const { error } = await supabase
       .from('subscriptions')
-      .update({
-        status: subscription.status,
-        current_period_start: new Date(item.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(item.current_period_end * 1000).toISOString(),
-      })
-      .eq('id', subscription.id);
+      .upsert(payload, { onConflict: 'id' });
 
     if (error) {
-      console.error('Error updating subscription:', error);
+      console.error('Error upserting subscription:', error);
       return new NextResponse('Database Error', { status: 500 });
     }
   }

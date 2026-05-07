@@ -156,27 +156,28 @@ describe('POST /api/webhooks/stripe — checkout.session.completed', () => {
 describe('POST /api/webhooks/stripe — subscription updates', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('updates subscription status on customer.subscription.updated', async () => {
+  it('upserts subscription status on customer.subscription.updated', async () => {
     const mockSub = {
       id: 'sub_test',
       status: 'active',
       items: {
-        data: [{ current_period_start: 1700000000, current_period_end: 1702592000 }],
+        data: [{ current_period_start: 1700000000, current_period_end: 1702592000, price: { id: 'price_x' } }],
       },
+      metadata: { userId: 'user-1' },
     }
     mockConstructEvent.mockReturnValueOnce({
       type: 'customer.subscription.updated',
       data: { object: mockSub },
     })
+    mockUpsert.mockResolvedValueOnce({ error: null })
 
     const { POST } = await import('@/app/api/webhooks/stripe/route')
     const res = await POST(makeWebhookRequest())
     expect(res.status).toBe(200)
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'active' })
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sub_test', status: 'active' }),
+      expect.objectContaining({ onConflict: 'id' })
     )
-    // .eq() called with the subscription ID
-    expect(mockUpdateEq).toHaveBeenCalledWith('id', 'sub_test')
   })
 
   it('marks subscription as canceled on customer.subscription.deleted', async () => {
@@ -184,20 +185,86 @@ describe('POST /api/webhooks/stripe — subscription updates', () => {
       id: 'sub_test',
       status: 'canceled',
       items: {
-        data: [{ current_period_start: 1700000000, current_period_end: 1702592000 }],
+        data: [{ current_period_start: 1700000000, current_period_end: 1702592000, price: { id: 'price_x' } }],
       },
+      metadata: {},
     }
     mockConstructEvent.mockReturnValueOnce({
       type: 'customer.subscription.deleted',
       data: { object: mockSub },
     })
+    mockUpsert.mockResolvedValueOnce({ error: null })
 
     const { POST } = await import('@/app/api/webhooks/stripe/route')
     const res = await POST(makeWebhookRequest())
     expect(res.status).toBe(200)
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'canceled' })
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'canceled' }),
+      expect.objectContaining({ onConflict: 'id' })
     )
+  })
+
+  it('handles customer.subscription.created by upserting the row', async () => {
+    mockUpsert.mockClear()
+    mockUpsert.mockResolvedValue({ error: null })
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'customer.subscription.created',
+      data: {
+        object: {
+          id: 'sub_new',
+          status: 'active',
+          items: { data: [{
+            current_period_start: 1700000000,
+            current_period_end: 1702592000,
+            price: { id: 'price_x' },
+          }] },
+          metadata: { userId: 'user-1' },
+        },
+      },
+    } as never)
+
+    const req = new Request('http://x/webhook', {
+      method: 'POST',
+      headers: { 'Stripe-Signature': 'sig' },
+      body: '{}',
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sub_new', status: 'active' }),
+      expect.objectContaining({ onConflict: 'id' })
+    )
+  })
+
+  it('subscription.updated upserts (creates if missing) for out-of-order events', async () => {
+    mockUpsert.mockClear()
+    mockUpsert.mockResolvedValue({ error: null })
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_late',
+          status: 'active',
+          items: { data: [{
+            current_period_start: 1700000000,
+            current_period_end: 1702592000,
+            price: { id: 'price_x' },
+          }] },
+          metadata: { userId: 'user-1' },
+        },
+      },
+    } as never)
+
+    const req = new Request('http://x/webhook', {
+      method: 'POST',
+      headers: { 'Stripe-Signature': 'sig' },
+      body: '{}',
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(mockUpsert).toHaveBeenCalled()
   })
 })
 
@@ -235,7 +302,7 @@ describe('POST /api/webhooks/stripe — empty subscription items guard', () => {
     expect(mockUpsert).not.toHaveBeenCalled()
   })
 
-  it('customer.subscription.updated: skips update and returns 200 when items is empty', async () => {
+  it('customer.subscription.updated: skips upsert and returns 200 when items is empty', async () => {
     mockConstructEvent.mockReturnValueOnce({
       type: 'customer.subscription.updated',
       data: {
@@ -250,10 +317,10 @@ describe('POST /api/webhooks/stripe — empty subscription items guard', () => {
     const { POST } = await import('@/app/api/webhooks/stripe/route')
     const res = await POST(makeWebhookRequest())
     expect(res.status).toBe(200)
-    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(mockUpsert).not.toHaveBeenCalled()
   })
 
-  it('customer.subscription.deleted: skips update and returns 200 when items is empty', async () => {
+  it('customer.subscription.deleted: skips upsert and returns 200 when items is empty', async () => {
     mockConstructEvent.mockReturnValueOnce({
       type: 'customer.subscription.deleted',
       data: {
@@ -268,6 +335,6 @@ describe('POST /api/webhooks/stripe — empty subscription items guard', () => {
     const { POST } = await import('@/app/api/webhooks/stripe/route')
     const res = await POST(makeWebhookRequest())
     expect(res.status).toBe(200)
-    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(mockUpsert).not.toHaveBeenCalled()
   })
 })
