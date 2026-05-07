@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// server-only throws outside of Next.js server context — mock it for test env.
+vi.mock('server-only', () => ({}))
+
 const mockInsert = vi.fn().mockResolvedValue({ error: null })
 const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
 const mockGetUser = vi.fn()

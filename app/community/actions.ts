@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { notify } from '@/utils/notifications/server'
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
+import { dbErrorMessage } from '@/utils/errors/db-error'
 import type { ActionResult } from '@/utils/actions/result'
 
 export async function submitPost(formData: FormData): Promise<ActionResult> {
@@ -80,7 +81,7 @@ export async function submitComment(formData: FormData): Promise<ActionResult> {
     .single()
 
   if (error || !inserted) {
-    return { success: false, error: 'No se pudo publicar el comentario.' }
+    return { success: false, error: dbErrorMessage('submitComment', error) }
   }
 
   // Notify post author only for top-level comments (replies notify the parent author below).

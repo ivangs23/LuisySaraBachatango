@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// server-only throws outside of Next.js server context — mock it for test env.
+vi.mock('server-only', () => ({}))
+
 const mockNotify = vi.fn()
 vi.mock('@/utils/notifications/server', () => ({ notify: mockNotify }))
 vi.mock('@/utils/supabase/server', () => ({ createClient: vi.fn() }))

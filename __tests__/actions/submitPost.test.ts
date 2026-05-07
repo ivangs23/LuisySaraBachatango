@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { _resetRateLimitForTest } from '@/utils/rate-limit'
 
+// server-only throws outside of Next.js server context — mock it for test env.
+vi.mock('server-only', () => ({}))
+
 const insertMock = vi.fn()
 const getUser = vi.fn()
 
