@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -50,6 +50,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: BASE_URL,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#c0a062',
 };
 
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
