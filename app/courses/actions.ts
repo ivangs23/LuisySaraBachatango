@@ -69,6 +69,7 @@ export async function updateLesson(formData: FormData) {
   const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
   const isFree = formData.get('isFree') === 'on'
   const parentLessonId = (formData.get('parentLessonId') as string | null) || null
+  const expectedUpdatedAt = formData.get('expectedUpdatedAt') as string | null
 
   const update: Record<string, unknown> = {
     title,
@@ -77,13 +78,28 @@ export async function updateLesson(formData: FormData) {
     duration,
     is_free: isFree,
     parent_lesson_id: parentLessonId,
+    updated_at: new Date().toISOString(),
   }
   if (thumbnailUrl) update.thumbnail_url = thumbnailUrl
 
-  const { error } = await supabase.from('lessons').update(update).eq('id', lessonId)
+  let query = supabase
+    .from('lessons')
+    .update(update)
+    .eq('id', lessonId)
+
+  if (expectedUpdatedAt) {
+    query = query.eq('updated_at', expectedUpdatedAt)
+  }
+
+  const { data, error } = await query.select('id').maybeSingle()
+
   if (error) {
     console.error('Update lesson error:', error)
     return { error: error.message }
+  }
+
+  if (expectedUpdatedAt && !data) {
+    return { error: 'concurrent_update' }
   }
 
   revalidatePath(`/courses/${courseId}`)

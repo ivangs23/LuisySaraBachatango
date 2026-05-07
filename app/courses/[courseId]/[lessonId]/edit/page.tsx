@@ -22,7 +22,7 @@ export default async function EditLessonPage(props: {
   const [{ data: lesson }, { data: topLevelLessons }, { data: assignment }] = await Promise.all([
     supabase
       .from('lessons')
-      .select('id, title, description, "order", thumbnail_url, duration, is_free, mux_asset_id, mux_playback_id, mux_status, parent_lesson_id')
+      .select('id, title, description, "order", thumbnail_url, duration, is_free, mux_asset_id, mux_playback_id, mux_status, parent_lesson_id, updated_at')
       .eq('id', params.lessonId)
       .eq('course_id', params.courseId)
       .single(),

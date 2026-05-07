@@ -732,6 +732,112 @@ describe('deleteAssignment', () => {
   })
 })
 
+// ── updateLesson ──────────────────────────────────────────────────────────────
+
+describe('updateLesson', () => {
+  let fromMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+    fromMock = vi.fn()
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: fromMock,
+    })
+  })
+
+  /** Builds a Supabase chain: update → eq('id') → [optional eq('updated_at')] → select → maybeSingle */
+  function makeUpdateChain(result: { data: unknown; error: unknown } = { data: { id: 'l1' }, error: null }) {
+    const maybeSingleMock = vi.fn().mockResolvedValue(result)
+    const selectMock = vi.fn().mockReturnValue({ maybeSingle: maybeSingleMock })
+    // Inner eq used for updated_at filter; returns the same select stub.
+    const innerEqMock = vi.fn().mockReturnValue({ select: selectMock })
+    // Outer eq used for id filter; can chain to another eq OR directly to select.
+    const outerEqMock = vi.fn().mockReturnValue({ eq: innerEqMock, select: selectMock })
+    const updateMock = vi.fn().mockReturnValue({ eq: outerEqMock })
+    fromMock.mockReturnValueOnce({ update: updateMock })
+    return { updateMock, outerEqMock, innerEqMock, selectMock, maybeSingleMock }
+  }
+
+  it('returns validation error when order is 0', async () => {
+    const { updateLesson } = await import('@/app/courses/actions')
+    const result = await updateLesson(fd({ lessonId: 'l1', courseId: 'c1', title: 'T', order: '0' }))
+    expect(result).toEqual({ error: 'El orden de la lección debe ser un número positivo' })
+  })
+
+  it('returns validation error for blank title', async () => {
+    const { updateLesson } = await import('@/app/courses/actions')
+    const result = await updateLesson(fd({ lessonId: 'l1', courseId: 'c1', title: '   ', order: '1' }))
+    expect(result).toEqual({ error: 'invalid_title' })
+  })
+
+  it('throws when requireAdmin rejects (non-admin)', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const { updateLesson } = await import('@/app/courses/actions')
+    await expect(
+      updateLesson(fd({ lessonId: 'l1', courseId: 'c1', title: 'T', order: '1' }))
+    ).rejects.toThrow('forbidden')
+  })
+
+  it('updates the lesson row without expectedUpdatedAt (no concurrency check)', async () => {
+    const { updateMock, outerEqMock } = makeUpdateChain({ data: { id: 'l1' }, error: null })
+
+    const { updateLesson } = await import('@/app/courses/actions')
+    const result = await updateLesson(fd({
+      lessonId: 'l1', courseId: 'c1', title: 'New title', order: '2',
+    }))
+
+    expect(result).toBeUndefined()
+    expect(fromMock).toHaveBeenCalledWith('lessons')
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'New title',
+      order: 2,
+      updated_at: expect.any(String),
+    }))
+    expect(outerEqMock).toHaveBeenCalledWith('id', 'l1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1/edit')
+  })
+
+  it('rejects with concurrent_update when expectedUpdatedAt does not match (0 rows affected)', async () => {
+    makeUpdateChain({ data: null, error: null })
+
+    const { updateLesson } = await import('@/app/courses/actions')
+    const result = await updateLesson(fd({
+      lessonId: 'l1', courseId: 'c1', title: 'New title', order: '1',
+      expectedUpdatedAt: 'OLD-timestamp',
+    }))
+
+    expect(result).toEqual({ error: 'concurrent_update' })
+    expect(mockRevalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('succeeds when expectedUpdatedAt matches (row returned)', async () => {
+    makeUpdateChain({ data: { id: 'l1' }, error: null })
+
+    const { updateLesson } = await import('@/app/courses/actions')
+    const result = await updateLesson(fd({
+      lessonId: 'l1', courseId: 'c1', title: 'New title', order: '1',
+      expectedUpdatedAt: '2026-05-07T10:00:00.000Z',
+    }))
+
+    expect(result).toBeUndefined()
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1')
+  })
+
+  it('returns error when Supabase update fails', async () => {
+    makeUpdateChain({ data: null, error: { message: 'update failed' } })
+
+    const { updateLesson } = await import('@/app/courses/actions')
+    const result = await updateLesson(fd({
+      lessonId: 'l1', courseId: 'c1', title: 'T', order: '1',
+    }))
+
+    expect(result).toEqual({ error: 'update failed' })
+  })
+})
+
 describe('validateOrder', () => {
   it('accepts valid positive integers', () => {
     expect(validateOrder('1')).toBeNull()

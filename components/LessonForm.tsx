@@ -14,6 +14,7 @@ type Lesson = {
   duration?: number | null
   is_free?: boolean
   parent_lesson_id?: string | null
+  updated_at?: string | null
 }
 
 type LessonOption = { id: string; title: string; order: number }
@@ -81,6 +82,7 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
     if (isFree) fd.append('isFree', 'on')
     if (thumbnailUrl) fd.append('thumbnailUrl', thumbnailUrl)
     if (parentLessonId) fd.append('parentLessonId', parentLessonId)
+    if (initialData?.updated_at) fd.append('expectedUpdatedAt', initialData.updated_at)
 
     const result = await action(fd)
     if (result && 'error' in result && result.error) {
