@@ -325,6 +325,26 @@ export async function gradeSubmission(
   const admin = await requireAdmin()
   const supabase = await createClient()
 
+  // Verify submission belongs to the claimed courseId via:
+  // submissions.assignment_id → assignments.lesson_id → lessons.course_id
+  const { data: ownership } = await supabase
+    .from('submissions')
+    .select('assignments(lessons(course_id))')
+    .eq('id', submissionId)
+    .single()
+
+  if (!ownership) {
+    return { error: 'submission_not_found' }
+  }
+
+  const submissionCourseId =
+    (ownership.assignments as { lessons?: { course_id?: string } } | null)
+      ?.lessons?.course_id
+
+  if (submissionCourseId !== courseId) {
+    return { error: 'submission_mismatch' }
+  }
+
   const { error } = await supabase
     .from('submissions')
     .update({ grade, feedback, status: 'reviewed', updated_at: new Date().toISOString() })

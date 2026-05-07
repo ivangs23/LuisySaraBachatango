@@ -496,6 +496,88 @@ describe('validateImageFile', () => {
   })
 })
 
+// ── gradeSubmission ───────────────────────────────────────────────────────────
+
+describe('gradeSubmission', () => {
+  let fromMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+    fromMock = vi.fn()
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: fromMock,
+    })
+  })
+
+  function makeOwnershipMock(courseId: string | undefined) {
+    const data = courseId !== undefined
+      ? { assignments: { lessons: { course_id: courseId } } }
+      : null
+    return {
+      select: () => ({ eq: () => ({ single: vi.fn().mockResolvedValue({ data }) }) }),
+    }
+  }
+
+  it('rejects when submission does not belong to courseId', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock('OTHER'))
+
+    const { gradeSubmission } = await import('@/app/courses/actions')
+    const result = await gradeSubmission('s1', 'A', 'good', 'c1', 'l1', 'u1')
+    expect(result).toEqual({ error: 'submission_mismatch' })
+    // Only the ownership query from('submissions') was issued; no second call for update
+    expect(fromMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('rejects when submission does not exist', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock(undefined))
+
+    const { gradeSubmission } = await import('@/app/courses/actions')
+    const result = await gradeSubmission('bogus', 'A', 'good', 'c1', 'l1', 'u1')
+    expect(result).toEqual({ error: 'submission_not_found' })
+  })
+
+  it('updates the submission and notifies the student when ownership matches', async () => {
+    // First from() call: ownership check
+    fromMock.mockReturnValueOnce(makeOwnershipMock('c1'))
+    // Second from() call: update
+    const eqMock = vi.fn().mockResolvedValue({ error: null })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+    fromMock.mockReturnValueOnce({ update: updateMock })
+
+    const { gradeSubmission } = await import('@/app/courses/actions')
+    const result = await gradeSubmission('s1', 'A+', 'great', 'c1', 'l1', 'u1')
+    expect(result).toBeUndefined()
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      grade: 'A+',
+      feedback: 'great',
+      status: 'reviewed',
+    }))
+    expect(eqMock).toHaveBeenCalledWith('id', 's1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1/submissions')
+  })
+
+  it('returns error when Supabase update fails', async () => {
+    // Ownership check passes
+    fromMock.mockReturnValueOnce(makeOwnershipMock('c1'))
+    // Update fails
+    const eqMock = vi.fn().mockResolvedValue({ error: { message: 'update failed' } })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+    fromMock.mockReturnValueOnce({ update: updateMock })
+
+    const { gradeSubmission } = await import('@/app/courses/actions')
+    const result = await gradeSubmission('s1', 'B', 'ok', 'c1', 'l1', 'u1')
+    expect(result).toEqual({ error: 'update failed' })
+  })
+
+  it('throws when requireAdmin rejects (non-admin)', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const { gradeSubmission } = await import('@/app/courses/actions')
+    await expect(gradeSubmission('s1', 'A', 'good', 'c1', 'l1', 'u1')).rejects.toThrow('forbidden')
+  })
+})
+
 describe('validateOrder', () => {
   it('accepts valid positive integers', () => {
     expect(validateOrder('1')).toBeNull()
