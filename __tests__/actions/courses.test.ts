@@ -578,6 +578,160 @@ describe('gradeSubmission', () => {
   })
 })
 
+// ── updateAssignment ──────────────────────────────────────────────────────────
+
+describe('updateAssignment', () => {
+  let fromMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+    fromMock = vi.fn()
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: fromMock,
+    })
+  })
+
+  function makeOwnershipMock(lessonId: string | undefined) {
+    const data = lessonId !== undefined ? { lesson_id: lessonId } : null
+    return {
+      select: () => ({ eq: () => ({ single: vi.fn().mockResolvedValue({ data }) }) }),
+    }
+  }
+
+  it('rejects when assignment does not belong to lessonId', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock('OTHER'))
+
+    const { updateAssignment } = await import('@/app/courses/actions')
+    const result = await updateAssignment('a1', 'title', 'desc', 'c1', 'l1')
+    expect(result).toEqual({ error: 'assignment_mismatch' })
+    // Only the ownership query was issued; no update call
+    expect(fromMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('rejects when assignment does not exist', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock(undefined))
+
+    const { updateAssignment } = await import('@/app/courses/actions')
+    const result = await updateAssignment('bogus', 'title', 'desc', 'c1', 'l1')
+    expect(result).toEqual({ error: 'assignment_not_found' })
+    expect(fromMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('updates the assignment when ownership matches', async () => {
+    // First from() call: ownership check
+    fromMock.mockReturnValueOnce(makeOwnershipMock('l1'))
+    // Second from() call: update
+    const eqMock = vi.fn().mockResolvedValue({ error: null })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+    fromMock.mockReturnValueOnce({ update: updateMock })
+
+    const { updateAssignment } = await import('@/app/courses/actions')
+    const result = await updateAssignment('a1', 'New Title', 'New Desc', 'c1', 'l1')
+    expect(result).toBeUndefined()
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'New Title',
+      description: 'New Desc',
+    }))
+    expect(eqMock).toHaveBeenCalledWith('id', 'a1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1/edit')
+  })
+
+  it('returns error when Supabase update fails', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock('l1'))
+    const eqMock = vi.fn().mockResolvedValue({ error: { message: 'update failed' } })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+    fromMock.mockReturnValueOnce({ update: updateMock })
+
+    const { updateAssignment } = await import('@/app/courses/actions')
+    const result = await updateAssignment('a1', 'T', 'D', 'c1', 'l1')
+    expect(result).toEqual({ error: 'update failed' })
+  })
+
+  it('throws when requireAdmin rejects (non-admin)', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const { updateAssignment } = await import('@/app/courses/actions')
+    await expect(updateAssignment('a1', 'T', 'D', 'c1', 'l1')).rejects.toThrow('forbidden')
+  })
+})
+
+// ── deleteAssignment ──────────────────────────────────────────────────────────
+
+describe('deleteAssignment', () => {
+  let fromMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+    fromMock = vi.fn()
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: fromMock,
+    })
+  })
+
+  function makeOwnershipMock(lessonId: string | undefined) {
+    const data = lessonId !== undefined ? { lesson_id: lessonId } : null
+    return {
+      select: () => ({ eq: () => ({ single: vi.fn().mockResolvedValue({ data }) }) }),
+    }
+  }
+
+  it('rejects when assignment does not belong to lessonId', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock('OTHER'))
+
+    const { deleteAssignment } = await import('@/app/courses/actions')
+    const result = await deleteAssignment('a1', 'c1', 'l1')
+    expect(result).toEqual({ error: 'assignment_mismatch' })
+    expect(fromMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('rejects when assignment does not exist', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock(undefined))
+
+    const { deleteAssignment } = await import('@/app/courses/actions')
+    const result = await deleteAssignment('bogus', 'c1', 'l1')
+    expect(result).toEqual({ error: 'assignment_not_found' })
+    expect(fromMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('deletes the assignment when ownership matches', async () => {
+    // First from() call: ownership check
+    fromMock.mockReturnValueOnce(makeOwnershipMock('l1'))
+    // Second from() call: delete
+    const eqMock = vi.fn().mockResolvedValue({ error: null })
+    const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+    fromMock.mockReturnValueOnce({ delete: deleteMock })
+
+    const { deleteAssignment } = await import('@/app/courses/actions')
+    const result = await deleteAssignment('a1', 'c1', 'l1')
+    expect(result).toBeUndefined()
+    expect(deleteMock).toHaveBeenCalled()
+    expect(eqMock).toHaveBeenCalledWith('id', 'a1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1/edit')
+  })
+
+  it('returns error when Supabase delete fails', async () => {
+    fromMock.mockReturnValueOnce(makeOwnershipMock('l1'))
+    const eqMock = vi.fn().mockResolvedValue({ error: { message: 'delete failed' } })
+    const deleteMock = vi.fn().mockReturnValue({ eq: eqMock })
+    fromMock.mockReturnValueOnce({ delete: deleteMock })
+
+    const { deleteAssignment } = await import('@/app/courses/actions')
+    const result = await deleteAssignment('a1', 'c1', 'l1')
+    expect(result).toEqual({ error: 'delete failed' })
+  })
+
+  it('throws when requireAdmin rejects (non-admin)', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const { deleteAssignment } = await import('@/app/courses/actions')
+    await expect(deleteAssignment('a1', 'c1', 'l1')).rejects.toThrow('forbidden')
+  })
+})
+
 describe('validateOrder', () => {
   it('accepts valid positive integers', () => {
     expect(validateOrder('1')).toBeNull()

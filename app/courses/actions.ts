@@ -243,6 +243,16 @@ export async function updateAssignment(assignmentId: string, title: string, desc
   await requireAdmin()
   const supabase = await createClient()
 
+  // Ownership: confirm assignment belongs to lessonId.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: 'assignment_not_found' }
+  if (assignment.lesson_id !== lessonId) return { error: 'assignment_mismatch' }
+
   const { error } = await supabase
     .from('assignments')
     .update({ title, description })
@@ -260,6 +270,16 @@ export async function updateAssignment(assignmentId: string, title: string, desc
 export async function deleteAssignment(assignmentId: string, courseId: string, lessonId: string) {
   await requireAdmin()
   const supabase = await createClient()
+
+  // Ownership: confirm assignment belongs to lessonId.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: 'assignment_not_found' }
+  if (assignment.lesson_id !== lessonId) return { error: 'assignment_mismatch' }
 
   const { error } = await supabase.from('assignments').delete().eq('id', assignmentId)
 
