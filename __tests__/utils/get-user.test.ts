@@ -21,9 +21,9 @@ describe('getCurrentUser', () => {
     // Note: react/cache memoizes globally in tests — the second call returns the
     // cached result from the first call (the real user object), not null.
     // This test documents that the cache() wrapper is in effect.
-    const module = await import('@/utils/supabase/get-user')
+    const mod = await import('@/utils/supabase/get-user')
     // Verify the module exports getCurrentUser function
-    expect(module).toHaveProperty('getCurrentUser')
-    expect(typeof module.getCurrentUser).toBe('function')
+    expect(mod).toHaveProperty('getCurrentUser')
+    expect(typeof mod.getCurrentUser).toBe('function')
   })
 })
