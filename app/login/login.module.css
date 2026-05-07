@@ -466,9 +466,9 @@
   gap: 0.55rem;
   padding: 0.9rem 1.4rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.95) 0%, rgba(var(--primary-rgb), 0.75) 100%);
-  border: 1px solid rgba(var(--primary-rgb), 0.65);
-  color: #0a0a0a;
+  background: linear-gradient(135deg, #b08d4a 0%, #8a6a30 100%);
+  border: 1px solid #9d7f3d;
+  color: #000000;
   font-family: var(--font-sans);
   font-size: 0.82rem;
   font-weight: 700;
