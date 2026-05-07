@@ -44,6 +44,12 @@ export function parseEventForm(formData: FormData): ParseResult {
   if (title.es.length === 0) return { error: 'El título en español es obligatorio' }
   if (description.es.length === 0) return { error: 'La descripción en español es obligatoria' }
 
+  if (location.length > 200) return { error: 'location_too_long' }
+  for (const loc of LOCALES) {
+    if (title[loc].length > 500) return { error: 'title_too_long' }
+    if (description[loc].length > 5000) return { error: 'description_too_long' }
+  }
+
   return {
     payload: { start_date, end_date, location, is_published, title, description },
   }

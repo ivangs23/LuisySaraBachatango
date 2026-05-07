@@ -37,14 +37,15 @@ export async function grantCourseAccess(userId: string, courseId: string) {
 
 export async function sendNotification(userId: string, title: string, body: string) {
   await requireAdmin()
-  const t = title.trim()
+  const t = title.trim().slice(0, 200)
+  const b = body.trim().slice(0, 1000)
   if (!t) throw new Error('Title required')
   if (!userId) throw new Error('userId required')
   const sb = createSupabaseAdmin()
   const { error } = await sb.from('notifications').insert({
     user_id: userId,
     title: t,
-    body: body.trim(),
+    body: b,
     type: 'admin_message',
   })
   if (error) throw error
