@@ -1,5 +1,5 @@
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
-import { requireAdmin } from '@/utils/admin/guard'
+import { requireAdmin } from '@/utils/auth/require-admin'
 
 export type OverviewKpis = {
   totalStudents: number

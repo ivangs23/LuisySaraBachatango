@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { requireAdmin, AdminGuardError } from '@/utils/admin/guard'
+import { requireAdmin, AdminGuardError } from '@/utils/auth/require-admin'
 import EventForm from '@/components/EventForm'
 
 export const dynamic = 'force-dynamic'

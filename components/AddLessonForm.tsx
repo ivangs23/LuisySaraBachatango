@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { createLesson } from '@/app/courses/actions';
 import styles from './AddLessonForm.module.css';
@@ -11,7 +11,6 @@ type AddLessonFormProps = {
 
 export default function AddLessonForm({ courseId }: AddLessonFormProps) {
   const [activeTab, setActiveTab] = useState<'url' | 'upload'>('url');
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -37,7 +36,6 @@ export default function AddLessonForm({ courseId }: AddLessonFormProps) {
 
   const handleSubmit = async (formData: FormData) => {
     setIsUploading(true);
-    setUploadProgress(0);
 
     try {
       // 1. Upload Thumbnail (if present)

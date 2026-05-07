@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { requireAdmin, AdminGuardError } from '@/utils/admin/guard'
+import { requireAdmin, AdminGuardError } from '@/utils/auth/require-admin'
 import { createClient } from '@/utils/supabase/server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import styles from './layout.module.css'
