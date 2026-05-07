@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   updateUserRole, grantCourseAccess, sendNotification, deleteUser,
@@ -17,8 +17,52 @@ export default function StudentActions({ userId, userEmail, currentRole, courses
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  const isOpen = modal !== 'none'
 
   function close() { setModal('none'); setError(null) }
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    previousFocusRef.current = document.activeElement as HTMLElement
+
+    const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
+      'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
+    )
+    firstFocusable?.focus()
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        close()
+        return
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+        )
+        if (focusables.length === 0) return
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      previousFocusRef.current?.focus()
+    }
+  }, [isOpen])
 
   function run(fn: () => Promise<void>) {
     setError(null)
@@ -40,7 +84,14 @@ export default function StudentActions({ userId, userEmail, currentRole, courses
 
       {modal !== 'none' && (
         <div className={styles.modalBackdrop} onClick={close}>
-          <div className={styles.modal} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+          <div
+            ref={dialogRef}
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="student-actions-dialog-title"
+            onClick={e => e.stopPropagation()}
+          >
             {modal === 'role' && (
               <RoleForm
                 currentRole={currentRole}
@@ -87,7 +138,7 @@ function RoleForm({ currentRole, disabled, error, onSubmit }: {
   const [r, setR] = useState(currentRole)
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(r) }}>
-      <h3>Cambiar rol</h3>
+      <h3 id="student-actions-dialog-title">Cambiar rol</h3>
       <select value={r} onChange={e => setR(e.target.value as never)} disabled={disabled} className={styles.input}>
         <option value="member">member</option>
         <option value="premium">premium</option>
@@ -105,7 +156,7 @@ function GrantForm({ courses, disabled, error, onSubmit }: {
   const [cid, setCid] = useState(courses[0]?.id ?? '')
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (cid) onSubmit(cid) }}>
-      <h3>Conceder acceso a curso</h3>
+      <h3 id="student-actions-dialog-title">Conceder acceso a curso</h3>
       <select value={cid} onChange={e => setCid(e.target.value)} disabled={disabled} className={styles.input}>
         {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
       </select>
@@ -122,7 +173,7 @@ function NotifyForm({ disabled, error, onSubmit }: {
   const [body, setBody] = useState('')
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(title, body) }}>
-      <h3>Enviar notificación</h3>
+      <h3 id="student-actions-dialog-title">Enviar notificación</h3>
       <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Título" disabled={disabled} className={styles.input} />
       <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Mensaje" rows={4} disabled={disabled} className={styles.input} />
       {error && <p className={styles.errorMsg}>{error}</p>}
@@ -140,7 +191,7 @@ function DeleteForm({ disabled, error, targetEmail, onSubmit }: {
   const emailMatch = typedEmail.trim().toLowerCase() === (targetEmail ?? '').toLowerCase()
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(phrase, typedEmail) }}>
-      <h3>Eliminar alumno</h3>
+      <h3 id="student-actions-dialog-title">Eliminar alumno</h3>
       <p>Esta acción es <strong>irreversible</strong>. Escribe <code>ELIMINAR</code> para confirmar.</p>
       <input value={phrase} onChange={e => setPhrase(e.target.value)} disabled={disabled} className={styles.input} />
       <p>
