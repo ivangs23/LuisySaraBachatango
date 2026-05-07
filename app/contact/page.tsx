@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { motion } from 'motion/react';
 import {
   User,
@@ -16,6 +16,7 @@ import {
 import Reveal from '@/components/Reveal';
 import styles from './page.module.css';
 import { useLanguage } from '@/context/LanguageContext';
+import { submitContact } from '@/app/actions/contact';
 
 const EMAIL = 'booking@luisysara.com';
 const INSTAGRAM = 'https://instagram.com/luisysaradance';
@@ -24,16 +25,23 @@ const FACEBOOK = 'https://facebook.com/luisysaradance';
 export default function ContactPage() {
   const { t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitting(true);
-    // Simulamos un envío para que la UX no sea instantánea
-    await new Promise((r) => setTimeout(r, 600));
-    setSubmitting(false);
-    setSubmitted(true);
-    (e.currentTarget as HTMLFormElement).reset();
+    setFormError(null);
+    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    startTransition(async () => {
+      const r = await submitContact(formData);
+      if ('success' in r) {
+        setSubmitted(true);
+        form.reset();
+      } else {
+        setFormError(r.error);
+      }
+    });
   };
 
   return (
@@ -279,14 +287,19 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {formError && (
+                  <p role="alert" className={styles.formError}>
+                    {t.contact.error}
+                  </p>
+                )}
                 <motion.button
                   type="submit"
                   className={styles.submitButton}
                   whileTap={{ scale: 0.97 }}
-                  disabled={submitting}
+                  disabled={isPending}
                 >
                   <Send size={13} strokeWidth={2.4} aria-hidden="true" />
-                  {submitting ? 'Enviando…' : t.contact.form.submit}
+                  {isPending ? 'Enviando…' : t.contact.form.submit}
                 </motion.button>
               </form>
             )}

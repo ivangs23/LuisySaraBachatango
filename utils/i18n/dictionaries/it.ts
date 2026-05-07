@@ -41,7 +41,8 @@ export const it: Dictionary = {
     q4: { q: "Serve il partner?", a: "No, molte lezioni sono individuali." }
   },
   newsletter: {
-    title: "Unisciti alla Comunità", desc: "Ricevi consigli esclusivi.", placeholder: "La tua email", button: "Iscriviti"
+    title: "Unisciti alla Comunità", desc: "Ricevi consigli esclusivi.", placeholder: "La tua email", button: "Iscriviti",
+    success: "Iscritto! Grazie.", error: "Invio fallito."
   },
   events: {
     title: "Agenda & Eventi", desc: "Scopri dove saremo.", details: "Più Info",
@@ -65,6 +66,7 @@ export const it: Dictionary = {
   },
   contact: {
     title: "Ingaggi", desc: "Vuoi portarci nella tua città?",
+    success: "Messaggio inviato! Ti risponderemo presto.", error: "Invio fallito.",
     form: {
       name: "Nome", namePlace: "Il tuo nome",
       email: "Email", type: "Tipo Evento", types: { fest: "Festival", work: "Workshop", show: "Show", other: "Altro" },

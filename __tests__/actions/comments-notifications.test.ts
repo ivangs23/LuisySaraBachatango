@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { hasCourseAccess } from '@/utils/auth/course-access'
 
+vi.mock('server-only', () => ({}))
+
 const mockNotify = vi.fn()
 vi.mock('@/utils/notifications/server', () => ({ notify: mockNotify }))
 

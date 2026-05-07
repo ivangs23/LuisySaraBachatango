@@ -193,25 +193,36 @@ export async function addMuxTextTrack(
   // Fetch the VTT, normalize it (handles DaVinci 01:00:00 offset + strips
   // invalid <font> tags). If the content changed, upload the normalized
   // version and point Mux at that URL instead.
+  const MAX_VTT_SIZE = 5 * 1024 * 1024 // 5MB — VTT files are tiny in practice
   let trackUrl = fileUrl
   try {
     const res = await fetch(fileUrl)
     if (res.ok) {
-      const text = await res.text()
-      const { normalized, changed } = normalizeVtt(text)
-      if (changed) {
-        const prefix = '/storage/v1/object/public/mux-track-sources/'
-        const idx = new URL(fileUrl).pathname.indexOf(prefix)
-        if (idx >= 0) {
-          const originalPath = new URL(fileUrl).pathname.slice(idx + prefix.length)
-          const normalizedPath = originalPath.replace(/\.vtt$/i, '.normalized.vtt')
-          const { error: upErr } = await supabase.storage
-            .from('mux-track-sources')
-            .upload(normalizedPath, normalized, { contentType: 'text/vtt', upsert: true })
-          if (!upErr) {
-            trackUrl = supabase.storage.from('mux-track-sources').getPublicUrl(normalizedPath).data.publicUrl
-          } else {
-            console.warn('VTT normalization upload failed, using original URL:', upErr.message)
+      const contentLength = res.headers.get('content-length')
+      if (contentLength && Number.parseInt(contentLength, 10) > MAX_VTT_SIZE) {
+        console.error('VTT file too large (Content-Length)', { fileUrl, contentLength })
+        // Skip normalization; keep original URL.
+      } else {
+        const text = await res.text()
+        if (text.length > MAX_VTT_SIZE) {
+          console.error('VTT file body too large', { fileUrl, size: text.length })
+        } else {
+          const { normalized, changed } = normalizeVtt(text)
+          if (changed) {
+            const prefix = '/storage/v1/object/public/mux-track-sources/'
+            const idx = new URL(fileUrl).pathname.indexOf(prefix)
+            if (idx >= 0) {
+              const originalPath = new URL(fileUrl).pathname.slice(idx + prefix.length)
+              const normalizedPath = originalPath.replace(/\.vtt$/i, '.normalized.vtt')
+              const { error: upErr } = await supabase.storage
+                .from('mux-track-sources')
+                .upload(normalizedPath, normalized, { contentType: 'text/vtt', upsert: true })
+              if (!upErr) {
+                trackUrl = supabase.storage.from('mux-track-sources').getPublicUrl(normalizedPath).data.publicUrl
+              } else {
+                console.warn('VTT normalization upload failed, using original URL:', upErr.message)
+              }
+            }
           }
         }
       }

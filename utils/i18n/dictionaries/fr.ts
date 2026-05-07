@@ -41,7 +41,8 @@ export const fr: Dictionary = {
     q4: { q: "Est-ce utile si je n'ai pas de partenaire ?", a: "Absolument. Bien que le Bachatango soit une danse de couple, de nombreuses leçons se concentrent sur la technique individuelle, la musicalité et le style." }
   },
   newsletter: {
-    title: "Rejoignez la Communauté", desc: "Recevez des conseils exclusifs, des nouvelles sur les ateliers et un cours gratuit en vous abonnant.", placeholder: "Votre email", button: "S'abonner"
+    title: "Rejoignez la Communauté", desc: "Recevez des conseils exclusifs, des nouvelles sur les ateliers et un cours gratuit en vous abonnant.", placeholder: "Votre email", button: "S'abonner",
+    success: "Inscrit ! Merci.", error: "Échec de l'envoi."
   },
   events: {
     title: "Agenda & Événements", desc: "Découvrez où nous serons prochainement. Venez apprendre, danser et profiter avec nous en direct.", details: "Plus d'infos",
@@ -65,6 +66,7 @@ export const fr: Dictionary = {
   },
   contact: {
     title: "Bookings", desc: "Vous voulez nous faire venir dans votre ville ? Remplissez ce formulaire.",
+    success: "Message envoyé ! Nous vous répondrons bientôt.", error: "Échec de l'envoi du message.",
     form: {
       name: "Nom / Organisateur", namePlace: "Votre nom ou nom de l'événement",
       email: "Email", type: "Type d'événement", types: { fest: "Festival", work: "Atelier", show: "Show", other: "Autre" },
