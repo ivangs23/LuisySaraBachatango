@@ -44,8 +44,9 @@ next-env.d.ts
 .env*.local
 
 # Playwright
-playwright-report/
-test-results/
+/playwright-report/
+/test-results/
+/playwright/.cache/
 e2e/.auth/
 
 # Worktrees
@@ -53,3 +54,6 @@ e2e/.auth/
 
 # Supabase CLI runtime cache
 supabase/.temp/
+
+# Lighthouse / load-test artifacts
+tmp/
