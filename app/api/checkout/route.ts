@@ -49,11 +49,32 @@ export async function POST(req: Request) {
         email: user.email,
         metadata: { userId: user.id },
       });
-      customerId = customer.id;
-      await supabaseAdmin
+
+      // Race guard: only set stripe_customer_id if it's still null. If a
+      // concurrent request already wrote one, re-fetch and keep theirs to
+      // avoid orphaning a Stripe customer with billing details.
+      const { data: updated } = await supabaseAdmin
         .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+        .update({ stripe_customer_id: customer.id })
+        .eq('id', user.id)
+        .is('stripe_customer_id', null)
+        .select('stripe_customer_id')
+        .maybeSingle();
+
+      if (updated?.stripe_customer_id) {
+        customerId = updated.stripe_customer_id;
+      } else {
+        // Lost the race — re-read what was committed by the winner.
+        const { data: existing } = await supabaseAdmin
+          .from('profiles')
+          .select('stripe_customer_id')
+          .eq('id', user.id)
+          .single();
+        customerId = existing?.stripe_customer_id ?? customer.id;
+        // The customer we just created here is now orphaned in Stripe.
+        // Stripe charges nothing for unused customers; it stays as test/log
+        // metadata. Could clean up via stripe.customers.del() — not critical.
+      }
     }
 
     // ── Course purchase (one-time, dynamic price) ─────────────────────

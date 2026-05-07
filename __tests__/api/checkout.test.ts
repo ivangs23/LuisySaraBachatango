@@ -30,6 +30,7 @@ vi.mock('@supabase/supabase-js', () => ({
       eq: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: { stripe_customer_id: null }, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { stripe_customer_id: 'cus_test' }, error: null }),
       update: vi.fn().mockReturnThis(),
     }),
   }),
