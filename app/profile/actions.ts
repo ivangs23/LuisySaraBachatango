@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { safeSocialUrl, safeAvatarUrl } from '@/utils/sanitize'
 import { validateImageMagicBytes } from '@/utils/uploads/magic-bytes'
+import crypto from 'node:crypto'
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
@@ -118,6 +119,19 @@ export async function deleteAccount(formData: FormData) {
   }
 
   const supabaseAdmin = await createClientWithServiceRole()
+
+  // Audit trail (best effort — failure here doesn't block deletion).
+  try {
+    const emailHash = crypto
+      .createHash('sha256')
+      .update((user.email ?? '').toLowerCase())
+      .digest('hex')
+    await supabaseAdmin
+      .from('account_deletions')
+      .insert({ email_sha256: emailHash })
+  } catch (err) {
+    console.error('[deleteAccount] audit insert failed', err)
+  }
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
