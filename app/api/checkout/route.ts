@@ -4,10 +4,10 @@ import { stripe } from '@/utils/stripe/server';
 import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
+import { getClientIp } from '@/utils/auth/client-ip';
 
 export async function POST(req: Request) {
-  const xff = req.headers.get('x-forwarded-for') ?? ''
-  const ip = xff.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'anon'
+  const ip = getClientIp(req.headers)
   const rl = await rateLimit(rateLimitKey([ip, 'checkout']), 10, 60_000) // 10/min per IP
   if (!rl.ok) {
     return new NextResponse('Too Many Requests', {
@@ -25,7 +25,10 @@ export async function POST(req: Request) {
     }
 
     const { courseId } = await req.json() as { courseId?: string };
-    const origin = req.headers.get('origin') ?? '';
+    // Origin must be the canonical site. Stripe success_url is built with this
+    // and a malicious Origin header would let an attacker phish the user after
+    // payment. Use NEXT_PUBLIC_BASE_URL (asserted at startup in prod).
+    const origin = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
     // Retrieve or create Stripe customer to avoid duplicates
     const supabaseAdmin = createSupabaseAdmin(
@@ -57,8 +60,9 @@ export async function POST(req: Request) {
     if (courseId) {
       const { data: course } = await supabase
         .from('courses')
-        .select('title, price_eur')
+        .select('title, price_eur, is_published')
         .eq('id', courseId)
+        .eq('is_published', true)
         .single();
 
       if (!course) {

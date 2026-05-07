@@ -16,6 +16,8 @@ export async function createLesson(formData: FormData) {
   const description = formData.get('description') as string
   const order = parseInt(formData.get('order') as string)
   if (isNaN(order) || order < 1) return { error: 'El orden de la lección debe ser un número positivo' }
+  if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
+  if (description && description.length > 5000) return { error: 'description_too_long' }
 
   const thumbnailUrl = formData.get('thumbnailUrl') as string
   const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
@@ -60,6 +62,8 @@ export async function updateLesson(formData: FormData) {
   const description = formData.get('description') as string
   const order = parseInt(formData.get('order') as string)
   if (isNaN(order) || order < 1) return { error: 'El orden de la lección debe ser un número positivo' }
+  if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
+  if (description && description.length > 5000) return { error: 'description_too_long' }
   const thumbnailUrl = formData.get('thumbnailUrl') as string
   const durationRaw = formData.get('duration') ? parseInt(formData.get('duration') as string) : null
   const duration = durationRaw !== null && isNaN(durationRaw) ? null : durationRaw
@@ -130,6 +134,12 @@ export async function createCourse(formData: FormData) {
   const month = monthRaw ? parseInt(monthRaw) : null
   const priceEur = priceEurRaw ? parseInt(priceEurRaw) : null
 
+  if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
+  if (description && description.length > 5000) return { error: 'description_too_long' }
+  if (priceEur !== null && (priceEur < 0 || priceEur > 9999)) return { error: 'invalid_price' }
+  if (year !== null && (year < 2020 || year > 2100)) return { error: 'invalid_year' }
+  if (month !== null && (month < 1 || month > 12)) return { error: 'invalid_month' }
+
   let imageUrl = ''
   if (imageFile && imageFile.size > 0) {
     const result = await uploadCourseImage(supabase, imageFile)
@@ -178,6 +188,12 @@ export async function updateCourse(formData: FormData) {
   const month = monthRaw ? parseInt(monthRaw) : null
   const priceEur = priceEurRaw ? parseInt(priceEurRaw) : null
 
+  if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
+  if (description && description.length > 5000) return { error: 'description_too_long' }
+  if (priceEur !== null && (priceEur < 0 || priceEur > 9999)) return { error: 'invalid_price' }
+  if (year !== null && (year < 2020 || year > 2100)) return { error: 'invalid_year' }
+  if (month !== null && (month < 1 || month > 12)) return { error: 'invalid_month' }
+
   let imageUrl = imageUrlProp
   if (imageFile && imageFile.size > 0) {
     const result = await uploadCourseImage(supabase, imageFile)
@@ -214,6 +230,8 @@ export async function updateCourse(formData: FormData) {
 
 export async function createAssignment(lessonId: string, courseId: string, title: string, description: string) {
   await requireAdmin()
+  if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
+  if (description && description.length > 5000) return { error: 'description_too_long' }
   const supabase = await createClient()
 
   // Verify the lesson actually belongs to this course
@@ -241,7 +259,19 @@ export async function createAssignment(lessonId: string, courseId: string, title
 
 export async function updateAssignment(assignmentId: string, title: string, description: string, courseId: string, lessonId: string) {
   await requireAdmin()
+  if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
+  if (description && description.length > 5000) return { error: 'description_too_long' }
   const supabase = await createClient()
+
+  // Ownership: confirm assignment belongs to lessonId.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: 'assignment_not_found' }
+  if (assignment.lesson_id !== lessonId) return { error: 'assignment_mismatch' }
 
   const { error } = await supabase
     .from('assignments')
@@ -260,6 +290,16 @@ export async function updateAssignment(assignmentId: string, title: string, desc
 export async function deleteAssignment(assignmentId: string, courseId: string, lessonId: string) {
   await requireAdmin()
   const supabase = await createClient()
+
+  // Ownership: confirm assignment belongs to lessonId.
+  const { data: assignment } = await supabase
+    .from('assignments')
+    .select('lesson_id')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: 'assignment_not_found' }
+  if (assignment.lesson_id !== lessonId) return { error: 'assignment_mismatch' }
 
   const { error } = await supabase.from('assignments').delete().eq('id', assignmentId)
 
@@ -324,6 +364,26 @@ export async function gradeSubmission(
 ) {
   const admin = await requireAdmin()
   const supabase = await createClient()
+
+  // Verify submission belongs to the claimed courseId via:
+  // submissions.assignment_id → assignments.lesson_id → lessons.course_id
+  const { data: ownership } = await supabase
+    .from('submissions')
+    .select('assignments(lessons(course_id))')
+    .eq('id', submissionId)
+    .single()
+
+  if (!ownership) {
+    return { error: 'submission_not_found' }
+  }
+
+  const submissionCourseId =
+    (ownership.assignments as { lessons?: { course_id?: string } } | null)
+      ?.lessons?.course_id
+
+  if (submissionCourseId !== courseId) {
+    return { error: 'submission_mismatch' }
+  }
 
   const { error } = await supabase
     .from('submissions')

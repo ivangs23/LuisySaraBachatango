@@ -4,6 +4,7 @@ const signInWithPassword = vi.fn()
 const adminDeleteUser = vi.fn()
 const signOut = vi.fn().mockResolvedValue({ error: null })
 const getUser = vi.fn()
+const adminInsertMock = vi.fn().mockResolvedValue({ error: null })
 
 vi.mock('@/utils/supabase/server', () => ({
   createClient: async () => ({
@@ -14,6 +15,12 @@ vi.mock('@/utils/supabase/server', () => ({
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     auth: { admin: { deleteUser: adminDeleteUser } },
+    from: (table: string) => {
+      if (table === 'account_deletions') {
+        return { insert: adminInsertMock }
+      }
+      return { insert: vi.fn().mockResolvedValue({ error: null }) }
+    },
   }),
 }))
 
@@ -37,6 +44,8 @@ describe('deleteAccount reauth', () => {
   beforeEach(() => {
     signInWithPassword.mockReset()
     adminDeleteUser.mockReset()
+    adminInsertMock.mockReset()
+    adminInsertMock.mockResolvedValue({ error: null })
     getUser.mockReset()
     signOut.mockResolvedValue({ error: null })
     getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'a@b.c' } } })
@@ -89,5 +98,22 @@ describe('deleteAccount reauth', () => {
     signInWithPassword.mockResolvedValue({ error: null })
     adminDeleteUser.mockResolvedValue({ error: { message: 'db error' } })
     await expect(deleteAccount(fd({ password: 'good' }))).rejects.toThrow(/borrar la cuenta/i)
+  })
+
+  it('inserts audit record with sha256 of email on successful deletion', async () => {
+    signInWithPassword.mockResolvedValue({ error: null })
+    adminDeleteUser.mockResolvedValue({ error: null })
+    await deleteAccount(fd({ password: 'good' })).catch(() => {})
+    expect(adminInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ email_sha256: expect.stringMatching(/^[a-f0-9]{64}$/) })
+    )
+  })
+
+  it('still deletes user even if audit insert throws', async () => {
+    signInWithPassword.mockResolvedValue({ error: null })
+    adminInsertMock.mockRejectedValue(new Error('db unavailable'))
+    adminDeleteUser.mockResolvedValue({ error: null })
+    await expect(deleteAccount(fd({ password: 'good' }))).rejects.toThrow(/REDIRECT:.*account_deleted/)
+    expect(adminDeleteUser).toHaveBeenCalledWith('u1')
   })
 })

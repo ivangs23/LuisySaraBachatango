@@ -7,6 +7,11 @@ vi.mock('@/utils/notifications/server', () => ({ notify: mockNotify }))
 vi.mock('@/utils/supabase/server', () => ({ createClient: vi.fn() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/utils/auth/course-access', () => ({ hasCourseAccess: vi.fn() }))
+vi.mock('@/utils/rate-limit', () => ({
+  rateLimit: vi.fn().mockResolvedValue({ ok: true, retryAfter: 0 }),
+  rateLimitKey: (parts: unknown[]) => parts.join(':'),
+  _resetRateLimitForTest: vi.fn(),
+}))
 
 function makeChain(returns: Record<string, unknown>) {
   const obj: Record<string, unknown> = {
@@ -25,6 +30,10 @@ beforeEach(() => {
 })
 
 describe('toggleLike — notifications', () => {
+  beforeEach(() => {
+    vi.mocked(hasCourseAccess).mockResolvedValue(true)
+  })
+
   it('notifies the comment author when adding a like (lesson context)', async () => {
     const commentChain = makeChain({
       single: { data: { id: 'comment-1', user_id: 'author-1', lesson_id: 'lesson-1', post_id: null }, error: null },
@@ -77,10 +86,14 @@ describe('toggleLike — notifications', () => {
       single: { data: { id: 'like-1' }, error: null }, // already liked
     })
     const likeDeleteChain = makeChain({})
+    const lessonChain = makeChain({
+      single: { data: { course_id: 'course-1' }, error: null },
+    })
 
     let likeCalls = 0
     const from = vi.fn((table: string) => {
       if (table === 'comments') return commentChain
+      if (table === 'lessons') return lessonChain
       if (table === 'comment_likes') {
         likeCalls += 1
         return likeCalls === 1 ? likeCheckChain : likeDeleteChain
@@ -240,5 +253,121 @@ describe('addComment — notifications', () => {
 
     expect(result).toEqual({ error: 'lesson_not_found' })
     expect(insertMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('toggleLike (comment) — course access', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('rejects when comment is on a paid lesson and user has no access', async () => {
+    const { rateLimit } = await import('@/utils/rate-limit')
+    vi.mocked(rateLimit).mockResolvedValue({ ok: true, retryAfter: 0 })
+    vi.mocked(hasCourseAccess).mockResolvedValue(false)
+
+    const commentChain = makeChain({
+      single: { data: { id: 'c1', user_id: 'other', lesson_id: 'l1', post_id: null }, error: null },
+    })
+    const lessonChain = makeChain({
+      single: { data: { course_id: 'paid-course' }, error: null },
+    })
+
+    const from = vi.fn((table: string) => {
+      if (table === 'comments') return commentChain
+      if (table === 'lessons') return lessonChain
+      return makeChain({})
+    })
+
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-x' } } }) },
+      from,
+    } as never)
+
+    const { toggleLike } = await import('@/app/actions/comments')
+    const result = await toggleLike('c1')
+
+    expect(result).toEqual({ error: 'forbidden' })
+    expect(hasCourseAccess).toHaveBeenCalledWith('user-x', 'paid-course')
+  })
+
+  it('allows liking when comment is on a lesson and user has access', async () => {
+    const { rateLimit } = await import('@/utils/rate-limit')
+    vi.mocked(rateLimit).mockResolvedValue({ ok: true, retryAfter: 0 })
+    vi.mocked(hasCourseAccess).mockResolvedValue(true)
+
+    const commentChain = makeChain({
+      single: { data: { id: 'c1', user_id: 'other', lesson_id: 'l1', post_id: null }, error: null },
+    })
+    const lessonChain = makeChain({
+      single: { data: { course_id: 'paid-course' }, error: null },
+    })
+    const likeCheckChain = makeChain({
+      single: { data: null, error: null }, // not yet liked
+    })
+    const likeInsertChain = makeChain({
+      insert: { data: null, error: null },
+    })
+
+    let likeCalls = 0
+    const from = vi.fn((table: string) => {
+      if (table === 'comments') return commentChain
+      if (table === 'lessons') return lessonChain
+      if (table === 'comment_likes') {
+        likeCalls += 1
+        return likeCalls === 1 ? likeCheckChain : likeInsertChain
+      }
+      return makeChain({})
+    })
+
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-x' } } }) },
+      from,
+    } as never)
+
+    const { toggleLike } = await import('@/app/actions/comments')
+    const result = await toggleLike('c1')
+
+    expect(result).toEqual({ success: true })
+    expect(hasCourseAccess).toHaveBeenCalledWith('user-x', 'paid-course')
+  })
+
+  it('allows liking when comment is on a community post (no lesson_id)', async () => {
+    const { rateLimit } = await import('@/utils/rate-limit')
+    vi.mocked(rateLimit).mockResolvedValue({ ok: true, retryAfter: 0 })
+
+    const commentChain = makeChain({
+      single: { data: { id: 'c1', user_id: 'other', lesson_id: null, post_id: 'p1' }, error: null },
+    })
+    const likeCheckChain = makeChain({
+      single: { data: null, error: null }, // not yet liked
+    })
+    const likeInsertChain = makeChain({
+      insert: { data: null, error: null },
+    })
+
+    let likeCalls = 0
+    const from = vi.fn((table: string) => {
+      if (table === 'comments') return commentChain
+      if (table === 'comment_likes') {
+        likeCalls += 1
+        return likeCalls === 1 ? likeCheckChain : likeInsertChain
+      }
+      return makeChain({})
+    })
+
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-x' } } }) },
+      from,
+    } as never)
+
+    const { toggleLike } = await import('@/app/actions/comments')
+    const result = await toggleLike('c1')
+
+    expect(result).toEqual({ success: true })
+    expect(hasCourseAccess).not.toHaveBeenCalled()
   })
 })

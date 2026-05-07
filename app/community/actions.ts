@@ -58,7 +58,7 @@ export async function submitComment(formData: FormData): Promise<ActionResult> {
   const content = ((formData.get('content') as string | null) ?? '').trim()
   const parentId = (formData.get('parentId') as string | null) || null
 
-  const rl = await rateLimit(rateLimitKey([user.id, 'comment']), 30, 60_000) // 30 comments/min
+  const rl = await rateLimit(rateLimitKey([user.id, 'comment']), 10, 60_000) // 10 comments/min
   if (!rl.ok) return { success: false, error: 'rate_limit' }
 
   if (!postId || !content) {

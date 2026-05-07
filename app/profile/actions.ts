@@ -3,7 +3,9 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { sanitizeUrl, safeAvatarUrl } from '@/utils/sanitize'
+import { safeSocialUrl, safeAvatarUrl } from '@/utils/sanitize'
+import { validateImageMagicBytes } from '@/utils/uploads/magic-bytes'
+import crypto from 'node:crypto'
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
@@ -25,39 +27,50 @@ export async function updateProfile(formData: FormData) {
   // Handle Avatar Upload
   const avatarFile = formData.get('avatarFile') as File
   if (avatarMode === 'upload' && avatarFile && avatarFile.size > 0) {
-      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-      const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+    const ALLOWED_TYPES_TO_EXT: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    }
+    const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
-      if (!ALLOWED_TYPES.includes(avatarFile.type)) {
-        throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF).')
-      }
-      if (avatarFile.size > MAX_SIZE) {
-        throw new Error('El archivo es demasiado grande. El tamaño máximo es 5MB.')
-      }
+    const ext = ALLOWED_TYPES_TO_EXT[avatarFile.type]
+    if (!ext) {
+      throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF).')
+    }
+    if (avatarFile.size > MAX_SIZE) {
+      throw new Error('El archivo es demasiado grande. El tamaño máximo es 5MB.')
+    }
 
-      const fileExt = avatarFile.name.split('.').pop()
-      const fileName = `${user.id}-${crypto.randomUUID()}.${fileExt}`
-      const filePath = `avatars/${fileName}`
+    // Verify magic bytes match the declared MIME type — defense against
+    // executables disguised with a manipulated Content-Type.
+    if (!(await validateImageMagicBytes(avatarFile))) {
+      throw new Error('El archivo no es una imagen válida.')
+    }
 
-      const { error: uploadError } = await supabase.storage
+    const fileName = `${user.id}-${crypto.randomUUID()}.${ext}`
+    const filePath = `avatars/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('thumbnails')
+      .upload(filePath, avatarFile, { upsert: true })
+
+    if (uploadError) {
+      throw new Error('Error al subir el avatar. Inténtalo de nuevo.')
+    } else {
+      const { data: { publicUrl } } = supabase.storage
         .from('thumbnails')
-        .upload(filePath, avatarFile, { upsert: true })
+        .getPublicUrl(filePath)
 
-      if (uploadError) {
-        throw new Error('Error al subir el avatar. Inténtalo de nuevo.')
-      } else {
-         const { data: { publicUrl } } = supabase.storage
-          .from('thumbnails')
-          .getPublicUrl(filePath)
-
-         avatarUrl = publicUrl
-      }
+      avatarUrl = publicUrl
+    }
   }
 
-  const instagram = sanitizeUrl(formData.get('instagram'))
-  const facebook = sanitizeUrl(formData.get('facebook'))
-  const tiktok = sanitizeUrl(formData.get('tiktok'))
-  const youtube = sanitizeUrl(formData.get('youtube'))
+  const instagram = safeSocialUrl(formData.get('instagram'), 'instagram')
+  const facebook = safeSocialUrl(formData.get('facebook'), 'facebook')
+  const tiktok = safeSocialUrl(formData.get('tiktok'), 'tiktok')
+  const youtube = safeSocialUrl(formData.get('youtube'), 'youtube')
 
   const { error } = await supabase
     .from('profiles')
@@ -106,6 +119,19 @@ export async function deleteAccount(formData: FormData) {
   }
 
   const supabaseAdmin = await createClientWithServiceRole()
+
+  // Audit trail (best effort — failure here doesn't block deletion).
+  try {
+    const emailHash = crypto
+      .createHash('sha256')
+      .update((user.email ?? '').toLowerCase())
+      .digest('hex')
+    await supabaseAdmin
+      .from('account_deletions')
+      .insert({ email_sha256: emailHash })
+  } catch (err) {
+    console.error('[deleteAccount] audit insert failed', err)
+  }
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
 

@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { notify } from '@/utils/notifications/server';
 import { hasCourseAccess } from '@/utils/auth/course-access';
+import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 
 export type Comment = {
   id: string;
@@ -187,6 +188,11 @@ export async function toggleLike(commentId: string) {
     return { error: 'Debes iniciar sesión' };
   }
 
+  const rl = await rateLimit(rateLimitKey([user.id, 'comment-like']), 60, 60_000)
+  if (!rl.ok) {
+    return { error: 'rate_limit' }
+  }
+
   const { data: comment } = await supabase
     .from('comments')
     .select('id, user_id, lesson_id, post_id')
@@ -194,6 +200,21 @@ export async function toggleLike(commentId: string) {
     .single();
 
   if (!comment) return { error: 'Comentario no encontrado' };
+
+  // Lesson comments require course access. Post comments don't.
+  let lessonForLink: { course_id: string } | null = null;
+  if (comment.lesson_id) {
+    const { data: lesson } = await supabase
+      .from('lessons')
+      .select('course_id')
+      .eq('id', comment.lesson_id)
+      .single();
+    if (!lesson) return { error: 'lesson_not_found' };
+    if (!(await hasCourseAccess(user.id, lesson.course_id))) {
+      return { error: 'forbidden' };
+    }
+    lessonForLink = lesson;
+  }
 
   const { data: existingLike } = await supabase
     .from('comment_likes')
@@ -217,12 +238,7 @@ export async function toggleLike(commentId: string) {
 
   let link: string;
   if (comment.lesson_id) {
-    const { data: lesson } = await supabase
-      .from('lessons')
-      .select('course_id')
-      .eq('id', comment.lesson_id)
-      .single();
-    link = `/courses/${lesson?.course_id ?? ''}/${comment.lesson_id}#comment-${commentId}`;
+    link = `/courses/${lessonForLink?.course_id ?? ''}/${comment.lesson_id}#comment-${commentId}`;
   } else if (comment.post_id) {
     link = `/community/${comment.post_id}#comment-${commentId}`;
   } else {

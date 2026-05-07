@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { notify } from '@/utils/notifications/server'
 import { revalidatePath } from 'next/cache'
+import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 
 export async function togglePostLike(postId: string) {
   const supabase = await createClient()
@@ -10,6 +11,11 @@ export async function togglePostLike(postId: string) {
 
   if (!user) {
     return { error: 'Debes iniciar sesión' }
+  }
+
+  const rl = await rateLimit(rateLimitKey([user.id, 'post-like']), 60, 60_000)
+  if (!rl.ok) {
+    return { error: 'rate_limit' }
   }
 
   const { data: existing } = await supabase
