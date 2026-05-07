@@ -48,12 +48,12 @@ const nextConfig: NextConfig = {
             // and JSON-LD scripts. Removing it would require switching to nonces (larger refactor).
             value: [
               "default-src 'self'",
-              `script-src 'self' 'unsafe-inline' https://js.stripe.com https://*.mux.com`,
+              `script-src 'self' 'unsafe-inline' https://js.stripe.com https://*.mux.com https://www.instagram.com https://platform.instagram.com`,
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: https://${SUPABASE_HOST} https://image.mux.com https://*.googleusercontent.com https://flagcdn.com`,
+              `img-src 'self' data: blob: https://${SUPABASE_HOST} https://image.mux.com https://*.googleusercontent.com https://flagcdn.com https://*.cdninstagram.com https://*.fbcdn.net`,
               "media-src 'self' blob: https://stream.mux.com https://*.mux.com",
               `connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.mux.com`,
-              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://open.spotify.com",
+              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://open.spotify.com https://www.instagram.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
