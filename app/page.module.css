@@ -20,7 +20,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/hero-bg.png');
+  background-image: url('/hero-bg.webp');
   background-size: auto;
   background-repeat: no-repeat;
   background-position: top center;

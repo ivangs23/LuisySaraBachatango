@@ -72,7 +72,7 @@ export default function Hero() {
           loop
           playsInline
           preload="metadata"
-          poster="/hero-bg.png"
+          poster="/hero-bg.webp"
           onCanPlay={() => setVideoReady(true)}
         >
           <source src="/hero-video.mp4" type="video/mp4" />

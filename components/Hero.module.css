@@ -18,7 +18,7 @@
   inset: 0;
   z-index: -2;
   background-color: #000;
-  background-image: url('/hero-bg.png');
+  background-image: url('/hero-bg.webp');
   background-size: cover;
   background-position: center 20%;
 }
