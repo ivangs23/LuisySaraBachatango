@@ -54,3 +54,6 @@ e2e/.auth/
 
 # Supabase CLI runtime cache
 supabase/.temp/
+
+# Lighthouse / load-test artifacts
+tmp/
