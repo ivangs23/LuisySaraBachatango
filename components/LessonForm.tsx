@@ -96,17 +96,17 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.field}>
-        <label>Título</label>
-        <input value={title} onChange={e => setTitle(e.target.value)} required />
+        <label htmlFor="lesson-title">Título</label>
+        <input id="lesson-title" value={title} onChange={e => setTitle(e.target.value)} required />
       </div>
       <div className={styles.field}>
-        <label>Descripción</label>
-        <textarea value={description ?? ''} onChange={e => setDescription(e.target.value)} rows={4} />
+        <label htmlFor="lesson-description">Descripción</label>
+        <textarea id="lesson-description" value={description ?? ''} onChange={e => setDescription(e.target.value)} rows={4} />
       </div>
       {availableParents && availableParents.length > 0 && (
         <div className={styles.field}>
-          <label>Lección padre (opcional)</label>
-          <select value={parentLessonId} onChange={e => setParentLessonId(e.target.value)}>
+          <label htmlFor="lesson-parent">Lección padre (opcional)</label>
+          <select id="lesson-parent" value={parentLessonId} onChange={e => setParentLessonId(e.target.value)}>
             <option value="">— Ninguna (lección de nivel superior) —</option>
             {availableParents.map(p => (
               <option key={p.id} value={p.id}>{p.order}. {p.title}</option>
@@ -115,12 +115,12 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
         </div>
       )}
       <div className={styles.field}>
-        <label>{parentLessonId ? 'Sub-orden (1, 2, 3…)' : 'Orden'}</label>
-        <input type="number" min="1" value={order} onChange={e => setOrder(e.target.value)} required />
+        <label htmlFor="lesson-order">{parentLessonId ? 'Sub-orden (1, 2, 3…)' : 'Orden'}</label>
+        <input id="lesson-order" type="number" min="1" value={order} onChange={e => setOrder(e.target.value)} required />
       </div>
       <div className={styles.field}>
-        <label>Duración (segundos, opcional)</label>
-        <input type="number" min="0" value={duration} onChange={e => setDuration(e.target.value)} />
+        <label htmlFor="lesson-duration">Duración (segundos, opcional)</label>
+        <input id="lesson-duration" type="number" min="0" value={duration} onChange={e => setDuration(e.target.value)} />
       </div>
       <div className={styles.field}>
         <label>
@@ -129,10 +129,10 @@ export default function LessonForm({ courseId, initialData, availableParents, ac
         </label>
       </div>
       <div className={styles.field}>
-        <label>Miniatura</label>
+        <label htmlFor="lesson-thumbnail">Miniatura</label>
         {/* eslint-disable-next-line @next/next/no-img-element -- may be a blob URL (URL.createObjectURL) when a new file is selected; cannot use next/image with blob: sources */}
         {thumbnailPreview && <img src={thumbnailPreview} alt="" style={{ maxWidth: 200, marginBottom: 8 }} />}
-        <input type="file" accept="image/*" onChange={e => setThumbnailFile(e.target.files?.[0] ?? null)} />
+        <input id="lesson-thumbnail" type="file" accept="image/*" onChange={e => setThumbnailFile(e.target.files?.[0] ?? null)} />
       </div>
       {error && <p className={styles.error}>{error}</p>}
       <button type="submit" disabled={submitting}>

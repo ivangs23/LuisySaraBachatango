@@ -33,7 +33,11 @@ export default function Newsletter() {
         <h2 className={styles.title}>{t.newsletter.title}</h2>
         <p className={styles.description}>{t.newsletter.desc}</p>
         <form className={styles.form} action={handleSubmit}>
+          <label htmlFor="newsletter-email" className="sr-only">
+            {t.newsletter.placeholder}
+          </label>
           <input
+            id="newsletter-email"
             type="email"
             name="email"
             placeholder={t.newsletter.placeholder}

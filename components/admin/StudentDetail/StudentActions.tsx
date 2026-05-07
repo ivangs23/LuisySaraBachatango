@@ -139,7 +139,8 @@ function RoleForm({ currentRole, disabled, error, onSubmit }: {
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(r) }}>
       <h3 id="student-actions-dialog-title">Cambiar rol</h3>
-      <select value={r} onChange={e => setR(e.target.value as never)} disabled={disabled} className={styles.input}>
+      <label htmlFor="role-select">Rol</label>
+      <select id="role-select" value={r} onChange={e => setR(e.target.value as never)} disabled={disabled} className={styles.input}>
         <option value="member">member</option>
         <option value="premium">premium</option>
         <option value="admin">admin</option>
@@ -157,7 +158,8 @@ function GrantForm({ courses, disabled, error, onSubmit }: {
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (cid) onSubmit(cid) }}>
       <h3 id="student-actions-dialog-title">Conceder acceso a curso</h3>
-      <select value={cid} onChange={e => setCid(e.target.value)} disabled={disabled} className={styles.input}>
+      <label htmlFor="grant-course-select">Curso</label>
+      <select id="grant-course-select" value={cid} onChange={e => setCid(e.target.value)} disabled={disabled} className={styles.input}>
         {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
       </select>
       {error && <p className={styles.errorMsg}>{error}</p>}
@@ -174,8 +176,10 @@ function NotifyForm({ disabled, error, onSubmit }: {
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(title, body) }}>
       <h3 id="student-actions-dialog-title">Enviar notificación</h3>
-      <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Título" disabled={disabled} className={styles.input} />
-      <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Mensaje" rows={4} disabled={disabled} className={styles.input} />
+      <label htmlFor="notify-title">Título</label>
+      <input id="notify-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Título" disabled={disabled} className={styles.input} />
+      <label htmlFor="notify-body">Mensaje</label>
+      <textarea id="notify-body" value={body} onChange={e => setBody(e.target.value)} placeholder="Mensaje" rows={4} disabled={disabled} className={styles.input} />
       {error && <p className={styles.errorMsg}>{error}</p>}
       <button type="submit" disabled={disabled || !title.trim()} className={styles.btnPrimary}>Enviar</button>
     </form>
@@ -193,12 +197,15 @@ function DeleteForm({ disabled, error, targetEmail, onSubmit }: {
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(phrase, typedEmail) }}>
       <h3 id="student-actions-dialog-title">Eliminar alumno</h3>
       <p>Esta acción es <strong>irreversible</strong>. Escribe <code>ELIMINAR</code> para confirmar.</p>
-      <input value={phrase} onChange={e => setPhrase(e.target.value)} disabled={disabled} className={styles.input} />
+      <label htmlFor="delete-confirm-phrase">Escribe ELIMINAR para confirmar</label>
+      <input id="delete-confirm-phrase" value={phrase} onChange={e => setPhrase(e.target.value)} disabled={disabled} className={styles.input} />
       <p>
         Para confirmar, escribe el email del usuario:{' '}
         <strong>{targetEmail ?? '(sin email)'}</strong>
       </p>
+      <label htmlFor="delete-confirm-email">Email del usuario</label>
       <input
+        id="delete-confirm-email"
         type="email"
         value={typedEmail}
         onChange={e => setTypedEmail(e.target.value)}

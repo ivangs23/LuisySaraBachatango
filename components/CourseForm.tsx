@@ -110,8 +110,8 @@ export default function CourseForm({ initialData }: CourseFormProps) {
     <form onSubmit={onSubmitWrapper} className={styles.form}>
 
       {/* Course type toggle */}
-      <div className={styles.group}>
-        <label>Tipo de Curso</label>
+      <fieldset className={styles.group} style={{ border: 'none', padding: 0, margin: 0 }}>
+        <legend>Tipo de Curso</legend>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
           {(['membership', 'complete'] as const).map((type) => (
             <button
@@ -139,7 +139,7 @@ export default function CourseForm({ initialData }: CourseFormProps) {
             ? '4 clases por mes. El acceso se habilita por mes pagado.'
             : 'Precio fijo único. Acceso permanente por categoría (bachata, tango…)'}
         </p>
-      </div>
+      </fieldset>
 
       <div className={styles.group}>
         <label htmlFor="title">Título del Curso</label>
@@ -197,9 +197,9 @@ export default function CourseForm({ initialData }: CourseFormProps) {
       </div>
 
       <div className={styles.group}>
-        <label>Imagen de Portada</label>
+        <label htmlFor="course-image">Imagen de Portada</label>
         <div className={styles.fileInputWrapper}>
-          <input type="file" name="image" accept="image/*" onChange={handleImageChange}
+          <input id="course-image" type="file" name="image" accept="image/*" onChange={handleImageChange}
             required={!initialData?.image_url} />
           {imagePreview && (
             // eslint-disable-next-line @next/next/no-img-element
