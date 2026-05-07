@@ -4,10 +4,10 @@ import { stripe } from '@/utils/stripe/server';
 import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
+import { getClientIp } from '@/utils/auth/client-ip';
 
 export async function POST(req: Request) {
-  const xff = req.headers.get('x-forwarded-for') ?? ''
-  const ip = xff.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'anon'
+  const ip = getClientIp(req.headers)
   const rl = await rateLimit(rateLimitKey([ip, 'checkout']), 10, 60_000) // 10/min per IP
   if (!rl.ok) {
     return new NextResponse('Too Many Requests', {
