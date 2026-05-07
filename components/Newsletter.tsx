@@ -48,7 +48,7 @@ export default function Newsletter() {
             {isPending ? '...' : t.newsletter.button}
           </button>
         </form>
-        {status.kind === 'ok' && <p>{t.newsletter.success}</p>}
+        {status.kind === 'ok' && <p role="status" aria-live="polite">{t.newsletter.success}</p>}
         {status.kind === 'err' && <p role="alert">{t.newsletter.error}</p>}
       </div>
     </section>

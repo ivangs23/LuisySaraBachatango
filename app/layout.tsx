@@ -112,8 +112,11 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <LanguageProvider>
+          <a href="#main-content" className="skip-link">
+            Saltar al contenido principal
+          </a>
           <Header user={user} profile={profile} />
-          <main style={{ minHeight: '80vh' }}>
+          <main id="main-content" style={{ minHeight: '80vh' }}>
             {children}
           </main>
           <Footer />

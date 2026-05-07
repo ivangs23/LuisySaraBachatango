@@ -38,15 +38,22 @@ export default function FAQ() {
         <div className={styles.list}>
           {FAQS.map((faq, index) => (
             <div key={index} className={styles.item}>
-              <button 
-                className={styles.question} 
+              <button
+                id={`faq-question-${index}`}
+                className={styles.question}
                 onClick={() => toggle(index)}
                 aria-expanded={openIndex === index}
+                aria-controls={`faq-answer-${index}`}
               >
                 {faq.question}
                 <span className={`${styles.icon} ${openIndex === index ? styles.open : ''}`}>+</span>
               </button>
-              <div className={`${styles.answer} ${openIndex === index ? styles.open : ''}`}>
+              <div
+                id={`faq-answer-${index}`}
+                className={`${styles.answer} ${openIndex === index ? styles.open : ''}`}
+                role="region"
+                aria-labelledby={`faq-question-${index}`}
+              >
                 <p>{faq.answer}</p>
               </div>
             </div>

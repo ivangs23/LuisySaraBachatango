@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import { Play, ChevronDown } from 'lucide-react';
@@ -19,6 +19,13 @@ export default function Hero() {
   const { t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
   const [videoReady, setVideoReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (prefersReducedMotion && videoRef.current) {
+      videoRef.current.pause();
+    }
+  }, [prefersReducedMotion]);
 
   // Split del título por palabras para animarlas escalonadas.
   // Mantenemos los saltos de línea originales del diccionario (whiteSpace: pre-line).
@@ -58,6 +65,7 @@ export default function Hero() {
       {/* Capa de fondo: vídeo con poster fallback */}
       <div className={styles.bgLayer} aria-hidden="true">
         <video
+          ref={videoRef}
           className={`${styles.bgVideo} ${videoReady ? styles.bgVideoVisible : ''}`}
           autoPlay
           muted

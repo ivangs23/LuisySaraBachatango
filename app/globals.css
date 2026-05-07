@@ -122,3 +122,21 @@ button {
   white-space: nowrap;
   border: 0;
 }
+
+/* Skip-to-content link — visible only on keyboard focus */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--primary, #c0a062);
+  color: var(--background, #050505);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 0.25rem 0;
+}
+
+.skip-link:focus {
+  left: 0;
+}
