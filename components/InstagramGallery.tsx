@@ -13,14 +13,23 @@ const POST_URLS = [
 export default function InstagramGallery() {
   
   useEffect(() => {
-    // Load Instagram Embed Script
     const script = document.createElement('script');
     script.src = "//www.instagram.com/embed.js";
     script.async = true;
     document.body.appendChild(script);
 
+    // Instagram's embed.js injects iframes without a title attribute, which
+    // breaks the Lighthouse `frame-title` accessibility check.
+    const observer = new MutationObserver(() => {
+      document.querySelectorAll<HTMLIFrameElement>('iframe.instagram-media-rendered, iframe.instagram-media').forEach((iframe) => {
+        if (!iframe.title) iframe.title = 'Publicación de Instagram';
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
     return () => {
-      document.body.removeChild(script);
+      observer.disconnect();
+      if (script.parentNode) script.parentNode.removeChild(script);
     }
   }, []);
 
