@@ -27,22 +27,18 @@ type FooterClientProps = {
 export default function FooterClient({ adminProfile }: FooterClientProps) {
   const { t } = useLanguage();
 
-  const instagramUrl = safeSocialUrl(
-    adminProfile?.instagram,
-    'https://www.instagram.com/luisysarabachatango/'
-  );
-  const facebookUrl = safeSocialUrl(
-    adminProfile?.facebook,
-    'https://www.facebook.com/LuisySaraBachatango'
-  );
-  const tiktokUrl = safeSocialUrl(
-    adminProfile?.tiktok,
-    'https://www.tiktok.com/@luisysarabachatango'
-  );
-  const youtubeUrl = safeSocialUrl(
-    adminProfile?.youtube,
-    'https://www.youtube.com/@LuisySaraBachatango'
-  );
+  const instagramUrl =
+    safeSocialUrl(adminProfile?.instagram, 'instagram') ??
+    'https://www.instagram.com/luisysarabachatango/';
+  const facebookUrl =
+    safeSocialUrl(adminProfile?.facebook, 'facebook') ??
+    'https://www.facebook.com/LuisySaraBachatango';
+  const tiktokUrl =
+    safeSocialUrl(adminProfile?.tiktok, 'tiktok') ??
+    'https://www.tiktok.com/@luisysarabachatango';
+  const youtubeUrl =
+    safeSocialUrl(adminProfile?.youtube, 'youtube') ??
+    'https://www.youtube.com/@LuisySaraBachatango';
 
   const exploreLinks = [
     { href: '/', label: t.footer.home },

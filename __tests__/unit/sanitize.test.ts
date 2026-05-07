@@ -53,29 +53,27 @@ describe('sanitizeUrl', () => {
 })
 
 describe('safeSocialUrl', () => {
-  const fallback = 'https://instagram.com/default'
-
-  it('returns the URL when valid', () => {
-    expect(safeSocialUrl('https://instagram.com/user', fallback)).toBe('https://instagram.com/user')
+  it('returns the URL when valid for the given network', () => {
+    expect(safeSocialUrl('https://instagram.com/user', 'instagram')).toBe('https://instagram.com/user')
   })
 
-  it('returns the fallback when URL is null', () => {
-    expect(safeSocialUrl(null, fallback)).toBe(fallback)
+  it('returns null when URL is null', () => {
+    expect(safeSocialUrl(null, 'instagram')).toBeNull()
   })
 
-  it('returns the fallback when URL is undefined', () => {
-    expect(safeSocialUrl(undefined, fallback)).toBe(fallback)
+  it('returns null when URL is undefined', () => {
+    expect(safeSocialUrl(undefined, 'instagram')).toBeNull()
   })
 
-  it('returns the fallback for http URLs', () => {
-    expect(safeSocialUrl('http://instagram.com/user', fallback)).toBe(fallback)
+  it('returns null for http URLs (non-https)', () => {
+    expect(safeSocialUrl('http://instagram.com/user', 'instagram')).toBeNull()
   })
 
-  it('returns the fallback for javascript: URLs', () => {
-    expect(safeSocialUrl('javascript:void(0)', fallback)).toBe(fallback)
+  it('returns null for javascript: URLs', () => {
+    expect(safeSocialUrl('javascript:void(0)', 'instagram')).toBeNull()
   })
 
-  it('returns the fallback for empty string', () => {
-    expect(safeSocialUrl('', fallback)).toBe(fallback)
+  it('returns null for empty string', () => {
+    expect(safeSocialUrl('', 'instagram')).toBeNull()
   })
 })

@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { sanitizeUrl, safeAvatarUrl } from '@/utils/sanitize'
+import { safeSocialUrl, safeAvatarUrl } from '@/utils/sanitize'
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
@@ -54,10 +54,10 @@ export async function updateProfile(formData: FormData) {
       }
   }
 
-  const instagram = sanitizeUrl(formData.get('instagram'))
-  const facebook = sanitizeUrl(formData.get('facebook'))
-  const tiktok = sanitizeUrl(formData.get('tiktok'))
-  const youtube = sanitizeUrl(formData.get('youtube'))
+  const instagram = safeSocialUrl(formData.get('instagram'), 'instagram')
+  const facebook = safeSocialUrl(formData.get('facebook'), 'facebook')
+  const tiktok = safeSocialUrl(formData.get('tiktok'), 'tiktok')
+  const youtube = safeSocialUrl(formData.get('youtube'), 'youtube')
 
   const { error } = await supabase
     .from('profiles')
