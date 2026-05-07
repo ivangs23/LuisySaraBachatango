@@ -866,3 +866,229 @@ describe('validateOrder', () => {
   })
 })
 
+// ── createCourse ──────────────────────────────────────────────────────────────
+
+describe('createCourse', () => {
+  let fromMock: ReturnType<typeof vi.fn>
+  let insertMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+
+    insertMock = vi.fn().mockResolvedValue({ error: null })
+    fromMock = vi.fn().mockReturnValue({ insert: insertMock })
+
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: fromMock,
+      storage: {
+        from: vi.fn().mockReturnValue({
+          upload: vi.fn().mockResolvedValue({ error: null }),
+          getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://storage/img.jpg' } }),
+        }),
+      },
+    })
+  })
+
+  it('returns invalid_title when title is empty', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: '', description: 'd', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'invalid_title' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns invalid_title when title is whitespace only', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: '   ', description: 'd', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'invalid_title' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns invalid_price when priceEur is negative', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: 'Curso', priceEur: '-10', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'invalid_price' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns invalid_price when priceEur exceeds 9999', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: 'Curso', priceEur: '10000', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'invalid_price' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns invalid_year when year is out of range', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: 'Curso', year: '1990', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'invalid_year' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns invalid_month when month is 0', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: 'Curso', month: '0', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'invalid_month' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('returns description_too_long when description exceeds 5000 chars', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: 'Curso', description: 'x'.repeat(5001), courseType: 'membership' }))
+    expect(result).toEqual({ error: 'description_too_long' })
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('inserts course and redirects on valid input', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    await expect(
+      createCourse(fd({
+        title: 'Curso de Bachata',
+        description: 'Una descripción',
+        courseType: 'membership',
+        isPublished: 'on',
+        priceEur: '50',
+        year: '2026',
+        month: '5',
+      }))
+    ).rejects.toThrow('REDIRECT:/courses')
+
+    expect(fromMock).toHaveBeenCalledWith('courses')
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Curso de Bachata',
+      description: 'Una descripción',
+      course_type: 'membership',
+      is_published: true,
+      price_eur: 50,
+      year: 2026,
+      month: 5,
+    }))
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/courses')
+  })
+
+  it('defaults is_published to false when isPublished field absent', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    await createCourse(fd({ title: 'Curso', courseType: 'complete' })).catch(() => {})
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({ is_published: false }))
+  })
+
+  it('returns error when Supabase insert fails', async () => {
+    insertMock.mockResolvedValue({ error: { message: 'insert failed' } })
+    const { createCourse } = await import('@/app/courses/actions')
+    const result = await createCourse(fd({ title: 'Curso', courseType: 'membership' }))
+    expect(result).toEqual({ error: 'insert failed' })
+  })
+
+  it('throws when requireAdmin rejects (non-admin)', async () => {
+    mockRequireAdmin.mockRejectedValueOnce(new Error('forbidden'))
+    const { createCourse } = await import('@/app/courses/actions')
+    await expect(createCourse(fd({ title: 'Curso', courseType: 'membership' }))).rejects.toThrow('forbidden')
+  })
+})
+
+// ── uploadAssignmentFile ──────────────────────────────────────────────────────
+
+describe('uploadAssignmentFile', () => {
+  let fromMock: ReturnType<typeof vi.fn>
+  let uploadMock: ReturnType<typeof vi.fn>
+
+  /** Build a client whose from() returns the assignment lookup chain then storage. */
+  function makeClientWithAssignment(courseId: string | null) {
+    const assignmentSingle = vi.fn().mockResolvedValue({
+      data: courseId !== null
+        ? { lesson_id: 'l1', lessons: { course_id: courseId } }
+        : null,
+    })
+    fromMock = vi.fn().mockReturnValue({
+      select: () => ({ eq: () => ({ single: assignmentSingle }) }),
+    })
+    uploadMock = vi.fn().mockResolvedValue({ error: null })
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
+      from: fromMock,
+      storage: {
+        from: vi.fn().mockReturnValue({ upload: uploadMock }),
+      },
+    })
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(hasCourseAccess).mockResolvedValue(true)
+  })
+
+  it('returns auth error when user is not authenticated', async () => {
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+      from: vi.fn(),
+      storage: { from: vi.fn() },
+    })
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', { type: 'image/jpeg' })
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('a1', file)
+    expect(result).toEqual({ error: 'auth' })
+  })
+
+  it('returns unsupported_type for disallowed MIME type', async () => {
+    makeClientWithAssignment('c1')
+    const file = new File([new Uint8Array([0])], 'malware.exe', { type: 'application/x-msdownload' })
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('a1', file)
+    expect(result).toEqual({ error: 'unsupported_type' })
+  })
+
+  it('returns too_large when file exceeds 50 MB', async () => {
+    makeClientWithAssignment('c1')
+    // Build a File whose .size property reports 50 MB + 1 byte without allocating memory.
+    const oversized = { name: 'big.jpg', type: 'image/jpeg', size: 50 * 1024 * 1024 + 1 } as File
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('a1', oversized)
+    expect(result).toEqual({ error: 'too_large' })
+  })
+
+  it('returns assignment_not_found when assignment does not exist', async () => {
+    makeClientWithAssignment(null)
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', { type: 'image/jpeg' })
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('bogus', file)
+    expect(result).toEqual({ error: 'assignment_not_found' })
+  })
+
+  it('returns forbidden when user has no course access', async () => {
+    vi.mocked(hasCourseAccess).mockResolvedValue(false)
+    makeClientWithAssignment('c1')
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', { type: 'image/jpeg' })
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('a1', file)
+    expect(result).toEqual({ error: 'forbidden' })
+    expect(uploadMock).not.toHaveBeenCalled()
+  })
+
+  it('returns fileUrl on successful upload', async () => {
+    makeClientWithAssignment('c1')
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'submission.jpg', { type: 'image/jpeg' })
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('a1', file)
+    expect(result).toMatchObject({ fileUrl: expect.stringContaining('storage://submissions/') })
+    expect(uploadMock).toHaveBeenCalled()
+  })
+
+  it('returns fileUrl for an allowed PDF upload', async () => {
+    makeClientWithAssignment('c1')
+    const file = new File([new Uint8Array([0x25, 0x50, 0x44, 0x46])], 'doc.pdf', { type: 'application/pdf' })
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('a1', file)
+    expect(result).toMatchObject({ fileUrl: expect.stringContaining('storage://submissions/') })
+  })
+
+  it('returns storage error when upload fails', async () => {
+    makeClientWithAssignment('c1')
+    uploadMock.mockResolvedValue({ error: { message: 'storage error' } })
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', { type: 'image/jpeg' })
+    const { uploadAssignmentFile } = await import('@/app/courses/actions')
+    const result = await uploadAssignmentFile('a1', file)
+    expect(result).toEqual({ error: 'storage error' })
+  })
+})
+

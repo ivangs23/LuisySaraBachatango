@@ -211,6 +211,6 @@ describe('updateProfile — avatar file validation', () => {
       expect(uploadedPath).not.toMatch(/\.php/)
     }
     // At minimum, no error should be thrown
-    expect(true).toBe(true)
+    // If we reach this point, the updateProfile call succeeded without throwing
   })
 })

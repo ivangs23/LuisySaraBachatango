@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/utils/admin/guard'
+import { requireAdmin } from '@/utils/auth/require-admin'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
 
 export async function deletePost(postId: string) {

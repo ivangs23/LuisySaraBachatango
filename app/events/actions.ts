@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
-import { requireAdmin } from '@/utils/admin/guard'
+import { requireAdmin } from '@/utils/auth/require-admin'
 // Lives in _lib because 'use server' modules cannot export sync helpers.
 import { parseEventForm } from '@/app/events/_lib/parse'
 

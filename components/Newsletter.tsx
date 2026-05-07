@@ -33,7 +33,11 @@ export default function Newsletter() {
         <h2 className={styles.title}>{t.newsletter.title}</h2>
         <p className={styles.description}>{t.newsletter.desc}</p>
         <form className={styles.form} action={handleSubmit}>
+          <label htmlFor="newsletter-email" className="sr-only">
+            {t.newsletter.placeholder}
+          </label>
           <input
+            id="newsletter-email"
             type="email"
             name="email"
             placeholder={t.newsletter.placeholder}
@@ -44,7 +48,7 @@ export default function Newsletter() {
             {isPending ? '...' : t.newsletter.button}
           </button>
         </form>
-        {status.kind === 'ok' && <p>{t.newsletter.success}</p>}
+        {status.kind === 'ok' && <p role="status" aria-live="polite">{t.newsletter.success}</p>}
         {status.kind === 'err' && <p role="alert">{t.newsletter.error}</p>}
       </div>
     </section>

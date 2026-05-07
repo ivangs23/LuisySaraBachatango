@@ -74,7 +74,9 @@ export default function LessonTabs({
                 key={tab.id}
                 type="button"
                 role="tab"
+                id={`tab-${tab.id}`}
                 aria-selected={isActive}
+                aria-controls={`panel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
                 className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
               >
@@ -103,6 +105,10 @@ export default function LessonTabs({
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
+            role="tabpanel"
+            id={`panel-${activeTab}`}
+            aria-labelledby={`tab-${activeTab}`}
+            tabIndex={0}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}

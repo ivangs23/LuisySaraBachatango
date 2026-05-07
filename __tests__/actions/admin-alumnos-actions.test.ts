@@ -6,7 +6,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 const mockRequireAdmin = vi.fn()
-vi.mock('@/utils/admin/guard', () => ({
+vi.mock('@/utils/auth/require-admin', () => ({
   requireAdmin: () => mockRequireAdmin(),
   AdminGuardError: class extends Error { constructor(public reason: string) { super(reason) } },
 }))

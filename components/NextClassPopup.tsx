@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import styles from './NextClassPopup.module.css';
 
@@ -14,6 +14,8 @@ type Lesson = {
 export default function NextClassPopup() {
   const [nextLesson, setNextLesson] = useState<Lesson | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     async function fetchNextLesson() {
@@ -34,14 +36,43 @@ export default function NextClassPopup() {
     fetchNextLesson();
   }, []);
 
+  useEffect(() => {
+    if (!isVisible) return;
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
+      'button, a[href], [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsVisible(false);
+      }
+    }
+
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      previousFocusRef.current?.focus();
+    };
+  }, [isVisible]);
+
   if (!isVisible || !nextLesson) return null;
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.popup}>
-        <button onClick={() => setIsVisible(false)} className={styles.closeButton}>×</button>
-        
-        <h2 className={styles.title}>¡Nueva Clase Disponible!</h2>
+      <div
+        ref={dialogRef}
+        className={styles.popup}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="next-class-popup-title"
+      >
+        <button onClick={() => setIsVisible(false)} className={styles.closeButton} aria-label="Cerrar">×</button>
+
+        <h2 id="next-class-popup-title" className={styles.title}>¡Nueva Clase Disponible!</h2>
         
         <div className={styles.thumbnailContainer}>
           {/* Placeholder image - in real app use lesson thumbnail */}

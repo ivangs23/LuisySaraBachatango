@@ -133,7 +133,13 @@ export default function NotificationBell() {
 
   return (
     <div className={styles.container} ref={dropdownRef}>
-      <button className={styles.bell} onClick={() => setIsOpen(!isOpen)} aria-label="Notificaciones">
+      <button
+        className={styles.bell}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notificaciones"
+        aria-expanded={isOpen}
+        aria-controls="notifications-dropdown"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -146,7 +152,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className={styles.dropdown}>
+        <div className={styles.dropdown} id="notifications-dropdown">
           <div className={styles.header}>
             <h3 className={styles.title}>Notificaciones</h3>
             {unreadCount > 0 && (
@@ -164,6 +170,12 @@ export default function NotificationBell() {
                   key={n.id}
                   className={`${styles.item} ${!n.is_read ? styles.unread : ''}`}
                   onClick={() => handleClick(n)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleClick(n);
+                    }
+                  }}
                   role="button"
                   tabIndex={0}
                 >

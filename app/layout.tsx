@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { unstable_cache } from "next/cache";
+import { getCurrentLocale } from '@/utils/i18n/get-locale';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -51,6 +52,10 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: '#c0a062',
+};
+
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { getCurrentUser } from "@/utils/supabase/get-user";
 
@@ -85,6 +90,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+  const locale = await getCurrentLocale();
 
   const profile = user ? await getCachedProfile(user.id) : null;
 
@@ -101,7 +107,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="es">
+    <html lang={locale}>
       <head>
         <script
           type="application/ld+json"
@@ -110,8 +116,11 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <LanguageProvider>
+          <a href="#main-content" className="skip-link">
+            Saltar al contenido principal
+          </a>
           <Header user={user} profile={profile} />
-          <main style={{ minHeight: '80vh' }}>
+          <main id="main-content" style={{ minHeight: '80vh' }}>
             {children}
           </main>
           <Footer />

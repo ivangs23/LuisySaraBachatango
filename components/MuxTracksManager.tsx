@@ -127,10 +127,15 @@ function TrackSection({
 
       {adding && (
         <form onSubmit={handleAdd} className={styles.form}>
-          <select value={languageCode} onChange={e => setLanguageCode(e.target.value)}>
+          <label htmlFor={`${kind}-track-language`}>Idioma</label>
+          <select id={`${kind}-track-language`} value={languageCode} onChange={e => setLanguageCode(e.target.value)}>
             {SUPPORTED_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
           </select>
+          <label htmlFor={`${kind}-track-file`}>
+            {kind === 'audio' ? 'Archivo de audio' : 'Archivo de subtítulos'}
+          </label>
           <input
+            id={`${kind}-track-file`}
             type="file"
             accept={kind === 'audio' ? 'audio/*,video/mp4' : '.vtt,text/vtt'}
             onChange={e => setFile(e.target.files?.[0] ?? null)}

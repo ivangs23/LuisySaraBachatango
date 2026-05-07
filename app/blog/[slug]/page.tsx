@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, ArrowUpRight, CalendarDays, Clock } from 'lucide-react';
 import styles from './page.module.css';
+import { safeJsonLd } from '@/utils/jsonld';
 
 type Article = {
   slug: string;
@@ -130,8 +131,49 @@ export default async function BlogArticlePage({
     day: 'numeric',
   });
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com';
+
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.excerpt,
+    image: article.image ? [article.image] : [],
+    datePublished: article.date,
+    dateModified: article.date,
+    author: {
+      '@type': 'Organization',
+      name: 'Luis y Sara Bachatango',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Luis y Sara Bachatango',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/blog/${slug}`,
+    },
+  };
+
+  const blogBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${baseUrl}/blog` },
+      { '@type': 'ListItem', position: 3, name: article.title, item: `${baseUrl}/blog/${slug}` },
+    ],
+  };
+
   return (
-    <article className={styles.container}>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(blogBreadcrumb) }} />
+      <article className={styles.container}>
       {/* ============== HERO ============== */}
       <header className={styles.hero}>
         <div className={styles.heroImage}>
@@ -267,5 +309,6 @@ export default async function BlogArticlePage({
         </nav>
       )}
     </article>
+    </>
   );
 }

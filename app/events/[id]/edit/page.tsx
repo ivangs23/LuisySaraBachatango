@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { requireAdmin, AdminGuardError } from '@/utils/admin/guard'
+import { requireAdmin, AdminGuardError } from '@/utils/auth/require-admin'
 import { createClient } from '@/utils/supabase/server'
 import EventForm from '@/components/EventForm'
 
