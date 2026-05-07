@@ -25,7 +25,10 @@ export async function POST(req: Request) {
     }
 
     const { courseId } = await req.json() as { courseId?: string };
-    const origin = req.headers.get('origin') ?? '';
+    // Origin must be the canonical site. Stripe success_url is built with this
+    // and a malicious Origin header would let an attacker phish the user after
+    // payment. Use NEXT_PUBLIC_BASE_URL (asserted at startup in prod).
+    const origin = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
     // Retrieve or create Stripe customer to avoid duplicates
     const supabaseAdmin = createSupabaseAdmin(
