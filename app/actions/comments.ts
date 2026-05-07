@@ -201,6 +201,21 @@ export async function toggleLike(commentId: string) {
 
   if (!comment) return { error: 'Comentario no encontrado' };
 
+  // Lesson comments require course access. Post comments don't.
+  let lessonForLink: { course_id: string } | null = null;
+  if (comment.lesson_id) {
+    const { data: lesson } = await supabase
+      .from('lessons')
+      .select('course_id')
+      .eq('id', comment.lesson_id)
+      .single();
+    if (!lesson) return { error: 'lesson_not_found' };
+    if (!(await hasCourseAccess(user.id, lesson.course_id))) {
+      return { error: 'forbidden' };
+    }
+    lessonForLink = lesson;
+  }
+
   const { data: existingLike } = await supabase
     .from('comment_likes')
     .select('id')
@@ -223,12 +238,7 @@ export async function toggleLike(commentId: string) {
 
   let link: string;
   if (comment.lesson_id) {
-    const { data: lesson } = await supabase
-      .from('lessons')
-      .select('course_id')
-      .eq('id', comment.lesson_id)
-      .single();
-    link = `/courses/${lesson?.course_id ?? ''}/${comment.lesson_id}#comment-${commentId}`;
+    link = `/courses/${lessonForLink?.course_id ?? ''}/${comment.lesson_id}#comment-${commentId}`;
   } else if (comment.post_id) {
     link = `/community/${comment.post_id}#comment-${commentId}`;
   } else {
