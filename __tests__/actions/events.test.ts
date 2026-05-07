@@ -9,7 +9,7 @@ const { mockRevalidatePath, mockRedirect, mockRequireAdmin, mockFrom } = vi.hois
 
 vi.mock('next/cache', () => ({ revalidatePath: mockRevalidatePath }))
 vi.mock('next/navigation', () => ({ redirect: mockRedirect }))
-vi.mock('@/utils/admin/guard', () => ({
+vi.mock('@/utils/auth/require-admin', () => ({
   requireAdmin: mockRequireAdmin,
   AdminGuardError: class AdminGuardError extends Error {
     constructor(public reason: string) { super(reason) }
