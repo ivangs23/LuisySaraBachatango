@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { unstable_cache } from "next/cache";
+import { getCurrentLocale } from '@/utils/i18n/get-locale';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -85,6 +86,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getCurrentUser();
+  const locale = await getCurrentLocale();
 
   const profile = user ? await getCachedProfile(user.id) : null;
 
@@ -101,7 +103,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="es">
+    <html lang={locale}>
       <head>
         <script
           type="application/ld+json"
