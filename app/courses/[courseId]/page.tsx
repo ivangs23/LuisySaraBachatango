@@ -110,11 +110,25 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
     ...(course.image_url ? { image: course.image_url } : {}),
   }
 
+  const courseBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Cursos', item: `${BASE_URL}/courses` },
+      { '@type': 'ListItem', position: 3, name: course.title, item: `${BASE_URL}/courses/${course.id}` },
+    ],
+  }
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(courseJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(courseBreadcrumb) }}
       />
       <CourseDetailView
         course={{
