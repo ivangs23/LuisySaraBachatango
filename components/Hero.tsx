@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import { Play, ChevronDown } from 'lucide-react';
@@ -18,7 +18,6 @@ type StatKey = typeof STATS[number]['labelKey'];
 export default function Hero() {
   const { t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
-  const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -66,17 +65,14 @@ export default function Hero() {
       <div className={styles.bgLayer} aria-hidden="true">
         <video
           ref={videoRef}
-          className={`${styles.bgVideo} ${videoReady ? styles.bgVideoVisible : ''}`}
+          className={styles.bgVideo}
           autoPlay
           muted
           loop
           playsInline
           preload="metadata"
           poster="/hero-bg.webp"
-          onCanPlay={() => setVideoReady(true)}
         >
-          <source src="/hero-video.mp4" type="video/mp4" />
-          <source src="/hero-video.webm" type="video/webm" />
         </video>
         {/* Gradiente cinemático y viñeta */}
         <div className={styles.bgOverlay} />
