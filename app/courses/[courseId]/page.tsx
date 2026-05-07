@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUser } from '@/utils/supabase/get-user'
 import { safeJsonLd } from '@/utils/jsonld'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import CourseDetailView from '@/components/CourseDetailView'
+import CoursePreviewShell from '@/components/CoursePreviewShell'
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
 
 export async function generateMetadata(
   props: { params: Promise<{ courseId: string }> }
@@ -33,21 +36,65 @@ export async function generateMetadata(
 
 export default async function CourseDetailPage(props: { params: Promise<{ courseId: string }> }) {
   const params = await props.params;
-
-  const user = await getCurrentUser()
   const supabase = await createClient()
 
-  if (!user) {
-    redirect(`/login?message=Please login to view this course&next=/courses/${params.courseId}`)
+  // Public-facing data — fetched before auth check so Googlebot sees it.
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('id, title, description, image_url, price_eur, course_type, is_published, year, month, category')
+    .eq('id', params.courseId)
+    .eq('is_published', true)
+    .single();
+
+  if (courseError || !course) notFound();
+
+  const courseJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course.title,
+    description: course.description ?? `Curso de Bachatango con Luis y Sara.`,
+    url: `${BASE_URL}/courses/${course.id}`,
+    provider: {
+      '@type': 'Organization',
+      name: 'Luis y Sara Bachatango',
+      url: BASE_URL,
+    },
+    ...(course.image_url ? { image: course.image_url } : {}),
   }
 
-  // Batch 1: course metadata, lesson list, and user role — all independent.
+  const courseBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Cursos', item: `${BASE_URL}/courses` },
+      { '@type': 'ListItem', position: 3, name: course.title, item: `${BASE_URL}/courses/${course.id}` },
+    ],
+  }
+
+  // Public preview path: anonymous users get the shell + CTA to login.
+  const user = await getCurrentUser()
+  if (!user) {
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(courseJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(courseBreadcrumb) }}
+        />
+        <CoursePreviewShell course={course} />
+      </>
+    );
+  }
+
+  // Authenticated path: full existing logic.
   const [
-    { data: course, error: courseError },
     { data: lessons, error: lessonsError },
     { data: profile },
   ] = await Promise.all([
-    supabase.from('courses').select('*').eq('id', params.courseId).single(),
     supabase.from('lessons')
       .select('id, title, order, release_date, parent_lesson_id')
       .eq('course_id', params.courseId)
@@ -55,7 +102,6 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
     supabase.from('profiles').select('role').eq('id', user.id).single(),
   ])
 
-  if (courseError || !course) notFound()
   if (lessonsError) console.error('Error fetching lessons:', lessonsError)
 
   const isAdmin = profile?.role === 'admin'
@@ -94,31 +140,6 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription
 
   const completedLessonIds = (progressResult.data ?? []).map(p => p.lesson_id)
-
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://luisysarabachatango.com'
-  const courseJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Course',
-    name: course.title,
-    description: course.description ?? `Curso de Bachatango con Luis y Sara.`,
-    url: `${BASE_URL}/courses/${course.id}`,
-    provider: {
-      '@type': 'Organization',
-      name: 'Luis y Sara Bachatango',
-      url: BASE_URL,
-    },
-    ...(course.image_url ? { image: course.image_url } : {}),
-  }
-
-  const courseBreadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: BASE_URL },
-      { '@type': 'ListItem', position: 2, name: 'Cursos', item: `${BASE_URL}/courses` },
-      { '@type': 'ListItem', position: 3, name: course.title, item: `${BASE_URL}/courses/${course.id}` },
-    ],
-  }
 
   return (
     <>
