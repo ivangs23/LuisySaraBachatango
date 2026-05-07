@@ -7,6 +7,11 @@ vi.mock('@/utils/notifications/server', () => ({ notify: mockNotify }))
 vi.mock('@/utils/supabase/server', () => ({ createClient: vi.fn() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/utils/auth/course-access', () => ({ hasCourseAccess: vi.fn() }))
+vi.mock('@/utils/rate-limit', () => ({
+  rateLimit: vi.fn().mockResolvedValue({ ok: true, retryAfter: 0 }),
+  rateLimitKey: (parts: unknown[]) => parts.join(':'),
+  _resetRateLimitForTest: vi.fn(),
+}))
 
 function makeChain(returns: Record<string, unknown>) {
   const obj: Record<string, unknown> = {

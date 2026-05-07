@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { notify } from '@/utils/notifications/server';
 import { hasCourseAccess } from '@/utils/auth/course-access';
+import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 
 export type Comment = {
   id: string;
@@ -185,6 +186,11 @@ export async function toggleLike(commentId: string) {
 
   if (!user) {
     return { error: 'Debes iniciar sesión' };
+  }
+
+  const rl = await rateLimit(rateLimitKey([user.id, 'comment-like']), 60, 60_000)
+  if (!rl.ok) {
+    return { error: 'rate_limit' }
   }
 
   const { data: comment } = await supabase
