@@ -6,13 +6,10 @@ import { headers } from 'next/headers'
 
 import { createClient } from '@/utils/supabase/server'
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
-import { assertProdEnv } from '@/utils/env/validate-prod'
 import { getClientIp } from '@/utils/auth/client-ip'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
-
-assertProdEnv()
 
 export async function login(formData: FormData) {
   const h = await headers()
