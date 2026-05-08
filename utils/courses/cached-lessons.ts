@@ -1,6 +1,6 @@
 import 'server-only'
 import { unstable_cache } from 'next/cache'
-import { createClient } from '@/utils/supabase/server'
+import { createSupabaseAdmin } from '@/utils/supabase/admin'
 
 export type LessonSidebarRow = {
   id: string
@@ -10,16 +10,14 @@ export type LessonSidebarRow = {
   is_free: boolean
 }
 
-/**
- * Returns the ordered list of lesson sidebar rows for a course.
- * Result is cached at the Next.js data layer for 5 minutes per courseId,
- * with the tag `course:<courseId>:lessons` so admin mutations can invalidate
- * via `revalidateTag(...)`.
- */
+// Uses the service-role client: unstable_cache forbids reading cookies(), which
+// the user-session client does. The sidebar exposes only non-sensitive per-course
+// metadata; per-lesson access is enforced on the lesson page via RLS, so a
+// shared cache across users is correct here.
 export const getCachedLessonsForCourse = (courseId: string) =>
   unstable_cache(
     async (): Promise<LessonSidebarRow[]> => {
-      const supabase = await createClient()
+      const supabase = createSupabaseAdmin()
       const { data } = await supabase
         .from('lessons')
         .select('id, title, order, parent_lesson_id, is_free')
