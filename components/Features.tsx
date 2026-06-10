@@ -62,8 +62,8 @@ export default function Features() {
             Tres claves para entrar al universo <em>Bachatango</em>
           </h2>
           <p className={styles.introText}>
-            Una propuesta cuidada, mes a mes. Lo que necesitas para crecer en
-            pista, sin saturarte de contenido.
+            Una propuesta cuidada al detalle. Lo que necesitas para crecer en
+            la pista, sin saturarte de contenido.
           </p>
         </div>
       </Reveal>

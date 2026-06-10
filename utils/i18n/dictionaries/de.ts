@@ -35,10 +35,9 @@ export const de: Dictionary = {
   },
   faq: {
     title: "Häufige Fragen",
-    q1: { q: "Brauche ich Vorkenntnisse?", a: "Nicht notwendig. Wir haben Anfängerkurse." },
-    q2: { q: "Wie greife ich auf die Kurse zu?", a: "Nach dem Abonnieren hast du sofortigen Zugriff." },
-    q3: { q: "Kann ich jederzeit kündigen?", a: "Ja, ohne Verpflichtungen." },
-    q4: { q: "Geht das auch ohne Tanzpartner?", a: "Absolut. Viele Lektionen konzentrieren sich auf individuelle Technik." }
+    q1: { q: "Brauche ich Vorkenntnisse?", a: "Grundkenntnisse in Bachata oder Tango." },
+    q2: { q: "Wie greife ich auf die Kurse zu?", a: "Sobald du einen Kurs kaufst, hast du sofortigen Zugriff auf den gesamten Kursinhalt über die Plattform. Du kannst die Klassen so oft ansehen, wie du möchtest." },
+    q3: { q: "Geht das auch ohne Tanzpartner?", a: "Absolut. Viele Lektionen konzentrieren sich auf individuelle Technik." }
   },
   newsletter: {
     title: "Tritt der Community bei", desc: "Erhalte exklusive Tipps und eine kostenlose Klasse.", placeholder: "Deine Email", button: "Abonnieren",
@@ -75,10 +74,12 @@ export const de: Dictionary = {
   },
   about: {
     heroTitle: "Leidenschaft und Eleganz", heroSubtitle: "Die Geschichte von Luis und Sara", bioTitle: "Mehr als Tanz",
-    bio1: "Luis und Sara sind Pioniere der Bachata-Tango-Fusion.",
-    bio2: "Ihre Reise begann in Madrid. Heute reisen sie um die Welt.",
-    stats: { s1: "Jahre Erfahrung", s2: "Online-Schüler", s3: "Besuchte Länder", s4: "Internationale Champions" },
-    quote: "Bachatango ist nicht nur Schritte, es ist Fühlen.", cta: "Fang heute an zu tanzen"
+    bio1: "Luis und Sara lernten sich mit gerade einmal 9 Jahren kennen, an ihrem ersten Tag im Tanzunterricht im Jahr 2002. Seitdem haben sie nie aufgehört, zusammen zu tanzen.",
+    bio2: "Jeder ist seinen eigenen Weg in der Kunstwelt gegangen: Sara hat einen Abschluss in Tanzpädagogik und Luis ist nationaler Wertungsrichter im Tanzsport. Gemeinsam standen sie auf Bühnen in aller Welt und teilten das Parkett mit Künstlern wie Il Divo, Gente de Zona und Diego Torres. Sie waren Teil von Tanzensembles im Fernsehen und bei bedeutenden Galas wie den Platino Awards des iberoamerikanischen Films.",
+    bio3: "Außerdem sind sie internationale Standardtanz-Meister und gewannen die erste Staffel von Bailando con las Estrellas auf Telecinco.",
+    bio4: "2020 gingen sie einen Schritt weiter und eröffneten ihre eigene Tanzschule – ein Projekt, das heute mehr als 300 Schüler vereint und zu ihrem großen Zuhause geworden ist.",
+    stats: { s1: "Jahre Erfahrung", s2: "Online-Schüler", s3: "Besuchte Länder", s4: "Internationale Titel" },
+    quote: "Bachatango: wenn Technik auf Leidenschaft trifft und zwei zu eins werden. Tanze. Fühle. Lebe.", cta: "Fang heute an zu tanzen"
   },
   communityPage: {
     joinTitle: "Tritt der Community bei",

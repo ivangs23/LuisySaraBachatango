@@ -15,10 +15,10 @@ import styles from './page.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 
 const STATS = [
-  { value: '15', suffix: '+', icon: GraduationCap, key: 's1' as const },
-  { value: '50', suffix: 'k+', icon: Users, key: 's2' as const },
+  { value: '25', suffix: '+', icon: GraduationCap, key: 's1' as const },
+  { value: '500', suffix: '+', icon: Users, key: 's2' as const },
   { value: '30', suffix: '+', icon: MapPin, key: 's3' as const },
-  { value: '5', suffix: '×', icon: Trophy, key: 's4' as const },
+  { value: '100', suffix: '+', icon: Trophy, key: 's4' as const },
 ];
 
 export default function SobreNosotros() {
@@ -90,6 +90,8 @@ export default function SobreNosotros() {
               </h2>
               <p className={styles.bioParagraph}>{t.about.bio1}</p>
               <p className={styles.bioParagraph}>{t.about.bio2}</p>
+              <p className={styles.bioParagraph}>{t.about.bio3}</p>
+              <p className={styles.bioParagraph}>{t.about.bio4}</p>
             </div>
           </Reveal>
 
@@ -125,7 +127,7 @@ export default function SobreNosotros() {
                 NÚMEROS QUE SE BAILAN
               </span>
               <h2 className={styles.statsTitle}>
-                Una década en{' '}
+                Más de dos décadas en{' '}
                 <span className={styles.statsTitleAccent}>movimiento</span>
               </h2>
             </div>

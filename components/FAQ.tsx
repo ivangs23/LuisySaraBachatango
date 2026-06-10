@@ -20,10 +20,6 @@ export default function FAQ() {
     {
       question: t.faq.q3.q,
       answer: t.faq.q3.a
-    },
-    {
-      question: t.faq.q4.q,
-      answer: t.faq.q4.a
     }
   ];
 

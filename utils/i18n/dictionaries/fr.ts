@@ -35,10 +35,9 @@ export const fr: Dictionary = {
   },
   faq: {
     title: "Questions Fréquentes",
-    q1: { q: "Ai-je besoin d'expérience en danse ?", a: "Ce n'est pas nécessaire. Nous avons des cours de niveau débutant conçus pour apprendre de zéro, étape par étape." },
-    q2: { q: "Comment accéder aux cours ?", a: "Une fois abonné, vous avez un accès immédiat à tout le contenu sur la plateforme. Vous pouvez voir les cours autant de fois que vous le souhaitez." },
-    q3: { q: "Puis-je annuler mon abonnement à tout moment ?", a: "Oui, sans engagement. Vous pouvez annuler votre abonnement depuis votre profil à tout moment et conserver l'accès jusqu'à la fin de la période facturée." },
-    q4: { q: "Est-ce utile si je n'ai pas de partenaire ?", a: "Absolument. Bien que le Bachatango soit une danse de couple, de nombreuses leçons se concentrent sur la technique individuelle, la musicalité et le style." }
+    q1: { q: "Ai-je besoin d'expérience en danse ?", a: "Des notions de base de bachata ou de tango." },
+    q2: { q: "Comment accéder aux cours ?", a: "Une fois que vous achetez un cours, vous avez un accès immédiat à tout le contenu du cours sur la plateforme. Vous pouvez voir les cours autant de fois que vous le souhaitez." },
+    q3: { q: "Est-ce utile si je n'ai pas de partenaire ?", a: "Absolument. Bien que le Bachatango soit une danse de couple, de nombreuses leçons se concentrent sur la technique individuelle, la musicalité et le style." }
   },
   newsletter: {
     title: "Rejoignez la Communauté", desc: "Recevez des conseils exclusifs, des nouvelles sur les ateliers et un cours gratuit en vous abonnant.", placeholder: "Votre email", button: "S'abonner",
@@ -75,10 +74,12 @@ export const fr: Dictionary = {
   },
   about: {
     heroTitle: "Passion et Élégance", heroSubtitle: "L'Histoire de Luis et Sara", bioTitle: "Plus que de la Danse, une Connexion",
-    bio1: "Luis et Sara sont des pionniers de la fusion Bachata et Tango. Avec plus de 10 ans d'expérience, ils ont créé une méthodologie unique.",
-    bio2: "Leur voyage a commencé à Madrid. Aujourd'hui, ils parcourent le monde pour partager leur vision.",
-    stats: { s1: "Années d'Expérience", s2: "Étudiants en Ligne", s3: "Pays Visités", s4: "Champions Internationaux" },
-    quote: "Le bachatango n'est pas que des pas, c'est sentir la respiration de son partenaire.", cta: "Commencez à Danser Aujourd'hui"
+    bio1: "Luis et Sara se sont rencontrés à seulement 9 ans, lors de leur premier jour de cours de danse en 2002. Depuis, ils n'ont jamais cessé de danser ensemble.",
+    bio2: "Chacun a suivi son propre chemin dans le monde artistique : Sara est diplômée en Pédagogie de la Danse et Luis est Juge National de Danse Sportive. Ensemble, ils ont parcouru les scènes du monde entier en partageant la piste avec des artistes tels qu'Il Divo, Gente de Zona ou Diego Torres, et ont fait partie de corps de ballet à la télévision et lors de galas aussi prestigieux que les Prix Platino du Cinéma ibéro-américain.",
+    bio3: "Ils sont également champions internationaux de danses de salon et ont remporté la première saison de Bailando con las Estrellas sur Telecinco.",
+    bio4: "En 2020, ils ont franchi une nouvelle étape en ouvrant leur propre école de danse, un projet qui réunit aujourd'hui plus de 300 élèves et qui est devenu leur grande maison.",
+    stats: { s1: "Années d'Expérience", s2: "Étudiants en Ligne", s3: "Pays Visités", s4: "Titres Internationaux" },
+    quote: "Bachatango : quand la technique rencontre la passion, et que deux ne font plus qu'un. Danse. Ressens. Vis.", cta: "Commencez à Danser Aujourd'hui"
   },
   communityPage: {
     joinTitle: "Rejoignez la Communauté",

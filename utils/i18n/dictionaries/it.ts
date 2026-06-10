@@ -35,10 +35,9 @@ export const it: Dictionary = {
   },
   faq: {
     title: "Domande Frequenti",
-    q1: { q: "Ho bisogno di esperienza?", a: "Non è necessario." },
-    q2: { q: "Come accedo ai corsi?", a: "Accesso immediato dopo l'iscrizione." },
-    q3: { q: "Posso cancellare quando voglio?", a: "Sì, senza vincoli." },
-    q4: { q: "Serve il partner?", a: "No, molte lezioni sono individuali." }
+    q1: { q: "Ho bisogno di esperienza?", a: "Nozioni di base di bachata o tango." },
+    q2: { q: "Come accedo ai corsi?", a: "Una volta acquistato un corso, hai accesso immediato a tutto il contenuto del corso attraverso la piattaforma. Puoi vedere le lezioni tutte le volte che vuoi." },
+    q3: { q: "Serve il partner?", a: "No, molte lezioni sono individuali." }
   },
   newsletter: {
     title: "Unisciti alla Comunità", desc: "Ricevi consigli esclusivi.", placeholder: "La tua email", button: "Iscriviti",
@@ -75,9 +74,12 @@ export const it: Dictionary = {
   },
   about: {
     heroTitle: "Passione ed Eleganza", heroSubtitle: "La Storia di Luis e Sara", bioTitle: "Più che Ballo",
-    bio1: "Pionieri della fusione.", bio2: "Il viaggio è iniziato a Madrid.",
-    stats: { s1: "Anni di Esperienza", s2: "Studenti Online", s3: "Paesi Visitati", s4: "Campioni Internazionali" },
-    quote: "Bachatango è sentire.", cta: "Inizia a Ballare Oggi"
+    bio1: "Luis e Sara si sono conosciuti a soli 9 anni, il loro primo giorno di lezione di ballo nel 2002. Da allora non hanno mai smesso di ballare insieme.",
+    bio2: "Ognuno ha seguito il proprio percorso nel mondo artistico: Sara è laureata in Pedagogia della Danza e Luis è Giudice Nazionale di Danza Sportiva. Insieme hanno calcato palcoscenici di mezzo mondo condividendo il ballo con artisti come Il Divo, Gente de Zona o Diego Torres, e hanno fatto parte di corpi di ballo in televisione e in gala prestigiosi come i Premi Platino del Cinema Iberoamericano.",
+    bio3: "Inoltre sono campioni internazionali di balli da sala e si sono proclamati vincitori della prima edizione di Bailando con las Estrellas su Telecinco.",
+    bio4: "Nel 2020 hanno fatto un passo in più e hanno aperto la loro scuola di ballo, un progetto che oggi riunisce più di 300 allievi ed è diventato la loro grande casa.",
+    stats: { s1: "Anni di Esperienza", s2: "Studenti Online", s3: "Paesi Visitati", s4: "Titoli Internazionali" },
+    quote: "Bachatango: quando la tecnica incontra la passione, e due diventano uno. Balla. Senti. Vivi.", cta: "Inizia a Ballare Oggi"
   },
   communityPage: {
     joinTitle: "Unisciti alla Comunità",

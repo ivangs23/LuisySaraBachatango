@@ -8,9 +8,9 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './Hero.module.css';
 
 const STATS = [
-  { value: '+15', labelKey: 'years' },
-  { value: '+4.000', labelKey: 'students' },
-  { value: '+25', labelKey: 'countries' },
+  { value: '+25', labelKey: 'years' },
+  { value: '+500', labelKey: 'students' },
+  { value: '+50', labelKey: 'countries' },
 ] as const;
 
 type StatKey = typeof STATS[number]['labelKey'];

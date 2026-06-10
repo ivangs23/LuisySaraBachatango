@@ -70,17 +70,13 @@ export const es = {
     title: "Preguntas Frecuentes",
     q1: {
       q: "¿Necesito tener experiencia previa en baile?",
-      a: "No es necesario. Tenemos cursos desde nivel iniciación diseñados para que aprendas desde cero, paso a paso."
+      a: "Conceptos básicos de bachata o tango."
     },
     q2: {
       q: "¿Cómo accedo a los cursos?",
-      a: "Una vez te suscribes, tienes acceso inmediato a todo el contenido a través de la plataforma. Puedes ver las clases tantas veces como quieras."
+      a: "Una vez compras un curso, tienes acceso inmediato a todo el contenido del curso a través de la plataforma. Puedes ver las clases tantas veces como quieras."
     },
     q3: {
-      q: "¿Puedo cancelar mi suscripción en cualquier momento?",
-      a: "Sí, sin compromisos. Puedes cancelar tu suscripción desde tu perfil en cualquier momento y mantendrás el acceso hasta el final del periodo facturado."
-    },
-    q4: {
       q: "¿Sirve si no tengo pareja de baile?",
       a: "Absolutamente. Aunque el Bachatango es un baile de pareja, muchas lecciones se enfocan en técnica individual, musicalidad y estilo que puedes practicar solo/a."
     }
@@ -140,15 +136,17 @@ export const es = {
     heroTitle: "Pasión y Elegancia",
     heroSubtitle: "La Historia de Luis y Sara",
     bioTitle: "Más que Baile, una Conexión",
-    bio1: "Luis y Sara no son solo instructores; son pioneros en la fusión del Bachata y el Tango. Con más de una década de experiencia en los escenarios internacionales, han desarrollado una metodología única que combina la sensualidad fluida de la bachata con la precisión y el drama del tango.",
-    bio2: "Su viaje comenzó en los salones de Madrid, donde sus estilos individuales chocaron para crear algo completamente nuevo. Hoy, viajan por el mundo compartiendo su visión: que el baile es el lenguaje más honesto del alma.",
+    bio1: "Luis y Sara se conocieron con apenas 9 años, en su primer día de clase de baile allá por 2002. Desde entonces, no han parado de bailar juntos.",
+    bio2: "Cada uno ha seguido su propio camino dentro del mundo artístico: Sara es licenciada en Pedagogía de la Danza y Luis es Juez Nacional de Baile Deportivo. Juntos han recorrido escenarios de medio mundo compartiendo baile con artistas como Il Divo, Gente de Zona o Diego Torres, y han formado parte de cuerpos de baile en televisión y en galas tan importantes como los Premios Platino del Cine Iberoamericano.",
+    bio3: "Además, son campeones internacionales de bailes de salón y se proclamaron ganadores de la primera edición de Bailando con las Estrellas en Telecinco.",
+    bio4: "En 2020 dieron un paso más y abrieron su propia escuela de baile, un proyecto que hoy reúne a más de 300 alumnos y que se ha convertido en su gran casa.",
     stats: {
       s1: "Años de Experiencia",
       s2: "Estudiantes Online",
       s3: "Países Visitados",
-      s4: "Campeones Internacionales"
+      s4: "Títulos Internacionales"
     },
-    quote: "El bachatango no es solo pasos, es sentir la respiración de tu pareja y convertirla en movimiento. Queremos que nuestros alumnos no solo aprendan a bailar, sino a sentir.",
+    quote: "Bachatango: cuando la técnica se encuentra con la pasión, y dos se convierten en uno. Baila. Siente. Vive.",
     cta: "Empieza a Bailar Hoy"
   },
   communityPage: {

@@ -71,17 +71,13 @@ export const en: Dictionary = {
     title: "Frequently Asked Questions",
     q1: {
       q: "Do I need previous dance experience?",
-      a: "Not necessary. We have courses from beginner level designed for you to learn from scratch, step by step."
+      a: "Basic concepts of bachata or tango."
     },
     q2: {
       q: "How do I access the courses?",
-      a: "Once you subscribe, you have immediate access to all content through the platform. You can watch classes as many times as you want."
+      a: "Once you buy a course, you have immediate access to all the course content through the platform. You can watch the classes as many times as you want."
     },
     q3: {
-      q: "Can I cancel my subscription anytime?",
-      a: "Yes, no commitments. You can cancel your subscription from your profile at any time and keep access until the end of the billing period."
-    },
-    q4: {
       q: "Does it work if I don't have a dance partner?",
       a: "Absolutely. Although Bachatango is a partner dance, many lessons focus on individual technique, musicality, and style that you can practice solo."
     }
@@ -141,15 +137,17 @@ export const en: Dictionary = {
     heroTitle: "Passion and Elegance",
     heroSubtitle: "The Story of Luis and Sara",
     bioTitle: "More than Dance, a Connection",
-    bio1: "Luis and Sara are not just instructors; they are pioneers in the fusion of Bachata and Tango. With over a decade of experience on international stages, they have developed a unique methodology that combines the fluid sensuality of bachata with the precision and drama of tango.",
-    bio2: "Their journey began in the dance halls of Madrid, where their individual styles collided to create something completely new. Today, they travel the world sharing their vision: that dance is the most honest language of the soul.",
+    bio1: "Luis and Sara met when they were just 9 years old, on their first day of dance class back in 2002. They haven't stopped dancing together since.",
+    bio2: "Each has followed their own path within the artistic world: Sara holds a degree in Dance Pedagogy and Luis is a National DanceSport Judge. Together they have performed on stages across half the world, sharing the floor with artists such as Il Divo, Gente de Zona, and Diego Torres, and have been part of dance troupes on television and at galas as prestigious as the Platino Awards for Ibero-American Cinema.",
+    bio3: "They are also international ballroom dance champions and were crowned winners of the first season of Bailando con las Estrellas on Telecinco.",
+    bio4: "In 2020 they took a further step and opened their own dance school, a project that today brings together more than 300 students and has become their true home.",
     stats: {
       s1: "Years of Experience",
       s2: "Online Students",
       s3: "Countries Visited",
-      s4: "International Champions"
+      s4: "International Titles"
     },
-    quote: "Bachatango is not just steps, it is feeling your partner's breathing and converting it into movement. We want our students not only to learn to dance, but to feel.",
+    quote: "Bachatango: when technique meets passion, and two become one. Dance. Feel. Live.",
     cta: "Start Dancing Today"
   },
   communityPage: {
