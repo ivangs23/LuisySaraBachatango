@@ -245,6 +245,7 @@ export default function LessonView({
 
               {canPlay ? (
                 <LessonPlayer
+                  key={lesson.mux_playback_id}
                   playbackId={lesson.mux_playback_id!}
                   playbackToken={playbackToken!}
                   thumbnailToken={thumbnailToken ?? undefined}
