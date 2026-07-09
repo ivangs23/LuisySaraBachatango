@@ -22,7 +22,7 @@ export default function StickyBuyBar({ courseId, isAuthed, price }: StickyProps)
   }, []);
 
   return (
-    <div className={`${styles.sticky} ${visible ? styles.stickyVisible : ''}`} {...(!visible ? { inert: '' } : {})}>
+    <div className={`${styles.sticky} ${visible ? styles.stickyVisible : ''}`} inert={!visible}>
       <span className={styles.stickyBrand}>{LANDING_COPY.sticky.brand}</span>
       <CourseCtaButton courseId={courseId} isAuthed={isAuthed} label={`${LANDING_COPY.sticky.cta} · €${price}`} className={styles.stickyCta} />
     </div>
