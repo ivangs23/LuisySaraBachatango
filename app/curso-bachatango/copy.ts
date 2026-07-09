@@ -8,6 +8,10 @@ export const LANDING_COPY = {
     micro: 'Pago único · Acceso de por vida · Pago seguro con Stripe',
     secondary: 'Prueba una clase gratis',
   },
+  sticky: {
+    brand: 'Luis y Sara · CURSO BACHATANGO',
+    cta: 'Comprar',
+  },
   pain: {
     title: '¿Te suena esto?',
     items: [

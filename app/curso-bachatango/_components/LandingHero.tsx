@@ -1,5 +1,6 @@
 'use client';
 
+import { sanitizeUrl } from '@/utils/sanitize';
 import { LANDING_COPY } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import styles from '../page.module.css';
@@ -13,10 +14,11 @@ interface HeroProps {
 
 export default function LandingHero({ courseId, isAuthed, price, imageUrl }: HeroProps) {
   const c = LANDING_COPY.hero;
+  const safeBg = imageUrl ? sanitizeUrl(imageUrl) : null;
   return (
     <section
       className={styles.hero}
-      style={imageUrl ? { backgroundImage: `linear-gradient(rgba(5,5,5,0.6), rgba(5,5,5,0.85)), url(${imageUrl})` } : undefined}
+      style={safeBg ? { backgroundImage: `linear-gradient(rgba(5,5,5,0.6), rgba(5,5,5,0.85)), url(${safeBg})` } : undefined}
     >
       <div className={styles.heroInner}>
         <h1 className={styles.heroTitle}>{c.h1}</h1>

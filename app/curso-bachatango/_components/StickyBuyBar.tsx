@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { LANDING_COPY } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import styles from '../page.module.css';
 
@@ -21,9 +22,9 @@ export default function StickyBuyBar({ courseId, isAuthed, price }: StickyProps)
   }, []);
 
   return (
-    <div className={`${styles.sticky} ${visible ? styles.stickyVisible : ''}`} aria-hidden={!visible}>
-      <span className={styles.stickyBrand}>Luis y Sara · CURSO BACHATANGO</span>
-      <CourseCtaButton courseId={courseId} isAuthed={isAuthed} label={`Comprar · €${price}`} className={styles.stickyCta} />
+    <div className={`${styles.sticky} ${visible ? styles.stickyVisible : ''}`} {...(!visible ? { inert: '' } : {})}>
+      <span className={styles.stickyBrand}>{LANDING_COPY.sticky.brand}</span>
+      <CourseCtaButton courseId={courseId} isAuthed={isAuthed} label={`${LANDING_COPY.sticky.cta} · €${price}`} className={styles.stickyCta} />
     </div>
   );
 }
