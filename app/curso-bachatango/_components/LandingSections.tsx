@@ -63,7 +63,7 @@ export default function LandingSections({ courseId, isAuthed, price }: SectionsP
           {c.testimonials.items.map((t, i) => (
             <Reveal key={i} delay={i * 0.05}>
               <blockquote className={styles.card}>
-                <p className={styles.quote}>"{t.quote}"</p>
+                <p className={styles.quote}>“{t.quote}”</p>
                 <cite className={styles.cite}>{t.author}</cite>
               </blockquote>
             </Reveal>

@@ -12,8 +12,11 @@ import CourseCtaButton from '@/app/curso-bachatango/_components/CourseCtaButton'
 
 beforeEach(() => {
   vi.clearAllMocks()
-  delete (window as any).location
-  window.location = { assign: vi.fn() } as any
+  Object.defineProperty(window, 'location', {
+    value: { assign: vi.fn() },
+    writable: true,
+    configurable: true,
+  })
 })
 
 describe('CourseCtaButton', () => {
