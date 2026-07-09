@@ -22,9 +22,6 @@ export const metadata: Metadata = {
   alternates: { canonical: `${BASE_URL}/curso-bachatango` },
 };
 
-// Regenerar el shell como mucho cada 5 min (precio/nombre desde BD).
-export const revalidate = 300;
-
 export default async function CursoBachatangoLanding() {
   const course = await getLandingCourse();
   if (!course) notFound();

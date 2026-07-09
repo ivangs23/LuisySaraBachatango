@@ -19,7 +19,10 @@ export default function CourseCtaButton({ courseId, isAuthed, label, className }
     // Interino (Spec 1): visitante sin cuenta → signup y vuelta a la landing.
     // Spec 2 (guest checkout) sustituirá SOLO esta rama.
     if (!isAuthed) {
-      router.push('/signup?next=/curso-bachatango');
+      // TODO(Spec 2 – guest checkout): el flujo de signup no propaga ?next=, así que
+      // por ahora el visitante frío va a /signup y termina en /dashboard. Guest checkout
+      // (pago→cuenta) reemplazará esta rama para volver al pago sin registro previo.
+      router.push('/signup');
       return;
     }
 

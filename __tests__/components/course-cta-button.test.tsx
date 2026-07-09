@@ -23,7 +23,7 @@ describe('CourseCtaButton', () => {
   it('usuario NO logueado: redirige a signup con next', () => {
     render(<CourseCtaButton courseId="c1" isAuthed={false} label="Comprar" />)
     fireEvent.click(screen.getByRole('button', { name: 'Comprar' }))
-    expect(push).toHaveBeenCalledWith('/signup?next=/curso-bachatango')
+    expect(push).toHaveBeenCalledWith('/signup')
   })
 
   it('usuario logueado: llama a /api/checkout y redirige a Stripe', async () => {
