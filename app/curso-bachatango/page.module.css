@@ -1,0 +1,16 @@
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 0.9rem 2rem;
+  font: var(--h4);
+  color: #050505;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.cta:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.cta:disabled { opacity: 0.6; cursor: default; }
