@@ -86,6 +86,9 @@ export default function Header({ user, profile }: HeaderProps) {
   const displayName =
     profile?.full_name?.trim() || user?.email?.split('@')[0] || 'Bailarín';
 
+  // Landing de venta standalone: sin nav global.
+  if (pathname === '/curso-bachatango') return null;
+
   return (
     <>
       <header
