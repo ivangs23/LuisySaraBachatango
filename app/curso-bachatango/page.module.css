@@ -1,3 +1,5 @@
+.page { background: #050505; color: var(--text-main); overflow-x: hidden; }
+
 .cta {
   display: inline-flex;
   align-items: center;
