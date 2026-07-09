@@ -1,0 +1,79 @@
+.page { background: #050505; color: var(--text-main); overflow-x: hidden; }
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 0.9rem 2rem;
+  font: var(--h4);
+  color: #050505;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.cta:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.cta:disabled { opacity: 0.6; cursor: default; }
+
+.hero {
+  min-height: 92vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-2xl) var(--page-pad);
+  background-color: #050505;
+  background-size: cover;
+  background-position: center;
+}
+.heroInner { max-width: 720px; }
+.heroTitle { font: var(--h1); color: var(--text-main); margin-bottom: var(--spacing-lg); }
+.heroSub { font: var(--body); color: var(--text-muted); font-size: 1.15rem; margin-bottom: var(--spacing-xl); }
+.heroCtaRow { display: flex; gap: var(--spacing-md); align-items: center; justify-content: center; flex-wrap: wrap; }
+.heroSecondary { color: var(--primary); text-decoration: underline; font: var(--small); }
+.heroMicro { margin-top: var(--spacing-md); color: var(--text-muted); font: var(--small); }
+
+.sticky {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--page-pad);
+  background: rgba(5,5,5,0.95);
+  border-top: 1px solid var(--border);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 50;
+}
+.stickyVisible { transform: translateY(0); }
+.stickyBrand { color: var(--text-main); font: var(--small); }
+.stickyCta { padding: 0.6rem 1.4rem; }
+@media (max-width: 600px) { .stickyBrand { display: none; } .sticky { justify-content: center; } }
+
+.section { max-width: var(--page-max); margin: 0 auto; padding: var(--spacing-2xl) var(--page-pad); }
+.h2 { font: var(--h2); color: var(--text-main); text-align: center; margin-bottom: var(--spacing-lg); }
+.h3 { font: var(--h3); color: var(--primary); margin-bottom: var(--spacing-sm); }
+.lead { font: var(--body); font-size: 1.15rem; color: var(--text-muted); text-align: center; max-width: 680px; margin: 0 auto; }
+.painList { list-style: none; padding: 0; max-width: 560px; margin: 0 auto var(--spacing-lg); color: var(--text-main); }
+.painList li { padding: var(--spacing-sm) 0; border-bottom: 1px solid var(--border-subtle); }
+.promise { font: var(--h3); color: var(--primary); text-align: center; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--spacing-lg); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--spacing-lg); }
+.cardBody { color: var(--text-muted); font: var(--body); }
+.quote { color: var(--text-main); font-style: italic; margin-bottom: var(--spacing-sm); }
+.cite { color: var(--primary); font: var(--small); }
+.trustRow { list-style: none; display: flex; gap: var(--spacing-lg); justify-content: center; flex-wrap: wrap; padding: var(--spacing-lg) 0 0; color: var(--text-muted); font: var(--small); }
+.ctaOutline { display: inline-block; margin: var(--spacing-md) auto 0; padding: 0.8rem 1.8rem; border: 1px solid var(--primary); color: var(--primary); border-radius: var(--radius-pill); text-align: center; }
+.offer { max-width: 620px; margin: var(--spacing-2xl) auto; padding: var(--spacing-2xl) var(--page-pad); text-align: center; background: var(--surface); border: 1px solid var(--primary); border-radius: var(--radius-lg); }
+.includes { list-style: none; padding: 0; margin: 0 auto var(--spacing-lg); max-width: 420px; text-align: left; color: var(--text-main); }
+.includes li { padding: var(--spacing-xs) 0; }
+.price { font: var(--h1); color: var(--primary); }
+.priceNote { color: var(--text-muted); font: var(--small); margin-bottom: var(--spacing-lg); }
+.finalCta { text-align: center; padding: var(--spacing-2xl) var(--page-pad); }
+.faq { max-width: 720px; margin: 0 auto; }
+.faqItem { border-bottom: 1px solid var(--border); }
+.faqQ { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md) 0; background: none; border: none; color: var(--text-main); font: var(--h4); cursor: pointer; text-align: left; }
+.faqIconOpen { transform: rotate(180deg); transition: transform 0.2s ease; }
+.faqA { color: var(--text-muted); font: var(--body); padding-bottom: var(--spacing-md); }

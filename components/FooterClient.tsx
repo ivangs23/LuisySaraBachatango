@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import {
   ArrowUpRight,
   Facebook,
@@ -25,7 +26,10 @@ type FooterClientProps = {
 };
 
 export default function FooterClient({ adminProfile }: FooterClientProps) {
+  const pathname = usePathname();
   const { t } = useLanguage();
+
+  if (pathname === '/curso-bachatango') return null;
 
   const instagramUrl =
     safeSocialUrl(adminProfile?.instagram, 'instagram') ??
