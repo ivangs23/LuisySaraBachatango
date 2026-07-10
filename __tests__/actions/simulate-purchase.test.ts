@@ -56,6 +56,8 @@ describe('simulatePurchase', () => {
     expect(session.customer_details.email).toBe('buyer@example.com')
     expect(session.metadata.courseId).toBe('c1')
     expect(String(session.id)).toMatch(/^demo_/)
+    const opts = mockProvision.mock.calls[0][2]
+    expect(opts).toEqual({ isDemo: true })
   })
 
   it('en demo, curso no existe/no publicado: redirige a /demo-checkout?...&error=course-not-found y NO provisiona', async () => {

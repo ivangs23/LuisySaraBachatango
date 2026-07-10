@@ -51,7 +51,7 @@ export async function simulatePurchase(formData: FormData): Promise<void> {
     customer: null,
   } as unknown as Stripe.Checkout.Session;
 
-  await provisionGuestPurchase(session, admin);
+  await provisionGuestPurchase(session, admin, { isDemo: true });
 
   redirect(`/gracias?demo=1&email=${encodeURIComponent(email)}`);
 }
