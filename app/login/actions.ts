@@ -7,9 +7,9 @@ import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 import { getClientIp } from '@/utils/auth/client-ip'
+import { MIN_PASSWORD_LENGTH } from '@/utils/auth/password'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-export const MIN_PASSWORD_LENGTH = 8
 
 export async function login(formData: FormData) {
   const h = await headers()
