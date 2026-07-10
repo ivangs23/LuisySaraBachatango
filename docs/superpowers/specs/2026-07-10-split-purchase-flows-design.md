@@ -57,10 +57,10 @@ alter table course_purchases add column if not exists source text;
   - demo → insertar `course_purchases {user_id, course_id, source:'web', is_demo:true}` (upsert idempotente) → `{ url: '/courses/'+courseId }`.
   - real → Stripe Checkout Session (customer reuse existente), `metadata:{ userId, courseId, source:'web' }`, success `/profile`. La rama logueada del webhook añade `source:'web'` a su upsert.
 
-### 4. `components/BuyCourseButton.tsx` (modificar — WEB)
-- Nueva prop `isAuthed: boolean` (la pasa `CourseDetailView`, que la recibe de la page).
-- `handleBuy`: si `!isAuthed` → `router.push('/signup?next=/courses/'+courseId)`. Si `isAuthed` → POST `/api/checkout` (como ahora) y `window.location.assign(url)`.
-- `components/CourseDetailView.tsx` + `app/courses/[courseId]/page.tsx`: pasar `isAuthed` (de `getCurrentUser()`).
+### 4. Web normal — ya gateado por login (sin cambios de UI)
+- Hallazgo: `app/courses/[courseId]/page.tsx` renderiza `CoursePreviewShell` (preview + CTA login) para anónimos; `BuyCourseButton` solo se muestra en la rama autenticada. Por tanto el flujo web YA es "regístrate/login primero → compra logueado".
+- `BuyCourseButton` NO necesita cambios (ni prop `isAuthed`): siempre lo pulsa un usuario logueado → POST `/api/checkout`. El origen `source:'web'` lo pone el servidor.
+- (Verificar que `CoursePreviewShell` lleva a login/registro; si solo dice "login", basta — la página de login enlaza a signup.)
 
 ### 5. `/curso-bachatango/comprar` (crear página + form)
 - `app/curso-bachatango/comprar/page.tsx` (server): valida `courseId` publicado (`notFound()` si no); prefill email/nombre si hay sesión; render `<LandingCheckoutForm courseId defaultEmail defaultName>`.
