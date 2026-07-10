@@ -1,6 +1,7 @@
 'use server';
 
 import { randomUUID } from 'node:crypto';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type Stripe from 'stripe';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
@@ -8,8 +9,16 @@ import { stripe } from '@/utils/stripe/server';
 import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { isDemoMode } from '@/utils/demo/mode';
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest';
+import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
+import { getClientIp } from '@/utils/auth/client-ip';
 
 export async function landingCheckout(formData: FormData): Promise<void> {
+  const ip = getClientIp(await headers());
+  const rl = await rateLimit(rateLimitKey([ip, 'landing-checkout']), 10, 60_000); // 10/min por IP
+  if (!rl.ok) {
+    redirect('/curso-bachatango/comprar?error=rate');
+  }
+
   const courseId = ((formData.get('courseId') as string | null) ?? '').trim();
   const fullName = ((formData.get('fullName') as string | null) ?? '').trim();
   const email = ((formData.get('email') as string | null) ?? '').trim().toLowerCase();
@@ -44,24 +53,32 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     redirect(`/gracias?demo=1&email=${encodeURIComponent(email)}`);
   }
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    billing_address_collection: 'auto',
-    customer_creation: 'always',
-    customer_email: email,
-    line_items: [{
-      price_data: {
-        currency: STRIPE_CONFIG.CURRENCY,
-        unit_amount: amount,
-        product_data: { name: course.title },
-      },
-      quantity: 1,
-    }],
-    mode: 'payment',
-    success_url: `${origin}/gracias?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/curso-bachatango`,
-    metadata: { courseId, guest: '1', source: 'landing', fullName },
-  });
-
-  redirect(session.url!);
+  let url: string | null = null;
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      billing_address_collection: 'auto',
+      customer_creation: 'always',
+      customer_email: email,
+      line_items: [{
+        price_data: {
+          currency: STRIPE_CONFIG.CURRENCY,
+          unit_amount: amount,
+          product_data: { name: course.title },
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${origin}/gracias?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/curso-bachatango`,
+      metadata: { courseId, guest: '1', source: 'landing', fullName },
+    });
+    url = session.url;
+  } catch (e) {
+    console.error('[landingCheckout] stripe', e);
+  }
+  if (!url) {
+    redirect(`/curso-bachatango/comprar?courseId=${encodeURIComponent(courseId)}&error=stripe`);
+  }
+  redirect(url);
 }
