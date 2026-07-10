@@ -180,6 +180,29 @@ describe('POST /api/webhooks/stripe — checkout.session.completed', () => {
     const res = await POST(makeWebhookRequest())
     expect(res.status).toBe(500)
   })
+
+  it('guest: pasa source y fullName desde metadata a provisionGuestPurchase', async () => {
+    mockProvision.mockResolvedValue({ ok: true, userId: 'guest-user' })
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: { object: makeSession({ metadata: { courseId: 'c1', guest: '1', source: 'landing', fullName: 'Ana' }, payment_status: 'paid' }) },
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockProvision).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ source: 'landing', fullName: 'Ana' }))
+  })
+
+  it('logueado: el upsert de course_purchases incluye source:web', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: { object: makeSession({ metadata: { userId: 'u1', courseId: 'c1', source: 'web' }, payment_status: 'paid' }) },
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    await POST(makeWebhookRequest())
+    const payload = mockUpsert.mock.calls[0][0]
+    expect(payload.source).toBe('web')
+  })
 })
 
 describe('POST /api/webhooks/stripe — subscription updates', () => {
