@@ -196,6 +196,21 @@ export const ja: Dictionary = {
     panelFeatures: ["リンクは限られた時間有効です", "アカウントとクラスは無傷のままです", "届かない場合はスパムフォルダを確認してください"],
     cardEyebrow: "回復する"
   },
+  resetPassword: {
+    title: "パスワードを設定",
+    subtitle: "アカウントにアクセスするための新しいパスワードを作成してください",
+    password: "新しいパスワード",
+    confirmPassword: "パスワードを確認",
+    submit: "パスワードを保存",
+    mismatch: "パスワードが一致しません。",
+    panelEyebrow: "最後のステップ",
+    panelTitle: "もう",
+    panelTitleEmphasis: "少し",
+    panelTitleSuffix: "です。",
+    panelLead: "アカウントを保護し、クラスにアクセスするために安全なパスワードを選んでください。",
+    panelFeatures: ["8文字以上を使用してください", "他のサイトで使っているパスワードは避けてください", "プロフィールからいつでも変更できます"],
+    cardEyebrow: "新しいパスワード"
+  },
   profile: {
     title: "マイプロフィール",
     editProfile: "プロフィールを編集",
@@ -226,6 +241,7 @@ export const ja: Dictionary = {
     invalid_email: "メールアドレスが無効です。",
     password_too_short: "パスワードは8文字以上である必要があります。",
     reset_failed: "リンクの送信に失敗しました。もう一度お試しください。",
+    update_failed: "パスワードの更新に失敗しました。もう一度お試しください。",
     rate_limit: "試行回数が多すぎます。1分待ってから再試行してください。",
     unknown: "エラーが発生しました。もう一度お試しください。"
   },

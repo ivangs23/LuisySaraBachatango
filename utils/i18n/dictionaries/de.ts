@@ -196,6 +196,21 @@ export const de: Dictionary = {
     panelFeatures: ["Link für begrenzte Zeit gültig", "Dein Konto und deine Kurse bleiben unversehrt", "Falls er nicht ankommt, überprüfe deinen Spam-Ordner"],
     cardEyebrow: "WIEDERHERSTELLEN"
   },
+  resetPassword: {
+    title: "Passwort Festlegen",
+    subtitle: "Erstelle ein neues Passwort für den Zugang zu deinem Konto",
+    password: "Neues Passwort",
+    confirmPassword: "Passwort bestätigen",
+    submit: "Passwort speichern",
+    mismatch: "Die Passwörter stimmen nicht überein.",
+    panelEyebrow: "LETZTER SCHRITT",
+    panelTitle: "Fast ",
+    panelTitleEmphasis: "geschafft",
+    panelTitleSuffix: ".",
+    panelLead: "Wähle ein sicheres Passwort, um dein Konto zu schützen und auf deine Kurse zuzugreifen.",
+    panelFeatures: ["Verwende mindestens 8 Zeichen", "Vermeide Passwörter, die du bereits woanders nutzt", "Du kannst es jederzeit in deinem Profil ändern"],
+    cardEyebrow: "NEUES PASSWORT"
+  },
   profile: {
     title: "Mein Profil",
     editProfile: "Profil bearbeiten",
@@ -226,6 +241,7 @@ export const de: Dictionary = {
     invalid_email: "Ungültige E-Mail.",
     password_too_short: "Das Passwort muss mindestens 8 Zeichen haben.",
     reset_failed: "Link konnte nicht gesendet werden. Bitte versuche es erneut.",
+    update_failed: "Passwort konnte nicht aktualisiert werden. Bitte versuche es erneut.",
     rate_limit: "Zu viele Versuche. Bitte warte eine Minute und versuche es erneut.",
     unknown: "Ein Fehler ist aufgetreten. Bitte versuche es erneut."
   },

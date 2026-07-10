@@ -264,6 +264,21 @@ export const es = {
     panelFeatures: ["Enlace válido durante un tiempo limitado", "Tu cuenta y tus clases siguen intactas", "Si no llega, revisa la carpeta de spam"],
     cardEyebrow: "RECUPERAR"
   },
+  resetPassword: {
+    title: "Fija tu Contraseña",
+    subtitle: "Crea una nueva contraseña para acceder a tu cuenta",
+    password: "Nueva contraseña",
+    confirmPassword: "Confirmar contraseña",
+    submit: "Guardar contraseña",
+    mismatch: "Las contraseñas no coinciden.",
+    panelEyebrow: "ÚLTIMO PASO",
+    panelTitle: "Ya casi ",
+    panelTitleEmphasis: "estás",
+    panelTitleSuffix: " dentro.",
+    panelLead: "Elige una contraseña segura para proteger tu cuenta y acceder a tus clases.",
+    panelFeatures: ["Usa al menos 8 caracteres", "Evita contraseñas que ya uses en otros sitios", "Podrás cambiarla cuando quieras desde tu perfil"],
+    cardEyebrow: "NUEVA CONTRASEÑA"
+  },
   profile: {
     title: "Mi Perfil",
     editProfile: "Editar Perfil",
@@ -294,6 +309,7 @@ export const es = {
     invalid_email: "Email no válido.",
     password_too_short: "La contraseña debe tener al menos 8 caracteres.",
     reset_failed: "Error al enviar el enlace. Inténtalo de nuevo.",
+    update_failed: "No se pudo actualizar la contraseña. Inténtalo de nuevo.",
     rate_limit: "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
     unknown: "Ha ocurrido un error. Inténtalo de nuevo."
   },

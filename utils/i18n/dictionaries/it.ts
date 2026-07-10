@@ -196,6 +196,21 @@ export const it: Dictionary = {
     panelFeatures: ["Link valido per un tempo limitato", "Il tuo account e le tue lezioni rimangono intatti", "Se non arriva, controlla la cartella spam"],
     cardEyebrow: "RECUPERA"
   },
+  resetPassword: {
+    title: "Imposta la Password",
+    subtitle: "Crea una nuova password per accedere al tuo account",
+    password: "Nuova password",
+    confirmPassword: "Conferma password",
+    submit: "Salva password",
+    mismatch: "Le password non coincidono.",
+    panelEyebrow: "ULTIMO PASSO",
+    panelTitle: "Ci sei ",
+    panelTitleEmphasis: "quasi",
+    panelTitleSuffix: ".",
+    panelLead: "Scegli una password sicura per proteggere il tuo account e accedere alle tue lezioni.",
+    panelFeatures: ["Usa almeno 8 caratteri", "Evita password che usi già altrove", "Potrai cambiarla quando vuoi dal tuo profilo"],
+    cardEyebrow: "NUOVA PASSWORD"
+  },
   profile: {
     title: "Il Mio Profilo",
     editProfile: "Modifica Profilo",
@@ -226,6 +241,7 @@ export const it: Dictionary = {
     invalid_email: "Email non valida.",
     password_too_short: "La password deve contenere almeno 8 caratteri.",
     reset_failed: "Impossibile inviare il link. Riprova.",
+    update_failed: "Impossibile aggiornare la password. Riprova.",
     rate_limit: "Troppi tentativi. Attendi un minuto e riprova.",
     unknown: "Si è verificato un errore. Riprova."
   },

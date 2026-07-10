@@ -265,6 +265,21 @@ export const en: Dictionary = {
     panelFeatures: ["Link valid for a limited time", "Your account and classes remain intact", "If it doesn't arrive, check your spam folder"],
     cardEyebrow: "RECOVER"
   },
+  resetPassword: {
+    title: "Set Your Password",
+    subtitle: "Create a new password to access your account",
+    password: "New password",
+    confirmPassword: "Confirm password",
+    submit: "Save password",
+    mismatch: "Passwords do not match.",
+    panelEyebrow: "LAST STEP",
+    panelTitle: "Almost ",
+    panelTitleEmphasis: "there",
+    panelTitleSuffix: ".",
+    panelLead: "Choose a secure password to protect your account and access your classes.",
+    panelFeatures: ["Use at least 8 characters", "Avoid passwords you already use elsewhere", "You can change it anytime from your profile"],
+    cardEyebrow: "NEW PASSWORD"
+  },
   profile: {
     title: "My Profile",
     editProfile: "Edit Profile",
@@ -295,6 +310,7 @@ export const en: Dictionary = {
     invalid_email: "Invalid email.",
     password_too_short: "Password must be at least 8 characters.",
     reset_failed: "Failed to send reset link. Please try again.",
+    update_failed: "Failed to update password. Please try again.",
     rate_limit: "Too many attempts. Please wait a minute and try again.",
     unknown: "An error occurred. Please try again."
   },

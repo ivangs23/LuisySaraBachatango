@@ -11,6 +11,7 @@ describe('isSafeRedirect', () => {
     ['/courses#anchor', true],
     ['/community/posts', true],
     ['/agenda', true],
+    ['/reset-password', true],
 
     [null, false],
     [undefined, false],

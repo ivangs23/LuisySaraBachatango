@@ -196,6 +196,21 @@ export const fr: Dictionary = {
     panelFeatures: ["Lien valide pendant un temps limité", "Votre compte et vos cours restent intacts", "S'il n'arrive pas, vérifiez vos spams"],
     cardEyebrow: "RÉCUPÉRER"
   },
+  resetPassword: {
+    title: "Définissez votre mot de passe",
+    subtitle: "Créez un nouveau mot de passe pour accéder à votre compte",
+    password: "Nouveau mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    submit: "Enregistrer le mot de passe",
+    mismatch: "Les mots de passe ne correspondent pas.",
+    panelEyebrow: "DERNIÈRE ÉTAPE",
+    panelTitle: "Vous y êtes ",
+    panelTitleEmphasis: "presque",
+    panelTitleSuffix: ".",
+    panelLead: "Choisissez un mot de passe sécurisé pour protéger votre compte et accéder à vos cours.",
+    panelFeatures: ["Utilisez au moins 8 caractères", "Évitez les mots de passe déjà utilisés ailleurs", "Vous pourrez le changer à tout moment depuis votre profil"],
+    cardEyebrow: "NOUVEAU MOT DE PASSE"
+  },
   profile: {
     title: "Mon Profil",
     editProfile: "Modifier le Profil",
@@ -226,6 +241,7 @@ export const fr: Dictionary = {
     invalid_email: "Email invalide.",
     password_too_short: "Le mot de passe doit contenir au moins 8 caractères.",
     reset_failed: "Échec de l'envoi du lien. Réessayez.",
+    update_failed: "Échec de la mise à jour du mot de passe. Réessayez.",
     rate_limit: "Trop de tentatives. Veuillez attendre une minute avant de réessayer.",
     unknown: "Une erreur s'est produite. Réessayez."
   },
