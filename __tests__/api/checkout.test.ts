@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // ── Demo mode mock ────────────────────────────────────────────────────────────
 const mockIsDemoMode = vi.fn(() => false)
@@ -161,6 +161,13 @@ describe('POST /api/checkout — modo demo', () => {
     vi.clearAllMocks()
     mockIsDemoMode.mockReturnValue(true)
     mockGetUser.mockResolvedValue({ data: { user: null } })
+  })
+
+  // clearAllMocks() no resetea el valor de retorno de mockReturnValue, así que
+  // sin este reset explícito cualquier test añadido después de este bloque
+  // heredaría demo=true silenciosamente.
+  afterEach(() => {
+    mockIsDemoMode.mockReturnValue(false)
   })
 
   it('en demo, con courseId, devuelve la url de /demo-checkout sin llamar a Stripe', async () => {

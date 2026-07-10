@@ -5,7 +5,10 @@
  */
 export function isDemoMode(): boolean {
   if (process.env.DEMO_MODE !== 'true') return false;
-  if (process.env.VERCEL_ENV === 'production') return false;
+  const vEnv = process.env.VERCEL_ENV;
+  // Allowlist: solo local (undefined) o preview/development. Cualquier otro valor
+  // (incluido 'production' o uno desconocido) desactiva el demo.
+  if (vEnv && vEnv !== 'preview' && vEnv !== 'development') return false;
   if ((process.env.NEXT_PUBLIC_BASE_URL ?? '').includes('luisysarabachatango.com')) return false;
   return true;
 }

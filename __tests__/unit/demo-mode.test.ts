@@ -18,9 +18,23 @@ describe('isDemoMode', () => {
     expect(isDemoMode()).toBe(true)
   })
 
+  it('true en VERCEL_ENV=preview con DEMO_MODE=true y dominio no-prod', () => {
+    process.env.DEMO_MODE = 'true'
+    process.env.VERCEL_ENV = 'preview'
+    process.env.NEXT_PUBLIC_BASE_URL = 'https://preview.vercel.app'
+    expect(isDemoMode()).toBe(true)
+  })
+
   it('false en VERCEL_ENV=production aunque DEMO_MODE=true', () => {
     process.env.DEMO_MODE = 'true'
     process.env.VERCEL_ENV = 'production'
+    process.env.NEXT_PUBLIC_BASE_URL = 'https://preview.vercel.app'
+    expect(isDemoMode()).toBe(false)
+  })
+
+  it('false en VERCEL_ENV desconocido (no allowlisted) aunque DEMO_MODE=true y dominio no-prod', () => {
+    process.env.DEMO_MODE = 'true'
+    process.env.VERCEL_ENV = 'some-unknown'
     process.env.NEXT_PUBLIC_BASE_URL = 'https://preview.vercel.app'
     expect(isDemoMode()).toBe(false)
   })
