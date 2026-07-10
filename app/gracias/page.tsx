@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { stripe } from '@/utils/stripe/server';
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
+import { isDemoMode } from '@/utils/demo/mode';
 import styles from './gracias.module.css';
 
 export const metadata: Metadata = {
@@ -9,8 +11,41 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function GraciasPage(props: { searchParams: Promise<{ session_id?: string }> }) {
-  const { session_id } = await props.searchParams;
+export default async function GraciasPage(props: { searchParams: Promise<{ session_id?: string; demo?: string; email?: string }> }) {
+  const { session_id, demo, email: demoEmail } = await props.searchParams;
+
+  // ── Rama demo: pago simulado, sin Stripe. Muestra el link para fijar
+  // contraseña (así se prueba el flujo sin depender del email SMTP). Solo en
+  // modo demo (en prod isDemoMode() es false y esta rama nunca se ejecuta).
+  if (isDemoMode() && demo === '1' && demoEmail) {
+    let setPasswordLink: string | null = null;
+    try {
+      const admin = createSupabaseAdmin(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      );
+      const { data } = await admin.auth.admin.generateLink({
+        type: 'recovery',
+        email: demoEmail,
+        options: { redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/auth/callback?next=/reset-password` },
+      });
+      setPasswordLink = data?.properties?.action_link ?? null;
+    } catch {
+      // generateLink falló → la compra ya está registrada; mostramos aviso sin link.
+    }
+    return (
+      <div className={styles.wrap}>
+        <div className={styles.card}>
+          <h1 className={styles.title}>MODO DEMO · pago simulado ✅</h1>
+          <p className={styles.body}>Acceso creado para <strong>{demoEmail}</strong>.</p>
+          {setPasswordLink
+            ? <p className={styles.hint}>Fija tu contraseña aquí: <a className={styles.link} href={setPasswordLink}>fijar contraseña</a></p>
+            : <p className={styles.hint}>Cuenta creada; revisa tu email para fijar la contraseña.</p>}
+          <a href="/curso-bachatango" className={styles.link}>Volver</a>
+        </div>
+      </div>
+    );
+  }
 
   let email: string | null = null;
   let paid = false;
