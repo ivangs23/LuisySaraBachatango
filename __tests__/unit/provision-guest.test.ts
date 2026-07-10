@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type Stripe from 'stripe'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest'
 
 // Chainable mock de un query de supabase-js
@@ -8,7 +9,7 @@ function makeAdmin(opts: {
   reFetchId?: string | null
   inviteUser?: { id: string } | null
   inviteError?: { message: string } | null
-  purchaseError?: { message: string } | null
+  purchaseError?: { message: string; code?: string } | null
 }) {
   const maybeSingle = vi.fn()
   // primera búsqueda por email
@@ -33,7 +34,7 @@ function makeAdmin(opts: {
     from,
     auth: { admin: { inviteUserByEmail } },
     _spies: { from, upsert, inviteUserByEmail },
-  } as any
+  } as unknown as SupabaseClient & { _spies: { from: typeof from; upsert: typeof upsert; inviteUserByEmail: typeof inviteUserByEmail } }
 }
 
 function makeSession(over: Partial<Stripe.Checkout.Session> = {}): Stripe.Checkout.Session {
@@ -71,7 +72,7 @@ describe('provisionGuestPurchase', () => {
 
   it('sin email: devuelve ok:false no-email, sin invitar ni insertar', async () => {
     const admin = makeAdmin({})
-    const res = await provisionGuestPurchase(makeSession({ customer_details: { email: null } as any }), admin)
+    const res = await provisionGuestPurchase(makeSession({ customer_details: null }), admin)
     expect(res).toEqual({ ok: false, reason: 'no-email' })
     expect(admin._spies.upsert).not.toHaveBeenCalled()
   })
@@ -84,5 +85,11 @@ describe('provisionGuestPurchase', () => {
       expect.objectContaining({ user_id: 'raced-user' }),
       expect.anything(),
     )
+  })
+
+  it('compra repetida (unique_violation en user_id+course_id): se trata como éxito idempotente', async () => {
+    const admin = makeAdmin({ existingId: 'existing-user', purchaseError: { code: '23505', message: 'dup' } })
+    const res = await provisionGuestPurchase(makeSession(), admin)
+    expect(res).toEqual({ ok: true, userId: 'existing-user' })
   })
 })

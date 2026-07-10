@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       if (session.metadata?.guest === '1' && courseId && session.payment_status === 'paid') {
         const result = await provisionGuestPurchase(session, supabase);
         if (!result.ok) {
-          console.error('Webhook: guest provisioning failed:', result.reason);
+          console.error('Webhook: guest provisioning failed:', result.reason, 'session:', session.id);
           // Falta de email/curso → no reintentar (200). Errores de DB/invite → 500.
           if (result.reason === 'no-email' || result.reason === 'no-course') {
             return new NextResponse(null, { status: 200 });

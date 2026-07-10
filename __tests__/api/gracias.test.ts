@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type Stripe from 'stripe'
 
 vi.mock('@/utils/stripe/server', () => {
   const mockRetrieve = vi.fn()
@@ -15,7 +16,7 @@ beforeEach(() => vi.clearAllMocks())
 describe('/gracias', () => {
   it('sesión pagada: muestra el email del comprador', async () => {
     const mockRetrieve = vi.mocked(stripe.checkout.sessions.retrieve)
-    mockRetrieve.mockResolvedValue({ payment_status: 'paid', customer_details: { email: 'buyer@example.com' } } as any)
+    mockRetrieve.mockResolvedValue({ payment_status: 'paid', customer_details: { email: 'buyer@example.com' } } as unknown as Stripe.Response<Stripe.Checkout.Session>)
     const el = await GraciasPage({ searchParams: Promise.resolve({ session_id: 'cs_1' }) })
     const html = JSON.stringify(el)
     expect(html).toContain('buyer@example.com')

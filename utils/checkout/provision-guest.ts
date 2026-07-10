@@ -63,7 +63,15 @@ export async function provisionGuestPurchase(
       },
       { onConflict: 'stripe_session_id', ignoreDuplicates: true },
     );
-  if (purchaseError) return { ok: false, reason: `purchase-error:${purchaseError.message}` };
+  if (purchaseError) {
+    // course_purchases also has UNIQUE(user_id, course_id). A repeat purchase
+    // of the same course by the same user (different stripe_session_id) hits
+    // that constraint instead of the onConflict target above — the user
+    // already owns the course, so treat it as idempotent success rather than
+    // failing the webhook and triggering a Stripe retry storm.
+    if (purchaseError.code === '23505') return { ok: true, userId };
+    return { ok: false, reason: `purchase-error:${purchaseError.message}` };
+  }
 
   // 4. Vincular stripe_customer_id si viene y no está puesto
   if (session.customer) {
