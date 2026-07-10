@@ -3,8 +3,10 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import DemoBanner from "@/components/DemoBanner";
 import { unstable_cache } from "next/cache";
 import { getCurrentLocale } from '@/utils/i18n/get-locale';
+import { isDemoMode } from '@/utils/demo/mode';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -119,6 +121,7 @@ export default async function RootLayout({
           <a href="#main-content" className="skip-link">
             Saltar al contenido principal
           </a>
+          {isDemoMode() && <DemoBanner />}
           <Header user={user} profile={profile} />
           <main id="main-content" style={{ minHeight: '80vh' }}>
             {children}

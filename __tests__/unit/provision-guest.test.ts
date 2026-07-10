@@ -92,4 +92,25 @@ describe('provisionGuestPurchase', () => {
     const res = await provisionGuestPurchase(makeSession(), admin)
     expect(res).toEqual({ ok: true, userId: 'existing-user' })
   })
+
+  it('demo (isDemo:true), email nuevo: invita con data.is_demo y marca la compra is_demo', async () => {
+    const admin = makeAdmin({ existingId: null, inviteUser: { id: 'new-user' } })
+    const res = await provisionGuestPurchase(makeSession(), admin, { isDemo: true })
+    expect(res).toEqual({ ok: true, userId: 'new-user' })
+    expect(admin._spies.inviteUserByEmail).toHaveBeenCalledWith(
+      'buyer@example.com',
+      expect.objectContaining({ data: { is_demo: true } }),
+    )
+    const [payload] = admin._spies.upsert.mock.calls[0]
+    expect(payload.is_demo).toBe(true)
+  })
+
+  it('real (sin opts): invita SIN data.is_demo y el upsert NO incluye is_demo', async () => {
+    const admin = makeAdmin({ existingId: null, inviteUser: { id: 'new-user' } })
+    await provisionGuestPurchase(makeSession(), admin)
+    const inviteArg = admin._spies.inviteUserByEmail.mock.calls[0][1]
+    expect(inviteArg.data).toBeUndefined()
+    const [payload] = admin._spies.upsert.mock.calls[0]
+    expect('is_demo' in payload).toBe(false)
+  })
 })
