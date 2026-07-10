@@ -119,3 +119,35 @@ describe('POST /api/checkout — course purchase validation', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('POST /api/checkout — guest (sin sesión)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetUser.mockResolvedValue({ data: { user: null } })
+    mockSupabaseFrom.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 199, is_published: true }, error: null }),
+    })
+    mockSessionCreate.mockResolvedValue({ id: 'cs_guest', url: 'https://checkout.stripe.com/guest' })
+  })
+
+  it('sin sesión pero con courseId: crea sesión guest y devuelve url', async () => {
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ courseId: 'course-1' }))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.url).toBe('https://checkout.stripe.com/guest')
+    const arg = mockSessionCreate.mock.calls[0][0]
+    expect(arg.customer).toBeUndefined()
+    expect(arg.metadata).toEqual({ courseId: 'course-1', guest: '1' })
+    expect(arg.success_url).toContain('/gracias?session_id=')
+    expect(mockCustomerCreate).not.toHaveBeenCalled()
+  })
+
+  it('sin sesión y sin courseId: sigue devolviendo 401', async () => {
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ priceId: 'price_test' }))
+    expect(res.status).toBe(401)
+  })
+})

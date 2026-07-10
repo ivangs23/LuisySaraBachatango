@@ -41,6 +41,12 @@ vi.mock('next/headers', () => ({
   }),
 }))
 
+// ── Guest provisioning mock ────────────────────────────────────────────────────
+const mockProvision = vi.fn()
+vi.mock('@/utils/checkout/provision-guest', () => ({
+  provisionGuestPurchase: (...args: unknown[]) => mockProvision(...args),
+}))
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function makeWebhookRequest(body = '{}') {
   return new Request('http://localhost:3000/api/webhooks/stripe', {
@@ -150,6 +156,29 @@ describe('POST /api/webhooks/stripe — checkout.session.completed', () => {
         plan_type: 'price_x',
       }),
     )
+  })
+
+  it('guest (sin userId, guest=1, paid): provisiona y responde 200', async () => {
+    mockProvision.mockResolvedValue({ ok: true, userId: 'guest-user' })
+    mockConstructEvent.mockReturnValue({
+      type: 'checkout.session.completed',
+      data: { object: makeSession({ metadata: { courseId: 'course-1', guest: '1' }, payment_status: 'paid' }) },
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockProvision).toHaveBeenCalled()
+  })
+
+  it('guest con provisión fallida por DB: responde 500 (Stripe reintenta)', async () => {
+    mockProvision.mockResolvedValue({ ok: false, reason: 'purchase-error:boom' })
+    mockConstructEvent.mockReturnValue({
+      type: 'checkout.session.completed',
+      data: { object: makeSession({ metadata: { courseId: 'course-1', guest: '1' }, payment_status: 'paid' }) },
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(500)
   })
 })
 

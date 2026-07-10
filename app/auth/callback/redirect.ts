@@ -5,6 +5,7 @@ const SAFE_REDIRECT_PREFIXES = [
   '/community',
   '/events',
   '/agenda',
+  '/reset-password',
 ] as const
 
 export function isSafeRedirect(next: string | null | undefined): boolean {

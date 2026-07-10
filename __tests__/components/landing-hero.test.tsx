@@ -16,4 +16,14 @@ describe('LandingHero', () => {
     expect(screen.getByText(/€199/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Empieza ahora/ })).toBeInTheDocument()
   })
+
+  it('muestra link de login cuando no está autenticado', () => {
+    render(<LandingHero courseId="c1" isAuthed={false} price={199} imageUrl={null} />)
+    expect(screen.getByRole('link', { name: /Inicia sesión/i })).toHaveAttribute('href', '/login')
+  })
+
+  it('no muestra link de login cuando está autenticado', () => {
+    render(<LandingHero courseId="c1" isAuthed={true} price={199} imageUrl={null} />)
+    expect(screen.queryByRole('link', { name: /Inicia sesión/i })).toBeNull()
+  })
 })

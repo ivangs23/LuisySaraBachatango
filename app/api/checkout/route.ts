@@ -20,95 +20,93 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
+    const { courseId } = await req.json() as { courseId?: string };
+
+    // Guest checkout: se permite comprar sin sesión SI hay courseId.
+    // Sin sesión y sin courseId no hay nada que hacer.
+    if (!user && !courseId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { courseId } = await req.json() as { courseId?: string };
-    // Origin must be the canonical site. Stripe success_url is built with this
-    // and a malicious Origin header would let an attacker phish the user after
-    // payment. Use NEXT_PUBLIC_BASE_URL (asserted at startup in prod).
+    // Origin canónico para success_url (asertado en prod). Un Origin malicioso
+    // no debe poder redirigir tras el pago.
     const origin = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
-    // Retrieve or create Stripe customer to avoid duplicates
-    const supabaseAdmin = createSupabaseAdmin(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
-
-    let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
-
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { userId: user.id },
-      });
-
-      // Race guard: only set stripe_customer_id if it's still null. If a
-      // concurrent request already wrote one, re-fetch and keep theirs to
-      // avoid orphaning a Stripe customer with billing details.
-      const { data: updated } = await supabaseAdmin
-        .from('profiles')
-        .update({ stripe_customer_id: customer.id })
-        .eq('id', user.id)
-        .is('stripe_customer_id', null)
-        .select('stripe_customer_id')
-        .maybeSingle();
-
-      if (updated?.stripe_customer_id) {
-        customerId = updated.stripe_customer_id;
-      } else {
-        // Lost the race — re-read what was committed by the winner.
-        const { data: existing } = await supabaseAdmin
-          .from('profiles')
-          .select('stripe_customer_id')
-          .eq('id', user.id)
-          .single();
-        customerId = existing?.stripe_customer_id ?? customer.id;
-        // The customer we just created here is now orphaned in Stripe.
-        // Stripe charges nothing for unused customers; it stays as test/log
-        // metadata. Could clean up via stripe.customers.del() — not critical.
-      }
+    if (!courseId) {
+      return NextResponse.json({ error: 'Falta courseId' }, { status: 400 });
     }
 
-    // ── Course purchase (one-time, dynamic price) ─────────────────────
-    if (courseId) {
-      const { data: course } = await supabase
-        .from('courses')
-        .select('title, price_eur, is_published')
-        .eq('id', courseId)
-        .eq('is_published', true)
+    // Datos públicos del curso (RLS permite leer publicados sin sesión).
+    const { data: course } = await supabase
+      .from('courses')
+      .select('title, price_eur, is_published')
+      .eq('id', courseId)
+      .eq('is_published', true)
+      .single();
+
+    if (!course) {
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+    if (!course.price_eur || course.price_eur <= 0) {
+      return NextResponse.json({ error: 'Este curso no tiene precio configurado' }, { status: 400 });
+    }
+    if (course.price_eur > 10000) {
+      return NextResponse.json({ error: 'Precio del curso inválido' }, { status: 400 });
+    }
+
+    const lineItems = [{
+      price_data: {
+        currency: STRIPE_CONFIG.CURRENCY,
+        unit_amount: Math.round(course.price_eur * 100),
+        product_data: { name: course.title },
+      },
+      quantity: 1,
+    }];
+
+    if (user) {
+      // ── Comprador logueado: reutiliza/crea customer y marca userId ──────────
+      const supabaseAdmin = createSupabaseAdmin(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
         .single();
 
-      if (!course) {
-        return NextResponse.json({ error: 'Course not found' }, { status: 404 });
-      }
+      let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
 
-      if (!course.price_eur || course.price_eur <= 0) {
-        return NextResponse.json({ error: 'Este curso no tiene precio configurado' }, { status: 400 });
-      }
-      if (course.price_eur > 10000) {
-        return NextResponse.json({ error: 'Precio del curso inválido' }, { status: 400 });
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user.id },
+        });
+        const { data: updated } = await supabaseAdmin
+          .from('profiles')
+          .update({ stripe_customer_id: customer.id })
+          .eq('id', user.id)
+          .is('stripe_customer_id', null)
+          .select('stripe_customer_id')
+          .maybeSingle();
+        if (updated?.stripe_customer_id) {
+          customerId = updated.stripe_customer_id;
+        } else {
+          const { data: existing } = await supabaseAdmin
+            .from('profiles')
+            .select('stripe_customer_id')
+            .eq('id', user.id)
+            .single();
+          customerId = existing?.stripe_customer_id ?? customer.id;
+        }
       }
 
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
         billing_address_collection: 'auto',
-        line_items: [{
-          price_data: {
-            currency: STRIPE_CONFIG.CURRENCY,
-            unit_amount: Math.round(course.price_eur * 100), // euros → céntimos
-            product_data: { name: course.title },
-          },
-          quantity: 1,
-        }],
+        line_items: lineItems,
         mode: 'payment',
         success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/courses/${courseId}`,
@@ -118,7 +116,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ sessionId: session.id, url: session.url });
     }
 
-    return NextResponse.json({ error: 'Falta courseId' }, { status: 400 });
+    // ── Comprador invitado (sin cuenta): Stripe recoge el email ───────────────
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      billing_address_collection: 'auto',
+      customer_creation: 'always',
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${origin}/gracias?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/curso-bachatango`,
+      metadata: { courseId, guest: '1' },
+    });
+
+    return NextResponse.json({ sessionId: session.id, url: session.url });
 
   } catch (err: unknown) {
     console.error('[checkout]', err);

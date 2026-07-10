@@ -34,6 +34,8 @@
 .heroCtaRow { display: flex; gap: var(--spacing-md); align-items: center; justify-content: center; flex-wrap: wrap; }
 .heroSecondary { color: var(--primary); text-decoration: underline; font: var(--small); }
 .heroMicro { margin-top: var(--spacing-md); color: var(--text-muted); font: var(--small); }
+.heroLogin { margin-top: var(--spacing-md); font: var(--small); color: var(--text-muted); }
+.heroLogin a { color: var(--primary); text-decoration: underline; }
 
 .sticky {
   position: fixed;

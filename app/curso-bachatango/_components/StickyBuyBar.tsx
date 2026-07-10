@@ -7,11 +7,10 @@ import styles from '../page.module.css';
 
 interface StickyProps {
   courseId: string;
-  isAuthed: boolean;
   price: number;
 }
 
-export default function StickyBuyBar({ courseId, isAuthed, price }: StickyProps) {
+export default function StickyBuyBar({ courseId, price }: StickyProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -24,7 +23,7 @@ export default function StickyBuyBar({ courseId, isAuthed, price }: StickyProps)
   return (
     <div className={`${styles.sticky} ${visible ? styles.stickyVisible : ''}`} inert={!visible}>
       <span className={styles.stickyBrand}>{LANDING_COPY.sticky.brand}</span>
-      <CourseCtaButton courseId={courseId} isAuthed={isAuthed} label={`${LANDING_COPY.sticky.cta} · €${price}`} className={styles.stickyCta} />
+      <CourseCtaButton courseId={courseId} label={`${LANDING_COPY.sticky.cta} · €${price}`} className={styles.stickyCta} />
     </div>
   );
 }
