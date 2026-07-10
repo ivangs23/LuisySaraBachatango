@@ -16,6 +16,7 @@ export type ProvisionResult = { ok: true; userId: string } | { ok: false; reason
 export async function provisionGuestPurchase(
   session: Stripe.Checkout.Session,
   admin: SupabaseClient,
+  opts: { isDemo?: boolean } = {},
 ): Promise<ProvisionResult> {
   const email = session.customer_details?.email?.toLowerCase();
   const courseId = session.metadata?.courseId;
@@ -34,7 +35,9 @@ export async function provisionGuestPurchase(
   // 2. Crear + invitar si es nuevo
   if (!userId) {
     const redirectTo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/auth/callback?next=/reset-password`;
-    const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
+    const inviteOptions: { redirectTo: string; data?: Record<string, unknown> } = { redirectTo };
+    if (opts.isDemo) inviteOptions.data = { is_demo: true };
+    const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, inviteOptions);
     if (invited?.user?.id) {
       userId = invited.user.id;
     } else {
@@ -52,17 +55,17 @@ export async function provisionGuestPurchase(
   }
 
   // 3. Registrar compra (idempotente sobre stripe_session_id)
+  const purchase: Record<string, unknown> = {
+    user_id: userId,
+    course_id: courseId,
+    stripe_session_id: session.id,
+    amount_paid: session.amount_total ?? null,
+  };
+  if (opts.isDemo) purchase.is_demo = true;
+
   const { error: purchaseError } = await admin
     .from('course_purchases')
-    .upsert(
-      {
-        user_id: userId,
-        course_id: courseId,
-        stripe_session_id: session.id,
-        amount_paid: session.amount_total ?? null,
-      },
-      { onConflict: 'stripe_session_id', ignoreDuplicates: true },
-    );
+    .upsert(purchase, { onConflict: 'stripe_session_id', ignoreDuplicates: true });
   if (purchaseError) {
     // course_purchases also has UNIQUE(user_id, course_id). A repeat purchase
     // of the same course by the same user (different stripe_session_id) hits
