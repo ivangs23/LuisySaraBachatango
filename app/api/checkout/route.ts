@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
 import { isDemoMode } from '@/utils/demo/mode';
+import { randomUUID } from 'node:crypto';
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers)
@@ -23,115 +24,66 @@ export async function POST(req: Request) {
 
     const { courseId } = await req.json() as { courseId?: string };
 
-    // Guest checkout: se permite comprar sin sesión SI hay courseId.
-    // Sin sesión y sin courseId no hay nada que hacer.
-    if (!user && !courseId) {
+    // /api/checkout es SOLO para la web logueada. La landing usa su propio
+    // formulario (/curso-bachatango/comprar → landingCheckout).
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // Origin canónico para success_url (asertado en prod). Un Origin malicioso
-    // no debe poder redirigir tras el pago.
-    const origin = process.env.NEXT_PUBLIC_BASE_URL ?? '';
-
     if (!courseId) {
       return NextResponse.json({ error: 'Falta courseId' }, { status: 400 });
     }
 
-    // Modo demo: corta antes de Stripe. La página /demo-checkout simula el pago.
-    if (isDemoMode()) {
-      return NextResponse.json({ url: `/demo-checkout?courseId=${courseId}` });
-    }
+    const origin = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
-    // Datos públicos del curso (RLS permite leer publicados sin sesión).
     const { data: course } = await supabase
       .from('courses')
       .select('title, price_eur, is_published')
       .eq('id', courseId)
       .eq('is_published', true)
       .single();
+    if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    if (!course.price_eur || course.price_eur <= 0) return NextResponse.json({ error: 'Este curso no tiene precio configurado' }, { status: 400 });
+    if (course.price_eur > 10000) return NextResponse.json({ error: 'Precio del curso inválido' }, { status: 400 });
 
-    if (!course) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
-    }
-    if (!course.price_eur || course.price_eur <= 0) {
-      return NextResponse.json({ error: 'Este curso no tiene precio configurado' }, { status: 400 });
-    }
-    if (course.price_eur > 10000) {
-      return NextResponse.json({ error: 'Precio del curso inválido' }, { status: 400 });
-    }
+    const supabaseAdmin = createSupabaseAdmin(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
 
-    const lineItems = [{
-      price_data: {
-        currency: STRIPE_CONFIG.CURRENCY,
-        unit_amount: Math.round(course.price_eur * 100),
-        product_data: { name: course.title },
-      },
-      quantity: 1,
-    }];
-
-    if (user) {
-      // ── Comprador logueado: reutiliza/crea customer y marca userId ──────────
-      const supabaseAdmin = createSupabaseAdmin(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    // Modo demo: simula la compra del usuario logueado (sin Stripe).
+    if (isDemoMode()) {
+      await supabaseAdmin.from('course_purchases').upsert(
+        { user_id: user.id, course_id: courseId, stripe_session_id: `demo_${randomUUID()}`, amount_paid: Math.round(course.price_eur * 100), is_demo: true, source: 'web' },
+        { onConflict: 'stripe_session_id', ignoreDuplicates: true },
       );
-
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('stripe_customer_id')
-        .eq('id', user.id)
-        .single();
-
-      let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
-
-      if (!customerId) {
-        const customer = await stripe.customers.create({
-          email: user.email,
-          metadata: { userId: user.id },
-        });
-        const { data: updated } = await supabaseAdmin
-          .from('profiles')
-          .update({ stripe_customer_id: customer.id })
-          .eq('id', user.id)
-          .is('stripe_customer_id', null)
-          .select('stripe_customer_id')
-          .maybeSingle();
-        if (updated?.stripe_customer_id) {
-          customerId = updated.stripe_customer_id;
-        } else {
-          const { data: existing } = await supabaseAdmin
-            .from('profiles')
-            .select('stripe_customer_id')
-            .eq('id', user.id)
-            .single();
-          customerId = existing?.stripe_customer_id ?? customer.id;
-        }
-      }
-
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        billing_address_collection: 'auto',
-        line_items: lineItems,
-        mode: 'payment',
-        success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/courses/${courseId}`,
-        metadata: { userId: user.id, courseId },
-      });
-
-      return NextResponse.json({ sessionId: session.id, url: session.url });
+      return NextResponse.json({ url: `/courses/${courseId}` });
     }
 
-    // ── Comprador invitado (sin cuenta): Stripe recoge el email ───────────────
+    // Comprador logueado real: reutiliza/crea customer.
+    const { data: profile } = await supabaseAdmin
+      .from('profiles').select('stripe_customer_id').eq('id', user.id).single();
+    let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
+    if (!customerId) {
+      const customer = await stripe.customers.create({ email: user.email, metadata: { userId: user.id } });
+      const { data: updated } = await supabaseAdmin
+        .from('profiles').update({ stripe_customer_id: customer.id }).eq('id', user.id).is('stripe_customer_id', null).select('stripe_customer_id').maybeSingle();
+      if (updated?.stripe_customer_id) {
+        customerId = updated.stripe_customer_id;
+      } else {
+        const { data: existing } = await supabaseAdmin.from('profiles').select('stripe_customer_id').eq('id', user.id).single();
+        customerId = existing?.stripe_customer_id ?? customer.id;
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
+      customer: customerId,
       payment_method_types: ['card'],
       billing_address_collection: 'auto',
-      customer_creation: 'always',
-      line_items: lineItems,
+      line_items: [{ price_data: { currency: STRIPE_CONFIG.CURRENCY, unit_amount: Math.round(course.price_eur * 100), product_data: { name: course.title } }, quantity: 1 }],
       mode: 'payment',
-      success_url: `${origin}/gracias?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/curso-bachatango`,
-      metadata: { courseId, guest: '1' },
+      success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/courses/${courseId}`,
+      metadata: { userId: user.id, courseId, source: 'web' },
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });

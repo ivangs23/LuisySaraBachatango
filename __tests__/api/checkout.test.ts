@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ── Demo mode mock ────────────────────────────────────────────────────────────
 const mockIsDemoMode = vi.fn(() => false)
@@ -36,6 +36,7 @@ vi.mock('@supabase/supabase-js', () => ({
       single: vi.fn().mockResolvedValue({ data: { stripe_customer_id: null }, error: null }),
       maybeSingle: vi.fn().mockResolvedValue({ data: { stripe_customer_id: 'cus_test' }, error: null }),
       update: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     }),
   }),
 }))
@@ -124,58 +125,30 @@ describe('POST /api/checkout — course purchase validation', () => {
   })
 })
 
-describe('POST /api/checkout — guest (sin sesión)', () => {
+describe('POST /api/checkout — web only', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGetUser.mockResolvedValue({ data: { user: null } })
-    mockSupabaseFrom.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 199, is_published: true }, error: null }),
-    })
-    mockSessionCreate.mockResolvedValue({ id: 'cs_guest', url: 'https://checkout.stripe.com/guest' })
-  })
-
-  it('sin sesión pero con courseId: crea sesión guest y devuelve url', async () => {
-    const { POST } = await import('@/app/api/checkout/route')
-    const res = await POST(makeRequest({ courseId: 'course-1' }))
-    expect(res.status).toBe(200)
-    const json = await res.json()
-    expect(json.url).toBe('https://checkout.stripe.com/guest')
-    const arg = mockSessionCreate.mock.calls[0][0]
-    expect(arg.customer).toBeUndefined()
-    expect(arg.metadata).toEqual({ courseId: 'course-1', guest: '1' })
-    expect(arg.success_url).toContain('/gracias?session_id=')
-    expect(mockCustomerCreate).not.toHaveBeenCalled()
-  })
-
-  it('sin sesión y sin courseId: sigue devolviendo 401', async () => {
-    const { POST } = await import('@/app/api/checkout/route')
-    const res = await POST(makeRequest({ priceId: 'price_test' }))
-    expect(res.status).toBe(401)
-  })
-})
-
-describe('POST /api/checkout — modo demo', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockIsDemoMode.mockReturnValue(true)
-    mockGetUser.mockResolvedValue({ data: { user: null } })
-  })
-
-  // clearAllMocks() no resetea el valor de retorno de mockReturnValue, así que
-  // sin este reset explícito cualquier test añadido después de este bloque
-  // heredaría demo=true silenciosamente.
-  afterEach(() => {
     mockIsDemoMode.mockReturnValue(false)
   })
 
-  it('en demo, con courseId, devuelve la url de /demo-checkout sin llamar a Stripe', async () => {
+  it('anónimo (sin sesión) con courseId → 401 (no guest checkout)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } })
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ courseId: 'course-1' }))
+    expect(res.status).toBe(401)
+    expect(mockSessionCreate).not.toHaveBeenCalled()
+  })
+
+  it('logueado real: crea sesión Stripe con metadata source:web', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@test.com' } } })
+    mockSupabaseFrom.mockReturnValue({
+      select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 199, is_published: true }, error: null }),
+    })
+    mockSessionCreate.mockResolvedValue({ id: 'cs_web', url: 'https://checkout.stripe.com/web' })
     const { POST } = await import('@/app/api/checkout/route')
     const res = await POST(makeRequest({ courseId: 'course-1' }))
     expect(res.status).toBe(200)
-    const json = await res.json()
-    expect(json.url).toBe('/demo-checkout?courseId=course-1')
-    expect(mockSessionCreate).not.toHaveBeenCalled()
+    expect(mockSessionCreate.mock.calls[0][0].metadata).toEqual(expect.objectContaining({ userId: 'user-1', courseId: 'course-1', source: 'web' }))
   })
 })
