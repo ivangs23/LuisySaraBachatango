@@ -52,8 +52,8 @@ export default async function CursoBachatangoLanding() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <LandingHero courseId={course.id} isAuthed={isAuthed} price={course.price_eur} imageUrl={course.image_url} />
-      <LandingSections courseId={course.id} isAuthed={isAuthed} price={course.price_eur} />
-      <StickyBuyBar courseId={course.id} isAuthed={isAuthed} price={course.price_eur} />
+      <LandingSections courseId={course.id} price={course.price_eur} />
+      <StickyBuyBar courseId={course.id} price={course.price_eur} />
     </div>
   );
 }

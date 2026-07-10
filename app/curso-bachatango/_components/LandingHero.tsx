@@ -24,10 +24,15 @@ export default function LandingHero({ courseId, isAuthed, price, imageUrl }: Her
         <h1 className={styles.heroTitle}>{c.h1}</h1>
         <p className={styles.heroSub}>{c.sub}</p>
         <div className={styles.heroCtaRow}>
-          <CourseCtaButton courseId={courseId} isAuthed={isAuthed} label={`${c.cta} · €${price}`} />
+          <CourseCtaButton courseId={courseId} label={`${c.cta} · €${price}`} />
           <a href="#clase-gratis" className={styles.heroSecondary}>{c.secondary}</a>
         </div>
         <p className={styles.heroMicro}>{c.micro}</p>
+        {!isAuthed && (
+          <p className={styles.heroLogin}>
+            ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+          </p>
+        )}
       </div>
     </section>
   );

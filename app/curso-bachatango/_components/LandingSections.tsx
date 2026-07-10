@@ -6,11 +6,10 @@ import styles from '../page.module.css';
 
 interface SectionsProps {
   courseId: string;
-  isAuthed: boolean;
   price: number;
 }
 
-export default function LandingSections({ courseId, isAuthed, price }: SectionsProps) {
+export default function LandingSections({ courseId, price }: SectionsProps) {
   const c = LANDING_COPY;
   return (
     <>
@@ -92,7 +91,7 @@ export default function LandingSections({ courseId, isAuthed, price }: SectionsP
           </ul>
           <p className={styles.price}>€{price}</p>
           <p className={styles.priceNote}>{c.offer.priceNote}</p>
-          <CourseCtaButton courseId={courseId} isAuthed={isAuthed} label={c.offer.cta} />
+          <CourseCtaButton courseId={courseId} label={c.offer.cta} />
         </Reveal>
       </section>
 
@@ -106,7 +105,7 @@ export default function LandingSections({ courseId, isAuthed, price }: SectionsP
       <section className={styles.finalCta}>
         <Reveal>
           <h2 className={styles.h2}>{c.finalCta.title}</h2>
-          <CourseCtaButton courseId={courseId} isAuthed={isAuthed} label={c.finalCta.cta} />
+          <CourseCtaButton courseId={courseId} label={c.finalCta.cta} />
         </Reveal>
       </section>
     </>
