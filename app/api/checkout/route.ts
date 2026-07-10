@@ -5,6 +5,7 @@ import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
+import { isDemoMode } from '@/utils/demo/mode';
 
 export async function POST(req: Request) {
   const ip = getClientIp(req.headers)
@@ -34,6 +35,11 @@ export async function POST(req: Request) {
 
     if (!courseId) {
       return NextResponse.json({ error: 'Falta courseId' }, { status: 400 });
+    }
+
+    // Modo demo: corta antes de Stripe. La página /demo-checkout simula el pago.
+    if (isDemoMode()) {
+      return NextResponse.json({ url: `/demo-checkout?courseId=${courseId}` });
     }
 
     // Datos públicos del curso (RLS permite leer publicados sin sesión).

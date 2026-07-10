@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// ── Demo mode mock ────────────────────────────────────────────────────────────
+const mockIsDemoMode = vi.fn(() => false)
+vi.mock('@/utils/demo/mode', () => ({ isDemoMode: () => mockIsDemoMode() }))
+
 // ── Stripe mock ───────────────────────────────────────────────────────────────
 const mockSessionCreate = vi.fn()
 const mockCustomerCreate = vi.fn().mockResolvedValue({ id: 'cus_test' })
@@ -149,5 +153,22 @@ describe('POST /api/checkout — guest (sin sesión)', () => {
     const { POST } = await import('@/app/api/checkout/route')
     const res = await POST(makeRequest({ priceId: 'price_test' }))
     expect(res.status).toBe(401)
+  })
+})
+
+describe('POST /api/checkout — modo demo', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockIsDemoMode.mockReturnValue(true)
+    mockGetUser.mockResolvedValue({ data: { user: null } })
+  })
+
+  it('en demo, con courseId, devuelve la url de /demo-checkout sin llamar a Stripe', async () => {
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ courseId: 'course-1' }))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.url).toBe('/demo-checkout?courseId=course-1')
+    expect(mockSessionCreate).not.toHaveBeenCalled()
   })
 })
