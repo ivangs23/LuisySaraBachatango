@@ -4,6 +4,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { assertProdEnv } from '@/utils/env/validate-prod';
+import { provisionGuestPurchase } from '@/utils/checkout/provision-guest';
 
 assertProdEnv();
 
@@ -40,6 +41,19 @@ export async function POST(req: Request) {
     const courseId = session.metadata?.courseId;
 
     if (!userId) {
+      // Guest checkout: no hay userId; se provisiona por email tras el pago.
+      if (session.metadata?.guest === '1' && courseId && session.payment_status === 'paid') {
+        const result = await provisionGuestPurchase(session, supabase);
+        if (!result.ok) {
+          console.error('Webhook: guest provisioning failed:', result.reason);
+          // Falta de email/curso → no reintentar (200). Errores de DB/invite → 500.
+          if (result.reason === 'no-email' || result.reason === 'no-course') {
+            return new NextResponse(null, { status: 200 });
+          }
+          return new NextResponse('Provisioning Error', { status: 500 });
+        }
+        return new NextResponse(null, { status: 200 });
+      }
       console.error('Webhook: missing userId in metadata');
       return new NextResponse('Missing userId', { status: 400 });
     }
