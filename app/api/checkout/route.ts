@@ -52,10 +52,15 @@ export async function POST(req: Request) {
 
     // Modo demo: simula la compra del usuario logueado (sin Stripe).
     if (isDemoMode()) {
-      await supabaseAdmin.from('course_purchases').upsert(
+      const { error: demoErr } = await supabaseAdmin.from('course_purchases').upsert(
         { user_id: user.id, course_id: courseId, stripe_session_id: `demo_${randomUUID()}`, amount_paid: Math.round(course.price_eur * 100), is_demo: true, source: 'web' },
         { onConflict: 'stripe_session_id', ignoreDuplicates: true },
       );
+      // 23505 = UNIQUE(user_id,course_id): ya posee el curso → éxito idempotente.
+      if (demoErr && demoErr.code !== '23505') {
+        console.error('[checkout] demo web upsert', demoErr);
+        return NextResponse.json({ error: 'Error al simular la compra.' }, { status: 500 });
+      }
       return NextResponse.json({ url: `/courses/${courseId}` });
     }
 

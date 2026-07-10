@@ -19,6 +19,7 @@ vi.mock('@/utils/stripe/server', () => ({
 const mockCourseData = { title: 'Test Course', price_eur: 49 }
 const mockSupabaseFrom = vi.fn()
 const mockGetUser = vi.fn()
+const mockAdminUpsert = vi.fn().mockResolvedValue({ error: null })
 
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
@@ -36,7 +37,7 @@ vi.mock('@supabase/supabase-js', () => ({
       single: vi.fn().mockResolvedValue({ data: { stripe_customer_id: null }, error: null }),
       maybeSingle: vi.fn().mockResolvedValue({ data: { stripe_customer_id: 'cus_test' }, error: null }),
       update: vi.fn().mockReturnThis(),
-      upsert: vi.fn().mockResolvedValue({ error: null }),
+      upsert: mockAdminUpsert,
     }),
   }),
 }))
@@ -150,5 +151,68 @@ describe('POST /api/checkout — web only', () => {
     const res = await POST(makeRequest({ courseId: 'course-1' }))
     expect(res.status).toBe(200)
     expect(mockSessionCreate.mock.calls[0][0].metadata).toEqual(expect.objectContaining({ userId: 'user-1', courseId: 'course-1', source: 'web' }))
+  })
+})
+
+describe('POST /api/checkout — demo web', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockIsDemoMode.mockReturnValue(true)
+    mockAdminUpsert.mockResolvedValue({ error: null })
+  })
+
+  it('demo web happy: logueado, compra simulada, upsert exitoso → 200 con url', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@test.com' } } })
+    mockSupabaseFrom.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 49, is_published: true }, error: null }),
+    })
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ courseId: 'course-1' }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.url).toBe('/courses/course-1')
+    expect(mockSessionCreate).not.toHaveBeenCalled()
+    expect(mockAdminUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: 'user-1',
+        course_id: 'course-1',
+        is_demo: true,
+        source: 'web',
+        amount_paid: 4900,
+      }),
+      expect.any(Object)
+    )
+  })
+
+  it('demo web already-owns (23505): upsert falla con código 23505 → 200 idempotente', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@test.com' } } })
+    mockSupabaseFrom.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 49, is_published: true }, error: null }),
+    })
+    mockAdminUpsert.mockResolvedValue({ error: { code: '23505', message: 'duplicate' } })
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ courseId: 'course-1' }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.url).toBe('/courses/course-1')
+  })
+
+  it('demo web DB error (40001): upsert falla con código 40001 → 500', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@test.com' } } })
+    mockSupabaseFrom.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 49, is_published: true }, error: null }),
+    })
+    mockAdminUpsert.mockResolvedValue({ error: { code: '40001', message: 'serialization error' } })
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ courseId: 'course-1' }))
+    expect(res.status).toBe(500)
+    const body = await res.json()
+    expect(body.error).toBe('Error al simular la compra.')
   })
 })
