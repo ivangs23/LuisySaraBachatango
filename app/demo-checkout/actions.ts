@@ -37,7 +37,11 @@ export async function simulatePurchase(formData: FormData): Promise<void> {
     .eq('is_published', true)
     .single();
 
-  const amount = course?.price_eur ? Math.round(course.price_eur * 100) : 0;
+  if (!course) {
+    redirect(`/demo-checkout?courseId=${encodeURIComponent(courseId)}&error=course-not-found`);
+  }
+
+  const amount = course.price_eur ? Math.round(course.price_eur * 100) : 0;
 
   const session = {
     id: `demo_${randomUUID()}`,

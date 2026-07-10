@@ -57,4 +57,17 @@ describe('simulatePurchase', () => {
     expect(session.metadata.courseId).toBe('c1')
     expect(String(session.id)).toMatch(/^demo_/)
   })
+
+  it('en demo, curso no existe/no publicado: redirige a /demo-checkout?...&error=course-not-found y NO provisiona', async () => {
+    mockIsDemoMode.mockReturnValue(true)
+    mockCourseSingle.mockResolvedValue({ data: null, error: null })
+    await expect(simulatePurchase(fd({ courseId: 'c1', email: 'a@b.com' }))).rejects.toThrow('REDIRECT:/demo-checkout?courseId=c1&error=course-not-found')
+    expect(mockProvision).not.toHaveBeenCalled()
+  })
+
+  it('en demo, courseId vacío: redirige a /demo-checkout?...&error=missing y NO provisiona', async () => {
+    mockIsDemoMode.mockReturnValue(true)
+    await expect(simulatePurchase(fd({ courseId: '', email: 'a@b.com' }))).rejects.toThrow('REDIRECT:/demo-checkout?courseId=&error=missing')
+    expect(mockProvision).not.toHaveBeenCalled()
+  })
 })
