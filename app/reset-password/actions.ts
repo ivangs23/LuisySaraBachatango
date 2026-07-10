@@ -16,7 +16,7 @@ export async function updatePassword(formData: FormData) {
     redirect('/login')
   }
 
-  const password = formData.get('password') as string
+  const password = (formData.get('password') as string | null) ?? ''
 
   if (password.length < MIN_PASSWORD_LENGTH) {
     redirect('/reset-password?error=password_too_short')
