@@ -1,0 +1,11 @@
+.wrap { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: var(--spacing-2xl) var(--page-pad); background: #050505; }
+.card { max-width: 460px; width: 100%; background: var(--surface); border: 1px solid var(--primary); border-radius: var(--radius-lg); padding: var(--spacing-2xl); text-align: center; }
+.title { font: var(--h3); color: var(--text-main); margin-bottom: var(--spacing-sm); }
+.price { color: var(--primary); font: var(--h4); margin-bottom: var(--spacing-lg); }
+.form { display: flex; flex-direction: column; gap: var(--spacing-sm); text-align: left; }
+.label { font: var(--small); color: var(--text-muted); }
+.input { padding: 0.7rem 1rem; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-main); font: var(--body); }
+.button { margin-top: var(--spacing-sm); padding: 0.9rem 2rem; background: var(--primary); color: #050505; border: none; border-radius: var(--radius-pill); font: var(--h4); cursor: pointer; }
+.button:hover { background: var(--primary-hover); }
+.note { font: var(--small); color: var(--text-muted); margin-top: var(--spacing-sm); }
+.error { color: #ff8a8a; font: var(--small); }

@@ -1,27 +1,12 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-
-const push = vi.fn()
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push, replace: vi.fn() }),
-  usePathname: () => '/curso-bachatango',
-}))
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
 
 import CourseCtaButton from '@/app/curso-bachatango/_components/CourseCtaButton'
 
-beforeEach(() => {
-  vi.clearAllMocks()
-  Object.defineProperty(window, 'location', { value: { assign: vi.fn(), href: '' }, writable: true })
-})
-
 describe('CourseCtaButton', () => {
-  it('siempre llama a /api/checkout y redirige a la url de Stripe', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ url: 'https://checkout.stripe.com/x' }) })
-    vi.stubGlobal('fetch', fetchMock)
+  it('renderiza un link a /curso-bachatango/comprar con el courseId', () => {
     render(<CourseCtaButton courseId="c1" label="Comprar" />)
-    fireEvent.click(screen.getByRole('button', { name: 'Comprar' }))
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/checkout', expect.objectContaining({ method: 'POST' })))
-    await waitFor(() => expect(window.location.assign).toHaveBeenCalledWith('https://checkout.stripe.com/x'))
+    expect(screen.getByRole('link', { name: 'Comprar' })).toHaveAttribute('href', '/curso-bachatango/comprar?courseId=c1')
   })
 })
