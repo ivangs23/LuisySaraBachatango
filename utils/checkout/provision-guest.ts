@@ -16,7 +16,7 @@ export type ProvisionResult = { ok: true; userId: string } | { ok: false; reason
 export async function provisionGuestPurchase(
   session: Stripe.Checkout.Session,
   admin: SupabaseClient,
-  opts: { isDemo?: boolean } = {},
+  opts: { isDemo?: boolean; source?: string; fullName?: string } = {},
 ): Promise<ProvisionResult> {
   const email = session.customer_details?.email?.toLowerCase();
   const courseId = session.metadata?.courseId;
@@ -35,8 +35,11 @@ export async function provisionGuestPurchase(
   // 2. Crear + invitar si es nuevo
   if (!userId) {
     const redirectTo = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/auth/callback?next=/reset-password`;
+    const meta: Record<string, unknown> = {};
+    if (opts.fullName) meta.full_name = opts.fullName;
+    if (opts.isDemo) meta.is_demo = true;
     const inviteOptions: { redirectTo: string; data?: Record<string, unknown> } = { redirectTo };
-    if (opts.isDemo) inviteOptions.data = { is_demo: true };
+    if (Object.keys(meta).length > 0) inviteOptions.data = meta;
     const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, inviteOptions);
     if (invited?.user?.id) {
       userId = invited.user.id;
@@ -62,6 +65,7 @@ export async function provisionGuestPurchase(
     amount_paid: session.amount_total ?? null,
   };
   if (opts.isDemo) purchase.is_demo = true;
+  if (opts.source) purchase.source = opts.source;
 
   const { error: purchaseError } = await admin
     .from('course_purchases')
