@@ -87,7 +87,9 @@ export async function POST(req: Request) {
             { onConflict: 'stripe_session_id', ignoreDuplicates: true }
           );
 
-        if (error) {
+        // 23505 = UNIQUE(user_id,course_id): el usuario ya posee el curso →
+        // idempotente (200), no 500 (que provocaría reintentos infinitos de Stripe).
+        if (error && error.code !== '23505') {
           console.error('Error saving course purchase:', error);
           return new NextResponse('Database Error', { status: 500 });
         }
