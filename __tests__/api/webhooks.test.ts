@@ -203,6 +203,30 @@ describe('POST /api/webhooks/stripe — checkout.session.completed', () => {
     const payload = mockUpsert.mock.calls[0][0]
     expect(payload.source).toBe('web')
   })
+
+  it('logueado: course_purchases con error 23505 (UNIQUE constraint) → 200 idempotente', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: { object: makeSession({ metadata: { userId: 'user-1', courseId: 'course-1' }, payment_status: 'paid' }) },
+    })
+    mockUpsert.mockResolvedValueOnce({ error: { code: '23505', message: 'duplicate key' } })
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+  })
+
+  it('logueado: course_purchases con error 40001 (serialization) → 500', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: { object: makeSession({ metadata: { userId: 'user-1', courseId: 'course-1' }, payment_status: 'paid' }) },
+    })
+    mockUpsert.mockResolvedValueOnce({ error: { code: '40001', message: 'serialization error' } })
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(500)
+  })
 })
 
 describe('POST /api/webhooks/stripe — subscription updates', () => {
