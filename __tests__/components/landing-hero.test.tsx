@@ -14,7 +14,7 @@ describe('LandingHero', () => {
     render(<LandingHero courseId="c1" isAuthed={false} price={199} imageUrl={null} />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Baila bachatango')
     expect(screen.getByText(/€199/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Empieza ahora/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Empieza ahora/ })).toBeInTheDocument()
   })
 
   it('muestra link de login cuando no está autenticado', () => {

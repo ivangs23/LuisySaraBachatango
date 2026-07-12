@@ -113,4 +113,20 @@ describe('provisionGuestPurchase', () => {
     const [payload] = admin._spies.upsert.mock.calls[0]
     expect('is_demo' in payload).toBe(false)
   })
+
+  it('con source y fullName: upsert incluye source y el invite pasa data.full_name', async () => {
+    const admin = makeAdmin({ existingId: null, inviteUser: { id: 'new-user' } })
+    await provisionGuestPurchase(makeSession(), admin, { source: 'landing', fullName: 'María López' })
+    const inviteArg = admin._spies.inviteUserByEmail.mock.calls[0][1]
+    expect(inviteArg.data).toEqual(expect.objectContaining({ full_name: 'María López' }))
+    const [payload] = admin._spies.upsert.mock.calls[0]
+    expect(payload.source).toBe('landing')
+  })
+
+  it('sin source: el upsert NO incluye la clave source', async () => {
+    const admin = makeAdmin({ existingId: null, inviteUser: { id: 'new-user' } })
+    await provisionGuestPurchase(makeSession(), admin)
+    const [payload] = admin._spies.upsert.mock.calls[0]
+    expect('source' in payload).toBe(false)
+  })
 })

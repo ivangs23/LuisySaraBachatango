@@ -43,7 +43,10 @@ export async function POST(req: Request) {
     if (!userId) {
       // Guest checkout: no hay userId; se provisiona por email tras el pago.
       if (session.metadata?.guest === '1' && courseId && session.payment_status === 'paid') {
-        const result = await provisionGuestPurchase(session, supabase);
+        const result = await provisionGuestPurchase(session, supabase, {
+          source: session.metadata?.source,
+          fullName: session.metadata?.fullName,
+        });
         if (!result.ok) {
           console.error('Webhook: guest provisioning failed:', result.reason, 'session:', session.id);
           // Falta de email/curso → no reintentar (200). Errores de DB/invite → 500.
@@ -79,6 +82,7 @@ export async function POST(req: Request) {
               course_id: courseId,
               stripe_session_id: session.id,
               amount_paid: session.amount_total ?? null,
+              source: session.metadata?.source ?? 'web',
             },
             { onConflict: 'stripe_session_id', ignoreDuplicates: true }
           );
