@@ -13,7 +13,7 @@ export default function DemoBanner() {
         zIndex: 100,
       }}
     >
-      ⚠️ MODO DEMO — los pagos son simulados, no se cobra nada
+      ⚠️ MODO PRUEBAS — los pagos son simulados, no se cobra nada
     </div>
   );
 }
