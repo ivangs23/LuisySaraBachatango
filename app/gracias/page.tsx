@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { stripe } from '@/utils/stripe/server';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/server';
-import { isDemoMode } from '@/utils/demo/mode';
+import { isTestPurchaseMode } from '@/utils/demo/test-mode';
 import styles from './gracias.module.css';
 
 export const metadata: Metadata = {
@@ -15,10 +15,10 @@ export const dynamic = 'force-dynamic';
 export default async function GraciasPage(props: { searchParams: Promise<{ session_id?: string; demo?: string; email?: string }> }) {
   const { session_id, demo, email: demoEmail } = await props.searchParams;
 
-  // ── Rama demo: pago simulado, sin Stripe. Muestra el link para fijar
-  // contraseña (así se prueba el flujo sin depender del email SMTP). Solo en
-  // modo demo (en prod isDemoMode() es false y esta rama nunca se ejecuta).
-  if (isDemoMode() && demo === '1' && demoEmail) {
+  // ── Rama pruebas: pago simulado, sin Stripe. Muestra el link para fijar
+  // contraseña (así se prueba el flujo sin depender del email SMTP). Activada por
+  // modo pruebas: env demo, o cookie de test de un admin en este navegador.
+  if ((await isTestPurchaseMode()) && demo === '1' && demoEmail) {
     // Solo generamos/mostramos el link de recovery si coincide con el email de la
     // sesión autenticada actual. Sin este guard, cualquiera podría pasar ?email=
     // de OTRO usuario por la URL y recibir un link de recovery válido para su

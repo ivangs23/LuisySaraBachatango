@@ -7,7 +7,7 @@ import type Stripe from 'stripe';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { stripe } from '@/utils/stripe/server';
 import { STRIPE_CONFIG } from '@/utils/stripe/config';
-import { isDemoMode } from '@/utils/demo/mode';
+import { isTestPurchaseMode } from '@/utils/demo/test-mode';
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
@@ -41,7 +41,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   const amount = Math.round(course.price_eur * 100);
   const origin = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
-  if (isDemoMode()) {
+  if (await isTestPurchaseMode()) {
     const session = {
       id: `demo_${randomUUID()}`,
       customer_details: { email },

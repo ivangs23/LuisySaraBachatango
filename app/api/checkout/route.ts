@@ -5,7 +5,7 @@ import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
-import { isDemoMode } from '@/utils/demo/mode';
+import { isTestPurchaseMode } from '@/utils/demo/test-mode';
 import { randomUUID } from 'node:crypto';
 
 export async function POST(req: Request) {
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     );
 
     // Modo demo: simula la compra del usuario logueado (sin Stripe).
-    if (isDemoMode()) {
+    if (await isTestPurchaseMode()) {
       const { error: demoErr } = await supabaseAdmin.from('course_purchases').upsert(
         { user_id: user.id, course_id: courseId, stripe_session_id: `demo_${randomUUID()}`, amount_paid: Math.round(course.price_eur * 100), is_demo: true, source: 'web' },
         { onConflict: 'stripe_session_id', ignoreDuplicates: true },

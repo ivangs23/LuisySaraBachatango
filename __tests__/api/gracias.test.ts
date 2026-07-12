@@ -8,12 +8,12 @@ vi.mock('@/utils/stripe/server', () => {
   }
 })
 
-const { mockIsDemoMode, mockGenerateLink, mockGetUser } = vi.hoisted(() => ({
-  mockIsDemoMode: vi.fn(() => false),
+const { mockIsTestPurchaseMode, mockGenerateLink, mockGetUser } = vi.hoisted(() => ({
+  mockIsTestPurchaseMode: vi.fn().mockResolvedValue(false),
   mockGenerateLink: vi.fn().mockResolvedValue({ data: { properties: { action_link: 'https://sb/reset-link' } }, error: null }),
   mockGetUser: vi.fn().mockResolvedValue({ data: { user: null } }),
 }))
-vi.mock('@/utils/demo/mode', () => ({ isDemoMode: () => mockIsDemoMode() }))
+vi.mock('@/utils/demo/test-mode', () => ({ isTestPurchaseMode: () => mockIsTestPurchaseMode() }))
 
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({ auth: { getUser: mockGetUser } }),
@@ -46,14 +46,14 @@ describe('/gracias', () => {
 
   describe('modo demo', () => {
     beforeEach(() => {
-      mockIsDemoMode.mockReturnValue(true)
+      mockIsTestPurchaseMode.mockResolvedValue(true)
     })
 
     // clearAllMocks() no resetea el valor de retorno de mockReturnValue, así que
     // sin este reset explícito cualquier test añadido después de este bloque
     // heredaría demo=true silenciosamente.
     afterEach(() => {
-      mockIsDemoMode.mockReturnValue(false)
+      mockIsTestPurchaseMode.mockResolvedValue(false)
     })
 
     it('en demo con ?demo=1&email y sesión propia coincidente: muestra el link de fijar contraseña, sin llamar a Stripe', async () => {

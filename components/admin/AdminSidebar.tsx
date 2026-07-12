@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Menu,
   X,
+  FlaskConical,
 } from 'lucide-react'
 import styles from './AdminSidebar.module.css'
 
@@ -31,6 +32,7 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
     { href: '/admin/cursos', label: 'Cursos', Icon: GraduationCap },
     { href: '/admin/eventos', label: 'Eventos', Icon: CalendarDays },
     { href: '/admin/comunidad', label: 'Comunidad', Icon: MessagesSquare },
+    { href: '/admin/pruebas', label: 'Modo pruebas', Icon: FlaskConical },
   ]
 
   const isActive = (href: string) =>

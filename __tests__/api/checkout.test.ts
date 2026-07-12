@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// ── Demo mode mock ────────────────────────────────────────────────────────────
-const mockIsDemoMode = vi.fn(() => false)
-vi.mock('@/utils/demo/mode', () => ({ isDemoMode: () => mockIsDemoMode() }))
+// ── Test mode mock ────────────────────────────────────────────────────────────
+const mockIsTestPurchaseMode = vi.fn().mockResolvedValue(false)
+vi.mock('@/utils/demo/test-mode', () => ({ isTestPurchaseMode: () => mockIsTestPurchaseMode() }))
 
 // ── Stripe mock ───────────────────────────────────────────────────────────────
 const mockSessionCreate = vi.fn()
@@ -129,7 +129,7 @@ describe('POST /api/checkout — course purchase validation', () => {
 describe('POST /api/checkout — web only', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockIsDemoMode.mockReturnValue(false)
+    mockIsTestPurchaseMode.mockResolvedValue(false)
   })
 
   it('anónimo (sin sesión) con courseId → 401 (no guest checkout)', async () => {
@@ -158,7 +158,7 @@ describe('POST /api/checkout — web only', () => {
 describe('POST /api/checkout — demo web', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockIsDemoMode.mockReturnValue(true)
+    mockIsTestPurchaseMode.mockResolvedValue(true)
     mockAdminUpsert.mockResolvedValue({ error: null })
   })
 

@@ -4,8 +4,8 @@ import { render, screen } from '@testing-library/react'
 import DemoBanner from '@/components/DemoBanner'
 
 describe('DemoBanner', () => {
-  it('muestra el aviso de modo demo', () => {
+  it('muestra el aviso de modo pruebas', () => {
     render(<DemoBanner />)
-    expect(screen.getByText(/MODO DEMO/i)).toBeInTheDocument()
+    expect(screen.getByText(/MODO PRUEBAS/i)).toBeInTheDocument()
   })
 })
