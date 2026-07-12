@@ -89,6 +89,7 @@ export async function POST(req: Request) {
       success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/courses/${courseId}`,
       metadata: { userId: user.id, courseId, source: 'web' },
+      allow_promotion_codes: true,
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });

@@ -47,6 +47,7 @@ describe('landingCheckout', () => {
     const arg = mockSessionCreate.mock.calls[0][0]
     expect(arg.customer_email).toBe('buyer@example.com')
     expect(arg.metadata).toEqual(expect.objectContaining({ courseId: 'c1', guest: '1', source: 'landing', fullName: 'Ana' }))
+    expect(arg.allow_promotion_codes).toBe(true)
     expect(mockProvision).not.toHaveBeenCalled()
   })
 
