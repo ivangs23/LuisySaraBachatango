@@ -72,6 +72,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
       success_url: `${origin}/gracias?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/curso-bachatango`,
       metadata: { courseId, guest: '1', source: 'landing', fullName },
+      allow_promotion_codes: true,
     });
     url = session.url;
   } catch (e) {

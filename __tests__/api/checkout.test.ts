@@ -151,6 +151,7 @@ describe('POST /api/checkout — web only', () => {
     const res = await POST(makeRequest({ courseId: 'course-1' }))
     expect(res.status).toBe(200)
     expect(mockSessionCreate.mock.calls[0][0].metadata).toEqual(expect.objectContaining({ userId: 'user-1', courseId: 'course-1', source: 'web' }))
+    expect(mockSessionCreate.mock.calls[0][0].allow_promotion_codes).toBe(true)
   })
 })
 
