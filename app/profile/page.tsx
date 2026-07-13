@@ -33,7 +33,11 @@ export default async function ProfilePage(props: {
     { count: coursesPurchasedCount },
     { count: lessonsCompletedCount },
   ] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url, updated_at, role, instagram, facebook, tiktok, youtube, stripe_customer_id')
+      .eq('id', user.id)
+      .single(),
     supabase
       .from('subscriptions')
       .select('id, status, current_period_start, current_period_end')
