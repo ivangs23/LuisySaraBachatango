@@ -14,7 +14,7 @@ export const PROD_SUPABASE_REF = 'jytokoxbsykoyifzbjkd'
 export function supabaseRefFromUrl(url: string | undefined): string | null {
   if (!url) return null
   const m = /^https:\/\/([a-z0-9]+)\.supabase\.co/i.exec(url)
-  return m ? m[1] : null
+  return m ? m[1].toLowerCase() : null
 }
 
 export function canProvisionInline(opts: {

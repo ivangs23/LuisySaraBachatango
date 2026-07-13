@@ -24,4 +24,14 @@ describe('canProvisionInline', () => {
     expect(canProvisionInline({ triggeredByAdminCookie: false, supabaseUrl: undefined })).toBe(false)
     expect(canProvisionInline({ triggeredByAdminCookie: false, supabaseUrl: 'garbage' })).toBe(false)
   })
+  it('uppercase-cased prod host is still treated as prod (env-trigger refuses)', () => {
+    const UP = 'https://JYTOKOXBSYKOYIFZBJKD.supabase.co'
+    expect(supabaseRefFromUrl(UP)).toBe(PROD_SUPABASE_REF)
+    expect(canProvisionInline({ triggeredByAdminCookie: false, supabaseUrl: UP })).toBe(false)
+    expect(canProvisionInline({ triggeredByAdminCookie: true, supabaseUrl: UP })).toBe(true)
+  })
+  it('prod-ref lookalike host (suffix) is treated as prod, not non-prod', () => {
+    const EVIL = 'https://jytokoxbsykoyifzbjkd.supabase.co.evil.com'
+    expect(canProvisionInline({ triggeredByAdminCookie: false, supabaseUrl: EVIL })).toBe(false)
+  })
 })
