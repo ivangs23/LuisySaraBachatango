@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
+import { scrubSensitive } from '@/utils/sentry/scrub'
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? process.env.SENTRY_DSN,
@@ -14,6 +15,11 @@ Sentry.init({
       delete h.authorization
       delete h['x-vercel-id']
     }
+    scrubSensitive(event)
+    return event
+  },
+  beforeSendTransaction(event) {
+    scrubSensitive(event)
     return event
   },
 })
