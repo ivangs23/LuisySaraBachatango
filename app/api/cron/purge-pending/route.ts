@@ -1,5 +1,6 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { timingSafeEqual } from 'node:crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,8 +9,13 @@ export const dynamic = 'force-dynamic';
 const TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export async function GET(req: Request): Promise<NextResponse> {
-  if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new NextResponse('Unauthorized', { status: 401 });
+  const secret = process.env.CRON_SECRET
+  const header = req.headers.get('authorization') ?? ''
+  const expected = `Bearer ${secret}`
+  const a = Buffer.from(header)
+  const b = Buffer.from(expected)
+  if (!secret || a.length !== b.length || !timingSafeEqual(a, b)) {
+    return new NextResponse('Unauthorized', { status: 401 })
   }
   const admin = createSupabaseAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

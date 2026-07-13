@@ -17,6 +17,17 @@ describe('GET /api/cron/purge-pending', () => {
     expect((await GET(req('Bearer wrong'))).status).toBe(401)
     expect(mockDelete).not.toHaveBeenCalled()
   })
+  it('401 when CRON_SECRET is unset, even with "Bearer undefined"', async () => {
+    delete process.env.CRON_SECRET
+    expect((await GET(req('Bearer undefined'))).status).toBe(401)
+    expect((await GET(req('Bearer '))).status).toBe(401)
+    expect(mockDelete).not.toHaveBeenCalled()
+  })
+  it('401 when CRON_SECRET is empty string', async () => {
+    process.env.CRON_SECRET = ''
+    expect((await GET(req('Bearer '))).status).toBe(401)
+    expect(mockDelete).not.toHaveBeenCalled()
+  })
   it('authorized: deletes rows older than the TTL', async () => {
     const res = await GET(req('Bearer secret123'))
     expect(res.status).toBe(200)
