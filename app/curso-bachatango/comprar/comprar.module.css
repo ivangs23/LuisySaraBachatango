@@ -9,3 +9,19 @@
 .button:hover { background: var(--primary-hover); }
 .note { font: var(--small); color: var(--text-muted); margin-top: var(--spacing-sm); }
 .error { color: #ff8a8a; font: var(--small); }
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin: 0.25rem 0;
+}
+.checkboxRow input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+.checkboxRow a {
+  text-decoration: underline;
+}
