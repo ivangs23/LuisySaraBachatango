@@ -17,6 +17,7 @@ function makeAdmin(opts: {
   purchaseInserted?: Array<{ id: string }>          // [] => idempotent duplicate (no email)
   purchaseError?: { code?: string; message?: string }
   profileSequence?: Array<{ id: string } | null>    // successive profiles-by-email lookups (race)
+  existingPurchase?: { id: string } | null          // course_purchases row for session.id (orphan check)
 } = {}) {
   const calls = { profileColumns: [] as unknown[], customerId: [] as unknown[], purchaseUpsert: [] as unknown[], pendingDelete: [] as string[], createUser: [] as unknown[] }
   const seq = opts.profileSequence
@@ -42,7 +43,10 @@ function makeAdmin(opts: {
         }
       }
       if (table === 'course_purchases') {
-        return { upsert: (payload: unknown) => { calls.purchaseUpsert.push(payload); return { select: () => Promise.resolve(opts.purchaseError ? { data: null, error: opts.purchaseError } : { data: purchaseInserted, error: null }) } } }
+        return {
+          upsert: (payload: unknown) => { calls.purchaseUpsert.push(payload); return { select: () => Promise.resolve(opts.purchaseError ? { data: null, error: opts.purchaseError } : { data: purchaseInserted, error: null }) } },
+          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: opts.existingPurchase ?? null }) }) }),
+        }
       }
       throw new Error('unexpected table ' + table)
     },
@@ -138,6 +142,20 @@ describe('provisionFromPending', () => {
     const admin = makeAdmin({ pending: null })
     expect(await provisionFromPending(session(), admin)).toEqual({ ok: true, userId: '', created: false })
     expect(admin.__calls.createUser).toEqual([])
+  })
+  it('pending not found + NO purchase for session (orphaned paid) -> logs reconciliation candidate', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const admin = makeAdmin({ pending: null, existingPurchase: null })
+    const res = await provisionFromPending(session({ customer_details: { email: 'x@y.com' } as Stripe.Checkout.Session.CustomerDetails }), admin)
+    expect(res).toEqual({ ok: true, userId: '', created: false })
+    expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), 'cs_1', 'x@y.com')
+  })
+  it('pending not found + purchase EXISTS (retry after success) -> silent, no reconciliation log', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const admin = makeAdmin({ pending: null, existingPurchase: { id: 'p1' } })
+    const res = await provisionFromPending(session(), admin)
+    expect(res).toEqual({ ok: true, userId: '', created: false })
+    expect(errSpy).not.toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), expect.anything(), expect.anything())
   })
   it('createUser already-exists race -> re-SELECT profile and continue (no 500), treated as existing', async () => {
     const admin = makeAdmin({ pending: PENDING, profileSequence: [null, { id: 'u-raced' }], createUser: { error: { message: 'already been registered', status: 422 } } })

@@ -34,9 +34,18 @@ export async function provisionFromPending(
     .eq('id', pendingId)
     .maybeSingle()
 
-  // Pending row already consumed (retry after a prior successful delivery) ->
-  // idempotent success, do not re-provision.
-  if (!pending) return { ok: true, userId: '', created: false }
+  // Pending row already consumed. Either a retry after a successful provision
+  // (a course_purchases row for this session already exists), or an ORPHANED
+  // paid session whose pending row was dedupe-deleted before payment (money
+  // taken, no account). Distinguish and flag the latter for ops.
+  if (!pending) {
+    const { data: existingPurchase } = await admin
+      .from('course_purchases').select('id').eq('stripe_session_id', session.id).maybeSingle()
+    if (!existingPurchase) {
+      console.error('[orphaned-paid-session] paid session with no pending row and no purchase — manual reconciliation needed: session=%s email=%s', session.id, session.customer_details?.email ?? session.customer_email ?? '')
+    }
+    return { ok: true, userId: '', created: false }
+  }
 
   const email = String(pending.email).toLowerCase()
   const courseId = pending.course_id as string | null
