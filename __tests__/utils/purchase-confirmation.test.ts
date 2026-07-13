@@ -35,4 +35,8 @@ describe('sendPurchaseConfirmation', () => {
     await sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })
     expect(fetchMock).not.toHaveBeenCalled()
   })
+  it('never throws when fetch itself rejects (network error)', async () => {
+    fetchMock.mockRejectedValue(new Error('network down'))
+    await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBeUndefined()
+  })
 })
