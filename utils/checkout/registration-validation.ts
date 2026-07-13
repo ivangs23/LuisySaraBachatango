@@ -26,12 +26,16 @@ function str(v: FormDataEntryValue | null): string {
 }
 
 function ageFrom(iso: string): number | null {
-  const d = new Date(iso + 'T00:00:00Z')
-  if (Number.isNaN(d.getTime())) return null
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!m) return null
+  const y = Number(m[1]), mo = Number(m[2]), da = Number(m[3])
+  const d = new Date(Date.UTC(y, mo - 1, da))
+  // reject rolled-over / impossible dates (e.g. 2020-02-30 -> Mar 1)
+  if (d.getUTCFullYear() !== y || d.getUTCMonth() !== mo - 1 || d.getUTCDate() !== da) return null
   const now = new Date()
   let age = now.getUTCFullYear() - d.getUTCFullYear()
-  const m = now.getUTCMonth() - d.getUTCMonth()
-  if (m < 0 || (m === 0 && now.getUTCDate() < d.getUTCDate())) age--
+  const mm = now.getUTCMonth() - d.getUTCMonth()
+  if (mm < 0 || (mm === 0 && now.getUTCDate() < d.getUTCDate())) age--
   return age
 }
 

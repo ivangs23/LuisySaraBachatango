@@ -48,4 +48,9 @@ describe('validateRegistration', () => {
     const out = r({ marketingConsent: 'on' })
     expect(out.ok && out.data.marketingConsent).toBe(true)
   })
+  it('rejects malformed / non-ISO / impossible birthdates', () => {
+    for (const dob of ['1995', '1995-05', '2020-02-30', '1995/05/20', 'not-a-date', '1995-13-01']) {
+      expect(r({ dateOfBirth: dob })).toEqual({ ok: false, code: 'invalid_birthdate' })
+    }
+  })
 })
