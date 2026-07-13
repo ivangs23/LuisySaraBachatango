@@ -105,8 +105,8 @@ FORM (landing) → landingCheckout(formData)
 
 WEBHOOK checkout.session.completed  (rama guest/landing)
   Detección (compat rollout): metadata.guest==='1'  OR  client_reference_id/pendingId presente
-  [MUST] provisionar SOLO si session.payment_status === 'paid'
-  [MUST] AND session.amount_total === pending.amount_expected (del curso); si no → log + HTTP 200, sin provisión
+  [MUST] provisionar SOLO si session.payment_status === 'paid' (señal autoritativa: Stripe cobró el importe requerido, ya con cualquier cupón)
+  amount_expected se guarda para trazabilidad/analítica; NO se exige igualdad estricta con amount_total (rompería el promo luisysara: cupón -30€ → amount_total 99€ ≠ 129€). Si amount_total ausente/negativo → log + HTTP 200, sin provisión. amount_paid = amount_total.
   Provisión idempotente (resolve-or-create):
     a. SELECT profiles by email
     b. si NO existe → admin.createUser({ email, password_hash, email_confirm:true, user_metadata:{full_name} })
@@ -177,7 +177,7 @@ Resultado UX: un comprador recurrente que teclea una contraseña nueva en la lan
 
 - **Validador** (`registration-validation.ts`): password fuerza/coincidencia, edad 16–100, país allowlist, teléfono, términos obligatorio, email.
 - **`landingCheckout`:** inserta pending con `password_hash` (no plaintext); Stripe recibe `client_reference_id=pendingId` y metadata sin password; email duplicado → respuesta genérica (no oráculo); sin términos → error; rate-limit por email. **[MUST]** test que asserta que los args de `create()` (y la sesión sintética demo) no contienen ninguna clave password/repeat/hash.
-- **Webhook:** pending→cuenta+perfil (columnas enumeradas)+compra+borrado; idempotencia (doble entrega no duplica cuenta ni compra); email ya existente → adjunta compra sin tocar password; `payment_status!=='paid'` o `amount_total` distinto → sin provisión; `checkout.session.expired` → borra pending.
+- **Webhook:** pending→cuenta+perfil (columnas enumeradas)+compra+borrado; idempotencia (doble entrega no duplica cuenta ni compra); email ya existente → adjunta compra sin tocar password; `payment_status!=='paid'` o `amount_total` ausente/negativo → sin provisión; cupón (amount_total < amount_expected) SÍ provisiona; `checkout.session.expired` → borra pending.
 - **Demo path:** provisiona inline con guard de cookie admin + assert no-prod; sin cookie/prod → no crea cuenta.
 - **Provisionador:** createUser "already exists" → re-SELECT, no 500.
 
