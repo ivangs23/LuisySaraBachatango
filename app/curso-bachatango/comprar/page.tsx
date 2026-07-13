@@ -7,8 +7,8 @@ import styles from './comprar.module.css';
 export const metadata: Metadata = { title: 'Comprar CURSO BACHATANGO', robots: { index: false, follow: false } };
 export const dynamic = 'force-dynamic';
 
-export default async function ComprarPage(props: { searchParams: Promise<{ courseId?: string; error?: string }> }) {
-  const { courseId, error } = await props.searchParams;
+export default async function ComprarPage(props: { searchParams: Promise<{ courseId?: string; error?: string; name?: string; email?: string }> }) {
+  const { courseId, error, name, email } = await props.searchParams;
   if (!courseId) notFound();
 
   const supabase = await createClient();
@@ -22,7 +22,7 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
       <div className={styles.card}>
         <h1 className={styles.title}>{course.title}</h1>
         <p className={styles.price}>€{course.price_eur} · pago único</p>
-        <LandingCheckoutForm courseId={course.id} defaultEmail={user?.email ?? ''} defaultName="" error={error} />
+        <LandingCheckoutForm courseId={course.id} defaultEmail={email ?? user?.email ?? ''} defaultName={name ?? ''} error={error} />
       </div>
     </div>
   );

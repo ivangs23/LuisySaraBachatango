@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { assertProdEnv } from '@/utils/env/validate-prod';
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest';
+import { provisionFromPending } from '@/utils/checkout/provision-registration';
 
 assertProdEnv();
 
@@ -39,6 +40,22 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;
     const courseId = session.metadata?.courseId;
+
+    // New landing registration flow: pendingId carried in client_reference_id
+    // (mirrored in metadata.pendingId). Provision the account from the pending
+    // row. Takes precedence over the legacy guest branch.
+    const pendingId = session.client_reference_id ?? session.metadata?.pendingId;
+    if (pendingId) {
+      const result = await provisionFromPending(session, supabase);
+      if (!result.ok) {
+        console.error('Webhook: pending provisioning failed:', result.reason, 'session:', session.id);
+        // Non-retryable reasons (validation/idempotent) -> 200. DB/create errors -> 500 for Stripe retry.
+        const nonRetryable = ['not-paid', 'bad-amount', 'no-pending-id', 'no-course'];
+        if (nonRetryable.includes(result.reason)) return new NextResponse(null, { status: 200 });
+        return new NextResponse('Provisioning Error', { status: 500 });
+      }
+      return new NextResponse(null, { status: 200 });
+    }
 
     if (!userId) {
       // Guest checkout: no hay userId; se provisiona por email tras el pago.
@@ -135,6 +152,15 @@ export async function POST(req: Request) {
         }
       }
     }
+  }
+
+  if (event.type === 'checkout.session.expired') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const pendingId = session.client_reference_id ?? session.metadata?.pendingId;
+    if (pendingId) {
+      await supabase.from('pending_registrations').delete().eq('id', pendingId);
+    }
+    return new NextResponse(null, { status: 200 });
   }
 
   if (

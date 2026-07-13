@@ -1,78 +1,87 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { mockIsTestPurchaseMode, mockProvision, mockSessionCreate, mockCourseSingle, mockRedirect, mockRateLimit } = vi.hoisted(() => ({
-  mockIsTestPurchaseMode: vi.fn(),
-  mockProvision: vi.fn().mockResolvedValue({ ok: true, userId: 'u1' }),
-  mockSessionCreate: vi.fn().mockResolvedValue({ id: 'cs_1', url: 'https://checkout.stripe.com/x' }),
-  mockCourseSingle: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 199 }, error: null }),
-  mockRedirect: vi.fn((u: string) => { throw new Error('REDIRECT:' + u) }),
-  mockRateLimit: vi.fn().mockResolvedValue({ ok: true, retryAfter: 0 }),
+const H = vi.hoisted(() => ({
+  isTest: vi.fn().mockResolvedValue(false),
+  readCookie: vi.fn().mockResolvedValue(false),
+  hash: vi.fn().mockResolvedValue('$2b$12$hash'),
+  provisionPending: vi.fn().mockResolvedValue({ ok: true, userId: 'u1', created: true }),
+  sessionCreate: vi.fn().mockResolvedValue({ id: 'cs_1', url: 'https://checkout.stripe.com/x' }),
+  courseSingle: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 129 }, error: null }),
+  pendingInsert: vi.fn().mockResolvedValue({ data: { id: 'pend-1' }, error: null }),
+  pendingDelete: vi.fn().mockResolvedValue({ error: null }),
+  redirect: vi.fn((u: string) => { throw new Error('REDIRECT:' + u) }),
+  rateLimit: vi.fn().mockResolvedValue({ ok: true, retryAfter: 0 }),
 }))
-vi.mock('@/utils/demo/test-mode', () => ({ isTestPurchaseMode: () => mockIsTestPurchaseMode() }))
-vi.mock('@/utils/checkout/provision-guest', () => ({ provisionGuestPurchase: (...a: unknown[]) => mockProvision(...a) }))
-vi.mock('@/utils/stripe/server', () => ({ stripe: { checkout: { sessions: { create: mockSessionCreate } } } }))
-vi.mock('next/navigation', () => ({ redirect: (u: string) => mockRedirect(u) }))
+vi.mock('@/utils/demo/test-mode', () => ({ isTestPurchaseMode: () => H.isTest(), readTestCookie: () => H.readCookie() }))
+vi.mock('@/utils/checkout/password-hash', () => ({ hashPassword: (p: string) => H.hash(p) }))
+vi.mock('@/utils/checkout/provision-registration', () => ({ provisionFromPending: (...a: unknown[]) => H.provisionPending(...a) }))
+vi.mock('@/utils/stripe/server', () => ({ stripe: { checkout: { sessions: { create: H.sessionCreate } } } }))
+vi.mock('next/navigation', () => ({ redirect: (u: string) => H.redirect(u) }))
 vi.mock('next/headers', () => ({ headers: vi.fn().mockResolvedValue({ get: () => '' }) }))
-vi.mock('@/utils/rate-limit', () => ({
-  rateLimit: (...a: unknown[]) => mockRateLimit(...a),
-  rateLimitKey: (parts: (string | null | undefined)[]) => parts.map(p => p ?? 'anon').join(':'),
-}))
+vi.mock('@/utils/rate-limit', () => ({ rateLimit: (...a: unknown[]) => H.rateLimit(...a), rateLimitKey: (p: (string | null | undefined)[]) => p.map(x => x ?? 'anon').join(':') }))
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({
-    from: vi.fn().mockReturnValue({ select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: mockCourseSingle }),
+    from: (t: string) => t === 'pending_registrations'
+      ? { insert: () => ({ select: () => ({ single: H.pendingInsert }) }), delete: () => ({ eq: (_c: string, v: string) => H.pendingDelete(v) }) }
+      : { select: () => ({ eq: () => ({ eq: () => ({ single: H.courseSingle }) }) }) },
   }),
 }))
 
 import { landingCheckout } from '@/app/curso-bachatango/comprar/actions'
+const fd = (o: Record<string, string>) => { const f = new FormData(); Object.entries(o).forEach(([k, v]) => f.append(k, v)); return f }
+const valid = {
+  courseId: 'c1', fullName: 'Ana', email: 'ana@example.com',
+  password: 'Bachata2026', repeatPassword: 'Bachata2026', country: 'ES', city: 'Madrid',
+  dateOfBirth: '1995-05-20', danceLevel: 'principiante', acceptTerms: 'on',
+}
+beforeEach(() => { vi.clearAllMocks(); H.isTest.mockResolvedValue(false); H.readCookie.mockResolvedValue(false); H.rateLimit.mockResolvedValue({ ok: true }) })
 
-function fd(o: Record<string, string>) { const f = new FormData(); Object.entries(o).forEach(([k, v]) => f.append(k, v)); return f }
-beforeEach(() => vi.clearAllMocks())
-
-describe('landingCheckout', () => {
-  it('demo: provisiona sintético con source landing + fullName y va a /gracias?demo=1', async () => {
-    mockIsTestPurchaseMode.mockResolvedValue(true)
-    await expect(landingCheckout(fd({ courseId: 'c1', email: 'Buyer@Example.com', fullName: 'Ana' })))
-      .rejects.toThrow('REDIRECT:/gracias?demo=1&email=buyer%40example.com')
-    const [session, , opts] = mockProvision.mock.calls[0]
-    expect(session.customer_details.email).toBe('buyer@example.com')
-    expect(session.metadata).toEqual(expect.objectContaining({ courseId: 'c1', source: 'landing', fullName: 'Ana' }))
-    expect(opts).toEqual({ isDemo: true, source: 'landing', fullName: 'Ana' })
-    expect(mockSessionCreate).not.toHaveBeenCalled()
+describe('landingCheckout (full registration)', () => {
+  it('real: hashes password, inserts pending, creates Stripe session with client_reference_id=pendingId and NO password fields', async () => {
+    await expect(landingCheckout(fd(valid))).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
+    expect(H.hash).toHaveBeenCalledWith('Bachata2026')
+    const pendingRow = H.pendingInsert.mock.calls.length ? undefined : undefined // insert payload asserted below
+    const arg = H.sessionCreate.mock.calls[0][0]
+    expect(arg.client_reference_id).toBe('pend-1')
+    expect(arg.metadata).toEqual(expect.objectContaining({ courseId: 'c1', source: 'landing', pendingId: 'pend-1' }))
+    expect(arg.customer_email).toBe('ana@example.com')
+    const asStr = JSON.stringify(arg).toLowerCase()
+    expect(asStr).not.toContain('bachata2026')
+    expect(asStr).not.toContain('password')
+    expect(asStr).not.toContain('$2b$')
   })
-
-  it('real: crea sesión Stripe con customer_email + metadata y redirige a Stripe', async () => {
-    mockIsTestPurchaseMode.mockResolvedValue(false)
-    await expect(landingCheckout(fd({ courseId: 'c1', email: 'buyer@example.com', fullName: 'Ana' })))
-      .rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
-    const arg = mockSessionCreate.mock.calls[0][0]
-    expect(arg.customer_email).toBe('buyer@example.com')
-    expect(arg.metadata).toEqual(expect.objectContaining({ courseId: 'c1', guest: '1', source: 'landing', fullName: 'Ana' }))
-    expect(arg.allow_promotion_codes).toBe(true)
-    expect(mockProvision).not.toHaveBeenCalled()
+  it('validation error: redirects with ?error= code and NEVER hashes or inserts', async () => {
+    await expect(landingCheckout(fd({ ...valid, acceptTerms: '' }))).rejects.toThrow(/REDIRECT:.*error=terms_not_accepted/)
+    expect(H.hash).not.toHaveBeenCalled()
+    expect(H.pendingInsert).not.toHaveBeenCalled()
+    expect(H.sessionCreate).not.toHaveBeenCalled()
   })
-
-  it('sin email o nombre: redirige de vuelta con error, sin provisionar ni Stripe', async () => {
-    mockIsTestPurchaseMode.mockResolvedValue(false)
-    await expect(landingCheckout(fd({ courseId: 'c1', email: '', fullName: '' })))
-      .rejects.toThrow(/REDIRECT:\/curso-bachatango\/comprar/)
-    expect(mockProvision).not.toHaveBeenCalled()
-    expect(mockSessionCreate).not.toHaveBeenCalled()
+  it('password mismatch: error=password_mismatch', async () => {
+    await expect(landingCheckout(fd({ ...valid, repeatPassword: 'Other1234' }))).rejects.toThrow(/error=password_mismatch/)
   })
-
-  it('rate limited: redirige a error=rate sin provisionar ni llamar a Stripe', async () => {
-    mockIsTestPurchaseMode.mockResolvedValue(false)
-    mockRateLimit.mockResolvedValueOnce({ ok: false, retryAfter: 60 })
-    await expect(landingCheckout(fd({ courseId: 'c1', email: 'buyer@example.com', fullName: 'Ana' })))
-      .rejects.toThrow('REDIRECT:/curso-bachatango/comprar?error=rate')
-    expect(mockProvision).not.toHaveBeenCalled()
-    expect(mockSessionCreate).not.toHaveBeenCalled()
+  it('rate limited: redirects error=rate, no hash/insert', async () => {
+    H.rateLimit.mockResolvedValue({ ok: false, retryAfter: 60 })
+    await expect(landingCheckout(fd(valid))).rejects.toThrow(/error=rate/)
+    expect(H.hash).not.toHaveBeenCalled()
   })
-
-  it('real: error de Stripe redirige con error=stripe', async () => {
-    mockIsTestPurchaseMode.mockResolvedValue(false)
-    mockSessionCreate.mockRejectedValueOnce(new Error('stripe down'))
-    await expect(landingCheckout(fd({ courseId: 'c1', email: 'buyer@example.com', fullName: 'Ana' })))
-      .rejects.toThrow('REDIRECT:/curso-bachatango/comprar?courseId=c1&error=stripe')
-    expect(mockProvision).not.toHaveBeenCalled()
+  it('demo/test with admin cookie: provisions inline (isDemo) with a password-free synthetic session, redirects to /gracias?demo=1', async () => {
+    H.isTest.mockResolvedValue(true); H.readCookie.mockResolvedValue(true)
+    await expect(landingCheckout(fd(valid))).rejects.toThrow(/REDIRECT:\/gracias\?demo=1/)
+    expect(H.sessionCreate).not.toHaveBeenCalled()
+    const [synthetic, , opts] = H.provisionPending.mock.calls[0] as [{ client_reference_id: string }, unknown, unknown]
+    expect(opts).toEqual({ isDemo: true })
+    expect(synthetic.client_reference_id).toBe('pend-1')
+    const s = JSON.stringify(synthetic).toLowerCase()
+    expect(s).not.toContain('bachata2026'); expect(s).not.toContain('password'); expect(s).not.toContain('$2b$')
+  })
+  it('demo without admin cookie against the prod ref: refuses, deletes pending, no provision', async () => {
+    H.isTest.mockResolvedValue(true); H.readCookie.mockResolvedValue(false)
+    const prev = process.env.NEXT_PUBLIC_SUPABASE_URL
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://jytokoxbsykoyifzbjkd.supabase.co'
+    try {
+      await expect(landingCheckout(fd(valid))).rejects.toThrow(/error=account_creation_failed/)
+      expect(H.provisionPending).not.toHaveBeenCalled()
+      expect(H.pendingDelete).toHaveBeenCalledWith('pend-1')
+    } finally { process.env.NEXT_PUBLIC_SUPABASE_URL = prev }
   })
 })

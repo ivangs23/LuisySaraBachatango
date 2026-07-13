@@ -92,7 +92,7 @@ export default function SignupForm({ labels }: SignupFormProps) {
             required
             autoComplete="new-password"
             placeholder="••••••••"
-            minLength={6}
+            minLength={8}
             className={`${styles.input} ${styles.inputPassword}`}
           />
           <button
