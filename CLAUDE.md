@@ -105,4 +105,6 @@ MUX_TOKEN_SECRET               # Mux Access Token secret
 MUX_SIGNING_KEY_ID             # Mux Signing Key ID (Settings → Signing Keys), used for playback JWTs
 MUX_SIGNING_KEY_PRIVATE        # Base64-encoded PEM of the Mux signing private key
 TEST_MODE_SECRET               # Optional. HMAC key for the admin per-browser test-mode cookie (/admin/pruebas). Fail-closed: if unset, the test-mode toggle is inert and checkout always uses real Stripe.
+CRON_SECRET                    # Bearer token for the scheduled purge route (/api/cron/purge-pending, Vercel cron). Fail-closed: if unset, the route returns 401 and stale pending_registrations are never purged.
+RESEND_API_KEY                 # Resend API key; sender/domain for transactional emails (guest access, purchase confirmation). If unset, those emails silently no-op.
 ```
