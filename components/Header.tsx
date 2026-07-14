@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { isChromelessRoute } from '@/utils/nav/chromeless-routes';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import {
@@ -86,8 +87,9 @@ export default function Header({ user, profile }: HeaderProps) {
   const displayName =
     profile?.full_name?.trim() || user?.email?.split('@')[0] || 'Bailarín';
 
-  // Landing de venta standalone: sin nav global.
-  if (pathname === '/curso-bachatango') return null;
+  // Funnel de venta standalone (landing + form + gracias): sin nav global,
+  // para que el comprador no navegue hasta pagar y completar el alta.
+  if (isChromelessRoute(pathname)) return null;
 
   return (
     <>
