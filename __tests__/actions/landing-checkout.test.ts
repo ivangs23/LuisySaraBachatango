@@ -32,7 +32,7 @@ const fd = (o: Record<string, string>) => { const f = new FormData(); Object.ent
 const valid = {
   courseId: 'c1', fullName: 'Ana', email: 'ana@example.com',
   password: 'Bachata2026', repeatPassword: 'Bachata2026', country: 'ES', city: 'Madrid',
-  dateOfBirth: '1995-05-20', danceLevel: 'principiante', acceptTerms: 'on',
+  postalCode: '28001', dateOfBirth: '1995-05-20', danceLevel: 'principiante', acceptTerms: 'on',
 }
 beforeEach(() => { vi.clearAllMocks(); H.isTest.mockResolvedValue(false); H.readCookie.mockResolvedValue(false); H.rateLimit.mockResolvedValue({ ok: true }) })
 

@@ -30,7 +30,7 @@ export async function provisionFromPending(
 
   const { data: pending } = await admin
     .from('pending_registrations')
-    .select('id, email, full_name, password_hash, country, city, date_of_birth, phone, marketing_consent, dance_level, course_id')
+    .select('id, email, full_name, password_hash, country, city, postal_code, date_of_birth, phone, marketing_consent, dance_level, course_id')
     .eq('id', pendingId)
     .maybeSingle()
 
@@ -88,6 +88,7 @@ export async function provisionFromPending(
     await admin.from('profiles').update({
       country: pending.country ?? null,
       city: pending.city ?? null,
+      postal_code: pending.postal_code ?? null,
       date_of_birth: pending.date_of_birth ?? null,
       phone: pending.phone ?? null,
       marketing_consent: pending.marketing_consent ?? false,

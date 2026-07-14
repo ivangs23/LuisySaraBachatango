@@ -8,6 +8,7 @@ export type CleanRegistration = {
   password: string
   country: string
   city: string
+  postalCode: string
   dateOfBirth: string
   danceLevel: string
   phone: string | null
@@ -20,6 +21,9 @@ export type RegistrationResult =
 
 const DANCE_LEVELS = new Set(['principiante', 'intermedio', 'avanzado'])
 const PHONE_RE = /^[+()\d][\d\s()-]{5,19}$/
+// Lenient international postal code: 2-11 chars, alphanumeric + space/hyphen
+// (covers ES "28001", UK "SW1A 1AA", etc.).
+const POSTAL_RE = /^[A-Za-z0-9][A-Za-z0-9\s-]{1,10}$/
 
 function str(v: FormDataEntryValue | null): string {
   return typeof v === 'string' ? v.trim() : ''
@@ -48,6 +52,7 @@ export function validateRegistration(
   const repeatPassword = typeof raw.repeatPassword === 'string' ? raw.repeatPassword : ''
   const country = str(raw.country)
   const city = str(raw.city)
+  const postalCode = str(raw.postalCode)
   const dateOfBirth = str(raw.dateOfBirth)
   const danceLevel = str(raw.danceLevel)
   const phoneRaw = str(raw.phone)
@@ -62,6 +67,7 @@ export function validateRegistration(
   if (password !== repeatPassword) return { ok: false, code: 'password_mismatch' }
   if (!isValidCountry(country)) return { ok: false, code: 'invalid_country' }
   if (!city) return { ok: false, code: 'missing' }
+  if (!POSTAL_RE.test(postalCode)) return { ok: false, code: 'invalid_postal' }
   const age = ageFrom(dateOfBirth)
   if (age === null || age < 16 || age > 100) return { ok: false, code: 'invalid_birthdate' }
   if (!DANCE_LEVELS.has(danceLevel)) return { ok: false, code: 'missing' }
@@ -71,7 +77,7 @@ export function validateRegistration(
   return {
     ok: true,
     data: {
-      fullName, email, password, country, city, dateOfBirth, danceLevel,
+      fullName, email, password, country, city, postalCode, dateOfBirth, danceLevel,
       phone: phoneRaw || null, marketingConsent,
     },
   }

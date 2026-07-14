@@ -4,7 +4,7 @@ import { validateRegistration } from '@/utils/checkout/registration-validation'
 const base = {
   fullName: 'Ana Ruiz', email: 'ana@example.com',
   password: 'Bachata2026', repeatPassword: 'Bachata2026',
-  country: 'ES', city: 'Madrid', dateOfBirth: '1995-05-20',
+  country: 'ES', city: 'Madrid', postalCode: '28001', dateOfBirth: '1995-05-20',
   danceLevel: 'principiante', phone: '', marketingConsent: '', acceptTerms: 'on',
 }
 const r = (o: Partial<typeof base>) => validateRegistration({ ...base, ...o })
@@ -32,6 +32,15 @@ describe('validateRegistration', () => {
   it('rejects mismatched repeat', () => { expect(r({ repeatPassword: 'Different1' })).toEqual({ ok: false, code: 'password_mismatch' }) })
   it('rejects invalid country', () => { expect(r({ country: 'ZZ' })).toEqual({ ok: false, code: 'invalid_country' }) })
   it('rejects missing city', () => { expect(r({ city: '' })).toEqual({ ok: false, code: 'missing' }) })
+  it('rejects missing / invalid postal code', () => {
+    expect(r({ postalCode: '' })).toEqual({ ok: false, code: 'invalid_postal' })
+    expect(r({ postalCode: '!' })).toEqual({ ok: false, code: 'invalid_postal' })
+    expect(r({ postalCode: 'x'.repeat(12) })).toEqual({ ok: false, code: 'invalid_postal' })
+  })
+  it('accepts ES and UK postal formats', () => {
+    expect(r({ postalCode: '28001' }).ok).toBe(true)
+    expect(r({ postalCode: 'SW1A 1AA' }).ok).toBe(true)
+  })
   it('rejects too-young / future / too-old birthdate', () => {
     expect(r({ dateOfBirth: '2020-01-01' })).toEqual({ ok: false, code: 'invalid_birthdate' })
     expect(r({ dateOfBirth: '2999-01-01' })).toEqual({ ok: false, code: 'invalid_birthdate' })

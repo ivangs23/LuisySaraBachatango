@@ -13,6 +13,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   password_weak: 'La contraseña debe incluir mayúscula, minúscula y número.',
   password_mismatch: 'Las contraseñas no coinciden.',
   invalid_country: 'Selecciona un país válido.',
+  invalid_postal: 'Introduce un código postal válido.',
   invalid_birthdate: 'Introduce una fecha de nacimiento válida (edad 16–100).',
   invalid_phone: 'El teléfono no es válido.',
   terms_not_accepted: 'Debes aceptar los términos y la privacidad.',
@@ -49,6 +50,9 @@ export default function LandingCheckoutForm({ courseId, defaultEmail, defaultNam
 
       <label className={styles.label} htmlFor="lc-city">Ciudad</label>
       <input id="lc-city" name="city" type="text" required className={styles.input} autoComplete="address-level2" />
+
+      <label className={styles.label} htmlFor="lc-postal">Código postal</label>
+      <input id="lc-postal" name="postalCode" type="text" required className={styles.input} autoComplete="postal-code" placeholder="28001" />
 
       <label className={styles.label} htmlFor="lc-dob">Fecha de nacimiento</label>
       <input id="lc-dob" name="dateOfBirth" type="date" required className={styles.input} />
