@@ -41,11 +41,14 @@ vi.mock('@/components/Reveal', () => ({
 import FooterClient from '@/components/FooterClient'
 
 describe('FooterClient en landing', () => {
-  it('no renderiza nada en /curso-bachatango', () => {
-    mockPath = '/curso-bachatango'
-    const { container } = render(<FooterClient adminProfile={null} />)
-    expect(container).toBeEmptyDOMElement()
-  })
+  it.each(['/curso-bachatango', '/curso-bachatango/comprar', '/gracias'])(
+    'no renderiza nada en el funnel (%s)',
+    (path) => {
+      mockPath = path
+      const { container } = render(<FooterClient adminProfile={null} />)
+      expect(container).toBeEmptyDOMElement()
+    },
+  )
 
   it('renderiza normalmente en otras rutas', () => {
     mockPath = '/'

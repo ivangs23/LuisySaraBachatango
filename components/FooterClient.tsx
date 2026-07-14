@@ -15,6 +15,7 @@ import Reveal from './Reveal';
 import styles from './Footer.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { safeSocialUrl } from '@/utils/sanitize';
+import { isChromelessRoute } from '@/utils/nav/chromeless-routes';
 
 type FooterClientProps = {
   adminProfile: {
@@ -29,7 +30,7 @@ export default function FooterClient({ adminProfile }: FooterClientProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  if (pathname === '/curso-bachatango') return null;
+  if (isChromelessRoute(pathname)) return null;
 
   const instagramUrl =
     safeSocialUrl(adminProfile?.instagram, 'instagram') ??
