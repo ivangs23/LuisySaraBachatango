@@ -3,9 +3,9 @@ import bcrypt from 'bcryptjs'
 import { hashPassword } from '@/utils/checkout/password-hash'
 
 describe('hashPassword', () => {
-  it('produces a bcrypt $2a/$2b hash at cost 12 that verifies', async () => {
+  it('produces a bcrypt $2a/$2b hash at cost 10 (Supabase default) that verifies', async () => {
     const hash = await hashPassword('Bachata2026')
-    expect(hash).toMatch(/^\$2[ab]\$12\$/)
+    expect(hash).toMatch(/^\$2[ab]\$10\$/)
     expect(await bcrypt.compare('Bachata2026', hash)).toBe(true)
     expect(await bcrypt.compare('wrong', hash)).toBe(false)
   })
