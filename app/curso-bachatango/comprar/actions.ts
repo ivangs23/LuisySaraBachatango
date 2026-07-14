@@ -41,6 +41,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     fullName: formData.get('fullName'), email: formData.get('email'),
     password: formData.get('password'), repeatPassword: formData.get('repeatPassword'),
     country: formData.get('country'), city: formData.get('city'),
+    postalCode: formData.get('postalCode'),
     dateOfBirth: formData.get('dateOfBirth'), danceLevel: formData.get('danceLevel'),
     phone: formData.get('phone'), marketingConsent: formData.get('marketingConsent'),
     acceptTerms: formData.get('acceptTerms'),
@@ -75,7 +76,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     .insert({
       id: randomUUID(),
       email: reg.email, full_name: reg.fullName, password_hash: passwordHash,
-      country: reg.country, city: reg.city, date_of_birth: reg.dateOfBirth,
+      country: reg.country, city: reg.city, postal_code: reg.postalCode, date_of_birth: reg.dateOfBirth,
       phone: reg.phone, marketing_consent: reg.marketingConsent, dance_level: reg.danceLevel,
       course_id: courseId, amount_expected: amountExpected,
     })

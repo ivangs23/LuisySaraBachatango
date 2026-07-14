@@ -62,7 +62,7 @@ function makeAdmin(opts: {
 
 const PENDING = {
   id: 'pend-1', email: 'ana@example.com', full_name: 'Ana', password_hash: '$2b$12$abc',
-  country: 'ES', city: 'Madrid', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true,
+  country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true,
   dance_level: 'principiante', course_id: 'course-1', amount_expected: 12900,
 }
 const session = (over: Partial<Stripe.Checkout.Session> = {}) => ({
@@ -79,7 +79,7 @@ describe('provisionFromPending', () => {
     expect(res).toEqual({ ok: true, userId: 'u-new', created: true })
     expect(admin.__calls.createUser[0]).toEqual(expect.objectContaining({ email: 'ana@example.com', password_hash: '$2b$12$abc', email_confirm: true, user_metadata: { full_name: 'Ana' } }))
     // enumerated columns bucket only — never password_hash, never stripe_customer_id
-    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante' }))
+    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante' }))
     expect(admin.__calls.profileColumns[0]).not.toHaveProperty('password_hash')
     expect(admin.__calls.customerId[0]).toEqual({ stripe_customer_id: 'cus_1' })
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-new', course_id: 'course-1', stripe_session_id: 'cs_1', amount_paid: 9900, source: 'landing' }))

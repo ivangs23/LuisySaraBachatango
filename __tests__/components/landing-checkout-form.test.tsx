@@ -8,7 +8,7 @@ import LandingCheckoutForm from '@/components/LandingCheckoutForm'
 describe('LandingCheckoutForm', () => {
   it('renders all required registration fields', () => {
     render(<LandingCheckoutForm courseId="c1" defaultEmail="" defaultName="" />)
-    for (const name of ['fullName', 'email', 'password', 'repeatPassword', 'country', 'city', 'dateOfBirth', 'danceLevel', 'phone', 'acceptTerms']) {
+    for (const name of ['fullName', 'email', 'password', 'repeatPassword', 'country', 'city', 'postalCode', 'dateOfBirth', 'danceLevel', 'phone', 'acceptTerms']) {
       expect(document.querySelector(`[name="${name}"]`)).toBeTruthy()
     }
     expect(document.querySelector('[name="marketingConsent"]')).toBeTruthy()
