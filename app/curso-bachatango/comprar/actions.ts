@@ -14,6 +14,7 @@ import { validateRegistration } from '@/utils/checkout/registration-validation';
 import { hashPassword } from '@/utils/checkout/password-hash';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
+import { CURRENT_TERMS_VERSION } from '@/utils/legal/terms-version';
 
 export async function landingCheckout(formData: FormData): Promise<void> {
   const ip = getClientIp(await headers());
@@ -93,6 +94,10 @@ export async function landingCheckout(formData: FormData): Promise<void> {
       email: reg.email, full_name: reg.fullName, password_hash: passwordHash,
       country: reg.country, city: reg.city, postal_code: reg.postalCode, date_of_birth: reg.dateOfBirth,
       phone: reg.phone, marketing_consent: reg.marketingConsent, dance_level: reg.danceLevel,
+      // Consent provenance (GDPR Art. 7): stamp WHEN + WHICH version was accepted.
+      terms_version: CURRENT_TERMS_VERSION,
+      terms_accepted_at: new Date().toISOString(),
+      marketing_consent_at: reg.marketingConsent ? new Date().toISOString() : null,
       course_id: courseId, amount_expected: amountExpected,
     })
     .select('id')

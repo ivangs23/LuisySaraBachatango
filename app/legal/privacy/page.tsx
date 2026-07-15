@@ -15,20 +15,28 @@ export const metadata: Metadata = {
 
 const SECTIONS: LegalSection[] = [
   {
-    heading: 'Información que recopilamos',
-    body: 'Recopilamos los datos que tú nos proporcionas directamente al crear una cuenta, suscribirte a un curso, completar tu perfil o contactar con nuestro equipo. Esto incluye nombre, dirección de correo electrónico, datos de facturación e información que decidas compartir voluntariamente.\n\nAdicionalmente, registramos información técnica básica —como dirección IP, tipo de navegador o páginas visitadas— necesaria para garantizar el correcto funcionamiento del servicio y mejorar la experiencia de aprendizaje.',
+    heading: 'Responsable del tratamiento',
+    body: 'El responsable del tratamiento de tus datos es Luis y Sara Bachatango. Para cualquier cuestión sobre privacidad o para ejercer tus derechos, escríbenos a contacto@luisysarabachatango.com.',
   },
   {
-    heading: 'Cómo utilizamos su información',
-    body: 'Utilizamos tus datos para prestar y mejorar el servicio: gestionar tu cuenta, procesar pagos, dar acceso a los contenidos, atender consultas y enviarte avisos técnicos relevantes.\n\nSolo te enviaremos comunicaciones comerciales si nos has dado tu consentimiento expreso, y siempre podrás revocarlo en cualquier momento desde el propio correo o desde tu perfil.',
+    heading: 'Datos que recopilamos',
+    body: 'Al comprar un curso o crear tu cuenta recogemos: nombre completo, correo electrónico, contraseña (que almacenamos cifrada, nunca en claro), país, ciudad, código postal, fecha de nacimiento, nivel de baile y, de forma opcional, teléfono. Registramos también la aceptación de los términos (con fecha y versión) y, si lo marcas, tu consentimiento para comunicaciones comerciales (con su fecha).\n\nDe forma automática registramos datos técnicos básicos —dirección IP, tipo de navegador, páginas visitadas— necesarios para el funcionamiento y la seguridad del servicio.',
   },
   {
-    heading: 'Compartir información',
-    body: 'No vendemos ni cedemos tu información personal a terceros. Únicamente compartimos los datos estrictamente necesarios con proveedores de confianza —como pasarelas de pago, alojamiento o herramientas de analítica— y siempre bajo contratos que garantizan un nivel adecuado de protección.\n\nTambién podríamos compartir información si una autoridad competente lo solicita formalmente conforme a la ley.',
+    heading: 'Finalidades y base legal',
+    body: 'Ejecución del contrato: gestionar tu cuenta, procesar el pago y darte acceso a los contenidos (art. 6.1.b RGPD).\n\nConsentimiento: enviarte novedades y ofertas, únicamente si lo has marcado expresamente; puedes retirarlo cuando quieras desde el propio email o tu perfil (art. 6.1.a RGPD).\n\nObligación legal: conservar los registros de facturación que exige la normativa fiscal (art. 6.1.c RGPD).\n\nInterés legítimo: seguridad, prevención del abuso y mejora del servicio (art. 6.1.f RGPD).',
   },
   {
-    heading: 'Seguridad',
-    body: 'Aplicamos medidas técnicas y organizativas razonables para proteger tu información frente a pérdida, robo, uso indebido o acceso no autorizado: cifrado en tránsito, controles de acceso y revisiones periódicas de nuestros sistemas.\n\nPuedes ejercer en cualquier momento tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiéndonos a contacto@luisysarabachatango.com.',
+    heading: 'Proveedores y transferencias internacionales',
+    body: 'Para prestar el servicio compartimos los datos estrictamente necesarios con encargados del tratamiento que actúan bajo contrato: Stripe (pagos), Supabase (base de datos y autenticación), Resend (envío de emails), Vercel (alojamiento), Mux (vídeo) y Sentry (registro de errores).\n\nAlgunos de estos proveedores pueden tratar datos fuera del Espacio Económico Europeo; en esos casos las transferencias se amparan en las garantías previstas por el RGPD (cláusulas contractuales tipo u otras salvaguardas adecuadas). No vendemos ni cedemos tus datos a terceros con fines publicitarios.',
+  },
+  {
+    heading: 'Conservación',
+    body: 'Conservamos los datos de tu cuenta mientras esté activa. Si la eliminas, suprimimos tus datos personales, salvo los registros que debamos conservar por obligación legal (por ejemplo, la facturación).\n\nLos registros de compras iniciadas pero no completadas se conservan un máximo de 30 días y después se eliminan automáticamente.',
+  },
+  {
+    heading: 'Seguridad y tus derechos',
+    body: 'Aplicamos medidas técnicas y organizativas razonables: cifrado en tránsito, contraseñas almacenadas con hash, controles de acceso y minimización de los datos expuestos.\n\nPuedes ejercer en cualquier momento tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad, así como retirar tu consentimiento, escribiéndonos a contacto@luisysarabachatango.com. También puedes reclamar ante la Agencia Española de Protección de Datos (www.aepd.es).',
   },
 ];
 

@@ -27,8 +27,8 @@ const SECTIONS: LegalSection[] = [
     body: 'Todo el contenido publicado en este sitio —textos, gráficos, logotipos, vídeos, música, coreografías y materiales descargables— es propiedad de Luis y Sara Bachatango o de sus licenciantes y queda protegido por la legislación nacional e internacional de propiedad intelectual.\n\nLa suscripción concede una licencia personal e intransferible para acceder al contenido. Queda prohibida su reproducción, distribución, comunicación pública o transformación sin autorización escrita previa.',
   },
   {
-    heading: 'Cancelación y reembolso',
-    body: 'Puedes cancelar tu suscripción en cualquier momento desde tu área de perfil; mantendrás el acceso al contenido hasta el final del periodo ya facturado.\n\nLos reembolsos se gestionan caso por caso conforme a la normativa de consumo aplicable. Para solicitar uno, escríbenos explicando tu situación a contacto@luisysarabachatango.com y estudiaremos tu caso con la mayor diligencia posible.',
+    heading: 'Producto digital, pago y desistimiento',
+    body: 'El CURSO BACHATANGO es un producto digital de pago único, con acceso inmediato y de por vida a los contenidos.\n\nAl completar la compra solicitas expresamente el acceso inmediato al contenido digital y reconoces que, conforme al artículo 103.m del RDLeg 1/2007 (Ley General para la Defensa de los Consumidores y Usuarios), pierdes el derecho de desistimiento de 14 días una vez comenzada la ejecución. Por este motivo, la compra no admite devoluciones.\n\nSi detectas un error en el cobro o un problema técnico que te impide acceder al contenido, escríbenos a contacto@luisysarabachatango.com y lo resolveremos.',
   },
 ];
 

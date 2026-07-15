@@ -3,6 +3,8 @@ import type Stripe from 'stripe'
 
 const sendMock = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/utils/email/purchase-confirmation', () => ({ sendPurchaseConfirmation: (...a: unknown[]) => sendMock(...a) }))
+const guestMock = vi.fn().mockResolvedValue({ ok: true, userId: 'u-guest' })
+vi.mock('@/utils/checkout/provision-guest', () => ({ provisionGuestPurchase: (...a: unknown[]) => guestMock(...a) }))
 
 import { provisionFromPending } from '@/utils/checkout/provision-registration'
 
@@ -63,7 +65,9 @@ function makeAdmin(opts: {
 const PENDING = {
   id: 'pend-1', email: 'ana@example.com', full_name: 'Ana', password_hash: '$2b$12$abc',
   country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true,
-  dance_level: 'principiante', course_id: 'course-1', amount_expected: 12900,
+  marketing_consent_at: '2026-07-14T10:00:00Z', dance_level: 'principiante',
+  terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z',
+  course_id: 'course-1', amount_expected: 12900,
 }
 const session = (over: Partial<Stripe.Checkout.Session> = {}) => ({
   id: 'cs_1', client_reference_id: 'pend-1', payment_status: 'paid', amount_total: 9900,
@@ -79,7 +83,7 @@ describe('provisionFromPending', () => {
     expect(res).toEqual({ ok: true, userId: 'u-new', created: true })
     expect(admin.__calls.createUser[0]).toEqual(expect.objectContaining({ email: 'ana@example.com', password_hash: '$2b$12$abc', email_confirm: true, user_metadata: { full_name: 'Ana' } }))
     // enumerated columns bucket only — never password_hash, never stripe_customer_id
-    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante' }))
+    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante', terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z' }))
     expect(admin.__calls.profileColumns[0]).not.toHaveProperty('password_hash')
     expect(admin.__calls.customerId[0]).toEqual({ stripe_customer_id: 'cus_1' })
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-new', course_id: 'course-1', stripe_session_id: 'cs_1', amount_paid: 9900, source: 'landing' }))
@@ -145,17 +149,19 @@ describe('provisionFromPending', () => {
     const admin = makeAdmin({ pending: PENDING, profileByEmail: null, createUser: { id: 'u-new' } })
     expect((await provisionFromPending(session({ amount_total: 9900 }), admin)).ok).toBe(true)
   })
-  it('pending not found (retry after success) -> idempotent ok, no re-provision', async () => {
-    const admin = makeAdmin({ pending: null })
+  it('pending not found + purchase EXISTS (retry after success) -> idempotent ok, no recovery', async () => {
+    const admin = makeAdmin({ pending: null, existingPurchase: { id: 'p1' } })
     expect(await provisionFromPending(session(), admin)).toEqual({ ok: true, userId: '', created: false })
     expect(admin.__calls.createUser).toEqual([])
+    expect(guestMock).not.toHaveBeenCalled()
   })
-  it('pending not found + NO purchase for session (orphaned paid) -> logs reconciliation candidate', async () => {
+  it('pending not found + NO purchase (orphaned paid) -> logs + recovers via guest provisioning', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const admin = makeAdmin({ pending: null, existingPurchase: null })
     const res = await provisionFromPending(session({ customer_details: { email: 'x@y.com' } as Stripe.Checkout.Session.CustomerDetails }), admin)
-    expect(res).toEqual({ ok: true, userId: '', created: false })
     expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), 'cs_1')
+    expect(guestMock).toHaveBeenCalled()
+    expect(res).toEqual({ ok: true, userId: 'u-guest', created: false })
   })
   it('pending not found + purchase EXISTS (retry after success) -> silent, no reconciliation log', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})

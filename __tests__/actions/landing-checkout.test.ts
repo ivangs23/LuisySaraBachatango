@@ -49,6 +49,7 @@ describe('landingCheckout (full registration)', () => {
     expect(row).toEqual(expect.objectContaining({
       email: 'ana@example.com', full_name: 'Ana', country: 'ES', city: 'Madrid',
       postal_code: '28001', date_of_birth: '1995-05-20', dance_level: 'principiante', course_id: 'c1',
+      terms_version: '2026-07-14', terms_accepted_at: expect.any(String),
     }))
     const arg = H.sessionCreate.mock.calls[0][0]
     expect(arg.client_reference_id).toBe('pend-1')

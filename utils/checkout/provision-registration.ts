@@ -1,6 +1,7 @@
 import type Stripe from 'stripe'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendPurchaseConfirmation } from '@/utils/email/purchase-confirmation'
+import { provisionGuestPurchase } from '@/utils/checkout/provision-guest'
 
 export type ProvisionResult =
   | { ok: true; userId: string; created: boolean }
@@ -35,7 +36,7 @@ export async function provisionFromPending(
 
   const { data: pending } = await admin
     .from('pending_registrations')
-    .select('id, email, full_name, password_hash, country, city, postal_code, date_of_birth, phone, marketing_consent, dance_level, course_id')
+    .select('id, email, full_name, password_hash, country, city, postal_code, date_of_birth, phone, marketing_consent, marketing_consent_at, dance_level, terms_version, terms_accepted_at, course_id')
     .eq('id', pendingId)
     .maybeSingle()
 
@@ -47,9 +48,16 @@ export async function provisionFromPending(
     const { data: existingPurchase } = await admin
       .from('course_purchases').select('id').eq('stripe_session_id', session.id).maybeSingle()
     if (!existingPurchase) {
-      // Log the session id only (never the raw email — Stripe holds the PII;
-      // ops look it up there for reconciliation).
-      console.error('[orphaned-paid-session] paid session with no pending row and no purchase — manual reconciliation needed: session=%s', session.id)
+      // Log the session id only (never the raw email — Stripe holds the PII).
+      console.error('[orphaned-paid-session] paid session with no pending row — attempting guest recovery: session=%s', session.id)
+      // Recover: the buyer paid but their pending row is gone (e.g. paid an old
+      // tab after resubmitting). Provision a passwordless guest account from the
+      // session's email + courseId (they set their password via the invite
+      // email) so money never ends up without access. Idempotent.
+      const rec = await provisionGuestPurchase(session, admin, { source: 'landing' })
+      if (rec.ok) return { ok: true, userId: rec.userId, created: false }
+      console.error('[orphaned-paid-session] guest recovery failed: %s', rec.reason)
+      return { ok: false, reason: `orphan-recovery-failed:${rec.reason}` }
     }
     return { ok: true, userId: '', created: false }
   }
@@ -99,7 +107,10 @@ export async function provisionFromPending(
       date_of_birth: pending.date_of_birth ?? null,
       phone: pending.phone ?? null,
       marketing_consent: pending.marketing_consent ?? false,
+      marketing_consent_at: pending.marketing_consent_at ?? null,
       dance_level: pending.dance_level ?? null,
+      terms_version: pending.terms_version ?? null,
+      terms_accepted_at: pending.terms_accepted_at ?? null,
     }).eq('id', userId)
     // Don't block provisioning on a profile-column write (those fields aren't
     // access-gating) — but surface it instead of swallowing it silently.

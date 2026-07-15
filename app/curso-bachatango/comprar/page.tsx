@@ -22,6 +22,11 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
       <div className={styles.card}>
         <h1 className={styles.title}>{course.title}</h1>
         <p className={styles.price}>€{course.price_eur} · pago único</p>
+        <p className={styles.note}>
+          Producto digital con acceso inmediato. Pago único, <strong>sin devoluciones</strong>: al comprar
+          solicitas el acceso inmediato y aceptas perder el derecho de desistimiento de 14 días (art. 103.m
+          RDLeg 1/2007). <a href="/legal/terms" target="_blank" rel="noopener noreferrer">Más info</a>.
+        </p>
         <LandingCheckoutForm
           courseId={course.id}
           defaultEmail={email ?? user?.email ?? ''}
