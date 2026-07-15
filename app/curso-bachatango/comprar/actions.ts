@@ -18,20 +18,32 @@ import { getClientIp } from '@/utils/auth/client-ip';
 export async function landingCheckout(formData: FormData): Promise<void> {
   const ip = getClientIp(await headers());
   const courseId = ((formData.get('courseId') as string | null) ?? '').trim();
-  // Safe fields re-echoed after a validation error (never the password).
+  // Safe fields re-echoed after a validation error (never the password) so a
+  // single typo doesn't wipe the whole 11-field form.
   const rawName = ((formData.get('fullName') as string | null) ?? '').trim();
   const rawEmail = ((formData.get('email') as string | null) ?? '').trim();
-  const back = (code: string) =>
-    `/curso-bachatango/comprar?courseId=${encodeURIComponent(courseId)}&error=${code}` +
-    `&name=${encodeURIComponent(rawName)}&email=${encodeURIComponent(rawEmail)}`;
+  const g = (k: string) => ((formData.get(k) as string | null) ?? '').trim();
+  const back = (code: string) => {
+    const q = new URLSearchParams({
+      courseId, error: code,
+      name: rawName, email: rawEmail,
+      country: g('country'), city: g('city'), postalCode: g('postalCode'),
+      dateOfBirth: g('dateOfBirth'), danceLevel: g('danceLevel'), phone: g('phone'),
+    });
+    return `/curso-bachatango/comprar?${q.toString()}`;
+  };
 
   // Rate limit against abuse of the unauthenticated pending INSERT (accumulates
   // PII + bcrypt hashes): per-IP burst, per-email/day, AND a per-IP/day row cap
   // so one IP cycling many distinct emails is still bounded.
   const rlIp = await rateLimit(rateLimitKey([ip, 'landing-checkout']), 10, 60_000);
   if (!rlIp.ok) redirect(back('rate'));
+  // Per-email limit scoped BY IP: the email is unauthenticated, so keying it
+  // globally would let an attacker burn a specific victim's daily budget
+  // (registration lockout). Scoping to (ip,email) caps repeats without
+  // cross-user harm.
   const emailForKey = rawEmail.toLowerCase();
-  const rlEmail = await rateLimit(rateLimitKey([emailForKey || ip, 'landing-checkout-email']), 5, 24 * 60 * 60_000);
+  const rlEmail = await rateLimit(rateLimitKey([ip, emailForKey, 'landing-checkout-email']), 5, 24 * 60 * 60_000);
   if (!rlEmail.ok) redirect(back('rate'));
   const rlIpDay = await rateLimit(rateLimitKey([ip, 'landing-checkout-ip-day']), 30, 24 * 60 * 60_000);
   if (!rlIpDay.ok) redirect(back('rate'));
@@ -66,9 +78,12 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   // after and NEVER logged, echoed, or sent to Stripe.
   const passwordHash = await hashPassword(reg.password);
 
-  // Dedupe: drop any prior un-consumed pending row for this email so abandoned
-  // attempts don't accumulate PII + hashes.
-  await admin.from('pending_registrations').delete().eq('email', reg.email);
+  // NOTE: we intentionally do NOT dedupe prior pending rows by email here. The
+  // email is unauthenticated, so a delete-by-email would let an attacker wipe a
+  // victim's in-flight pending row (submitted between their form post and their
+  // Stripe payment) and orphan their paid session. Each submit gets its own UUID
+  // row consumed by pendingId; abandoned rows are reaped by the per-IP/day cap
+  // above and the scheduled purge cron.
 
   // Insert the pending row; its id is the opaque pendingId.
   const { data: pending, error: pendingErr } = await admin
@@ -139,6 +154,11 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   } catch (e) {
     console.error('[landingCheckout] stripe', e);
   }
-  if (!url) redirect(back('stripe'));
+  if (!url) {
+    // Stripe session couldn't be created — delete the just-inserted pending row
+    // (password_hash + PII) instead of leaving it for the 30-day cron.
+    await admin.from('pending_registrations').delete().eq('id', pendingId);
+    redirect(back('stripe'));
+  }
   redirect(url);
 }

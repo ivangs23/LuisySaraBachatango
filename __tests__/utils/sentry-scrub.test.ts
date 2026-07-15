@@ -9,8 +9,9 @@ describe('scrubSensitive', () => {
     }
     scrubSensitive(event)
     expect(event.request.data.password).toBe('[Filtered]')
-    expect(event.request.data.email).toBe('a@b.com')
+    expect(event.request.data.email).toBe('[Filtered]') // PII now scrubbed too
     expect((event.request.data.nested as Record<string, unknown>).repeatPassword).toBe('[Filtered]')
+    expect((event.request.data.nested as Record<string, unknown>).ok).toBe(1) // non-sensitive kept
     expect((event.extra.payload as Record<string, unknown>).password_hash).toBe('[Filtered]')
     expect((event.extra.payload as Record<string, unknown>).keep).toBe('yes')
     expect((event.extra.list as Array<Record<string, unknown>>)[0].password).toBe('[Filtered]')

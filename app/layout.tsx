@@ -123,7 +123,7 @@ export default async function RootLayout({
           </a>
           {(await isTestPurchaseMode()) && <DemoBanner />}
           <Header user={user} profile={profile} />
-          <main id="main-content" style={{ minHeight: '80vh' }}>
+          <main id="main-content" tabIndex={-1} style={{ minHeight: '80vh' }}>
             {children}
           </main>
           <Footer />

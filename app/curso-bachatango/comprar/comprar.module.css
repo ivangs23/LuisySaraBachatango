@@ -1,5 +1,5 @@
 .wrap { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: var(--spacing-2xl) var(--page-pad); background: #050505; }
-.card { max-width: 460px; width: 100%; background: var(--surface); border: 1px solid var(--primary); border-radius: var(--radius-lg); padding: var(--spacing-2xl); text-align: center; }
+.card { max-width: 460px; width: 100%; background: var(--surface); border: 1px solid var(--primary); border-radius: var(--radius-lg); padding: var(--spacing-2xl) var(--page-pad); text-align: center; }
 .title { font: var(--h3); color: var(--text-main); margin-bottom: var(--spacing-sm); }
 .price { color: var(--primary); font: var(--h4); margin-bottom: var(--spacing-lg); }
 .form { display: flex; flex-direction: column; gap: var(--spacing-sm); text-align: left; }
