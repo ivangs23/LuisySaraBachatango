@@ -27,6 +27,11 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
           solicitas el acceso inmediato y aceptas perder el derecho de desistimiento de 14 días (art. 103.m
           RDLeg 1/2007). <a href="/legal/terms" target="_blank" rel="noopener noreferrer">Más info</a>.
         </p>
+        <ul className={styles.trust}>
+          <li>Pago seguro con Stripe</li>
+          <li>Acceso de por vida</li>
+          <li>Comunidad de bailarines</li>
+        </ul>
         <LandingCheckoutForm
           courseId={course.id}
           defaultEmail={email ?? user?.email ?? ''}

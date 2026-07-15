@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 vi.mock('@/app/curso-bachatango/comprar/actions', () => ({ landingCheckout: vi.fn() }))
 import LandingCheckoutForm from '@/components/LandingCheckoutForm'
@@ -48,5 +48,16 @@ describe('LandingCheckoutForm', () => {
     expect((document.querySelector('[name="country"]') as HTMLSelectElement).value).toBe('ES')
     expect((document.querySelector('[name="city"]') as HTMLInputElement).value).toBe('Madrid')
     expect((document.querySelector('[name="password"]') as HTMLInputElement).value).toBe('')
+  })
+  it('toggles both password fields visibility', () => {
+    render(<LandingCheckoutForm courseId="c1" defaultEmail="" defaultName="" />)
+    const pw = document.querySelector('[name="password"]') as HTMLInputElement
+    const pw2 = document.querySelector('[name="repeatPassword"]') as HTMLInputElement
+    expect(pw.type).toBe('password')
+    fireEvent.click(screen.getByRole('button', { name: /mostrar contrase/i }))
+    expect(pw.type).toBe('text')
+    expect(pw2.type).toBe('text')
+    fireEvent.click(screen.getByRole('button', { name: /ocultar contrase/i }))
+    expect(pw.type).toBe('password')
   })
 })

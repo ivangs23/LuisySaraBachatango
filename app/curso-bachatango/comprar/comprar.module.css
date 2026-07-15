@@ -25,3 +25,34 @@
 .checkboxRow a {
   text-decoration: underline;
 }
+
+.pwToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  margin: -0.25rem 0 0.25rem;
+  color: #a3a3a3;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.pwToggle:hover { color: #d4d4d4; }
+
+.trust {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  font-size: 0.82rem;
+  color: #a3a3a3;
+}
+.trust li::before {
+  content: '✓ ';
+  color: #c0a062;
+  font-weight: 700;
+}
