@@ -23,11 +23,30 @@ describe('LandingCheckoutForm', () => {
   })
   it('shows a specific message for the error code', () => {
     render(<LandingCheckoutForm courseId="c1" defaultEmail="" defaultName="" error="password_weak" />)
-    expect(screen.getByText(/may[uú]scula/i)).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(/may[uú]scula/i)
   })
   it('acceptTerms is required and marketingConsent is not', () => {
     render(<LandingCheckoutForm courseId="c1" defaultEmail="" defaultName="" />)
     expect((document.querySelector('[name="acceptTerms"]') as HTMLInputElement).required).toBe(true)
     expect((document.querySelector('[name="marketingConsent"]') as HTMLInputElement).required).toBe(false)
+  })
+  it('announces the error message via role="alert" when an error prop is passed', () => {
+    render(<LandingCheckoutForm courseId="c1" defaultEmail="" defaultName="" error="password_weak" />)
+    const alert = screen.getByRole('alert')
+    expect(alert).toBeInTheDocument()
+    expect(alert.id).toBe('lc-form-error')
+  })
+  it('applies defaults to re-echoed fields without touching password fields', () => {
+    render(
+      <LandingCheckoutForm
+        courseId="c1"
+        defaultEmail=""
+        defaultName=""
+        defaults={{ country: 'ES', city: 'Madrid', postalCode: '28001', dateOfBirth: '1990-01-01', danceLevel: 'intermedio', phone: '+34600123456' }}
+      />
+    )
+    expect((document.querySelector('[name="country"]') as HTMLSelectElement).value).toBe('ES')
+    expect((document.querySelector('[name="city"]') as HTMLInputElement).value).toBe('Madrid')
+    expect((document.querySelector('[name="password"]') as HTMLInputElement).value).toBe('')
   })
 })

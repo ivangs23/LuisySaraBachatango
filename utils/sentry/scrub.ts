@@ -1,4 +1,12 @@
-const SENSITIVE = new Set(['password', 'repeatPassword', 'repeat_password', 'password_hash'])
+// Password family + registration PII field names (both camelCase and the
+// snake_case DB column names) so a captured FormData / pending row never leaks
+// to Sentry. Denylist by field NAME (values are replaced wherever the key
+// appears, at any depth).
+const SENSITIVE = new Set([
+  'password', 'repeatPassword', 'repeat_password', 'password_hash',
+  'email', 'phone', 'fullName', 'full_name',
+  'dateOfBirth', 'date_of_birth', 'postalCode', 'postal_code', 'city',
+])
 
 function walk(node: unknown, seen: WeakSet<object>): void {
   if (!node || typeof node !== 'object') return

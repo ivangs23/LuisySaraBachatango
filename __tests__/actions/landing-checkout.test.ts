@@ -8,6 +8,7 @@ const H = vi.hoisted(() => ({
   sessionCreate: vi.fn().mockResolvedValue({ id: 'cs_1', url: 'https://checkout.stripe.com/x' }),
   courseSingle: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 129 }, error: null }),
   pendingInsert: vi.fn().mockResolvedValue({ data: { id: 'pend-1' }, error: null }),
+  pendingInsertPayload: null as Record<string, unknown> | null,
   pendingDelete: vi.fn().mockResolvedValue({ error: null }),
   redirect: vi.fn((u: string) => { throw new Error('REDIRECT:' + u) }),
   rateLimit: vi.fn().mockResolvedValue({ ok: true, retryAfter: 0 }),
@@ -22,7 +23,7 @@ vi.mock('@/utils/rate-limit', () => ({ rateLimit: (...a: unknown[]) => H.rateLim
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({
     from: (t: string) => t === 'pending_registrations'
-      ? { insert: () => ({ select: () => ({ single: H.pendingInsert }) }), delete: () => ({ eq: (_c: string, v: string) => H.pendingDelete(v) }) }
+      ? { insert: (payload: Record<string, unknown>) => { H.pendingInsertPayload = payload; return { select: () => ({ single: H.pendingInsert }) } }, delete: () => ({ eq: (_c: string, v: string) => H.pendingDelete(v) }) }
       : { select: () => ({ eq: () => ({ eq: () => ({ single: H.courseSingle }) }) }) },
   }),
 }))
@@ -40,7 +41,15 @@ describe('landingCheckout (full registration)', () => {
   it('real: hashes password, inserts pending, creates Stripe session with client_reference_id=pendingId and NO password fields', async () => {
     await expect(landingCheckout(fd(valid))).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
     expect(H.hash).toHaveBeenCalledWith('Bachata2026')
-    const pendingRow = H.pendingInsert.mock.calls.length ? undefined : undefined // insert payload asserted below
+    // The pending row stores the HASHED password (never plaintext) + the
+    // snake_case-mapped fields.
+    const row = H.pendingInsertPayload as Record<string, unknown>
+    expect(row.password_hash).toBe('$2b$12$hash')
+    expect(JSON.stringify(row)).not.toContain('Bachata2026')
+    expect(row).toEqual(expect.objectContaining({
+      email: 'ana@example.com', full_name: 'Ana', country: 'ES', city: 'Madrid',
+      postal_code: '28001', date_of_birth: '1995-05-20', dance_level: 'principiante', course_id: 'c1',
+    }))
     const arg = H.sessionCreate.mock.calls[0][0]
     expect(arg.client_reference_id).toBe('pend-1')
     expect(arg.metadata).toEqual(expect.objectContaining({ courseId: 'c1', source: 'landing', pendingId: 'pend-1' }))

@@ -102,6 +102,13 @@ describe('provisionFromPending', () => {
     await provisionFromPending(session(), admin, { isDemo: true })
     expect((admin.__calls.createUser[0] as { user_metadata: Record<string, unknown> }).user_metadata).toEqual(expect.objectContaining({ is_demo: true }))
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ is_demo: true }))
+    expect(sendMock).not.toHaveBeenCalled() // demo dry-run never emails
+  })
+  it('no_payment_required (100%-off promo) still provisions', async () => {
+    const admin = makeAdmin({ pending: PENDING, profileByEmail: null, createUser: { id: 'u-new' } })
+    const res = await provisionFromPending(session({ payment_status: 'no_payment_required', amount_total: 0 }), admin)
+    expect(res).toEqual({ ok: true, userId: 'u-new', created: true })
+    expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ amount_paid: 0 }))
   })
   it('duplicate delivery (empty insert) -> no second email', async () => {
     const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old' }, purchaseInserted: [] })
@@ -148,7 +155,7 @@ describe('provisionFromPending', () => {
     const admin = makeAdmin({ pending: null, existingPurchase: null })
     const res = await provisionFromPending(session({ customer_details: { email: 'x@y.com' } as Stripe.Checkout.Session.CustomerDetails }), admin)
     expect(res).toEqual({ ok: true, userId: '', created: false })
-    expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), 'cs_1', 'x@y.com')
+    expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), 'cs_1')
   })
   it('pending not found + purchase EXISTS (retry after success) -> silent, no reconciliation log', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})

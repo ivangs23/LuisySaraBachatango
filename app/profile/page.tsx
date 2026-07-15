@@ -35,7 +35,7 @@ export default async function ProfilePage(props: {
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, email, full_name, avatar_url, updated_at, role, instagram, facebook, tiktok, youtube, stripe_customer_id')
+      .select('id, full_name, avatar_url, updated_at, role, instagram, facebook, tiktok, youtube')
       .eq('id', user.id)
       .single(),
     supabase
@@ -62,7 +62,7 @@ export default async function ProfilePage(props: {
     <ProfileView
       profile={{
         id: user.id,
-        email: profile?.email ?? user.email ?? null,
+        email: user.email ?? null,
         full_name: profile?.full_name ?? null,
         avatar_url: profile?.avatar_url ?? null,
         instagram: profile?.instagram ?? null,

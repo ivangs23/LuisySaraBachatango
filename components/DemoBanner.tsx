@@ -13,7 +13,7 @@ export default function DemoBanner() {
         zIndex: 100,
       }}
     >
-      ⚠️ MODO PRUEBAS — los pagos son simulados, no se cobra nada
+      <span aria-hidden="true">⚠️</span> MODO PRUEBAS — los pagos son simulados, no se cobra nada
     </div>
   );
 }

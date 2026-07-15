@@ -21,7 +21,12 @@ export async function provisionFromPending(
   // Anti-fraud: only a genuinely paid session provisions. amount_total is
   // recorded (coupons legitimately reduce it); we do NOT require equality with
   // amount_expected, only that it is a valid non-negative integer.
-  if (session.payment_status !== 'paid') return { ok: false, reason: 'not-paid' }
+  // 'paid' (card) or 'no_payment_required' (a 100%-off promo / full credit —
+  // allow_promotion_codes is on, so this state is reachable). Both mean Stripe
+  // collected whatever was owed and the buyer should be provisioned.
+  if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') {
+    return { ok: false, reason: 'not-paid' }
+  }
   const amount = session.amount_total
   if (typeof amount !== 'number' || amount < 0) return { ok: false, reason: 'bad-amount' }
 
@@ -42,7 +47,9 @@ export async function provisionFromPending(
     const { data: existingPurchase } = await admin
       .from('course_purchases').select('id').eq('stripe_session_id', session.id).maybeSingle()
     if (!existingPurchase) {
-      console.error('[orphaned-paid-session] paid session with no pending row and no purchase — manual reconciliation needed: session=%s email=%s', session.id, session.customer_details?.email ?? session.customer_email ?? '')
+      // Log the session id only (never the raw email — Stripe holds the PII;
+      // ops look it up there for reconciliation).
+      console.error('[orphaned-paid-session] paid session with no pending row and no purchase — manual reconciliation needed: session=%s', session.id)
     }
     return { ok: true, userId: '', created: false }
   }
@@ -85,7 +92,7 @@ export async function provisionFromPending(
   // New account only: populate the enumerated profile columns. NEVER write
   // password_hash into profiles; NEVER clobber an existing user's fields.
   if (created) {
-    await admin.from('profiles').update({
+    const { error: profErr } = await admin.from('profiles').update({
       country: pending.country ?? null,
       city: pending.city ?? null,
       postal_code: pending.postal_code ?? null,
@@ -94,12 +101,16 @@ export async function provisionFromPending(
       marketing_consent: pending.marketing_consent ?? false,
       dance_level: pending.dance_level ?? null,
     }).eq('id', userId)
+    // Don't block provisioning on a profile-column write (those fields aren't
+    // access-gating) — but surface it instead of swallowing it silently.
+    if (profErr) console.error('[provision] profile columns update failed for user=%s: %s', userId, profErr.message)
   }
 
   if (session.customer) {
-    await admin.from('profiles')
+    const { error: custErr } = await admin.from('profiles')
       .update({ stripe_customer_id: session.customer as string })
       .eq('id', userId).is('stripe_customer_id', null)
+    if (custErr) console.error('[provision] stripe_customer_id update failed for user=%s: %s', userId, custErr.message)
   }
 
   // Purchase (idempotent). `.select('id')` reveals whether a GENUINE row was
@@ -129,8 +140,8 @@ export async function provisionFromPending(
 
   // Email last, exactly once — only on a genuine new purchase insert. A
   // duplicate delivery (empty `inserted`) or an already-owned course does not
-  // re-send.
-  if (genuineInsert) {
+  // re-send. Demo/test provisioning does NOT email (it's an admin dry-run).
+  if (genuineInsert && !opts.isDemo) {
     await sendPurchaseConfirmation({
       email,
       fullName: (pending.full_name as string | null) ?? null,
