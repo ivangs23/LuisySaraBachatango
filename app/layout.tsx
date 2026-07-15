@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FunnelLegalFooter from "@/components/FunnelLegalFooter";
 import DemoBanner from "@/components/DemoBanner";
 import { unstable_cache } from "next/cache";
 import { getCurrentLocale } from '@/utils/i18n/get-locale';
@@ -127,6 +128,7 @@ export default async function RootLayout({
             {children}
           </main>
           <Footer />
+          <FunnelLegalFooter />
         </LanguageProvider>
       </body>
     </html>
