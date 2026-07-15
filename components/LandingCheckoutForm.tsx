@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { landingCheckout } from '@/app/curso-bachatango/comprar/actions';
 import { COUNTRIES } from '@/utils/i18n/countries';
 import styles from '@/app/curso-bachatango/comprar/comprar.module.css';
@@ -47,6 +48,8 @@ export default function LandingCheckoutForm({ courseId, defaultEmail, defaultNam
   const message = error ? (ERROR_MESSAGES[error] ?? 'Revisa tus datos e inténtalo de nuevo.') : null;
   const errorRef = useRef<HTMLParagraphElement>(null);
   const todayISO = new Date().toISOString().slice(0, 10);
+  const [showPw, setShowPw] = useState(false);
+  const pwType = showPw ? 'text' : 'password';
 
   useEffect(() => {
     if (message) errorRef.current?.focus();
@@ -68,11 +71,15 @@ export default function LandingCheckoutForm({ courseId, defaultEmail, defaultNam
       <input id="lc-email" name="email" type="email" required defaultValue={defaultEmail} placeholder="tu@email.com" className={styles.input} autoComplete="email" />
 
       <label className={styles.label} htmlFor="lc-password">Contraseña</label>
-      <input id="lc-password" name="password" type="password" required minLength={8} className={styles.input} autoComplete="new-password" placeholder="Mín. 8, con mayúscula, minúscula y número" aria-describedby="lc-password-hint" />
+      <input id="lc-password" name="password" type={pwType} required minLength={8} className={styles.input} autoComplete="new-password" placeholder="Mín. 8, con mayúscula, minúscula y número" aria-describedby="lc-password-hint" />
       <span id="lc-password-hint" className={styles.note}>Mín. 8 caracteres, con mayúscula, minúscula y número.</span>
 
       <label className={styles.label} htmlFor="lc-password2">Repetir contraseña</label>
-      <input id="lc-password2" name="repeatPassword" type="password" required minLength={8} className={styles.input} autoComplete="new-password" />
+      <input id="lc-password2" name="repeatPassword" type={pwType} required minLength={8} className={styles.input} autoComplete="new-password" />
+      <button type="button" onClick={() => setShowPw(v => !v)} aria-pressed={showPw} className={styles.pwToggle}>
+        {showPw ? <EyeOff size={14} strokeWidth={2} aria-hidden /> : <Eye size={14} strokeWidth={2} aria-hidden />}
+        {showPw ? 'Ocultar contraseñas' : 'Mostrar contraseñas'}
+      </button>
 
       <label className={styles.label} htmlFor="lc-country">País</label>
       <select id="lc-country" name="country" required defaultValue={defaults?.country ?? ''} className={styles.input} autoComplete="country">
