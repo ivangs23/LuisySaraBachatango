@@ -390,6 +390,7 @@ export async function gradeSubmission(
 ) {
   const admin = await requireAdmin()
   const supabase = await createClient()
+  const adminSupabase = createSupabaseAdmin()
 
   // Verify submission belongs to the claimed courseId via:
   // submissions.assignment_id → assignments.lesson_id → lessons.course_id
@@ -411,7 +412,11 @@ export async function gradeSubmission(
     return { error: 'submission_mismatch' }
   }
 
-  const { error } = await supabase
+  // Grade/feedback are written via the service-role client: the submissions
+  // UPDATE grant to `authenticated` no longer covers these columns (see
+  // supabase/2026_07_submissions_grade_lockdown.sql). Authorization is still
+  // enforced in-app via requireAdmin() + the ownership check above.
+  const { error } = await adminSupabase
     .from('submissions')
     .update({ grade, feedback, status: 'reviewed', updated_at: new Date().toISOString() })
     .eq('id', submissionId)
@@ -424,7 +429,6 @@ export async function gradeSubmission(
   // Notify the student
   // Use admin client to bypass RLS (notifications has no INSERT policy for users).
   // UPSERT so re-grading updates the existing notification instead of conflicting on the dedupe unique index.
-  const adminSupabase = createSupabaseAdmin()
   await adminSupabase.from('notifications').upsert(
     {
       user_id: submittedUserId,
