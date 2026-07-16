@@ -4,6 +4,7 @@ import { CalendarDays, FileDown, Inbox, Paperclip, User } from 'lucide-react'
 import GradeSubmissionForm from '@/components/GradeSubmissionForm'
 import AdminShell, { AdminPanel } from '../../../_components/AdminShell'
 import styles from './page.module.css'
+import { sanitizeUrl } from '@/utils/sanitize'
 
 export default async function SubmissionsPage(props: {
   params: Promise<{ courseId: string; lessonId: string }>
@@ -159,7 +160,7 @@ export default async function SubmissionsPage(props: {
                         Archivo adjunto
                       </p>
                       <a
-                        href={sub.file_url}
+                        href={sanitizeUrl(sub.file_url) ?? '#'}
                         target="_blank"
                         rel="noreferrer"
                         className={styles.fieldFileRow}

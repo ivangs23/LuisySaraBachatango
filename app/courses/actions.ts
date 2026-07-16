@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { hasCourseAccess } from '@/utils/auth/course-access'
+import { sanitizeUrl } from '@/utils/sanitize'
 
 export async function createLesson(formData: FormData) {
   await requireAdmin()
@@ -351,13 +352,22 @@ export async function submitAssignment(assignmentId: string, textContent: string
     return { error: 'forbidden' }
   }
 
+  // fileUrl is member-supplied and later rendered as an <a href> on the admin
+  // submissions page — reject anything that isn't a safe https URL to prevent a
+  // stored javascript:-scheme XSS that would execute as the reviewing admin.
+  let safeFileUrl: string | null = null
+  if (fileUrl != null && fileUrl !== '') {
+    safeFileUrl = sanitizeUrl(fileUrl)
+    if (!safeFileUrl) return { error: 'invalid_file' }
+  }
+
   const { error } = await supabase
     .from('submissions')
     .upsert({
       assignment_id: assignmentId,
       user_id: user.id,
       text_content: textContent || null,
-      file_url: fileUrl,
+      file_url: safeFileUrl,
       status: 'pending',
       updated_at: new Date().toISOString(),
     })
