@@ -118,7 +118,7 @@ export default async function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <LanguageProvider>
+        <LanguageProvider initialLocale={locale}>
           <a href="#main-content" className="skip-link">
             Saltar al contenido principal
           </a>

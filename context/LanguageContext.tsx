@@ -12,8 +12,9 @@ type LanguageContextType = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+export function LanguageProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale?: Locale }) {
   const [locale, setLocale] = useState<Locale>(() => {
+    if (initialLocale && ['es', 'en', 'fr', 'de', 'it', 'ja'].includes(initialLocale)) return initialLocale;
     if (typeof window === 'undefined') return 'es';
     const saved = localStorage.getItem('language') as Locale | null;
     if (saved && ['es', 'en', 'fr', 'de', 'it', 'ja'].includes(saved)) {
