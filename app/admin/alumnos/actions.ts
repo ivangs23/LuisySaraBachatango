@@ -8,11 +8,23 @@ const ROLES = ['member', 'premium', 'admin'] as const
 type Role = (typeof ROLES)[number]
 
 export async function updateUserRole(userId: string, role: Role) {
-  await requireAdmin()
+  const me = await requireAdmin()
   if (!ROLES.includes(role)) throw new Error(`Invalid role: ${role}`)
   if (!userId) throw new Error('userId required')
+  if (userId === me.id) throw new Error('No puedes cambiar tu propio rol')
 
   const sb = createSupabaseAdmin()
+
+  // Demoting away from admin: never remove the last admin. Only relevant when the
+  // TARGET is currently an admin — a non-admin being re-roled can't reduce the count.
+  if (role !== 'admin') {
+    const { data: current } = await sb.from('profiles').select('role').eq('id', userId).single()
+    if (current?.role === 'admin') {
+      const { count } = await sb.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'admin')
+      if ((count ?? 0) <= 1) throw new Error('No puedes quitar el último admin')
+    }
+  }
+
   const { error } = await sb.from('profiles').update({ role }).eq('id', userId)
   if (error) throw error
   revalidatePath(`/admin/alumnos/${userId}`)
