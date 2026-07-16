@@ -48,7 +48,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
     { data: assignment },
   ] = await Promise.all([
     supabase.from('lessons')
-      .select('id, title, description, thumbnail_url, mux_playback_id, mux_status, course_id')
+      .select('id, title, description, thumbnail_url, mux_playback_id, mux_status, course_id, is_free')
       .eq('id', params.lessonId)
       .eq('course_id', params.courseId)
       .single(),
@@ -104,7 +104,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
       : Promise.resolve({ data: null }),
   ])
 
-  const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription
+  const hasAccess = isAdmin || !!lesson.is_free || !!coursePurchase || !!coveringSubscription
 
   const submission = submissionResult.data
 
