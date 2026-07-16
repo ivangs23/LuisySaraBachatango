@@ -112,6 +112,9 @@ export async function addComment(lessonId: string, content: string, parentId: st
     return { error: 'Debes iniciar sesión para comentar' };
   }
 
+  const rl = await rateLimit(rateLimitKey([user.id, 'lesson-comment']), 10, 60_000);
+  if (!rl.ok) return { error: 'rate_limited' };
+
   if (!content || content.trim().length === 0) {
     return { error: 'El comentario no puede estar vacío' };
   }
