@@ -183,6 +183,14 @@ export async function verifyStripeSession(sessionId: string) {
       return { success: false, error: 'Payment not completed' }
     }
 
+    // Ownership check: without this, any authenticated user could pass an
+    // arbitrary sessionId (Stripe Checkout Session IDs are not secret — they
+    // appear in the success-redirect URL) and get a false "success" for a
+    // payment that isn't theirs.
+    if (session.metadata?.userId !== user.id) {
+      return { success: false, error: 'Payment not completed' }
+    }
+
     // The Stripe webhook is the single source of truth for persisting
     // subscriptions and course_purchases. Here we only confirm to the client
     // that the payment is settled.

@@ -5,7 +5,8 @@ import { STRIPE_CONFIG } from '@/utils/stripe/config';
 import { NextResponse } from 'next/server';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
-import { isTestPurchaseMode } from '@/utils/demo/test-mode';
+import { isTestPurchaseMode, readTestCookie } from '@/utils/demo/test-mode';
+import { canProvisionInline } from '@/utils/checkout/demo-provision-guard';
 import { randomUUID } from 'node:crypto';
 
 export async function POST(req: Request) {
@@ -52,6 +53,10 @@ export async function POST(req: Request) {
 
     // Modo demo: simula la compra del usuario logueado (sin Stripe).
     if (await isTestPurchaseMode()) {
+      const triggeredByAdminCookie = await readTestCookie();
+      if (!canProvisionInline({ triggeredByAdminCookie, supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL })) {
+        return NextResponse.json({ error: 'Demo checkout no permitido en este entorno.' }, { status: 403 });
+      }
       const { error: demoErr } = await supabaseAdmin.from('course_purchases').upsert(
         { user_id: user.id, course_id: courseId, stripe_session_id: `demo_${randomUUID()}`, amount_paid: Math.round(course.price_eur * 100), is_demo: true, source: 'web' },
         { onConflict: 'stripe_session_id', ignoreDuplicates: true },

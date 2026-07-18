@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { hasCourseAccess } from '@/utils/auth/course-access'
+import { sanitizeUrl } from '@/utils/sanitize'
 
 export async function createLesson(formData: FormData) {
   await requireAdmin()
@@ -351,13 +352,22 @@ export async function submitAssignment(assignmentId: string, textContent: string
     return { error: 'forbidden' }
   }
 
+  // fileUrl is member-supplied and later rendered as an <a href> on the admin
+  // submissions page — reject anything that isn't a safe https URL to prevent a
+  // stored javascript:-scheme XSS that would execute as the reviewing admin.
+  let safeFileUrl: string | null = null
+  if (fileUrl != null && fileUrl !== '') {
+    safeFileUrl = sanitizeUrl(fileUrl)
+    if (!safeFileUrl) return { error: 'invalid_file' }
+  }
+
   const { error } = await supabase
     .from('submissions')
     .upsert({
       assignment_id: assignmentId,
       user_id: user.id,
       text_content: textContent || null,
-      file_url: fileUrl,
+      file_url: safeFileUrl,
       status: 'pending',
       updated_at: new Date().toISOString(),
     })
@@ -380,6 +390,7 @@ export async function gradeSubmission(
 ) {
   const admin = await requireAdmin()
   const supabase = await createClient()
+  const adminSupabase = createSupabaseAdmin()
 
   // Verify submission belongs to the claimed courseId via:
   // submissions.assignment_id → assignments.lesson_id → lessons.course_id
@@ -401,7 +412,11 @@ export async function gradeSubmission(
     return { error: 'submission_mismatch' }
   }
 
-  const { error } = await supabase
+  // Grade/feedback are written via the service-role client: the submissions
+  // UPDATE grant to `authenticated` no longer covers these columns (see
+  // supabase/2026_07_submissions_grade_lockdown.sql). Authorization is still
+  // enforced in-app via requireAdmin() + the ownership check above.
+  const { error } = await adminSupabase
     .from('submissions')
     .update({ grade, feedback, status: 'reviewed', updated_at: new Date().toISOString() })
     .eq('id', submissionId)
@@ -414,7 +429,6 @@ export async function gradeSubmission(
   // Notify the student
   // Use admin client to bypass RLS (notifications has no INSERT policy for users).
   // UPSERT so re-grading updates the existing notification instead of conflicting on the dedupe unique index.
-  const adminSupabase = createSupabaseAdmin()
   await adminSupabase.from('notifications').upsert(
     {
       user_id: submittedUserId,

@@ -1,8 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { _resetRateLimitForTest } from '@/utils/rate-limit'
+
+// Local in-memory rate-limit bucket is module-level state shared across every
+// test in this file (keyed by IP, and makeRequest() never varies IP). Without
+// resetting it, tests beyond the 10/min quota start failing with 429
+// regardless of what they're actually testing.
+beforeEach(() => _resetRateLimitForTest())
 
 // ── Test mode mock ────────────────────────────────────────────────────────────
 const mockIsTestPurchaseMode = vi.fn().mockResolvedValue(false)
-vi.mock('@/utils/demo/test-mode', () => ({ isTestPurchaseMode: () => mockIsTestPurchaseMode() }))
+vi.mock('@/utils/demo/test-mode', () => ({
+  isTestPurchaseMode: () => mockIsTestPurchaseMode(),
+  readTestCookie: vi.fn().mockResolvedValue(false),
+}))
+
+// ── Demo provision guard mock ──────────────────────────────────────────────────
+const mockCanProvision = vi.fn().mockReturnValue(true)
+vi.mock('@/utils/checkout/demo-provision-guard', () => ({
+  canProvisionInline: (...a: unknown[]) => mockCanProvision(...a),
+}))
 
 // ── Stripe mock ───────────────────────────────────────────────────────────────
 const mockSessionCreate = vi.fn()
@@ -160,6 +176,7 @@ describe('POST /api/checkout — demo web', () => {
     vi.clearAllMocks()
     mockIsTestPurchaseMode.mockResolvedValue(true)
     mockAdminUpsert.mockResolvedValue({ error: null })
+    mockCanProvision.mockReturnValue(true)
   })
 
   it('demo web happy: logueado, compra simulada, upsert exitoso → 200 con url', async () => {
@@ -215,5 +232,19 @@ describe('POST /api/checkout — demo web', () => {
     expect(res.status).toBe(500)
     const body = await res.json()
     expect(body.error).toBe('Error al simular la compra.')
+  })
+
+  it('demo branch refused by prod guard -> 403, no purchase upsert', async () => {
+    mockCanProvision.mockReturnValue(false)
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@test.com' } } })
+    mockSupabaseFrom.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 49, is_published: true }, error: null }),
+    })
+    const { POST } = await import('@/app/api/checkout/route')
+    const res = await POST(makeRequest({ courseId: 'course-1' }))
+    expect(res.status).toBe(403)
+    expect(mockAdminUpsert).not.toHaveBeenCalled()
   })
 })

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { hasCourseAccess } from '@/utils/auth/course-access'
+import { createSupabaseAdmin } from '@/utils/supabase/admin'
 
 // ─── Integration tests for courses actions ────────────────────────────────────
 // Mocks must be declared before any module imports.
@@ -538,13 +539,24 @@ describe('gradeSubmission', () => {
     expect(result).toEqual({ error: 'submission_not_found' })
   })
 
+  // Builds a fake admin client whose from() routes 'submissions' to the given
+  // update mock and anything else (e.g. 'notifications') to a no-op upsert mock,
+  // mirroring gradeSubmission's move of the grade write to the service-role client.
+  function makeAdminClient(updateMock: ReturnType<typeof vi.fn>) {
+    const upsertMock = vi.fn().mockResolvedValue({ error: null })
+    const adminFromMock = vi.fn((table: string) =>
+      table === 'submissions' ? { update: updateMock } : { upsert: upsertMock }
+    )
+    return { from: adminFromMock } as unknown as ReturnType<typeof createSupabaseAdmin>
+  }
+
   it('updates the submission and notifies the student when ownership matches', async () => {
-    // First from() call: ownership check
+    // Only from() call on the user-session client: ownership check
     fromMock.mockReturnValueOnce(makeOwnershipMock('c1'))
-    // Second from() call: update
+    // Update runs through the admin (service-role) client
     const eqMock = vi.fn().mockResolvedValue({ error: null })
     const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
-    fromMock.mockReturnValueOnce({ update: updateMock })
+    vi.mocked(createSupabaseAdmin).mockReturnValueOnce(makeAdminClient(updateMock))
 
     const { gradeSubmission } = await import('@/app/courses/actions')
     const result = await gradeSubmission('s1', 'A+', 'great', 'c1', 'l1', 'u1')
@@ -556,15 +568,17 @@ describe('gradeSubmission', () => {
     }))
     expect(eqMock).toHaveBeenCalledWith('id', 's1')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1/submissions')
+    // Ownership check was the only from() call on the user-session client.
+    expect(fromMock).toHaveBeenCalledTimes(1)
   })
 
   it('returns error when Supabase update fails', async () => {
     // Ownership check passes
     fromMock.mockReturnValueOnce(makeOwnershipMock('c1'))
-    // Update fails
+    // Update fails via the admin (service-role) client
     const eqMock = vi.fn().mockResolvedValue({ error: { message: 'update failed' } })
     const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
-    fromMock.mockReturnValueOnce({ update: updateMock })
+    vi.mocked(createSupabaseAdmin).mockReturnValueOnce(makeAdminClient(updateMock))
 
     const { gradeSubmission } = await import('@/app/courses/actions')
     const result = await gradeSubmission('s1', 'B', 'ok', 'c1', 'l1', 'u1')

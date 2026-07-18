@@ -81,7 +81,7 @@ export async function resetPassword(formData: FormData) {
   const email = formData.get('email') as string
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback?next=/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'}/auth/callback?next=/reset-password`,
   })
 
   // Always redirect to the same destination — whether the email exists or not —

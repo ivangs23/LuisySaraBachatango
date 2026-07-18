@@ -120,7 +120,10 @@ export default function AuthShell({
       </aside>
 
       {/* ===== Form area ===== */}
-      <main className={styles.formArea}>
+      {/* A <div>, not <main> — RootLayout already renders the page's <main>
+          landmark; AuthShell is rendered inside it, so a second <main> here
+          would be a duplicate landmark. */}
+      <div className={styles.formArea}>
         <div className={styles.formBg} aria-hidden="true" />
         <motion.div className={styles.card} {...fadeRight(0.05)}>
           <div className={styles.cardHeader}>
@@ -166,7 +169,7 @@ export default function AuthShell({
 
           {children}
         </motion.div>
-      </main>
+      </div>
     </div>
   );
 }

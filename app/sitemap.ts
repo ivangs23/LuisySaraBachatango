@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { createSupabaseAdmin } from '@/utils/supabase/admin';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://luisysarabachatango.com';
 
@@ -61,8 +62,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    // Community posts: no updated_at column in DB — use created_at
-    const { data: posts } = await supabase
+    // Community posts: no updated_at column in DB — use created_at.
+    // Posts RLS is authenticated-only, so the anon client returns 0 rows; read
+    // with the service role (public post ids only) so they reach the sitemap.
+    const { data: posts } = await createSupabaseAdmin()
       .from('posts')
       .select('id, created_at')
       .order('created_at', { ascending: false })

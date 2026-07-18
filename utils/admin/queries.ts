@@ -306,8 +306,17 @@ export async function listStudents(args: {
     .select('id, full_name, email, avatar_url, role, updated_at', { count: 'exact' })
 
   if (args.q && args.q.trim()) {
-    const term = `%${args.q.trim().replace(/[%_]/g, m => '\\' + m)}%`
-    q = q.or(`full_name.ilike.${term},email.ilike.${term}`)
+    // Two escaping layers before interpolating into `.or()`:
+    // 1) ILIKE: %, _ are wildcards and \ is the escape char — backslash them so the
+    //    search term matches literally.
+    // 2) PostgREST filter grammar: its reserved chars (, . : ( )) are ONLY neutralized
+    //    by wrapping the whole value in double quotes — a bare backslash before them
+    //    does nothing in an unquoted value. Inside the quotes, " and \ must be
+    //    backslash-escaped (PostgREST consumes one backslash per \X). This closes the
+    //    filter-injection gap (a raw , or ) could otherwise truncate/extend the group).
+    const ilike = args.q.trim().replace(/[%_\\]/g, m => '\\' + m)
+    const term = `%${ilike}%`.replace(/["\\]/g, m => '\\' + m)
+    q = q.or(`full_name.ilike."${term}",email.ilike."${term}"`)
   }
   if (args.role && args.role !== 'all') {
     q = q.eq('role', args.role)

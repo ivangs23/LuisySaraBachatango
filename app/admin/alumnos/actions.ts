@@ -1,5 +1,6 @@
 'use server'
 
+import crypto from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
@@ -8,11 +9,23 @@ const ROLES = ['member', 'premium', 'admin'] as const
 type Role = (typeof ROLES)[number]
 
 export async function updateUserRole(userId: string, role: Role) {
-  await requireAdmin()
+  const me = await requireAdmin()
   if (!ROLES.includes(role)) throw new Error(`Invalid role: ${role}`)
   if (!userId) throw new Error('userId required')
+  if (userId === me.id) throw new Error('No puedes cambiar tu propio rol')
 
   const sb = createSupabaseAdmin()
+
+  // Demoting away from admin: never remove the last admin. Only relevant when the
+  // TARGET is currently an admin — a non-admin being re-roled can't reduce the count.
+  if (role !== 'admin') {
+    const { data: current } = await sb.from('profiles').select('role').eq('id', userId).single()
+    if (current?.role === 'admin') {
+      const { count } = await sb.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'admin')
+      if ((count ?? 0) <= 1) throw new Error('No puedes quitar el último admin')
+    }
+  }
+
   const { error } = await sb.from('profiles').update({ role }).eq('id', userId)
   if (error) throw error
   revalidatePath(`/admin/alumnos/${userId}`)
@@ -72,6 +85,14 @@ export async function deleteUser(userId: string, confirmPhrase: string, targetEm
 
   if (!target.email || target.email.toLowerCase() !== normalizedEmail) {
     throw new Error('El email no coincide con el usuario seleccionado')
+  }
+
+  // Audit trail (best effort — failure here doesn't block deletion).
+  try {
+    const emailHash = crypto.createHash('sha256').update(normalizedEmail).digest('hex')
+    await sb.from('account_deletions').insert({ email_sha256: emailHash })
+  } catch (err) {
+    console.error('[admin deleteUser] audit insert failed', err)
   }
 
   const { error } = await sb.auth.admin.deleteUser(userId)

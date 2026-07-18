@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { dictionaries, Locale } from '@/utils/dictionaries';
+import { dictionaries, LOCALES, Locale } from '@/utils/dictionaries';
 
 type LanguageContextType = {
   locale: Locale;
@@ -12,11 +12,12 @@ type LanguageContextType = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+export function LanguageProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale?: Locale }) {
   const [locale, setLocale] = useState<Locale>(() => {
+    if (initialLocale && LOCALES.includes(initialLocale)) return initialLocale;
     if (typeof window === 'undefined') return 'es';
     const saved = localStorage.getItem('language') as Locale | null;
-    if (saved && ['es', 'en', 'fr', 'de', 'it', 'ja'].includes(saved)) {
+    if (saved && LOCALES.includes(saved)) {
       document.cookie = `locale=${encodeURIComponent(saved)}; path=/; max-age=${60 * 60 * 24 * 365}; secure; samesite=lax`;
       return saved;
     }

@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createEvent, updateEvent } from '@/app/events/actions'
+import { LOCALES } from '@/utils/i18n/types'
 import styles from './EventForm.module.css'
 
-const LOCALES = ['es', 'en', 'fr', 'de', 'it', 'ja'] as const
 type Locale = typeof LOCALES[number]
 
 const LOCALE_LABEL: Record<Locale, string> = {

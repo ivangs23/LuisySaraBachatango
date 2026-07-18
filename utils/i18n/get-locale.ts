@@ -1,8 +1,8 @@
 import 'server-only'
 import { cookies } from 'next/headers'
-import type { Locale } from '@/utils/i18n/types'
+import { LOCALES, type Locale } from '@/utils/i18n/types'
 
-const VALID_LOCALES: ReadonlySet<Locale> = new Set(['es', 'en', 'fr', 'de', 'it', 'ja'])
+const VALID_LOCALES: ReadonlySet<Locale> = new Set(LOCALES)
 
 export async function getCurrentLocale(): Promise<Locale> {
   const cookieStore = await cookies()
