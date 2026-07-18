@@ -6,6 +6,7 @@
   --surface: #121212;
   --surface-hover: #1e1e1e;
   --surface-elevated: rgba(255, 255, 255, 0.03);
+  --bg-secondary: var(--surface); /* used by course cards / comment inputs */
 
   --primary: #c0a062;      /* Dorado */
   --primary-hover: #d4b06e;

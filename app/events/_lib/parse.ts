@@ -1,5 +1,6 @@
-export type EventLocale = 'es' | 'en' | 'fr' | 'de' | 'it' | 'ja'
-const LOCALES: EventLocale[] = ['es', 'en', 'fr', 'de', 'it', 'ja']
+import { LOCALES } from '@/utils/i18n/types'
+
+export type EventLocale = (typeof LOCALES)[number]
 
 export type EventPayload = {
   start_date: string
