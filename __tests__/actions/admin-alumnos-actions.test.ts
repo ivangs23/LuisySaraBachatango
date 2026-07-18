@@ -38,7 +38,13 @@ vi.mock('@/utils/supabase/admin', () => ({
 }))
 
 describe('updateUserRole', () => {
-  beforeEach(() => { vi.clearAllMocks(); mockRequireAdmin.mockResolvedValue({ id: 'admin-1' }) })
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+    // Target's current role for the last-admin guard's lookup; a non-admin target
+    // skips the admin-count check and proceeds straight to the update.
+    mockSingle.mockResolvedValue({ data: { role: 'member' } })
+  })
 
   it('updates role when admin', async () => {
     const { updateUserRole } = await import('@/app/admin/alumnos/actions')
