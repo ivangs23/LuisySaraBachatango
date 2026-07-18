@@ -1,5 +1,6 @@
 'use server'
 
+import crypto from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
@@ -84,6 +85,14 @@ export async function deleteUser(userId: string, confirmPhrase: string, targetEm
 
   if (!target.email || target.email.toLowerCase() !== normalizedEmail) {
     throw new Error('El email no coincide con el usuario seleccionado')
+  }
+
+  // Audit trail (best effort — failure here doesn't block deletion).
+  try {
+    const emailHash = crypto.createHash('sha256').update(normalizedEmail).digest('hex')
+    await sb.from('account_deletions').insert({ email_sha256: emailHash })
+  } catch (err) {
+    console.error('[admin deleteUser] audit insert failed', err)
   }
 
   const { error } = await sb.auth.admin.deleteUser(userId)
