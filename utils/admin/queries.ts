@@ -306,7 +306,10 @@ export async function listStudents(args: {
     .select('id, full_name, email, avatar_url, role, updated_at', { count: 'exact' })
 
   if (args.q && args.q.trim()) {
-    const term = `%${args.q.trim().replace(/[%_]/g, m => '\\' + m)}%`
+    // Escape PostgREST special characters before interpolating into `.or()`:
+    // %/_ are ILIKE wildcards; ,()."\ are PostgREST filter-syntax metacharacters
+    // that would otherwise let a crafted search term inject extra filter clauses.
+    const term = `%${args.q.trim().replace(/[%_,().\\]/g, m => '\\' + m)}%`
     q = q.or(`full_name.ilike.${term},email.ilike.${term}`)
   }
   if (args.role && args.role !== 'all') {

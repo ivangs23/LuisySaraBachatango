@@ -47,15 +47,15 @@ describe('verifyStripeSession', () => {
     supabaseMock.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
   })
 
-  it('returns success for a paid session without writing to DB', async () => {
-    stripeMock.retrieve.mockResolvedValue({ payment_status: 'paid' })
+  it('returns success for a paid session owned by the current user', async () => {
+    stripeMock.retrieve.mockResolvedValue({ payment_status: 'paid', metadata: { userId: 'u1' } })
     const result = await verifyStripeSession('cs_test_1')
     expect(result).toEqual({ success: true })
     expect(adminMock.upsert).not.toHaveBeenCalled()
   })
 
   it('returns failure for unpaid session', async () => {
-    stripeMock.retrieve.mockResolvedValue({ payment_status: 'unpaid' })
+    stripeMock.retrieve.mockResolvedValue({ payment_status: 'unpaid', metadata: { userId: 'u1' } })
     const result = await verifyStripeSession('cs_test_2')
     expect(result.success).toBe(false)
     expect(adminMock.upsert).not.toHaveBeenCalled()
@@ -69,6 +69,19 @@ describe('verifyStripeSession', () => {
   it('returns generic error on Stripe failure', async () => {
     stripeMock.retrieve.mockRejectedValue(new Error('network'))
     const result = await verifyStripeSession('cs_test_4')
+    expect(result.success).toBe(false)
+  })
+
+  it('returns failure when the session belongs to a different user (ownership guard)', async () => {
+    stripeMock.retrieve.mockResolvedValue({ payment_status: 'paid', metadata: { userId: 'someone-else' } })
+    const result = await verifyStripeSession('cs_test_5')
+    expect(result.success).toBe(false)
+    expect(adminMock.upsert).not.toHaveBeenCalled()
+  })
+
+  it('returns failure when the session has no metadata at all', async () => {
+    stripeMock.retrieve.mockResolvedValue({ payment_status: 'paid' })
+    const result = await verifyStripeSession('cs_test_6')
     expect(result.success).toBe(false)
   })
 })

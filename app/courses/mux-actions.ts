@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { requireAdmin as requireAdminGuard, AdminGuardError } from '@/utils/auth/require-admin'
 import { mux } from '@/utils/mux/server'
 import {
   buildDirectUploadParams,
@@ -11,13 +12,23 @@ import {
 import { normalizeVtt } from '@/utils/vtt'
 import { revalidatePath } from 'next/cache'
 
+// Thin local adapter: delegates the actual admin check to the shared,
+// canonical guard (@/utils/auth/require-admin) so there is a single source
+// of truth for "is this user an admin", but preserves the `{ supabase, error }`
+// return shape every action below (and MuxTracksManager.tsx) already depends on.
 async function requireAdmin() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { supabase, error: 'Unauthorized' as const, user: null }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') return { supabase, error: 'Forbidden' as const, user }
-  return { supabase, user, error: null }
+  try {
+    await requireAdminGuard()
+    return { supabase, error: null }
+  } catch (err) {
+    if (err instanceof AdminGuardError) {
+      return err.reason === 'unauthenticated'
+        ? { supabase, error: 'Unauthorized' as const }
+        : { supabase, error: 'Forbidden' as const }
+    }
+    throw err
+  }
 }
 
 export async function createMuxUpload(lessonId: string, origin: string) {
@@ -189,6 +200,23 @@ export async function addMuxTextTrack(
     .eq('id', lessonId)
     .single()
   if (!lesson?.mux_asset_id) return { error: 'La lección no tiene un asset de Mux listo.' }
+
+  // SSRF guard: fileUrl is admin-supplied and we fetch it server-side below
+  // (to normalize the VTT). Only allow the Supabase Storage host it's meant
+  // to come from (MuxTracksManager.tsx always uploads to the
+  // `mux-track-sources` bucket first) — reject anything else before fetching.
+  let fileOrigin: string
+  try {
+    fileOrigin = new URL(fileUrl).origin
+  } catch {
+    return { error: 'URL de archivo inválida.' }
+  }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const allowedOrigin = supabaseUrl ? new URL(supabaseUrl).origin : null
+  if (!allowedOrigin || fileOrigin !== allowedOrigin) {
+    console.error('addMuxTextTrack: fileUrl origin rejected (SSRF guard)', { fileUrl })
+    return { error: 'URL de archivo no permitida.' }
+  }
 
   // Fetch the VTT, normalize it (handles DaVinci 01:00:00 offset + strips
   // invalid <font> tags). If the content changed, upload the normalized

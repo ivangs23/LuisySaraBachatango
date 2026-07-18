@@ -42,17 +42,35 @@ vi.mock('@/utils/mux/server', () => ({
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 
-// Supabase client mock — controls both the requireAdmin check and lesson queries
+// The admin check itself is delegated to the shared, canonical guard —
+// mock it directly (same pattern as courses.test.ts / events.test.ts) rather
+// than reimplementing its internals here.
+const { mockRequireAdmin, AdminGuardError } = vi.hoisted(() => {
+  class AdminGuardError extends Error {
+    reason: 'unauthenticated' | 'forbidden' | 'lookup_failed'
+    constructor(reason: 'unauthenticated' | 'forbidden' | 'lookup_failed') {
+      super(`AdminGuard: ${reason}`)
+      this.name = 'AdminGuardError'
+      this.reason = reason
+    }
+  }
+  return { mockRequireAdmin: vi.fn(), AdminGuardError }
+})
+
+vi.mock('@/utils/auth/require-admin', () => ({
+  requireAdmin: mockRequireAdmin,
+  getCurrentRole: vi.fn(),
+  AdminGuardError,
+}))
+
+// Supabase client mock — controls lesson/storage queries used by the actions
+// once past the (separately mocked) admin check.
 const {
-  mockGetUser,
-  mockProfileSelect,
   mockLessonSelect,
   mockLessonUpdate,
   mockStorageUpload,
   mockStorageGetPublicUrl,
 } = vi.hoisted(() => ({
-  mockGetUser: vi.fn(),
-  mockProfileSelect: vi.fn(),
   mockLessonSelect: vi.fn(),
   mockLessonUpdate: vi.fn(),
   mockStorageUpload: vi.fn(),
@@ -62,18 +80,9 @@ const {
 vi.mock('@/utils/supabase/server', () => ({
   createClient: vi.fn(async () => ({
     auth: {
-      getUser: mockGetUser,
+      getUser: vi.fn(),
     },
     from: (table: string) => {
-      if (table === 'profiles') {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: mockProfileSelect,
-            }),
-          }),
-        }
-      }
       if (table === 'lessons') {
         return {
           select: () => ({
@@ -99,21 +108,19 @@ vi.mock('@/utils/supabase/server', () => ({
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
-/** Set up mocks so requireAdmin() returns an admin user. */
+/** Set up mocks so requireAdmin() resolves (admin user). */
 function setupAdmin() {
-  mockGetUser.mockResolvedValue({ data: { user: { id: 'admin-1' } } })
-  mockProfileSelect.mockResolvedValue({ data: { role: 'admin' }, error: null })
+  mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
 }
 
-/** Set up mocks so requireAdmin() returns Unauthorized (no user). */
+/** Set up mocks so requireAdmin() rejects with Unauthorized (no user). */
 function setupUnauthorized() {
-  mockGetUser.mockResolvedValue({ data: { user: null } })
+  mockRequireAdmin.mockRejectedValue(new AdminGuardError('unauthenticated'))
 }
 
-/** Set up mocks so requireAdmin() returns Forbidden (non-admin user). */
+/** Set up mocks so requireAdmin() rejects with Forbidden (non-admin user). */
 function setupForbidden() {
-  mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
-  mockProfileSelect.mockResolvedValue({ data: { role: 'member' }, error: null })
+  mockRequireAdmin.mockRejectedValue(new AdminGuardError('forbidden'))
 }
 
 // ─── createMuxUpload ──────────────────────────────────────────────────────────
@@ -337,7 +344,7 @@ describe('addMuxAudioTrack', () => {
     const { addMuxAudioTrack } = await import('@/app/courses/mux-actions')
     const result = await addMuxAudioTrack('lesson-1', 'x', 'Spanish', 'https://example.com/audio.mp3')
     expect(result).toEqual({ error: 'Idioma inválido.' })
-    expect(mockGetUser).not.toHaveBeenCalled()
+    expect(mockRequireAdmin).not.toHaveBeenCalled()
   })
 
   it('returns { error: "Unauthorized" } when not logged in', async () => {
@@ -414,7 +421,7 @@ describe('addMuxTextTrack', () => {
     const { addMuxTextTrack } = await import('@/app/courses/mux-actions')
     const result = await addMuxTextTrack('lesson-1', 'x', 'Spanish', 'https://example.com/sub.vtt')
     expect(result).toEqual({ error: 'Idioma inválido.' })
-    expect(mockGetUser).not.toHaveBeenCalled()
+    expect(mockRequireAdmin).not.toHaveBeenCalled()
   })
 
   it('returns { error: "Unauthorized" } when not logged in', async () => {
@@ -445,6 +452,41 @@ describe('addMuxTextTrack', () => {
     expect(muxAssetsCreateTrack).not.toHaveBeenCalled()
   })
 
+  // ── SSRF guard ──────────────────────────────────────────────────────────────
+  // fileUrl is fetched server-side (for VTT normalization); only the
+  // NEXT_PUBLIC_SUPABASE_URL origin is allowed. vitest.setup.ts sets that env
+  // var to 'https://test.supabase.co'.
+
+  it('rejects a fileUrl from a disallowed origin (SSRF guard) without fetching it', async () => {
+    setupAdmin()
+    mockLessonSelect.mockResolvedValue({
+      data: { mux_asset_id: 'asset_1', course_id: 'course-1' },
+      error: null,
+    })
+
+    const { addMuxTextTrack } = await import('@/app/courses/mux-actions')
+    const result = await addMuxTextTrack('lesson-1', 'es', 'Spanish', 'https://evil.example.com/sub.vtt')
+
+    expect(result).toEqual({ error: 'URL de archivo no permitida.' })
+    expect(fetch).not.toHaveBeenCalled()
+    expect(muxAssetsCreateTrack).not.toHaveBeenCalled()
+  })
+
+  it('rejects a malformed fileUrl', async () => {
+    setupAdmin()
+    mockLessonSelect.mockResolvedValue({
+      data: { mux_asset_id: 'asset_1', course_id: 'course-1' },
+      error: null,
+    })
+
+    const { addMuxTextTrack } = await import('@/app/courses/mux-actions')
+    const result = await addMuxTextTrack('lesson-1', 'es', 'Spanish', 'not-a-url')
+
+    expect(result).toEqual({ error: 'URL de archivo inválida.' })
+    expect(fetch).not.toHaveBeenCalled()
+    expect(muxAssetsCreateTrack).not.toHaveBeenCalled()
+  })
+
   it('creates a text track (skipping normalization on fetch failure) and returns trackId + status', async () => {
     setupAdmin()
     mockLessonSelect.mockResolvedValue({
@@ -454,7 +496,10 @@ describe('addMuxTextTrack', () => {
     muxAssetsCreateTrack.mockResolvedValue({ id: 'track_2', status: 'preparing' })
 
     const { addMuxTextTrack } = await import('@/app/courses/mux-actions')
-    const result = await addMuxTextTrack('lesson-1', 'es', 'Spanish', 'https://example.com/sub.vtt')
+    const result = await addMuxTextTrack(
+      'lesson-1', 'es', 'Spanish',
+      'https://test.supabase.co/storage/v1/object/public/mux-track-sources/lesson-1/sub.vtt',
+    )
 
     expect(muxAssetsCreateTrack).toHaveBeenCalledWith(
       'asset_1',
@@ -472,7 +517,10 @@ describe('addMuxTextTrack', () => {
     muxAssetsCreateTrack.mockRejectedValue(new Error('Mux API error'))
 
     const { addMuxTextTrack } = await import('@/app/courses/mux-actions')
-    const result = await addMuxTextTrack('lesson-1', 'es', 'Spanish', 'https://example.com/sub.vtt')
+    const result = await addMuxTextTrack(
+      'lesson-1', 'es', 'Spanish',
+      'https://test.supabase.co/storage/v1/object/public/mux-track-sources/lesson-1/sub.vtt',
+    )
 
     expect(result).toEqual({ error: 'No se pudo crear la pista de subtítulos.' })
   })
