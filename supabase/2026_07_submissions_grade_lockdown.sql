@@ -5,9 +5,20 @@
 -- student could set their own grade/feedback on a pending submission via direct PostgREST.
 --
 -- Fix: drop the table-level UPDATE grant and re-grant ONLY the columns a student
--- legitimately edits on their own pending row. grade/feedback are now written solely by
--- the service role (gradeSubmission, admin-gated), which bypasses grants + RLS. `status`
+-- legitimately writes on their own row. grade/feedback are now written solely by the
+-- service role (gradeSubmission, admin-gated), which bypasses grants + RLS. `status`
 -- stays grantable because the student re-submit upsert writes status='pending'; its value
--- is pinned by the student UPDATE policy's WITH CHECK, so it can't be used to self-review.
+-- is pinned by the student UPDATE policy (an UPDATE policy's WITH CHECK defaults to its
+-- USING expr, `auth.uid()=user_id AND status='pending'`), so it can't be used to self-review.
+--
+-- assignment_id and user_id MUST also be granted: submitAssignment uses PostgREST
+-- .upsert() (INSERT ... ON CONFLICT DO UPDATE), whose generated SET clause assigns every
+-- payload column — including assignment_id and user_id. PostgreSQL checks UPDATE privilege
+-- on all SET-clause columns at executor start, unconditionally (even on a first-time insert
+-- that never conflicts), so omitting them would make EVERY student submission fail with
+-- "permission denied for column assignment_id". They're safe to grant: the student UPDATE
+-- policy's WITH CHECK pins user_id to the caller (can't reassign to another user), and
+-- assignment_id can only be changed on the caller's own pending row (no privilege gain).
+-- grade/feedback remain OFF the grant, which is the whole point.
 revoke update on public.submissions from anon, authenticated;
-grant update (text_content, file_url, status, updated_at) on public.submissions to authenticated;
+grant update (assignment_id, user_id, text_content, file_url, status, updated_at) on public.submissions to authenticated;
