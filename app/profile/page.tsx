@@ -47,7 +47,8 @@ export default async function ProfilePage(props: {
     supabase
       .from('course_purchases')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id),
+      .eq('user_id', user.id)
+      .is('refunded_at', null),
     supabase
       .from('lesson_progress')
       .select('lesson_id', { count: 'exact', head: true })
@@ -78,6 +79,7 @@ export default async function ProfilePage(props: {
       lessonsCompletedCount={lessonsCompletedCount ?? 0}
       isAdmin={isAdmin}
       t={t.profile}
+      months={t.coursesPage.months}
       deleteAccountAction={deleteAccount}
     />
   )

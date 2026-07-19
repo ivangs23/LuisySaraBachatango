@@ -39,3 +39,23 @@ describe('safeSocialUrl', () => {
     expect(safeSocialUrl('', 'instagram')).toBeNull()
   })
 })
+
+describe('maskEmail', () => {
+  it('enmascara local y dominio conservando la TLD', async () => {
+    const { maskEmail } = await import('@/utils/sanitize')
+    expect(maskEmail('ivan@gmail.com')).toBe('i***@g***.com')
+    expect(maskEmail('a@sub.dominio.es')).toBe('a***@s***.es')
+  })
+  it('devuelve null para entradas inválidas', async () => {
+    const { maskEmail } = await import('@/utils/sanitize')
+    expect(maskEmail(null)).toBeNull()
+    expect(maskEmail('')).toBeNull()
+    expect(maskEmail('sin-arroba')).toBeNull()
+    expect(maskEmail('@dominio.com')).toBeNull()
+    expect(maskEmail('user@')).toBeNull()
+  })
+  it('dominio sin punto: enmascara entero', async () => {
+    const { maskEmail } = await import('@/utils/sanitize')
+    expect(maskEmail('user@localhost')).toBe('u***@***')
+  })
+})

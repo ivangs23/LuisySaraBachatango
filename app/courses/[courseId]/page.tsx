@@ -120,6 +120,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
       .select('id')
       .eq('user_id', user.id)
       .eq('course_id', params.courseId)
+      .is('refunded_at', null)
       .maybeSingle(),
     supabase.from('subscriptions')
       .select('id')

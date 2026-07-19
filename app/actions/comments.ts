@@ -236,7 +236,13 @@ export async function toggleLike(commentId: string) {
     user_id: user.id,
   });
   if (insertError) {
-    return { success: true };
+    // 23505 = violación de UNIQUE (like duplicado por doble click/carrera):
+    // el estado final es el deseado, así que es idempotente. Cualquier otro
+    // error de inserción sí es un fallo real y debe llegar al cliente.
+    if (insertError.code === '23505') {
+      return { success: true };
+    }
+    return { error: 'like_failed' };
   }
 
   let link: string;

@@ -4,11 +4,13 @@ import Stripe from 'stripe'
 // ── Stripe mock ───────────────────────────────────────────────────────────────
 const mockConstructEvent = vi.fn()
 const mockSubscriptionsRetrieve = vi.fn()
+const mockSessionsList = vi.fn()
 
 vi.mock('@/utils/stripe/server', () => ({
   stripe: {
     webhooks: { constructEvent: mockConstructEvent },
     subscriptions: { retrieve: mockSubscriptionsRetrieve },
+    checkout: { sessions: { list: mockSessionsList } },
   },
 }))
 
@@ -89,14 +91,18 @@ describe('POST /api/webhooks/stripe — signature verification', () => {
 describe('POST /api/webhooks/stripe — checkout.session.completed', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns 400 when userId is missing in metadata', async () => {
+  it('ignores (200) a completed session with no app metadata — e.g. a dashboard Payment Link', async () => {
+    // Antes devolvía 400, lo que hacía a Stripe reintentar durante días y
+    // marcar el endpoint como failing por eventos ajenos a la app (B12).
     mockConstructEvent.mockReturnValueOnce({
       type: 'checkout.session.completed',
       data: { object: makeSession({ metadata: {} }) },
     })
     const { POST } = await import('@/app/api/webhooks/stripe/route')
     const res = await POST(makeWebhookRequest())
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(200)
+    // Y no escribe nada en BD.
+    expect(mockUpsert).not.toHaveBeenCalled()
   })
 
   it('processes a course purchase via idempotent upsert on stripe_session_id', async () => {
@@ -412,5 +418,105 @@ describe('POST /api/webhooks/stripe — empty subscription items guard', () => {
     const res = await POST(makeWebhookRequest())
     expect(res.status).toBe(200)
     expect(mockUpsert).not.toHaveBeenCalled()
+  })
+})
+
+// ── Reembolsos y disputas (AUDITORIA-2026-07 A3) ──────────────────────────────
+describe('POST /api/webhooks/stripe — charge.refunded / disputes', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  function chainRefundUpdate(rows: Array<{ id: string }>) {
+    // update().eq().is().select('id') — devuelve las filas afectadas.
+    const select = vi.fn().mockResolvedValue({ data: rows, error: null })
+    mockIs.mockReturnValueOnce({ select })
+    return select
+  }
+
+  it('reembolso TOTAL: marca refunded_at por payment_intent y responde 200', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: 'evt_1',
+      type: 'charge.refunded',
+      data: { object: { object: 'charge', amount: 4900, amount_refunded: 4900, payment_intent: 'pi_123' } },
+    })
+    chainRefundUpdate([{ id: 'p1' }])
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+
+    expect(res.status).toBe(200)
+    expect(mockFrom).toHaveBeenCalledWith('course_purchases')
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ refunded_at: expect.any(String) }))
+    expect(mockUpdateEq).toHaveBeenCalledWith('stripe_payment_intent', 'pi_123')
+  })
+
+  it('reembolso PARCIAL: mantiene el acceso (política 2026-07) — no toca la BD', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: 'evt_2',
+      type: 'charge.refunded',
+      data: { object: { object: 'charge', amount: 4900, amount_refunded: 1000, payment_intent: 'pi_123' } },
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('charge.dispute.created: revoca el acceso', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: 'evt_3',
+      type: 'charge.dispute.created',
+      data: { object: { object: 'dispute', status: 'needs_response', payment_intent: 'pi_dis' } },
+    })
+    chainRefundUpdate([{ id: 'p1' }])
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ refunded_at: expect.any(String) }))
+    expect(mockUpdateEq).toHaveBeenCalledWith('stripe_payment_intent', 'pi_dis')
+  })
+
+  it('charge.dispute.closed con status=won: restaura el acceso (refunded_at = null)', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: 'evt_4',
+      type: 'charge.dispute.closed',
+      data: { object: { object: 'dispute', status: 'won', payment_intent: 'pi_won' } },
+    })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalledWith({ refunded_at: null })
+    expect(mockUpdateEq).toHaveBeenCalledWith('stripe_payment_intent', 'pi_won')
+  })
+
+  it('compra legacy sin stripe_payment_intent: fallback vía sessions.list y marca por stripe_session_id', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: 'evt_5',
+      type: 'charge.refunded',
+      data: { object: { object: 'charge', amount: 4900, amount_refunded: 4900, payment_intent: 'pi_old' } },
+    })
+    // 1ª update por payment_intent: 0 filas. 2ª update por session_id: 1 fila.
+    chainRefundUpdate([])
+    mockSessionsList.mockResolvedValueOnce({ data: [{ id: 'cs_legacy' }] })
+    chainRefundUpdate([{ id: 'p9' }])
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(200)
+    expect(mockSessionsList).toHaveBeenCalledWith({ payment_intent: 'pi_old', limit: 1 })
+    expect(mockUpdateEq).toHaveBeenCalledWith('stripe_session_id', 'cs_legacy')
+  })
+
+  it('error de BD al marcar → 500 (Stripe reintenta)', async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: 'evt_6',
+      type: 'charge.refunded',
+      data: { object: { object: 'charge', amount: 4900, amount_refunded: 4900, payment_intent: 'pi_err' } },
+    })
+    const select = vi.fn().mockResolvedValue({ data: null, error: { message: 'db down' } })
+    mockIs.mockReturnValueOnce({ select })
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(makeWebhookRequest())
+    expect(res.status).toBe(500)
   })
 })

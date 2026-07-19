@@ -29,12 +29,15 @@ import { stripe } from '@/utils/stripe/server'
 beforeEach(() => vi.clearAllMocks())
 
 describe('/gracias', () => {
-  it('sesión pagada: muestra el email del comprador', async () => {
+  it('sesión pagada: muestra el email del comprador ENMASCARADO (M7: no ser un oráculo de emails)', async () => {
     const mockRetrieve = vi.mocked(stripe.checkout.sessions.retrieve)
     mockRetrieve.mockResolvedValue({ payment_status: 'paid', customer_details: { email: 'buyer@example.com' } } as unknown as Stripe.Response<Stripe.Checkout.Session>)
     const el = await GraciasPage({ searchParams: Promise.resolve({ session_id: 'cs_1' }) })
     const html = JSON.stringify(el)
-    expect(html).toContain('buyer@example.com')
+    // Un tercero que obtenga el session_id (captura, log) no debe poder leer
+    // el email completo del comprador.
+    expect(html).not.toContain('buyer@example.com')
+    expect(html).toContain('b***@e***.com')
   })
 
   it('sin session_id: mensaje neutro, no llama a Stripe', async () => {

@@ -3,6 +3,9 @@ import { withSentryConfig } from '@sentry/nextjs'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_HOST = SUPABASE_URL.replace(/^https?:\/\//, '') || '*.supabase.co';
+// next/image remotePatterns needs a concrete hostname; fall back to the
+// production project host if the env var is unset at build time.
+const SUPABASE_IMAGE_HOST = SUPABASE_URL.replace(/^https?:\/\//, '') || 'jytokoxbsykoyifzbjkd.supabase.co';
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -16,7 +19,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'jytokoxbsykoyifzbjkd.supabase.co',
+        hostname: SUPABASE_IMAGE_HOST,
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
@@ -52,6 +55,9 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               `img-src 'self' data: blob: https://${SUPABASE_HOST} https://image.mux.com https://*.googleusercontent.com https://flagcdn.com https://*.cdninstagram.com https://*.fbcdn.net`,
               "media-src 'self' blob: https://stream.mux.com https://*.mux.com",
+              // hls.js (inside Mux Player) spawns blob: workers; without an
+              // explicit worker-src, CSP3 falls back to default-src and blocks them.
+              "worker-src 'self' blob:",
               `connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.mux.com`,
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://open.spotify.com https://www.instagram.com",
               "frame-ancestors 'none'",

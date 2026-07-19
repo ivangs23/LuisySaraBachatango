@@ -1,26 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-// requiresAuth is not exported, so we test it indirectly via updateSession.
-// We define the same logic here to ensure the patterns are correct.
-const AUTH_REQUIRED_PREFIXES = [
-  '/dashboard',
-  '/profile',
-  '/community/create',
-  '/courses/create',
-]
-
-const AUTH_REQUIRED_PATTERNS = [
-  /^\/courses\/[^/]+\/edit$/,
-  /^\/courses\/[^/]+\/add-lesson$/,
-  /^\/courses\/[^/]+\/[^/]+\/edit$/,
-  /^\/courses\/[^/]+\/[^/]+\/submissions/,
-]
-
-function requiresAuth(pathname: string): boolean {
-  if (AUTH_REQUIRED_PREFIXES.some(p => pathname.startsWith(p))) return true
-  if (AUTH_REQUIRED_PATTERNS.some(r => r.test(pathname))) return true
-  return false
-}
+import { describe, it, expect } from 'vitest'
+import {
+  AUTH_REQUIRED_PREFIXES,
+  AUTH_REQUIRED_PATTERNS,
+  requiresAuth,
+} from '@/utils/supabase/middleware-helper'
 
 describe('requiresAuth — protected routes', () => {
   it.each([
@@ -57,5 +40,25 @@ describe('requiresAuth — public routes', () => {
     '/auth/callback',
   ])('does NOT require auth: %s', (path) => {
     expect(requiresAuth(path)).toBe(false)
+  })
+})
+
+describe('exported route tables', () => {
+  it('every prefix is itself a protected path', () => {
+    for (const prefix of AUTH_REQUIRED_PREFIXES) {
+      expect(requiresAuth(prefix)).toBe(true)
+    }
+  })
+
+  it('patterns cover the admin lesson/course editing routes', () => {
+    const samples = [
+      '/courses/x/edit',
+      '/courses/x/add-lesson',
+      '/courses/x/y/edit',
+      '/courses/x/y/submissions',
+    ]
+    for (const path of samples) {
+      expect(AUTH_REQUIRED_PATTERNS.some(r => r.test(path))).toBe(true)
+    }
   })
 })

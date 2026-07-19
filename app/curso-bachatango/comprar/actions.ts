@@ -1,7 +1,7 @@
 'use server';
 
 import { randomUUID } from 'node:crypto';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type Stripe from 'stripe';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
@@ -24,13 +24,23 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   const rawName = ((formData.get('fullName') as string | null) ?? '').trim();
   const rawEmail = ((formData.get('email') as string | null) ?? '').trim();
   const g = (k: string) => ((formData.get(k) as string | null) ?? '').trim();
-  const back = (code: string) => {
-    const q = new URLSearchParams({
-      courseId, error: code,
+  // Re-echo de campos tras un error de validación vía cookie flash efímera —
+  // NUNCA por query string: un redirect 303 convierte la URL en GET y el email,
+  // DOB y teléfono acabarían en logs de Vercel, historial e intermediarios
+  // (AUDITORIA-2026-07 M6). La contraseña jamás se re-echoa por ningún canal.
+  const back = async (code: string) => {
+    (await cookies()).set('landing_form', JSON.stringify({
       name: rawName, email: rawEmail,
       country: g('country'), city: g('city'), postalCode: g('postalCode'),
       dateOfBirth: g('dateOfBirth'), danceLevel: g('danceLevel'), phone: g('phone'),
+    }), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/curso-bachatango',
+      maxAge: 120, // autoexpira; la página no puede borrarla (server component)
     });
+    const q = new URLSearchParams({ courseId, error: code });
     return `/curso-bachatango/comprar?${q.toString()}`;
   };
 
@@ -38,16 +48,16 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   // PII + bcrypt hashes): per-IP burst, per-email/day, AND a per-IP/day row cap
   // so one IP cycling many distinct emails is still bounded.
   const rlIp = await rateLimit(rateLimitKey([ip, 'landing-checkout']), 10, 60_000);
-  if (!rlIp.ok) redirect(back('rate'));
+  if (!rlIp.ok) redirect(await back('rate'));
   // Per-email limit scoped BY IP: the email is unauthenticated, so keying it
   // globally would let an attacker burn a specific victim's daily budget
   // (registration lockout). Scoping to (ip,email) caps repeats without
   // cross-user harm.
   const emailForKey = rawEmail.toLowerCase();
   const rlEmail = await rateLimit(rateLimitKey([ip, emailForKey, 'landing-checkout-email']), 5, 24 * 60 * 60_000);
-  if (!rlEmail.ok) redirect(back('rate'));
+  if (!rlEmail.ok) redirect(await back('rate'));
   const rlIpDay = await rateLimit(rateLimitKey([ip, 'landing-checkout-ip-day']), 30, 24 * 60 * 60_000);
-  if (!rlIpDay.ok) redirect(back('rate'));
+  if (!rlIpDay.ok) redirect(await back('rate'));
 
   // Validate ALL fields BEFORE any hashing or DB write.
   const v = validateRegistration({
@@ -59,8 +69,8 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     phone: formData.get('phone'), marketingConsent: formData.get('marketingConsent'),
     acceptTerms: formData.get('acceptTerms'),
   });
-  if (!courseId) redirect(back('missing'));
-  if (!v.ok) redirect(back(v.code));
+  if (!courseId) redirect(await back('missing'));
+  if (!v.ok) redirect(await back(v.code));
   const reg = v.data;
 
   const admin = createSupabaseAdmin(
@@ -71,7 +81,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   const { data: course } = await admin
     .from('courses').select('title, price_eur').eq('id', courseId).eq('is_published', true).single();
   if (!course || !course.price_eur || course.price_eur <= 0 || course.price_eur > 10000) {
-    redirect(back('course'));
+    redirect(await back('course'));
   }
   const amountExpected = Math.round(course.price_eur * 100);
 
@@ -102,7 +112,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     })
     .select('id')
     .single();
-  if (pendingErr || !pending) redirect(back('account_creation_failed'));
+  if (pendingErr || !pending) redirect(await back('account_creation_failed'));
   const pendingId = pending.id as string;
 
   // Demo/test: provision inline (simulate the webhook) behind the prod guard.
@@ -112,7 +122,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     const triggeredByAdminCookie = await readTestCookie();
     if (!canProvisionInline({ triggeredByAdminCookie, supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL })) {
       await admin.from('pending_registrations').delete().eq('id', pendingId);
-      redirect(back('account_creation_failed'));
+      redirect(await back('account_creation_failed'));
     }
     const synthetic = {
       id: `demo_${randomUUID()}`,
@@ -131,7 +141,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     }
     if (!provisioned) {
       await admin.from('pending_registrations').delete().eq('id', pendingId);
-      redirect(back('account_creation_failed'));
+      redirect(await back('account_creation_failed'));
     }
     redirect(`/gracias?demo=1&email=${encodeURIComponent(reg.email)}`);
   }
@@ -140,6 +150,11 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   let url: string | null = null;
   try {
     const session = await stripe.checkout.sessions.create({
+      // CANDADO (AUDITORIA-2026-07 B12): solo 'card'. Si algún día se añaden
+      // métodos de pago diferidos (SEPA, Klarna…), hay que implementar ANTES el
+      // handler de checkout.session.async_payment_succeeded en el webhook —
+      // hoy una sesión completed con payment_status 'unpaid' se descarta (200)
+      // y el pago diferido nunca aprovisionaría.
       payment_method_types: ['card'],
       billing_address_collection: 'auto',
       customer_creation: 'always',
@@ -163,7 +178,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     // Stripe session couldn't be created — delete the just-inserted pending row
     // (password_hash + PII) instead of leaving it for the 30-day cron.
     await admin.from('pending_registrations').delete().eq('id', pendingId);
-    redirect(back('stripe'));
+    redirect(await back('stripe'));
   }
   redirect(url);
 }

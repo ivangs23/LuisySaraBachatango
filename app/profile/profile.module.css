@@ -807,3 +807,15 @@
 .subHeader {
   /* placeholders so any stale references don't break */
 }
+
+/* ============== Error del formulario ============== */
+.formError {
+  margin: 0;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 68, 68, 0.4);
+  background: rgba(255, 68, 68, 0.06);
+  color: #ff8a8a;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}

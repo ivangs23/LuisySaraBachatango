@@ -7,6 +7,7 @@ import FunnelLegalFooter from "@/components/FunnelLegalFooter";
 import DemoBanner from "@/components/DemoBanner";
 import { unstable_cache } from "next/cache";
 import { getCurrentLocale } from '@/utils/i18n/get-locale';
+import { getDict } from '@/utils/get-dict';
 import { isTestPurchaseMode } from '@/utils/demo/test-mode';
 
 const inter = Inter({ subsets: ["latin"] });
@@ -94,6 +95,7 @@ export default async function RootLayout({
 }>) {
   const user = await getCurrentUser();
   const locale = await getCurrentLocale();
+  const dict = await getDict();
 
   const profile = user ? await getCachedProfile(user.id) : null;
 
@@ -120,7 +122,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         <LanguageProvider initialLocale={locale}>
           <a href="#main-content" className="skip-link">
-            Saltar al contenido principal
+            {dict.common.skipToContent}
           </a>
           {(await isTestPurchaseMode()) && <DemoBanner />}
           <Header user={user} profile={profile} />

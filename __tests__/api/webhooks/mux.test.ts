@@ -53,6 +53,31 @@ describe('Mux webhook', () => {
     expect(updateMock).toHaveBeenCalledWith({ mux_status: 'ready', mux_playback_id: 'pb-1' })
   })
 
+  it('prefiere el playback id con policy "signed" (B3)', async () => {
+    const res = await POST(signedRequest({
+      type: 'video.asset.ready',
+      data: { id: 'asset-1', playback_ids: [
+        { id: 'pb-public', policy: 'public' },
+        { id: 'pb-signed', policy: 'signed' },
+      ] },
+    }))
+    expect(res.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith({ mux_status: 'ready', mux_playback_id: 'pb-signed' })
+  })
+
+  it('rechaza una firma con timestamp caducado (anti-replay, B3)', async () => {
+    const body = JSON.stringify({ type: 'video.asset.ready', data: { id: 'a' } })
+    const t = (Math.floor(Date.now() / 1000) - 10 * 60).toString() // 10 min atrás
+    const sig = crypto.createHmac('sha256', SECRET).update(`${t}.${body}`).digest('hex')
+    const res = await POST(new Request('http://x/webhook', {
+      method: 'POST',
+      headers: { 'mux-signature': `t=${t},v1=${sig}` },
+      body,
+    }))
+    expect(res.status).toBe(401)
+    expect(updateMock).not.toHaveBeenCalled()
+  })
+
   it('updates lesson on asset.errored', async () => {
     const res = await POST(signedRequest({
       type: 'video.asset.errored',

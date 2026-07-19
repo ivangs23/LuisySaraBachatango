@@ -54,7 +54,7 @@ export default async function CoursesPage() {
     // Fetch role, purchases and subscriptions in parallel.
     const [profileResult, purchasesResult, subscriptionsResult] = await Promise.all([
       supabase.from('profiles').select('role').eq('id', user.id).single(),
-      supabase.from('course_purchases').select('course_id').eq('user_id', user.id),
+      supabase.from('course_purchases').select('course_id').eq('user_id', user.id).is('refunded_at', null),
       supabase.from('subscriptions')
         .select('current_period_start, current_period_end')
         .eq('user_id', user.id)

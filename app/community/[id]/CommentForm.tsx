@@ -3,13 +3,22 @@
 import { useState, useTransition } from 'react'
 import { Send } from 'lucide-react'
 import { submitComment } from '../actions'
+import { useLanguage } from '@/context/LanguageContext'
 import styles from '../community.module.css'
+
+// Mapeo de códigos máquina de submitComment a mensajes en español.
+// Los códigos desconocidos (o mensajes ya legibles) se muestran tal cual.
+const ERROR_MESSAGES: Record<string, string> = {
+  auth: 'Debes iniciar sesión para comentar.',
+  rate_limit: 'Estás comentando demasiado rápido. Espera un momento e inténtalo de nuevo.',
+}
 
 type Props = {
   postId: string
 }
 
 export default function CommentForm({ postId }: Props) {
+  const { t } = useLanguage()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -18,7 +27,7 @@ export default function CommentForm({ postId }: Props) {
     startTransition(async () => {
       const result = await submitComment(formData)
       if (!result.success) {
-        setError(result.error)
+        setError(ERROR_MESSAGES[result.error] ?? result.error)
       }
     })
   }
@@ -30,13 +39,13 @@ export default function CommentForm({ postId }: Props) {
       <textarea
         name="content"
         className={styles.textarea}
-        placeholder="Escribe un comentario..."
+        placeholder={t.community.writeComment}
         required
         disabled={isPending}
       />
       <button type="submit" className={styles.submitButton} disabled={isPending}>
         <Send size={13} strokeWidth={2.4} aria-hidden="true" />
-        {isPending ? 'Enviando…' : 'Comentar'}
+        {isPending ? t.community.sending : t.community.comment}
       </button>
     </form>
   )

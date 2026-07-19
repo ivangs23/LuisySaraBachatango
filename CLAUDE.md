@@ -81,7 +81,7 @@ All translations live in `utils/dictionaries.ts` as a single typed object with k
 | `notifications` | In-app notifications (e.g., graded assignment) |
 | `posts` / `comments` | Community forum |
 
-SQL migration files are in `supabase/`. The canonical schema is `supabase/schema.sql` with additive patches in other files (e.g., `rbac_setup.sql`, `course_types.sql`).
+SQL migration files are in `supabase/`. The canonical schema is `supabase/schema.sql` with additive patches in other files (e.g., `rbac_setup.sql`, `course_types.sql`). **See [supabase/MIGRATIONS.md](supabase/MIGRATIONS.md) for the apply order and which legacy files are dangerous to re-run** — some (`rbac_setup.sql`, `events.sql`, `full_setup.sql`) reopen hardened policies if replayed over a hardened DB.
 
 ### Security Utilities
 
@@ -89,7 +89,9 @@ SQL migration files are in `supabase/`. The canonical schema is `supabase/schema
 
 ### Testing
 
-Tests live in `__tests__/` with subfolders mirroring the source structure. Vitest runs in `node` environment by default; component tests use `jsdom` (configured via `environmentMatchGlobs` in [vitest.config.ts](vitest.config.ts)). Supabase and Stripe are mocked in `vitest.setup.ts`.
+Tests live in `__tests__/` with subfolders mirroring the source structure. Vitest runs in `node` environment by default; component tests opt into `jsdom` via a `// @vitest-environment jsdom` docblock at the top of each file (the old `environmentMatchGlobs` config was removed in Vitest 4). Supabase and Stripe are mocked in `vitest.setup.ts`. Coverage: `@vitest/coverage-v8` is a dev dependency; run `npm run test:coverage`.
+
+CI runs lint + `tsc --noEmit` + vitest + build on every push/PR (`.github/workflows/ci.yml`).
 
 ## Required Environment Variables
 

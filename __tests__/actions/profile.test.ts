@@ -135,7 +135,7 @@ describe('updateProfile — avatar file validation', () => {
     vi.mocked(createClient).mockResolvedValue(makeClient() as never)
   })
 
-  it('throws for non-image MIME type', async () => {
+  it('returns invalid_type for non-image MIME type', async () => {
     const { updateProfile } = await import('@/app/profile/actions')
 
     const mockFile = new File(['content'], 'virus.exe', { type: 'application/octet-stream' })
@@ -146,10 +146,10 @@ describe('updateProfile — avatar file validation', () => {
     fd.set('avatarMode', 'upload')
     fd.set('avatarFile', mockFile)
 
-    await expect(updateProfile(fd)).rejects.toThrow('Tipo de archivo no permitido')
+    await expect(updateProfile(fd)).resolves.toEqual({ error: 'invalid_type' })
   })
 
-  it('throws for file exceeding 5MB', async () => {
+  it('returns too_large for file exceeding 5MB', async () => {
     const { updateProfile } = await import('@/app/profile/actions')
 
     const mockFile = new File(['content'], 'big.jpg', { type: 'image/jpeg' })
@@ -160,10 +160,10 @@ describe('updateProfile — avatar file validation', () => {
     fd.set('avatarMode', 'upload')
     fd.set('avatarFile', mockFile)
 
-    await expect(updateProfile(fd)).rejects.toThrow('demasiado grande')
+    await expect(updateProfile(fd)).resolves.toEqual({ error: 'too_large' })
   })
 
-  it('throws when magic bytes do not match declared MIME type', async () => {
+  it('returns invalid_image when magic bytes do not match declared MIME type', async () => {
     mockValidateImageMagicBytes.mockResolvedValueOnce(false)
     const { updateProfile } = await import('@/app/profile/actions')
 
@@ -176,7 +176,25 @@ describe('updateProfile — avatar file validation', () => {
     fd.set('avatarMode', 'upload')
     fd.set('avatarFile', mockFile)
 
-    await expect(updateProfile(fd)).rejects.toThrow('El archivo no es una imagen válida.')
+    await expect(updateProfile(fd)).resolves.toEqual({ error: 'invalid_image' })
+  })
+
+  it('returns update_failed when the profiles update errors', async () => {
+    mockUpdate.mockReturnValueOnce({
+      eq: vi.fn().mockResolvedValue({ error: { message: 'db down' } }),
+    })
+    const { updateProfile } = await import('@/app/profile/actions')
+
+    const fd = new FormData()
+    fd.set('fullName', 'Test User')
+    fd.set('avatarMode', 'url')
+    fd.set('avatarUrl', '')
+    fd.set('instagram', '')
+    fd.set('facebook', '')
+    fd.set('tiktok', '')
+    fd.set('youtube', '')
+
+    await expect(updateProfile(fd)).resolves.toEqual({ error: 'update_failed' })
   })
 
   it('uploads successfully and derives extension from MIME (not filename)', async () => {
@@ -197,7 +215,8 @@ describe('updateProfile — avatar file validation', () => {
     fd.set('tiktok', '')
     fd.set('youtube', '')
 
-    await updateProfile(fd)
+    const result = await updateProfile(fd)
+    expect(result).toEqual({ success: true })
 
     // The storage upload should have been called with a path ending in .jpg, not .php
     const storageFromMock = makeClient().storage.from as ReturnType<typeof vi.fn>

@@ -132,7 +132,9 @@ export default function LessonView({
   );
   const currentNode = lessonTree.find(n => n.id === lessonId);
   const positionLabel = currentNode
-    ? `Lección ${currentNode.displayNumber} de ${total}`
+    ? t.lesson.lessonPosition
+        .replace('{current}', currentNode.displayNumber)
+        .replace('{total}', String(total))
     : null;
 
   const canPlay =
@@ -171,7 +173,7 @@ export default function LessonView({
               </span>
               <div className={styles.sidebarProgress}>
                 <div className={styles.sidebarProgressLabel}>
-                  <span>{completedCount}/{total} completadas</span>
+                  <span>{completedCount}/{total} {t.lesson.completed}</span>
                   <span className={styles.sidebarProgressPct}>{progressPct}%</span>
                 </div>
                 <div className={styles.progressTrack}>
@@ -260,9 +262,9 @@ export default function LessonView({
                   <div className={styles.lockedIcon}>
                     <Clock size={28} strokeWidth={1.8} />
                   </div>
-                  <h2 className={styles.lockedTitle}>Vídeo en preparación</h2>
+                  <h2 className={styles.lockedTitle}>{t.lesson.videoPreparing}</h2>
                   <p className={styles.lockedSub}>
-                    El vídeo de esta lección todavía se está procesando. Vuelve en unos minutos.
+                    {t.lesson.videoProcessing}
                   </p>
                 </div>
               ) : (

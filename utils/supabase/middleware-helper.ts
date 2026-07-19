@@ -4,7 +4,7 @@ import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 import { getClientIp } from '@/utils/auth/client-ip'
 
 // Routes that require authentication (any logged-in user)
-const AUTH_REQUIRED_PREFIXES = [
+export const AUTH_REQUIRED_PREFIXES = [
   '/dashboard',
   '/profile',
   '/community/create',
@@ -12,14 +12,14 @@ const AUTH_REQUIRED_PREFIXES = [
 ]
 
 // Route patterns that require authentication (regex)
-const AUTH_REQUIRED_PATTERNS = [
+export const AUTH_REQUIRED_PATTERNS = [
   /^\/courses\/[^/]+\/edit$/,
   /^\/courses\/[^/]+\/add-lesson$/,
   /^\/courses\/[^/]+\/[^/]+\/edit$/,
   /^\/courses\/[^/]+\/[^/]+\/submissions/,
 ]
 
-function requiresAuth(pathname: string): boolean {
+export function requiresAuth(pathname: string): boolean {
   if (AUTH_REQUIRED_PREFIXES.some(p => pathname.startsWith(p))) return true
   if (AUTH_REQUIRED_PATTERNS.some(r => r.test(pathname))) return true
   return false

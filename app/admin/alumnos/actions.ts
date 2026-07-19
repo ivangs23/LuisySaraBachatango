@@ -16,18 +16,14 @@ export async function updateUserRole(userId: string, role: Role) {
 
   const sb = createSupabaseAdmin()
 
-  // Demoting away from admin: never remove the last admin. Only relevant when the
-  // TARGET is currently an admin — a non-admin being re-roled can't reduce the count.
-  if (role !== 'admin') {
-    const { data: current } = await sb.from('profiles').select('role').eq('id', userId).single()
-    if (current?.role === 'admin') {
-      const { count } = await sb.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'admin')
-      if ((count ?? 0) <= 1) throw new Error('No puedes quitar el último admin')
-    }
+  // El guard de "último admin" es atómico dentro de set_user_role (bloquea las
+  // filas admin con FOR UPDATE) para evitar el TOCTOU de dos degradaciones
+  // concurrentes (AUDITORIA-2026-07 B8).
+  const { error } = await sb.rpc('set_user_role', { target: userId, new_role: role })
+  if (error) {
+    if (error.message?.includes('last_admin')) throw new Error('No puedes quitar el último admin')
+    throw error
   }
-
-  const { error } = await sb.from('profiles').update({ role }).eq('id', userId)
-  if (error) throw error
   revalidatePath(`/admin/alumnos/${userId}`)
   revalidatePath('/admin/alumnos')
 }

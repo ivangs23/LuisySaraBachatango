@@ -3,6 +3,7 @@ import { stripe } from '@/utils/stripe/server';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/server';
 import { isTestPurchaseMode } from '@/utils/demo/test-mode';
+import { maskEmail } from '@/utils/sanitize';
 import styles from './gracias.module.css';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com';
@@ -67,7 +68,10 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
     try {
       const session = await stripe.checkout.sessions.retrieve(session_id);
       paid = session.payment_status === 'paid';
-      email = session.customer_details?.email ?? null;
+      // Enmascarado (i***@g***.com): el session_id viaja por URL y puede
+      // acabar en manos de terceros (capturas, logs, referrers) — esta página
+      // no debe funcionar como oráculo del email completo del comprador.
+      email = maskEmail(session.customer_details?.email ?? null);
     } catch {
       // sesión inválida/expirada → mensaje neutro
     }

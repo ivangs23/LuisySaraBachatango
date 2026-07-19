@@ -58,6 +58,7 @@ export default async function LessonPage(props: { params: Promise<{ courseId: st
       .select('id')
       .eq('user_id', user.id)
       .eq('course_id', params.courseId)
+      .is('refunded_at', null)
       .maybeSingle(),
     supabase.from('assignments')
       .select('id, title, description')

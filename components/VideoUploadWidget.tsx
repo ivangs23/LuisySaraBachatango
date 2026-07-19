@@ -74,6 +74,14 @@ export default function VideoUploadWidget({ lessonId, currentStatus, currentPlay
         }
         pollTimerRef.current = window.setTimeout(tick, POLL_INTERVAL_MS)
       } catch {
+        // Los fallos de red también cuentan como intento: sin este límite,
+        // una red caída dejaría el sondeo girando para siempre.
+        if (attempts >= POLL_MAX_ATTEMPTS) {
+          isPollingRef.current = false
+          setStatus('errored')
+          setError('El procesamiento está tardando demasiado. Refresca la página para volver a comprobar.')
+          return
+        }
         pollTimerRef.current = window.setTimeout(tick, POLL_INTERVAL_MS)
       }
     }

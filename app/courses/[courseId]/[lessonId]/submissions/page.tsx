@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { redirect, notFound } from 'next/navigation'
 import { CalendarDays, FileDown, Inbox, Paperclip, User } from 'lucide-react'
 import GradeSubmissionForm from '@/components/GradeSubmissionForm'
@@ -25,25 +26,39 @@ export default async function SubmissionsPage(props: {
     redirect(`/courses/${params.courseId}/${params.lessonId}`)
   }
 
+  // Data queries use the admin client: the page is admin-gated above, and the
+  // session role (`authenticated`) no longer holds the column grant on
+  // profiles.email (2026_07_profiles_email_revoke.sql) — querying it with the
+  // session client fails with 42501 and would render an empty inbox.
+  const admin = createSupabaseAdmin()
+
   // Fetch the assignment for this lesson
-  const { data: assignment } = await supabase
+  const { data: assignment, error: assignmentError } = await admin
     .from('assignments')
     .select('id, title, description')
     .eq('lesson_id', params.lessonId)
     .maybeSingle()
+
+  if (assignmentError) {
+    throw new Error(`No se pudieron cargar las tareas: ${assignmentError.message}`)
+  }
 
   if (!assignment) {
     notFound()
   }
 
   // Fetch all submissions with profile info
-  const { data: submissions } = await supabase
+  const { data: submissions, error: submissionsError } = await admin
     .from('submissions')
     .select(
       'id, text_content, file_url, status, grade, feedback, created_at, updated_at, user_id, profiles(full_name, email, avatar_url)'
     )
     .eq('assignment_id', assignment.id)
     .order('created_at', { ascending: false })
+
+  if (submissionsError) {
+    throw new Error(`No se pudieron cargar las entregas: ${submissionsError.message}`)
+  }
 
   const total = submissions?.length ?? 0
   const reviewed = submissions?.filter((s) => s.status === 'reviewed').length ?? 0

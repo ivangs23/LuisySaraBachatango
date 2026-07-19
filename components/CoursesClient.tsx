@@ -7,6 +7,7 @@ import { LayoutGroup, motion } from 'motion/react';
 import styles from './CoursesClient.module.css';
 import Reveal from './Reveal';
 import { useLanguage } from '@/context/LanguageContext';
+import { safeImageUrl } from '@/utils/sanitize';
 
 const CATEGORY_LABELS: Record<string, string> = {
   bachatango: 'BachaTango',
@@ -66,9 +67,9 @@ function CourseCard({ course, accessible, index, tc, variant }: CourseCardProps)
 
       {/* Imagen con ken-burns + overlays */}
       <div className={styles.imageContainer}>
-        {course.image_url?.startsWith('http') ? (
+        {safeImageUrl(course.image_url) ? (
           <Image
-            src={course.image_url}
+            src={safeImageUrl(course.image_url)!}
             alt={course.title}
             className={styles.image}
             fill

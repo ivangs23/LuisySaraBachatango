@@ -23,13 +23,13 @@ npm run test:e2e       # headless
 npm run test:e2e:ui    # Playwright UI mode
 ```
 
-The `webServer` in `playwright.config.ts` auto-spawns `npm run dev` at port 3000 and reuses a running server if one exists. Set `E2E_BASE_URL` to point at a deployed instance instead.
+The `webServer` in `playwright.config.ts` runs a production server (`npm run build && npm run start`) at port 3000, reusing an already-running server outside CI. Set `E2E_BASE_URL` to point at a deployed instance instead (that skips the webServer entirely).
 
 ## Required environment variables
 
 | Var | Purpose | Default behavior if missing |
 |---|---|---|
-| `E2E_BASE_URL` | Override target URL | Uses http://localhost:3000 + auto-spawn dev |
+| `E2E_BASE_URL` | Override target URL | Uses http://localhost:3000 + auto-spawned `npm run build && npm run start` |
 | `E2E_USER_EMAIL` / `E2E_USER_PASSWORD` | A normal (non-admin) user | Auth tests skip |
 | `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` | An admin user | Admin tests skip |
 | `E2E_READY_LESSON_URL` | Path to `/courses/:cid/:lid/edit` for a lesson with Mux `ready` status | Tracks-manager test skips |
@@ -60,7 +60,7 @@ npm run test:e2e
 
 ## Notes
 
-- Tests are serial (`workers: 1`) to avoid auth race conditions.
+- In CI, tests are serial (`workers: 1`) to avoid auth race conditions; locally Playwright uses its default worker count (specs run fully parallel).
 - No real Mux upload is tested — that flow needs manual verification (see `docs/superpowers/plans/2026-04-23-mux-video-migration.md` Task 16).
 - Stripe checkout is not tested here.
 - Signup tests **do not** submit a real signup (avoids polluting `auth.users`); they only assert form rendering and client-side validation.

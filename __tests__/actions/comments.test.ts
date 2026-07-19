@@ -110,6 +110,72 @@ describe('addComment — content length boundary', () => {
   })
 })
 
+describe('toggleLike — insert error handling', () => {
+  function makeToggleClient(insertError: { code: string; message: string } | null) {
+    // Comentario de post de comunidad (lesson_id null) — no requiere course access
+    const commentChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: { id: 'c1', user_id: 'other-user', lesson_id: null, post_id: 'p1' },
+        error: null,
+      }),
+    }
+    const likeCheckChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }), // sin like previo
+    }
+    const likeInsertChain = {
+      insert: vi.fn().mockResolvedValue({ error: insertError }),
+    }
+    let likeCalls = 0
+    const from = vi.fn((table: string) => {
+      if (table === 'comments') return commentChain
+      if (table === 'comment_likes') {
+        likeCalls += 1
+        return likeCalls === 1 ? likeCheckChain : likeInsertChain
+      }
+      throw new Error(`unexpected table: ${table}`)
+    })
+    return {
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: `liker-${Math.random()}` } } }) },
+      from,
+    }
+  }
+
+  it('returns success for duplicate like (23505 = idempotent)', async () => {
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue(
+      makeToggleClient({ code: '23505', message: 'duplicate key value' }) as never,
+    )
+
+    const { toggleLike } = await import('@/app/actions/comments')
+    const result = await toggleLike('c1')
+    expect(result).toEqual({ success: true })
+  })
+
+  it('returns like_failed for any other insert error', async () => {
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue(
+      makeToggleClient({ code: '42501', message: 'permission denied' }) as never,
+    )
+
+    const { toggleLike } = await import('@/app/actions/comments')
+    const result = await toggleLike('c1')
+    expect(result).toEqual({ error: 'like_failed' })
+  })
+
+  it('still returns success when insert succeeds', async () => {
+    const { createClient } = await import('@/utils/supabase/server')
+    vi.mocked(createClient).mockResolvedValue(makeToggleClient(null) as never)
+
+    const { toggleLike } = await import('@/app/actions/comments')
+    const result = await toggleLike('c1')
+    expect(result).toEqual({ success: true })
+  })
+})
+
 describe('comment tree building', () => {
   it('builds a flat list into a nested tree', () => {
     // Pure algorithmic test — mirrors the logic in getComments

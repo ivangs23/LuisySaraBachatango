@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npx vitest run
+
+      - name: Build
+        run: npm run build
+        env:
+          # Obviously-fake values so `next build` can evaluate next.config.ts
+          # and prerender pages. utils/env/validate-prod.ts only asserts real
+          # values in a production *runtime* (it no-ops during the build via
+          # NEXT_PHASE=phase-production-build, and we do NOT set VERCEL here),
+          # so dummy values are safe.
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-dummy-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-dummy-service-role-key
+          STRIPE_SECRET_KEY: sk_test_dummy
+          STRIPE_WEBHOOK_SECRET: whsec_dummy
+          NEXT_PUBLIC_BASE_URL: https://example.com
+          MUX_TOKEN_ID: ci-dummy-token-id
+          MUX_TOKEN_SECRET: ci-dummy-token-secret
+          MUX_SIGNING_KEY_ID: ci-dummy-signing-key-id
+          MUX_SIGNING_KEY_PRIVATE: ZHVtbXk=

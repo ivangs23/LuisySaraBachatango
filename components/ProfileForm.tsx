@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LayoutGroup, motion } from 'motion/react';
 import {
   User,
@@ -13,6 +13,19 @@ import {
 } from 'lucide-react';
 import { updateProfile } from '@/app/profile/actions';
 import styles from '@/app/profile/profile.module.css';
+
+// Mapeo de códigos devueltos por updateProfile a mensajes en español
+const ERROR_MESSAGES: Record<string, string> = {
+  invalid_type:
+    'Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF).',
+  too_large: 'El archivo es demasiado grande. El tamaño máximo es 5MB.',
+  invalid_image: 'El archivo no es una imagen válida.',
+  upload_failed: 'Error al subir el avatar. Inténtalo de nuevo.',
+  update_failed: 'No se pudieron guardar los cambios. Inténtalo de nuevo.',
+};
+
+const GENERIC_ERROR =
+  'No se pudieron guardar los cambios. Revisa el tamaño/formato del avatar (máx. 5MB) e inténtalo de nuevo.';
 
 type Profile = {
   id: string;
@@ -38,6 +51,10 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // URL de blob activa para la preview del avatar — se revoca al reemplazarla
+  // y al desmontar, para no fugar object URLs.
+  const objectUrlRef = useRef<string | null>(null);
 
   const [fullName, setFullName] = useState(profile.full_name || '');
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '');
@@ -73,11 +90,24 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     profile,
   ]);
 
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+    };
+  }, []);
+
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setAvatarFile(file);
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
       const objectUrl = URL.createObjectURL(file);
+      objectUrlRef.current = objectUrl;
       setAvatarPreview(objectUrl);
     }
   };
@@ -89,13 +119,21 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
+    setSubmitError(null);
     formData.append('avatarMode', avatarMode);
 
     try {
-      await updateProfile(formData);
-      setIsDirty(false);
+      const res = await updateProfile(formData);
+      if ('error' in res) {
+        setSubmitError(ERROR_MESSAGES[res.error] ?? GENERIC_ERROR);
+      } else {
+        setIsDirty(false);
+      }
     } catch (e) {
+      // En prod los errores lanzados por Server Actions llegan enmascarados;
+      // mostramos un mensaje genérico visible en lugar de fallar en silencio.
       console.error(e);
+      setSubmitError(GENERIC_ERROR);
     } finally {
       setIsSubmitting(false);
     }
@@ -282,6 +320,12 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
           placeholder="https://youtube.com/@tu_canal"
         />
       </div>
+
+      {submitError && (
+        <p role="alert" className={styles.formError}>
+          {submitError}
+        </p>
+      )}
 
       <motion.button
         type="submit"

@@ -87,6 +87,9 @@ export async function POST(req: Request) {
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
+      // CANDADO (AUDITORIA-2026-07 B12): solo 'card'. Añadir métodos diferidos
+      // (SEPA, Klarna…) exige implementar antes checkout.session.async_payment_succeeded
+      // en el webhook — ver el comentario homólogo en curso-bachatango/comprar/actions.ts.
       payment_method_types: ['card'],
       billing_address_collection: 'auto',
       line_items: [{ price_data: { currency: STRIPE_CONFIG.CURRENCY, unit_amount: Math.round(course.price_eur * 100), product_data: { name: course.title } }, quantity: 1 }],

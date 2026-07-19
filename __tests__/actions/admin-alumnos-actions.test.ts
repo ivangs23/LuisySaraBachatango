@@ -15,6 +15,7 @@ const mockUpdate = vi.fn()
 const mockInsert = vi.fn()
 const mockDeleteUser = vi.fn()
 const mockSingle = vi.fn()
+const mockRpc = vi.fn()
 
 vi.mock('@/utils/supabase/admin', () => ({
   createSupabaseAdmin: () => ({
@@ -33,6 +34,7 @@ vi.mock('@/utils/supabase/admin', () => ({
         insert: mockInsert.mockResolvedValue({ error: null }),
       }
     }),
+    rpc: (...a: unknown[]) => mockRpc(...a),
     auth: { admin: { deleteUser: mockDeleteUser.mockResolvedValue({ error: null }) } },
   }),
 }))
@@ -41,15 +43,22 @@ describe('updateUserRole', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
-    // Target's current role for the last-admin guard's lookup; a non-admin target
-    // skips the admin-count check and proceeds straight to the update.
     mockSingle.mockResolvedValue({ data: { role: 'member' } })
+    // El guard de último admin es ahora atómico dentro de la función SQL
+    // set_user_role, invocada por rpc.
+    mockRpc.mockResolvedValue({ error: null })
   })
 
-  it('updates role when admin', async () => {
+  it('updates role via la función atómica set_user_role', async () => {
     const { updateUserRole } = await import('@/app/admin/alumnos/actions')
     await updateUserRole('user-1', 'premium')
-    expect(mockUpdate).toHaveBeenCalledWith({ role: 'premium' })
+    expect(mockRpc).toHaveBeenCalledWith('set_user_role', { target: 'user-1', new_role: 'premium' })
+  })
+
+  it('mapea el error last_admin al mensaje en español', async () => {
+    mockRpc.mockResolvedValueOnce({ error: { message: 'last_admin' } })
+    const { updateUserRole } = await import('@/app/admin/alumnos/actions')
+    await expect(updateUserRole('u1', 'member')).rejects.toThrow(/último admin/i)
   })
 
   it('rejects invalid role', async () => {

@@ -7,11 +7,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    environmentMatchGlobs: [
-      // Components and hooks need jsdom
-      ['__tests__/components/**', 'jsdom'],
-      ['__tests__/hooks/**', 'jsdom'],
-    ],
+    // Component tests opt into jsdom via a `// @vitest-environment jsdom`
+    // docblock per file (environmentMatchGlobs was removed in Vitest 4).
     // Playwright E2E tests live under e2e/ and are run via `npm run test:e2e`.
     exclude: ['e2e/**', 'node_modules/**', '.next/**', 'test-results/**', 'playwright-report/**', '.claude/**', '.worktrees/**'],
     setupFiles: ['./vitest.setup.ts'],

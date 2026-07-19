@@ -1,11 +1,32 @@
 'use client';
 
 import { useState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import styles from '@/app/login/login.module.css';
 import { login } from '@/app/login/actions';
+
+// useFormStatus solo funciona en un componente hijo del <form>:
+// este botón se deshabilita mientras la acción está en curso para
+// evitar dobles envíos.
+function SubmitButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <motion.button
+      type="submit"
+      formAction={login}
+      disabled={pending}
+      aria-busy={pending}
+      className={styles.buttonPrimary}
+      whileTap={pending ? undefined : { scale: 0.97 }}
+    >
+      {label}
+      <ArrowRight size={14} strokeWidth={2.6} aria-hidden="true" />
+    </motion.button>
+  );
+}
 
 type LoginFormProps = {
   labels: {
@@ -87,15 +108,7 @@ export default function LoginForm({ labels }: LoginFormProps) {
       </div>
 
       <div className={styles.actions}>
-        <motion.button
-          type="submit"
-          formAction={login}
-          className={styles.buttonPrimary}
-          whileTap={{ scale: 0.97 }}
-        >
-          {labels.submit}
-          <ArrowRight size={14} strokeWidth={2.6} aria-hidden="true" />
-        </motion.button>
+        <SubmitButton label={labels.submit} />
 
         <div className={styles.divider}>
           <span className={styles.dividerLine} aria-hidden="true" />

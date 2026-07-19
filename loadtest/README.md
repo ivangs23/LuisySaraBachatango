@@ -32,9 +32,16 @@ cookie from DevTools → Application → Cookies.
 ```bash
 COOKIE='sb-access-token=...; sb-refresh-token=...' \
 COURSE_ID=00000000-0000-0000-0000-000000000000 \
+LESSON_PATH=/courses/00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111 \
 BASE_URL=https://your-staging-url.vercel.app \
   k6 run loadtest/scenarios/lesson-flow.js
 ```
+
+`LESSON_PATH` points at an actual lesson page (`/courses/<courseId>/<lessonId>`)
+the cookie's user can access. This lesson stage is the authenticated hot path
+(access check + Mux playback-token signing) the June audit required (finding A5)
+— it has its own `p95 < 2500 ms` threshold. If `LESSON_PATH` is unset the stage
+is skipped with a console warning.
 
 ## Acceptance criteria for 1000 concurrent
 
@@ -44,7 +51,7 @@ BASE_URL=https://your-staging-url.vercel.app \
 - All thresholds reported as `✓` at the end
 
 `lesson-flow.js` (500 sustained, 3min):
-- p95 < 2500 ms
+- p95 < 2500 ms (overall AND for the lesson-page requests, tagged `stage:lesson`)
 - error rate < 2%
 
 ## When the test fails

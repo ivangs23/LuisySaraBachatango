@@ -15,6 +15,7 @@ vi.mock('@/utils/supabase/server', () => ({
         select: () => chain,
         eq: () => chain,
         in: () => chain,
+        is: () => chain,
         lte: () => chain,
         gte: () => chain,
         maybeSingle: () => {

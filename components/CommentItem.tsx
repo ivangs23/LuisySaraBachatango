@@ -1,8 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Comment, addComment, toggleLike } from '@/app/actions/comments';
 import styles from './Comments.module.css';
+
+// Mapeo de códigos máquina de las server actions a mensajes en español.
+// Los mensajes ya legibles (p. ej. 'Debes iniciar sesión') pasan tal cual.
+const ERROR_MESSAGES: Record<string, string> = {
+  rate_limited: 'Estás comentando demasiado rápido. Espera un momento e inténtalo de nuevo.',
+  rate_limit: 'Demasiadas acciones seguidas. Espera un momento e inténtalo de nuevo.',
+  lesson_not_found: 'Esta lección ya no está disponible.',
+  forbidden: 'No tienes acceso a este curso.',
+  like_failed: 'No se pudo registrar el like. Inténtalo de nuevo.',
+};
+
+function errorMessage(code: string): string {
+  return ERROR_MESSAGES[code] ?? code;
+}
 
 type CommentItemProps = {
   comment: Comment;
@@ -17,26 +31,37 @@ export default function CommentItem({ comment, courseId, lessonId, onReplyAdded 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [likes, setLikes] = useState(comment.likes_count);
   const [hasLiked, setHasLiked] = useState(comment.user_has_liked);
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [isLikePending, startLikeTransition] = useTransition();
 
-  const handleLike = async () => {
+  const handleLike = () => {
+    if (isLikePending) return;
     // Optimistic update
     const newLikedState = !hasLiked;
     setHasLiked(newLikedState);
     setLikes(prev => newLikedState ? prev + 1 : prev - 1);
 
-    await toggleLike(comment.id);
+    startLikeTransition(async () => {
+      const res = await toggleLike(comment.id);
+      if (res && 'error' in res) {
+        // Revertir el optimistic update si la acción falló
+        setHasLiked(!newLikedState);
+        setLikes(prev => newLikedState ? prev - 1 : prev + 1);
+      }
+    });
   };
 
   const handleReplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyContent.trim()) return;
 
+    setReplyError(null);
     setIsSubmitting(true);
     const res = await addComment(lessonId, replyContent, comment.id);
     setIsSubmitting(false);
 
     if (res?.error) {
-      alert(res.error);
+      setReplyError(errorMessage(res.error));
     } else {
       setReplyContent('');
       setIsReplying(false);
@@ -64,8 +89,10 @@ export default function CommentItem({ comment, courseId, lessonId, onReplyAdded 
       </div>
 
       <div className={styles.actions}>
-        <button 
-          onClick={handleLike} 
+        <button
+          onClick={handleLike}
+          disabled={isLikePending}
+          aria-pressed={hasLiked}
           className={`${styles.actionButton} ${hasLiked ? styles.liked : ''}`}
         >
           {hasLiked ? '❤️' : '🤍'} {likes}
@@ -77,6 +104,9 @@ export default function CommentItem({ comment, courseId, lessonId, onReplyAdded 
 
       {isReplying && (
         <form onSubmit={handleReplySubmit} className={styles.replyForm}>
+          {replyError && (
+            <p role="alert" className={styles.formError}>{replyError}</p>
+          )}
           <textarea
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}

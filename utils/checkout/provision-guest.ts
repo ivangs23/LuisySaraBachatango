@@ -62,6 +62,10 @@ export async function provisionGuestPurchase(
     user_id: userId,
     course_id: courseId,
     stripe_session_id: session.id,
+    // Permite al handler de charge.refunded/disputes localizar la compra.
+    stripe_payment_intent: typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id ?? null,
     amount_paid: session.amount_total ?? null,
   };
   if (opts.isDemo) purchase.is_demo = true;

@@ -49,7 +49,7 @@ export default async function DashboardPage() {
     profileResult,
     completedResult,
   ] = await Promise.all([
-    supabase.from('course_purchases').select('course_id').eq('user_id', user.id),
+    supabase.from('course_purchases').select('course_id').eq('user_id', user.id).is('refunded_at', null),
     supabase
       .from('subscriptions')
       .select('status, current_period_start, current_period_end')

@@ -1,3 +1,6 @@
+// Client-side Sentry init. With Turbopack (the default bundler in Next.js 16)
+// the SDK does NOT auto-inject `sentry.client.config.ts`; browser init must
+// live in `instrumentation-client.ts` at the project root. (AUDITORIA-2026-07 A4)
 import * as Sentry from '@sentry/nextjs'
 import { scrubSensitive } from '@/utils/sentry/scrub'
 
@@ -23,3 +26,6 @@ Sentry.init({
     return event
   },
 })
+
+// Instruments App Router navigations for performance tracing.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

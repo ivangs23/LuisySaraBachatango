@@ -85,7 +85,7 @@ export default function Header({ user, profile }: HeaderProps) {
     user?.email?.[0]?.toUpperCase() ??
     '·';
   const displayName =
-    profile?.full_name?.trim() || user?.email?.split('@')[0] || 'Bailarín';
+    profile?.full_name?.trim() || user?.email?.split('@')[0] || t.header.dancer;
 
   // Funnel de venta standalone (landing + form + gracias): sin nav global,
   // para que el comprador no navegue hasta pagar y completar el alta.
@@ -97,7 +97,7 @@ export default function Header({ user, profile }: HeaderProps) {
         className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`}
       >
         {/* Logo */}
-        <Link href="/" className={styles.logoLink} aria-label="Inicio">
+        <Link href="/" className={styles.logoLink} aria-label={t.header.home}>
           <span className={styles.logoMark}>
             <Image
               src="/logo.png"
@@ -120,7 +120,7 @@ export default function Header({ user, profile }: HeaderProps) {
         </Link>
 
         {/* Desktop nav */}
-        <nav className={styles.nav} aria-label="Navegación principal">
+        <nav className={styles.nav} aria-label={t.header.mainNav}>
           <LayoutGroup id="header-nav">
             <div className={styles.navLinks}>
               {NAV_LINKS.map((link) => {
@@ -204,7 +204,7 @@ export default function Header({ user, profile }: HeaderProps) {
                     >
                       <div className={styles.dropdownHeader}>
                         <span className={styles.dropdownEyebrow}>
-                          SESIÓN ABIERTA
+                          {t.header.sessionOpen}
                         </span>
                         <span className={styles.dropdownName}>
                           {displayName}
@@ -266,7 +266,7 @@ export default function Header({ user, profile }: HeaderProps) {
           onClick={() => setIsMenuOpen((v) => !v)}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-drawer"
-          aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-label={isMenuOpen ? t.header.closeMenu : t.header.openMenu}
           data-open={isMenuOpen}
         >
           <span className={styles.hamburgerInner} aria-hidden="true">
@@ -284,7 +284,7 @@ export default function Header({ user, profile }: HeaderProps) {
             id="mobile-drawer"
             role="dialog"
             aria-modal="true"
-            aria-label="Menú principal"
+            aria-label={t.header.mainMenu}
             className={`${styles.mobileDrawer} ${styles.mobileDrawerOpen}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -298,7 +298,7 @@ export default function Header({ user, profile }: HeaderProps) {
 
             <span className={styles.mobileEyebrow}>
               <span className={styles.mobileEyebrowLine} aria-hidden="true" />
-              MENÚ · NAVEGACIÓN
+              {t.header.menuNavigation}
             </span>
 
             <div className={styles.mobileLinks}>

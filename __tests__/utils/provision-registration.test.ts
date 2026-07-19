@@ -14,11 +14,11 @@ import { provisionFromPending } from '@/utils/checkout/provision-registration'
 // .upsert().select('id')  (returns { data, error }).
 function makeAdmin(opts: {
   pending?: Record<string, unknown> | null
-  profileByEmail?: { id: string } | null
+  profileByEmail?: { id: string; terms_accepted_at?: string | null } | null
   createUser?: { id?: string; error?: { message: string; status?: number } }
   purchaseInserted?: Array<{ id: string }>          // [] => idempotent duplicate (no email)
   purchaseError?: { code?: string; message?: string }
-  profileSequence?: Array<{ id: string } | null>    // successive profiles-by-email lookups (race)
+  profileSequence?: Array<{ id: string; terms_accepted_at?: string | null } | null>    // successive profiles-by-email lookups (race)
   existingPurchase?: { id: string } | null          // course_purchases row for session.id (orphan check)
 } = {}) {
   const calls = { profileColumns: [] as unknown[], customerId: [] as unknown[], purchaseUpsert: [] as unknown[], pendingDelete: [] as string[], createUser: [] as unknown[] }
@@ -91,15 +91,28 @@ describe('provisionFromPending', () => {
     expect(admin.__calls.pendingDelete).toEqual(['pend-1'])
     expect(sendMock).toHaveBeenCalledWith({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
   })
-  it('existing account: records purchase, NEVER creates user or writes enumerated profile cols/password; emails (existing)', async () => {
-    const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old' } })
+  it('existing account CON consentimiento ya registrado: no crea usuario ni pisa columnas; emails (existing)', async () => {
+    // Un usuario genuinamente preexistente ya tiene terms_accepted_at → no backfill.
+    const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old', terms_accepted_at: '2025-01-01T00:00:00Z' } })
     const res = await provisionFromPending(session(), admin)
     expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
     expect(admin.__calls.createUser).toEqual([])
-    expect(admin.__calls.profileColumns).toEqual([]) // no enumerated-column write for existing user
+    expect(admin.__calls.profileColumns).toEqual([]) // no pisa a un usuario que ya tiene consentimiento
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-old' }))
     expect(admin.__calls.pendingDelete).toEqual(['pend-1'])
     expect(sendMock).toHaveBeenCalledWith({ email: 'ana@example.com', fullName: 'Ana', existingAccount: true })
+  })
+
+  it('B2: cuenta resuelta SIN terms_accepted_at → backfill del consentimiento en el reintento', async () => {
+    // Escenario: un intento previo creó el usuario pero el UPDATE de consent
+    // falló; el retry lo resuelve (created=false) y debe rellenar el consentimiento.
+    const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old', terms_accepted_at: null } })
+    const res = await provisionFromPending(session(), admin)
+    expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+    expect(admin.__calls.createUser).toEqual([])
+    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({
+      terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z', marketing_consent: true,
+    }))
   })
   it('isDemo: marks user_metadata.is_demo and purchase.is_demo', async () => {
     const admin = makeAdmin({ pending: PENDING, profileByEmail: null, createUser: { id: 'u-new' } })
@@ -171,9 +184,10 @@ describe('provisionFromPending', () => {
     expect(errSpy).not.toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), expect.anything(), expect.anything())
   })
   it('createUser already-exists race -> re-SELECT profile and continue (no 500), treated as existing', async () => {
-    const admin = makeAdmin({ pending: PENDING, profileSequence: [null, { id: 'u-raced' }], createUser: { error: { message: 'already been registered', status: 422 } } })
+    // La entrega concurrente ganadora ya escribió el consentimiento → no backfill.
+    const admin = makeAdmin({ pending: PENDING, profileSequence: [null, { id: 'u-raced', terms_accepted_at: '2026-07-14T10:00:00Z' }], createUser: { error: { message: 'already been registered', status: 422 } } })
     const res = await provisionFromPending(session(), admin)
     expect(res).toEqual({ ok: true, userId: 'u-raced', created: false })
-    expect(admin.__calls.profileColumns).toEqual([]) // raced -> treated as existing, no enumerated write
+    expect(admin.__calls.profileColumns).toEqual([]) // raced + ya con consent -> no enumerated write
   })
 })

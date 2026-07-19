@@ -267,13 +267,18 @@ describe('submitAssignment', () => {
     const result = await submitAssignment('a1', 'my work text', null)
 
     expect(fromMock).toHaveBeenCalledWith('submissions')
-    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({
-      assignment_id: 'a1',
-      user_id: 'user-1',
-      text_content: 'my work text',
-      file_url: null,
-      status: 'pending',
-    }))
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assignment_id: 'a1',
+        user_id: 'user-1',
+        text_content: 'my work text',
+        file_url: null,
+        status: 'pending',
+      }),
+      // Regresión: sin onConflict el upsert resuelve contra la PK y una
+      // re-entrega choca con UNIQUE(assignment_id, user_id) → 23505.
+      { onConflict: 'assignment_id,user_id' },
+    )
     expect(result).toEqual({ success: true })
   })
 
@@ -288,10 +293,13 @@ describe('submitAssignment', () => {
     const { submitAssignment } = await import('@/app/courses/actions')
     await submitAssignment('a2', '', 'https://storage/file.pdf')
 
-    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({
-      file_url: 'https://storage/file.pdf',
-      text_content: null, // empty string becomes null
-    }))
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        file_url: 'https://storage/file.pdf',
+        text_content: null, // empty string becomes null
+      }),
+      { onConflict: 'assignment_id,user_id' },
+    )
   })
 
   it('returns error when Supabase upsert fails', async () => {

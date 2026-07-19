@@ -2,6 +2,9 @@
   "name": "luis-sara-platform",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -47,6 +50,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.5",
     "baseline-browser-mapping": "^2.10.27",
     "dotenv": "^17.4.2",
     "eslint": "^9",

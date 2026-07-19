@@ -1,53 +1,48 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-const { mockRequireAdmin, mockUpdateEq, state } = vi.hoisted(() => ({
+
+// El guard de "último admin" es ahora ATÓMICO dentro de la función SQL
+// set_user_role (bloquea las filas admin con FOR UPDATE), invocada por rpc
+// (AUDITORIA-2026-07 B8). Aquí se testea el contrato del server action:
+// bloqueo de auto-rol, delegación a la rpc, y mapeo del error last_admin.
+const { mockRequireAdmin, mockRpc } = vi.hoisted(() => ({
   mockRequireAdmin: vi.fn(),
-  mockUpdateEq: vi.fn().mockResolvedValue({ error: null }),
-  state: { targetRole: 'member', adminCount: 2 },
+  mockRpc: vi.fn().mockResolvedValue({ error: null }),
 }))
 vi.mock('@/utils/auth/require-admin', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/utils/supabase/admin', () => ({
-  createSupabaseAdmin: () => ({
-    from: () => ({
-      select: (_col: string, opts?: { count?: string }) =>
-        opts?.count
-          ? { eq: () => Promise.resolve({ count: state.adminCount }) }          // count query
-          : { eq: () => ({ single: () => Promise.resolve({ data: { role: state.targetRole } }) }) }, // current-role query
-      update: () => ({ eq: mockUpdateEq }),
-    }),
-  }),
+  createSupabaseAdmin: () => ({ rpc: (...a: unknown[]) => mockRpc(...a) }),
 }))
 import { updateUserRole } from '@/app/admin/alumnos/actions'
 beforeEach(() => {
   vi.clearAllMocks()
   mockRequireAdmin.mockResolvedValue({ id: 'admin1' })
-  state.targetRole = 'member'
-  state.adminCount = 2
+  mockRpc.mockResolvedValue({ error: null })
 })
 
 describe('updateUserRole guardrails', () => {
   it('blocks changing your OWN role', async () => {
     await expect(updateUserRole('admin1', 'member')).rejects.toThrow(/tu propio rol/)
-    expect(mockUpdateEq).not.toHaveBeenCalled()
+    expect(mockRpc).not.toHaveBeenCalled()
   })
-  it('blocks demoting the LAST admin', async () => {
-    state.targetRole = 'admin'; state.adminCount = 1
-    await expect(updateUserRole('other-admin', 'member')).rejects.toThrow(/último admin/)
-    expect(mockUpdateEq).not.toHaveBeenCalled()
-  })
-  it('allows demoting an admin when another admin remains', async () => {
-    state.targetRole = 'admin'; state.adminCount = 2
+
+  it('delega en la función atómica set_user_role', async () => {
     await updateUserRole('other-admin', 'member')
-    expect(mockUpdateEq).toHaveBeenCalled()
+    expect(mockRpc).toHaveBeenCalledWith('set_user_role', { target: 'other-admin', new_role: 'member' })
   })
-  it('allows re-roling a non-admin even when only one admin exists (not over-blocked)', async () => {
-    state.targetRole = 'member'; state.adminCount = 1
-    await updateUserRole('u2', 'premium')
-    expect(mockUpdateEq).toHaveBeenCalled()
+
+  it('mapea el error last_admin (raise del guard SQL) al mensaje en español', async () => {
+    mockRpc.mockResolvedValueOnce({ error: { message: 'last_admin' } })
+    await expect(updateUserRole('other-admin', 'member')).rejects.toThrow(/último admin/)
   })
-  it('allows promoting to admin without a count check', async () => {
-    state.adminCount = 1
+
+  it('propaga otros errores de la rpc', async () => {
+    mockRpc.mockResolvedValueOnce({ error: { message: 'db down' } })
+    await expect(updateUserRole('u2', 'premium')).rejects.toThrow()
+  })
+
+  it('promover a admin también pasa por la rpc', async () => {
     await updateUserRole('u3', 'admin')
-    expect(mockUpdateEq).toHaveBeenCalled()
+    expect(mockRpc).toHaveBeenCalledWith('set_user_role', { target: 'u3', new_role: 'admin' })
   })
 })

@@ -97,9 +97,23 @@ export async function provisionFromPending(
     }
   }
 
-  // New account only: populate the enumerated profile columns. NEVER write
-  // password_hash into profiles; NEVER clobber an existing user's fields.
-  if (created) {
+  // Populate the enumerated profile columns (incl. GDPR Art. 7 consent
+  // provenance). NEVER write password_hash into profiles.
+  //
+  // Backfill en reintentos (AUDITORIA-2026-07 B2): si en un primer intento
+  // createUser tuvo éxito pero este UPDATE falló (profErr se loguea, no relanza)
+  // y luego el upsert de compra dio 500 → el retry resuelve al usuario ya
+  // existente (created=false) y antes se saltaba este bloque PARA SIEMPRE,
+  // perdiendo la evidencia de consentimiento. Ahora también se escribe cuando
+  // el perfil aún no tiene `terms_accepted_at`, sin pisar a un usuario
+  // genuinamente preexistente (que ya lo tendría relleno).
+  let shouldWriteProfile = created
+  if (!created) {
+    const { data: prof } = await admin
+      .from('profiles').select('terms_accepted_at').eq('id', userId).maybeSingle()
+    shouldWriteProfile = !prof?.terms_accepted_at
+  }
+  if (shouldWriteProfile) {
     const { error: profErr } = await admin.from('profiles').update({
       country: pending.country ?? null,
       city: pending.city ?? null,
@@ -128,6 +142,10 @@ export async function provisionFromPending(
   // inserted (vs an idempotent duplicate) so the email fires exactly once.
   const purchaseRow: Record<string, unknown> = {
     user_id: userId, course_id: courseId, stripe_session_id: session.id, amount_paid: amount, source: 'landing',
+    // Permite al handler de charge.refunded/disputes localizar la compra.
+    stripe_payment_intent: typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id ?? null,
   }
   if (opts.isDemo) purchaseRow.is_demo = true
   const { data: inserted, error: purchaseError } = await admin.from('course_purchases')

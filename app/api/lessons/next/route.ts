@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { hasCourseAccess } from '@/utils/auth/course-access';
+import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -8,6 +9,17 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return new NextResponse('Unauthorized', { status: 401 });
+  }
+
+  // Rate limit por usuario: la ruta encadena una query de lessons + hasCourseAccess
+  // (2-3 queries más) en cada GET. Era el único endpoint autenticado sin límite
+  // (AUDITORIA-2026-07 B4).
+  const rl = await rateLimit(rateLimitKey([user.id, 'lessons-next']), 30, 60_000);
+  if (!rl.ok) {
+    return new NextResponse('Too Many Requests', {
+      status: 429,
+      headers: { 'Retry-After': String(rl.retryAfter) },
+    });
   }
 
   const now = new Date();

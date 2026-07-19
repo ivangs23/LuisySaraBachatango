@@ -15,6 +15,7 @@ import AdminBanner from '@/components/admin/AdminBanner';
 import styles from '@/app/dashboard/dashboard.module.css';
 import coursesStyles from '@/app/courses/courses.module.css';
 import cardStyles from '@/components/CoursesClient.module.css';
+import { safeImageUrl } from '@/utils/sanitize';
 
 type Course = {
   id: string;
@@ -79,9 +80,9 @@ function CourseCard({
   return (
     <Link href={`/courses/${course.id}`} className={coursesStyles.card}>
       <div className={coursesStyles.imageContainer}>
-        {course.image_url?.startsWith('http') ? (
+        {safeImageUrl(course.image_url) ? (
           <Image
-            src={course.image_url}
+            src={safeImageUrl(course.image_url)!}
             alt={course.title}
             className={coursesStyles.image}
             width={400}

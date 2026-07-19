@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { LayoutGroup, motion } from 'motion/react';
 import { Search, Heart, MessageCircle, ArrowUpRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './community.module.css';
 
 type Post = {
@@ -15,12 +15,9 @@ type Post = {
   profiles: {
     full_name: string | null;
   } | null;
-  category?: string;
   likes_count?: number;
   comments_count?: number;
 };
-
-const CATEGORIES = ['Todos', 'General', 'Dudas de Clase', 'Música', 'Eventos', 'Quedadas'];
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -33,20 +30,21 @@ function formatDate(iso: string): string {
 }
 
 export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }) {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
 
+  // Nota: la tabla posts no tiene columna de categoría, así que aquí solo
+  // filtramos por búsqueda. Si algún día se añade la columna, reintroducir
+  // las pestañas de categoría con un filtro real.
   const filteredPosts = useMemo(() => {
     return initialPosts.filter(post => {
       const term = searchTerm.toLowerCase();
-      const matchesSearch =
+      return (
         post.title.toLowerCase().includes(term) ||
-        post.content.toLowerCase().includes(term);
-      // Category filter is a stub for now (no category column in DB)
-      const matchesCategory = selectedCategory === 'Todos' || true;
-      return matchesSearch && matchesCategory;
+        post.content.toLowerCase().includes(term)
+      );
     });
-  }, [initialPosts, searchTerm, selectedCategory]);
+  }, [initialPosts, searchTerm]);
 
   return (
     <>
@@ -61,41 +59,12 @@ export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }
             />
             <input
               type="text"
-              placeholder="Buscar en la comunidad..."
+              placeholder={t.community.searchPlaceholder}
               className={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-        </Reveal>
-
-        <Reveal delay={0.05}>
-          <LayoutGroup id="community-categories">
-            <div className={styles.categories} role="tablist" aria-label="Categorías">
-              {CATEGORIES.map((cat) => {
-                const active = selectedCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`${styles.categoryChip} ${active ? styles.activeChip : ''}`}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="community-chip-indicator"
-                        className={styles.chipIndicator}
-                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                      />
-                    )}
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-          </LayoutGroup>
         </Reveal>
       </section>
 
@@ -119,7 +88,7 @@ export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }
                       <h2 className={styles.postTitle}>{post.title}</h2>
                       <div className={styles.postMeta}>
                         <span className={styles.authorName}>
-                          {post.profiles?.full_name || 'Usuario'}
+                          {post.profiles?.full_name || t.community.anonymous}
                         </span>
                         <span className={styles.dot}>•</span>
                         <span>{formatDate(post.created_at)}</span>
@@ -130,16 +99,16 @@ export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }
                   <p className={styles.postContent}>{post.content}</p>
 
                   <div className={styles.cardFooter}>
-                    <span className={styles.interaction} aria-label="Me gusta">
+                    <span className={styles.interaction} aria-label={t.community.like}>
                       <Heart size={14} strokeWidth={2.2} />
                       {post.likes_count ?? 0}
                     </span>
-                    <span className={styles.interaction} aria-label="Comentarios">
+                    <span className={styles.interaction} aria-label={t.community.comments}>
                       <MessageCircle size={14} strokeWidth={2.2} />
                       {post.comments_count ?? 0}
                     </span>
                     <span className={styles.cardCta}>
-                      Leer
+                      {t.community.read}
                       <ArrowUpRight size={12} strokeWidth={2.6} aria-hidden="true" />
                     </span>
                   </div>
@@ -153,13 +122,13 @@ export default function CommunityFeed({ initialPosts }: { initialPosts: Post[] }
               <div className={styles.emptyState}>
                 <p className={styles.emptyTitle}>
                   {searchTerm
-                    ? `Sin resultados para "${searchTerm}"`
-                    : 'Todavía no hay posts'}
+                    ? t.community.noResults.replace('{term}', searchTerm)
+                    : t.community.noPosts}
                 </p>
                 <p>
                   {searchTerm
-                    ? 'Prueba con otra búsqueda o publica el primer post sobre el tema.'
-                    : 'Sé el primero en compartir algo con la comunidad.'}
+                    ? t.community.noResultsSub
+                    : t.community.noPostsSub}
                 </p>
               </div>
             </Reveal>

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import ProfileForm from '@/components/ProfileForm';
+import { safeAvatarUrl } from '@/utils/sanitize';
 import styles from '@/app/profile/profile.module.css';
 
 type Profile = {
@@ -51,6 +52,29 @@ type Dict = {
   undoableWarning: string;
   logout: string;
   deleteAccount: string;
+  roleMember: string;
+  roleAdmin: string;
+  rolePremium: string;
+  roleAdminFull: string;
+  subscriptionActiveBadge: string;
+  sinceBadge: string;
+  coursesPurchased: string;
+  lifetimeAccess: string;
+  lessonsCompleted: string;
+  globalProgress: string;
+  statActive: string;
+  statNoPlan: string;
+  renewsOn: string;
+  noPlanActive: string;
+  personalInfo: string;
+  yourPlan: string;
+  account: string;
+  role: string;
+  memberSince: string;
+  irreversibleActions: string;
+  password: string;
+  currentPasswordPlaceholder: string;
+  viewCourses: string;
 };
 
 type Props = {
@@ -62,26 +86,22 @@ type Props = {
   lessonsCompletedCount: number;
   isAdmin: boolean;
   t: Dict;
+  months: readonly string[];
   deleteAccountAction: (formData: FormData) => Promise<void>;
 };
 
-const MONTHS_ES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
-
-function formatDate(iso: string | null): string | null {
+function formatDate(iso: string | null, months: readonly string[]): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return `${d.getDate()} ${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function formatMonthYear(iso: string | null): string | null {
+function formatMonthYear(iso: string | null, months: readonly string[]): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+  return `${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function getInitials(name: string | null, email: string): string {
@@ -101,24 +121,28 @@ export default function ProfileView({
   lessonsCompletedCount,
   isAdmin,
   t,
+  months,
   deleteAccountAction,
 }: Props) {
   const displayName = profile.full_name?.trim() || userEmail.split('@')[0];
   const role = (profile.role ?? 'member').toLowerCase();
   const roleLabel =
-    role === 'admin' ? 'ADMIN' : role === 'premium' ? 'PREMIUM' : 'MIEMBRO';
+    role === 'admin' ? t.roleAdmin : role === 'premium' ? t.rolePremium : t.roleMember;
   const isSubscriptionActive =
     !!subscription &&
     (subscription.status === 'active' || subscription.status === 'trialing') &&
     (subscription.current_period_end
       ? new Date(subscription.current_period_end) > new Date()
       : true);
-  const subscriptionEndLabel = formatDate(subscription?.current_period_end ?? null);
-  const memberSinceLabel = formatMonthYear(memberSince);
+  const subscriptionEndLabel = formatDate(subscription?.current_period_end ?? null, months);
+  const memberSinceLabel = formatMonthYear(memberSince, months);
   const initials = getInitials(profile.full_name, userEmail);
 
-  const hasValidAvatar =
-    profile.avatar_url && profile.avatar_url.startsWith('http');
+  // safeAvatarUrl (no startsWith('http')): un host fuera de remotePatterns hace
+  // que <Image> lance en render y rompe la página para ese usuario. Existen
+  // avatares externos legacy (ProfileForm tiene modo URL) — devolver null los
+  // degrada al fallback de iniciales en vez de crashear (AUDITORIA-2026-07 M8).
+  const safeAvatar = safeAvatarUrl(profile.avatar_url);
 
   return (
     <div className={styles.container}>
@@ -139,9 +163,9 @@ export default function ProfileView({
               <div className={styles.avatarWrap}>
                 <span className={styles.avatarHalo} aria-hidden="true" />
                 <div className={styles.avatarRing}>
-                  {hasValidAvatar ? (
+                  {safeAvatar ? (
                     <Image
-                      src={profile.avatar_url!}
+                      src={safeAvatar}
                       alt={displayName}
                       width={160}
                       height={160}
@@ -177,13 +201,13 @@ export default function ProfileView({
                   {isSubscriptionActive && (
                     <span className={styles.heroBadgeAccess}>
                       <Sparkles size={12} strokeWidth={2.5} aria-hidden="true" />
-                      Suscripción activa
+                      {t.subscriptionActiveBadge}
                     </span>
                   )}
                   {memberSinceLabel && (
                     <span className={styles.heroBadge}>
                       <CalendarDays size={12} strokeWidth={2.2} aria-hidden="true" />
-                      Desde {memberSinceLabel}
+                      {t.sinceBadge.replace('{date}', memberSinceLabel)}
                     </span>
                   )}
                 </div>
@@ -199,34 +223,34 @@ export default function ProfileView({
           <Reveal delay={0.05}>
             <div className={styles.statCard}>
               <span className={styles.statValue}>{coursesPurchasedCount}</span>
-              <span className={styles.statLabel}>Cursos comprados</span>
+              <span className={styles.statLabel}>{t.coursesPurchased}</span>
               <p className={styles.statSub}>
                 <BookOpen size={11} strokeWidth={2.2} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                Acceso vitalicio
+                {t.lifetimeAccess}
               </p>
             </div>
           </Reveal>
           <Reveal delay={0.12}>
             <div className={styles.statCard}>
               <span className={styles.statValue}>{lessonsCompletedCount}</span>
-              <span className={styles.statLabel}>Lecciones completadas</span>
+              <span className={styles.statLabel}>{t.lessonsCompleted}</span>
               <p className={styles.statSub}>
                 <CheckCircle2 size={11} strokeWidth={2.2} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                Progreso global
+                {t.globalProgress}
               </p>
             </div>
           </Reveal>
           <Reveal delay={0.19}>
             <div className={styles.statCard}>
               <span className={styles.statValue}>
-                {isSubscriptionActive ? 'Activa' : 'Sin plan'}
+                {isSubscriptionActive ? t.statActive : t.statNoPlan}
               </span>
-              <span className={styles.statLabel}>Suscripción</span>
+              <span className={styles.statLabel}>{t.subscription}</span>
               <p className={styles.statSub}>
                 <Sparkles size={11} strokeWidth={2.2} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                 {isSubscriptionActive && subscriptionEndLabel
-                  ? `Renueva el ${subscriptionEndLabel}`
-                  : 'No hay plan activo'}
+                  ? t.renewsOn.replace('{date}', subscriptionEndLabel)
+                  : t.noPlanActive}
               </p>
             </div>
           </Reveal>
@@ -243,7 +267,7 @@ export default function ProfileView({
                 <span className={styles.sectionEyebrowLine} aria-hidden="true" />
                 {t.editProfile.toUpperCase()}
               </span>
-              <h2 className={styles.sectionTitle}>Tu información personal</h2>
+              <h2 className={styles.sectionTitle}>{t.personalInfo}</h2>
             </div>
             <ProfileForm profile={profile} />
           </div>
@@ -258,7 +282,7 @@ export default function ProfileView({
                   <span className={styles.sectionEyebrowLine} aria-hidden="true" />
                   {t.subscription.toUpperCase()}
                 </span>
-                <h2 className={styles.sectionTitle}>Tu plan</h2>
+                <h2 className={styles.sectionTitle}>{t.yourPlan}</h2>
               </div>
 
               <div className={styles.subscriptionStatus}>
@@ -284,8 +308,8 @@ export default function ProfileView({
               )}
 
               {!isSubscriptionActive && (
-                <Link href="/pricing" className={styles.subCta}>
-                  Ver planes
+                <Link href="/courses" className={styles.subCta}>
+                  {t.viewCourses}
                   <ArrowUpRight size={14} strokeWidth={2.4} />
                 </Link>
               )}
@@ -299,7 +323,7 @@ export default function ProfileView({
                   <span className={styles.sectionEyebrowLine} aria-hidden="true" />
                   {t.accountInfo.toUpperCase()}
                 </span>
-                <h2 className={styles.sectionTitle}>Cuenta</h2>
+                <h2 className={styles.sectionTitle}>{t.account}</h2>
               </div>
 
               <div className={styles.infoGrid}>
@@ -308,14 +332,14 @@ export default function ProfileView({
                   <span className={styles.infoValue}>{userEmail}</span>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Rol</span>
+                  <span className={styles.infoLabel}>{t.role}</span>
                   <span className={styles.infoValue}>
-                    {isAdmin ? 'Administrador' : roleLabel}
+                    {isAdmin ? t.roleAdminFull : roleLabel}
                   </span>
                 </div>
                 {memberSinceLabel && (
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Miembro desde</span>
+                    <span className={styles.infoLabel}>{t.memberSince}</span>
                     <span className={styles.infoValue}>{memberSinceLabel}</span>
                   </div>
                 )}
@@ -334,7 +358,7 @@ export default function ProfileView({
                 <span className={styles.dangerEyebrowLine} aria-hidden="true" />
                 {t.dangerZone.toUpperCase()}
               </span>
-              <h2 className={styles.dangerTitle}>Acciones irreversibles</h2>
+              <h2 className={styles.dangerTitle}>{t.irreversibleActions}</h2>
             </div>
             <p className={styles.dangerSub}>{t.undoableWarning}</p>
 
@@ -352,13 +376,13 @@ export default function ProfileView({
 
               <form action={deleteAccountAction} className={styles.deleteForm}>
                 <label className={styles.deletePasswordLabel}>
-                  Contraseña
+                  {t.password}
                   <input
                     type="password"
                     name="password"
                     required
                     autoComplete="current-password"
-                    placeholder="Tu contraseña actual"
+                    placeholder={t.currentPasswordPlaceholder}
                     className={styles.deletePasswordInput}
                   />
                 </label>

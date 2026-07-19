@@ -47,26 +47,53 @@ export function safeSocialUrl(
 }
 
 /**
- * Hosts allowed for avatar URLs. Must stay in sync with next.config.ts
- * `images.remotePatterns`, otherwise <Image> throws at render time and
- * breaks the page for that user.
+ * Hosts allowed for images rendered via next/image. Must stay in sync with
+ * next.config.ts `images.remotePatterns`, otherwise <Image> throws at render
+ * time and breaks the page for that user. Derived from the Supabase URL (same
+ * source next.config uses) with the prod host as fallback when the env var is
+ * unset (e.g. some test contexts).
  */
-const ALLOWED_AVATAR_HOSTS = new Set<string>([
-  'jytokoxbsykoyifzbjkd.supabase.co',
-])
+const SUPABASE_IMAGE_HOST =
+  (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/^https?:\/\//, '') ||
+  'jytokoxbsykoyifzbjkd.supabase.co'
+const ALLOWED_IMAGE_HOSTS = new Set<string>([SUPABASE_IMAGE_HOST])
 
 /**
- * Validates an avatar URL is HTTPS and on an allowlisted host.
+ * Validates an image URL is HTTPS and on an allowlisted host.
  * Returns the URL if safe, null otherwise (caller should fall back to placeholder).
  */
-export function safeAvatarUrl(value: string | FormDataEntryValue | null | undefined): string | null {
+export function safeImageUrl(value: string | FormDataEntryValue | null | undefined): string | null {
   const url = sanitizeUrl(value)
   if (!url) return null
   try {
     const parsed = new URL(url)
-    if (!ALLOWED_AVATAR_HOSTS.has(parsed.hostname)) return null
+    if (!ALLOWED_IMAGE_HOSTS.has(parsed.hostname)) return null
     return url
   } catch {
     return null
   }
+}
+
+/**
+ * Avatars use the same allowlist as any other next/image source.
+ * Kept as a named export for call-site clarity.
+ */
+export const safeAvatarUrl = safeImageUrl
+
+/**
+ * Masks an email for display on semi-public surfaces (e.g. /gracias, whose
+ * session_id arrives via URL and could be replayed by a third party).
+ * "ivan@gmail.com" -> "i***@g***.com". Returns null for invalid input.
+ */
+export function maskEmail(value: string | null | undefined): string | null {
+  if (!value || typeof value !== 'string') return null
+  const at = value.indexOf('@')
+  if (at <= 0 || at === value.length - 1) return null
+  const local = value.slice(0, at)
+  const domain = value.slice(at + 1)
+  const lastDot = domain.lastIndexOf('.')
+  const maskedLocal = `${local[0]}***`
+  if (lastDot <= 0) return `${maskedLocal}@***`
+  const maskedDomain = `${domain[0]}***${domain.slice(lastDot)}`
+  return `${maskedLocal}@${maskedDomain}`
 }

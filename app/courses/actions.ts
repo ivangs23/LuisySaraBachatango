@@ -361,6 +361,9 @@ export async function submitAssignment(assignmentId: string, textContent: string
     if (!safeFileUrl) return { error: 'invalid_file' }
   }
 
+  // onConflict es imprescindible: sin él, PostgREST resuelve el upsert contra
+  // la PK (id, ausente del payload) y una re-entrega chocaría con el
+  // UNIQUE(assignment_id, user_id) devolviendo 23505 en vez de actualizar.
   const { error } = await supabase
     .from('submissions')
     .upsert({
@@ -370,7 +373,7 @@ export async function submitAssignment(assignmentId: string, textContent: string
       file_url: safeFileUrl,
       status: 'pending',
       updated_at: new Date().toISOString(),
-    })
+    }, { onConflict: 'assignment_id,user_id' })
 
   if (error) {
     console.error('Error submitting assignment:', error)

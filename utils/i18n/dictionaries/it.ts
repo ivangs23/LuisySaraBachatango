@@ -2,12 +2,21 @@ import type { Dictionary } from '@/utils/i18n/types'
 
 export const it: Dictionary = {
   header: {
-    courses: "Corsi", events: "Eventi", music: "Musica", community: "Comunità", about: "Chi Siamo", login: "Login", profile: "Il Mio Profilo", dashboard: "Dashboard", logout: "Esci"
+    courses: "Corsi", events: "Eventi", music: "Musica", community: "Comunità", about: "Chi Siamo", login: "Login", profile: "Il Mio Profilo", dashboard: "Dashboard", logout: "Esci",
+    sessionOpen: "SESSIONE APERTA",
+    openMenu: "Apri menu",
+    closeMenu: "Chiudi menu",
+    menuNavigation: "MENU · NAVIGAZIONE",
+    mainNav: "Navigazione principale",
+    mainMenu: "Menu principale",
+    home: "Home",
+    dancer: "Ballerino"
   },
   common: {
     processing: "Elaborazione...",
     subscribeNow: "Iscriviti Ora",
-    login: "Accedi"
+    login: "Accedi",
+    skipToContent: "Vai al contenuto principale"
   },
   footer: {
     description: "Impara il Bachatango con Luis e Sara. La fusione perfetta tra la sensualità della bachata e l'eleganza del tango.",
@@ -132,9 +141,19 @@ export const it: Dictionary = {
     assignmentSending: "Invio in corso...",
     assignmentSuccess: "Compito inviato con successo!",
     assignmentViewSubmissions: "Vedi tutti gli invii",
+    assignmentInReview: "Il tuo compito è in revisione. Ti avviseremo quando l'insegnante lo correggerà.",
+    assignmentFeedbackLabel: "Feedback dell'insegnante:",
+    assignmentUrlLabel: "Link al tuo video o materiale (facoltativo)",
+    assignmentUrlPlaceholder: "https://... (YouTube, Drive, ecc.)",
+    assignmentError: "Impossibile inviare il compito. Riprova.",
+    assignmentEmptyDescription: "Nessuna descrizione per questa lezione.",
     previousLesson: "Precedente",
     nextLesson: "Successivo",
-    lessonNavigation: "Navigazione tra le lezioni"
+    lessonNavigation: "Navigazione tra le lezioni",
+    lessonPosition: "Lezione {current} di {total}",
+    completed: "completate",
+    videoPreparing: "Video in preparazione",
+    videoProcessing: "Il video di questa lezione è ancora in elaborazione. Torna tra qualche minuto."
   },
   dashboard: {
     title: "I Miei Corsi",
@@ -225,7 +244,30 @@ export const it: Dictionary = {
     dangerZone: "Zona Pericolo",
     undoableWarning: "Queste azioni non possono essere annullate.",
     logout: "Esci",
-    deleteAccount: "Elimina Account"
+    deleteAccount: "Elimina Account",
+    roleMember: "MEMBRO",
+    roleAdmin: "ADMIN",
+    rolePremium: "PREMIUM",
+    roleAdminFull: "Amministratore",
+    subscriptionActiveBadge: "Abbonamento attivo",
+    sinceBadge: "Dal {date}",
+    coursesPurchased: "Corsi acquistati",
+    lifetimeAccess: "Accesso a vita",
+    lessonsCompleted: "Lezioni completate",
+    globalProgress: "Progresso globale",
+    statActive: "Attiva",
+    statNoPlan: "Nessun piano",
+    renewsOn: "Si rinnova il {date}",
+    noPlanActive: "Nessun piano attivo",
+    personalInfo: "Le tue informazioni personali",
+    yourPlan: "Il tuo piano",
+    account: "Account",
+    role: "Ruolo",
+    memberSince: "Membro dal",
+    irreversibleActions: "Azioni irreversibili",
+    password: "Password",
+    currentPasswordPlaceholder: "La tua password attuale",
+    viewCourses: "Vedi corsi"
   },
   pricing: {
     title: "Abbonamenti",
@@ -249,5 +291,53 @@ export const it: Dictionary = {
     email_confirmation: "Controlla la tua email per continuare il processo di registrazione.",
     email_reset: "Controlla la tua email per continuare il processo di recupero password.",
     account_deleted: "Account eliminato con successo."
+  },
+  notifications: {
+    ariaLabel: "Notifiche",
+    title: "Notifiche",
+    markAllRead: "Segna tutte come lette",
+    empty: "Non hai nuove notifiche.",
+    someone: "Qualcuno",
+    andOthers: "e altri {count}",
+    commentLike: "ha messo mi piace al tuo commento",
+    commentReply: "ha risposto al tuo commento",
+    postComment: "ha commentato il tuo post",
+    postLike: "ha messo mi piace al tuo post",
+    assignmentGraded: "Il tuo compito è stato corretto",
+    defaultText: "Notifica"
+  },
+  community: {
+    searchPlaceholder: "Cerca nella community...",
+    read: "Leggi",
+    like: "Mi piace",
+    comments: "Commenti",
+    anonymous: "Utente",
+    noResults: "Nessun risultato per \"{term}\"",
+    noResultsSub: "Prova un'altra ricerca o pubblica per primo su questo tema.",
+    noPosts: "Ancora nessun post",
+    noPostsSub: "Sii il primo a condividere qualcosa con la community.",
+    commentPlaceholder: "Lascia un commento...",
+    publishComment: "Pubblica commento",
+    publishing: "Pubblicazione...",
+    loadingComments: "Caricamento commenti...",
+    loadError: "Impossibile caricare i commenti.",
+    retry: "Riprova",
+    firstToComment: "Sii il primo a commentare.",
+    writeComment: "Scrivi un commento...",
+    sending: "Invio…",
+    comment: "Commenta",
+    cancel: "Annulla",
+    reply: "Rispondi",
+    writeReply: "Scrivi la tua risposta…",
+    publish: "Pubblica",
+    backToCommunity: "Torna alla community",
+    postEyebrow: "POST DELLA COMMUNITY",
+    loginCta: "Accedi",
+    toLeaveComment: "per lasciare un commento.",
+    noCommentsYet: "Ancora nessun commento. Sii il primo a partecipare.",
+    prevComments: "← Precedenti",
+    nextComments: "Successivi →",
+    conversation: "Conversazione",
+    commentsPageLabel: "Commenti — pagina {page} di {total}"
   }
 }

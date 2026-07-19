@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { createSupabaseAdmin } from '@/utils/supabase/admin';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://luisysarabachatango.com';
 
@@ -48,37 +47,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    // Events: has updated_at, end_date and is_published — filter future published only
-    const { data: events } = await supabase
-      .from('events')
-      .select('id, end_date, updated_at, created_at')
-      .eq('is_published', true)
-      .gte('end_date', new Date().toISOString().slice(0, 10));
+    // Los eventos no reciben rutas propias en el sitemap: todos viven en la
+    // página única /events (ya cubierta por la entrada estática). Emitir
+    // `#event-<id>` generaba URLs con fragmento que los sitemaps no soportan
+    // —todas colapsan a /events duplicado— (AUDITORIA-2026-07 M14).
+    //
+    // Community posts: se OMITEN a propósito. El foro es solo-miembros (RLS de
+    // posts exige auth); publicarlos con el service role generaba soft-404s para
+    // Googlebot (ve el CTA de registro, no el contenido) y exponía un índice
+    // público y enumerable de IDs del foro privado (AUDITORIA-2026-07 M14).
 
-    const eventRoutes: MetadataRoute.Sitemap = (events ?? []).map((e) => ({
-      url: `${BASE_URL}/events#event-${e.id}`,
-      lastModified: e.updated_at ? new Date(e.updated_at) : (e.created_at ? new Date(e.created_at) : now),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    }));
-
-    // Community posts: no updated_at column in DB — use created_at.
-    // Posts RLS is authenticated-only, so the anon client returns 0 rows; read
-    // with the service role (public post ids only) so they reach the sitemap.
-    const { data: posts } = await createSupabaseAdmin()
-      .from('posts')
-      .select('id, created_at')
-      .order('created_at', { ascending: false })
-      .limit(500);
-
-    const postRoutes: MetadataRoute.Sitemap = (posts ?? []).map((p) => ({
-      url: `${BASE_URL}/community/${p.id}`,
-      lastModified: new Date(p.created_at),
-      changeFrequency: 'weekly' as const,
-      priority: 0.5,
-    }));
-
-    return [...staticRoutes, ...staticBlog, ...courseRoutes, ...eventRoutes, ...postRoutes];
+    return [...staticRoutes, ...staticBlog, ...courseRoutes];
   } catch {
     return [...staticRoutes, ...staticBlog];
   }

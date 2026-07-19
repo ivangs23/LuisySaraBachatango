@@ -31,12 +31,14 @@ export async function hasCourseAccess(
     .single()
   if (!course) return false
 
-  // One-time purchase.
+  // One-time purchase. Las compras reembolsadas o en disputa (refunded_at
+  // marcado por el webhook de Stripe) no dan acceso.
   const { data: purchase } = await supabase
     .from('course_purchases')
     .select('id')
     .eq('user_id', userId)
     .eq('course_id', courseId)
+    .is('refunded_at', null)
     .maybeSingle()
   if (purchase) return true
 

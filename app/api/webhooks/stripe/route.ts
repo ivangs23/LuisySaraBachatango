@@ -74,8 +74,12 @@ export async function POST(req: Request) {
         }
         return new NextResponse(null, { status: 200 });
       }
-      console.error('Webhook: missing userId in metadata');
-      return new NextResponse('Missing userId', { status: 400 });
+      // Sesión completed sin metadata reconocida (p. ej. un Payment Link o un
+      // checkout creado a mano en el dashboard sobre la misma cuenta Stripe).
+      // 200, no 400: un 4xx haría a Stripe reintentar durante días y marcar el
+      // endpoint como failing por eventos que no son de esta app.
+      console.warn('Webhook: checkout.session.completed sin metadata de la app — ignorada. session:', session.id);
+      return new NextResponse(null, { status: 200 });
     }
 
     // Persist stripe_customer_id in profile if not already set
@@ -98,6 +102,9 @@ export async function POST(req: Request) {
               user_id: userId,
               course_id: courseId,
               stripe_session_id: session.id,
+              stripe_payment_intent: typeof session.payment_intent === 'string'
+                ? session.payment_intent
+                : session.payment_intent?.id ?? null,
               amount_paid: session.amount_total ?? null,
               source: session.metadata?.source ?? 'web',
             },
@@ -152,6 +159,101 @@ export async function POST(req: Request) {
         }
       }
     }
+  }
+
+  // ==========================================================================
+  // Reembolsos y disputas (AUDITORIA-2026-07 A3): revocan el acceso marcando
+  // refunded_at en course_purchases. hasCourseAccess y las policies RLS
+  // filtran `refunded_at is null`.
+  // Política (decisión 2026-07): solo el reembolso TOTAL revoca; el parcial
+  // (gesto comercial) mantiene el acceso. Una disputa revoca al abrirse y se
+  // restaura si se gana (dispute.closed, status=won).
+  // ==========================================================================
+  if (event.type === 'charge.refunded' || event.type === 'charge.dispute.created') {
+    let paymentIntent: string | null = null;
+
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object as Stripe.Charge;
+      // Reembolso parcial → mantener acceso (no-op idempotente).
+      if (charge.amount_refunded < charge.amount) {
+        return new NextResponse(null, { status: 200 });
+      }
+      paymentIntent = typeof charge.payment_intent === 'string'
+        ? charge.payment_intent
+        : charge.payment_intent?.id ?? null;
+    } else {
+      const dispute = event.data.object as Stripe.Dispute;
+      paymentIntent = typeof dispute.payment_intent === 'string'
+        ? dispute.payment_intent
+        : dispute.payment_intent?.id ?? null;
+    }
+
+    if (!paymentIntent) {
+      // Cargo sin payment_intent (no debería darse en Checkout) — nada que hacer.
+      console.warn('Webhook: refund/dispute sin payment_intent. event:', event.id);
+      return new NextResponse(null, { status: 200 });
+    }
+
+    const revokedAt = new Date().toISOString();
+    const { data: updated, error } = await supabase
+      .from('course_purchases')
+      .update({ refunded_at: revokedAt })
+      .eq('stripe_payment_intent', paymentIntent)
+      .is('refunded_at', null)
+      .select('id');
+
+    if (error) {
+      console.error('Webhook: error marcando refunded_at:', error);
+      return new NextResponse('Database Error', { status: 500 });
+    }
+
+    // Compra anterior a la columna stripe_payment_intent: resolver la sesión
+    // de Checkout desde Stripe y marcar por stripe_session_id.
+    if (!updated || updated.length === 0) {
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
+      const sessionId = sessions.data[0]?.id;
+      if (sessionId) {
+        const { data: legacyUpdated, error: legacyErr } = await supabase
+          .from('course_purchases')
+          .update({ refunded_at: revokedAt, stripe_payment_intent: paymentIntent })
+          .eq('stripe_session_id', sessionId)
+          .is('refunded_at', null)
+          .select('id');
+        if (legacyErr) {
+          console.error('Webhook: error marcando refunded_at (fallback sesión):', legacyErr);
+          return new NextResponse('Database Error', { status: 500 });
+        }
+        console.warn('[refund] %s pi=%s session=%s filas=%d', event.type, paymentIntent, sessionId, legacyUpdated?.length ?? 0);
+      } else {
+        // Reembolso de un pago que no es una compra de curso (p. ej. futura
+        // suscripción) o ya marcado — idempotente.
+        console.warn('[refund] %s pi=%s sin compra asociada', event.type, paymentIntent);
+      }
+    } else {
+      console.warn('[refund] %s pi=%s acceso revocado (filas=%d)', event.type, paymentIntent, updated.length);
+    }
+    return new NextResponse(null, { status: 200 });
+  }
+
+  if (event.type === 'charge.dispute.closed') {
+    const dispute = event.data.object as Stripe.Dispute;
+    if (dispute.status === 'won') {
+      const paymentIntent = typeof dispute.payment_intent === 'string'
+        ? dispute.payment_intent
+        : dispute.payment_intent?.id ?? null;
+      if (paymentIntent) {
+        const { error } = await supabase
+          .from('course_purchases')
+          .update({ refunded_at: null })
+          .eq('stripe_payment_intent', paymentIntent);
+        if (error) {
+          console.error('Webhook: error restaurando acceso tras disputa ganada:', error);
+          return new NextResponse('Database Error', { status: 500 });
+        }
+        console.warn('[dispute-won] pi=%s acceso restaurado', paymentIntent);
+      }
+    }
+    return new NextResponse(null, { status: 200 });
   }
 
   if (event.type === 'checkout.session.expired') {

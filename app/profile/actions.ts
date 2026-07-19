@@ -7,7 +7,12 @@ import { safeSocialUrl, safeAvatarUrl } from '@/utils/sanitize'
 import { validateImageMagicBytes } from '@/utils/uploads/magic-bytes'
 import crypto from 'node:crypto'
 
-export async function updateProfile(formData: FormData) {
+// Devuelve códigos de error en vez de lanzar: los errores lanzados en Server
+// Actions llegan enmascarados al cliente en producción, así que el formulario
+// no podría distinguirlos. El formulario mapea estos códigos a mensajes en español.
+export type UpdateProfileResult = { success: true } | { error: string }
+
+export async function updateProfile(formData: FormData): Promise<UpdateProfileResult> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -37,16 +42,16 @@ export async function updateProfile(formData: FormData) {
 
     const ext = ALLOWED_TYPES_TO_EXT[avatarFile.type]
     if (!ext) {
-      throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF).')
+      return { error: 'invalid_type' }
     }
     if (avatarFile.size > MAX_SIZE) {
-      throw new Error('El archivo es demasiado grande. El tamaño máximo es 5MB.')
+      return { error: 'too_large' }
     }
 
     // Verify magic bytes match the declared MIME type — defense against
     // executables disguised with a manipulated Content-Type.
     if (!(await validateImageMagicBytes(avatarFile))) {
-      throw new Error('El archivo no es una imagen válida.')
+      return { error: 'invalid_image' }
     }
 
     const fileName = `${user.id}-${crypto.randomUUID()}.${ext}`
@@ -57,7 +62,7 @@ export async function updateProfile(formData: FormData) {
       .upload(filePath, avatarFile, { upsert: true })
 
     if (uploadError) {
-      throw new Error('Error al subir el avatar. Inténtalo de nuevo.')
+      return { error: 'upload_failed' }
     } else {
       const { data: { publicUrl } } = supabase.storage
         .from('thumbnails')
@@ -86,11 +91,12 @@ export async function updateProfile(formData: FormData) {
     .eq('id', user.id)
 
   if (error) {
-    throw new Error('Could not update profile')
+    return { error: 'update_failed' }
   }
 
   revalidatePath('/profile')
   revalidatePath('/', 'layout') // Update header avatar
+  return { success: true }
 }
 
 export async function deleteAccount(formData: FormData) {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/utils/supabase/server'
 import { getCurrentUser } from '@/utils/supabase/get-user'
+import { getDict } from '@/utils/get-dict'
 import Link from 'next/link'
 import { ArrowLeft, MessageCircleMore } from 'lucide-react'
 import styles from '../community.module.css'
@@ -58,6 +59,7 @@ export default async function PostDetailPage(props: {
   const [params, searchParamsResolved] = await Promise.all([props.params, props.searchParams])
   const user = await getCurrentUser()
   const supabase = await createClient()
+  const t = (await getDict()).community
 
   const commentsPage = Math.max(1, parseInt(searchParamsResolved.commentsPage ?? '1') || 1)
   const cFrom = (commentsPage - 1) * 50
@@ -156,12 +158,12 @@ export default async function PostDetailPage(props: {
         <div className={styles.detailInner}>
           <Link href="/community" className={styles.backLink}>
             <ArrowLeft size={14} strokeWidth={2.4} aria-hidden="true" />
-            <span>Volver a la comunidad</span>
+            <span>{t.backToCommunity}</span>
           </Link>
 
           <span className={styles.eyebrow}>
             <span className={styles.eyebrowLine} aria-hidden="true" />
-            POST DE LA COMUNIDAD
+            {t.postEyebrow}
           </span>
 
           <h1 className={styles.detailTitle}>{post.title}</h1>
@@ -190,10 +192,10 @@ export default async function PostDetailPage(props: {
         <div className={styles.commentsHeader}>
           <span className={styles.commentsEyebrow}>
             <span className={styles.commentsEyebrowLine} aria-hidden="true" />
-            CONVERSACIÓN
+            {t.conversation.toUpperCase()}
           </span>
           <h2 className={styles.commentsTitle}>
-            Comentarios ({commentCount})
+            {t.comments} ({commentCount})
           </h2>
         </div>
 
@@ -201,7 +203,7 @@ export default async function PostDetailPage(props: {
           <CommentForm postId={post.id} />
         ) : (
           <div className={styles.commentLoginPrompt}>
-            <Link href="/login?next=/community">Inicia sesión</Link> para dejar un comentario.
+            <Link href="/login?next=/community">{t.loginCta}</Link> {t.toLeaveComment}
           </div>
         )}
 
@@ -213,7 +215,7 @@ export default async function PostDetailPage(props: {
               style={{ marginBottom: 6, opacity: 0.7 }}
               aria-hidden="true"
             />
-            <p style={{ margin: 0 }}>No hay comentarios todavía. Sé el primero en participar.</p>
+            <p style={{ margin: 0 }}>{t.noCommentsYet}</p>
           </div>
         ) : (
           <CommunityCommentTree
@@ -224,13 +226,13 @@ export default async function PostDetailPage(props: {
         )}
 
         {totalCommentPages > 1 && (
-          <nav aria-label="Paginación de comentarios" className={styles.pagination}>
+          <nav aria-label={t.conversation} className={styles.pagination}>
             {commentsPage > 1 ? (
-              <Link href={`/community/${post.id}?commentsPage=${commentsPage - 1}`} scroll={false}>← Anteriores</Link>
+              <Link href={`/community/${post.id}?commentsPage=${commentsPage - 1}`} scroll={false}>{t.prevComments}</Link>
             ) : <span aria-hidden="true" />}
-            <span>Comentarios — página {commentsPage} de {totalCommentPages}</span>
+            <span>{t.commentsPageLabel.replace('{page}', String(commentsPage)).replace('{total}', String(totalCommentPages))}</span>
             {commentsPage < totalCommentPages ? (
-              <Link href={`/community/${post.id}?commentsPage=${commentsPage + 1}`} scroll={false}>Siguientes →</Link>
+              <Link href={`/community/${post.id}?commentsPage=${commentsPage + 1}`} scroll={false}>{t.nextComments}</Link>
             ) : <span aria-hidden="true" />}
           </nav>
         )}

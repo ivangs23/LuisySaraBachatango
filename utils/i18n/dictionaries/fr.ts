@@ -2,12 +2,21 @@ import type { Dictionary } from '@/utils/i18n/types'
 
 export const fr: Dictionary = {
   header: {
-    courses: "Cours", events: "Événements", music: "Musique", community: "Communauté", about: "À Propos", login: "Connexion", profile: "Mon Profil", dashboard: "Dashboard", logout: "Déconnexion"
+    courses: "Cours", events: "Événements", music: "Musique", community: "Communauté", about: "À Propos", login: "Connexion", profile: "Mon Profil", dashboard: "Dashboard", logout: "Déconnexion",
+    sessionOpen: "SESSION OUVERTE",
+    openMenu: "Ouvrir le menu",
+    closeMenu: "Fermer le menu",
+    menuNavigation: "MENU · NAVIGATION",
+    mainNav: "Navigation principale",
+    mainMenu: "Menu principal",
+    home: "Accueil",
+    dancer: "Danseur"
   },
   common: {
     processing: "Traitement...",
     subscribeNow: "S'abonner Maintenant",
-    login: "Connexion"
+    login: "Connexion",
+    skipToContent: "Aller au contenu principal"
   },
   footer: {
     description: "Apprenez le Bachatango avec Luis et Sara. La fusion parfaite entre la sensualité de la bachata et l'élégance du tango.",
@@ -132,9 +141,19 @@ export const fr: Dictionary = {
     assignmentSending: "Envoi...",
     assignmentSuccess: "Devoir envoyé avec succès !",
     assignmentViewSubmissions: "Voir toutes les soumissions",
+    assignmentInReview: "Votre devoir est en cours de correction. Nous vous préviendrons dès qu'il sera noté.",
+    assignmentFeedbackLabel: "Retour du professeur :",
+    assignmentUrlLabel: "Lien vers votre vidéo ou support (facultatif)",
+    assignmentUrlPlaceholder: "https://... (YouTube, Drive, etc.)",
+    assignmentError: "Votre devoir n'a pas pu être envoyé. Veuillez réessayer.",
+    assignmentEmptyDescription: "Aucune description pour cette leçon.",
     previousLesson: "Précédent",
     nextLesson: "Suivant",
-    lessonNavigation: "Navigation entre leçons"
+    lessonNavigation: "Navigation entre leçons",
+    lessonPosition: "Leçon {current} sur {total}",
+    completed: "terminées",
+    videoPreparing: "Vidéo en préparation",
+    videoProcessing: "La vidéo de cette leçon est encore en cours de traitement. Reviens dans quelques minutes."
   },
   dashboard: {
     title: "Mes Cours",
@@ -225,7 +244,30 @@ export const fr: Dictionary = {
     dangerZone: "Zone Dangereuse",
     undoableWarning: "Ces actions sont irréversibles.",
     logout: "Déconnexion",
-    deleteAccount: "Supprimer le Compte"
+    deleteAccount: "Supprimer le Compte",
+    roleMember: "MEMBRE",
+    roleAdmin: "ADMIN",
+    rolePremium: "PREMIUM",
+    roleAdminFull: "Administrateur",
+    subscriptionActiveBadge: "Abonnement actif",
+    sinceBadge: "Depuis {date}",
+    coursesPurchased: "Cours achetés",
+    lifetimeAccess: "Accès à vie",
+    lessonsCompleted: "Leçons terminées",
+    globalProgress: "Progression globale",
+    statActive: "Actif",
+    statNoPlan: "Aucun plan",
+    renewsOn: "Se renouvelle le {date}",
+    noPlanActive: "Aucun plan actif",
+    personalInfo: "Vos informations personnelles",
+    yourPlan: "Votre plan",
+    account: "Compte",
+    role: "Rôle",
+    memberSince: "Membre depuis",
+    irreversibleActions: "Actions irréversibles",
+    password: "Mot de passe",
+    currentPasswordPlaceholder: "Votre mot de passe actuel",
+    viewCourses: "Voir les cours"
   },
   pricing: {
     title: "Abonnements",
@@ -249,5 +291,53 @@ export const fr: Dictionary = {
     email_confirmation: "Consultez votre email pour continuer le processus d'inscription.",
     email_reset: "Consultez votre email pour continuer le processus de réinitialisation.",
     account_deleted: "Compte supprimé avec succès."
+  },
+  notifications: {
+    ariaLabel: "Notifications",
+    title: "Notifications",
+    markAllRead: "Tout marquer comme lu",
+    empty: "Vous n'avez aucune nouvelle notification.",
+    someone: "Quelqu'un",
+    andOthers: "et {count} de plus",
+    commentLike: "a aimé votre commentaire",
+    commentReply: "a répondu à votre commentaire",
+    postComment: "a commenté votre publication",
+    postLike: "a aimé votre publication",
+    assignmentGraded: "Votre devoir a été corrigé",
+    defaultText: "Notification"
+  },
+  community: {
+    searchPlaceholder: "Rechercher dans la communauté...",
+    read: "Lire",
+    like: "J'aime",
+    comments: "Commentaires",
+    anonymous: "Utilisateur",
+    noResults: "Aucun résultat pour \"{term}\"",
+    noResultsSub: "Essayez une autre recherche ou soyez le premier à publier à ce sujet.",
+    noPosts: "Pas encore de publications",
+    noPostsSub: "Soyez le premier à partager quelque chose avec la communauté.",
+    commentPlaceholder: "Laissez un commentaire...",
+    publishComment: "Publier le commentaire",
+    publishing: "Publication...",
+    loadingComments: "Chargement des commentaires...",
+    loadError: "Impossible de charger les commentaires.",
+    retry: "Réessayer",
+    firstToComment: "Soyez le premier à commenter.",
+    writeComment: "Écrivez un commentaire...",
+    sending: "Envoi…",
+    comment: "Commenter",
+    cancel: "Annuler",
+    reply: "Répondre",
+    writeReply: "Écrivez votre réponse…",
+    publish: "Publier",
+    backToCommunity: "Retour à la communauté",
+    postEyebrow: "PUBLICATION DE LA COMMUNAUTÉ",
+    loginCta: "Connectez-vous",
+    toLeaveComment: "pour laisser un commentaire.",
+    noCommentsYet: "Aucun commentaire pour le moment. Soyez le premier à participer.",
+    prevComments: "← Précédents",
+    nextComments: "Suivants →",
+    conversation: "Conversation",
+    commentsPageLabel: "Commentaires — page {page} sur {total}"
   }
 }

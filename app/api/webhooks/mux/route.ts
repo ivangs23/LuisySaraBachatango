@@ -17,12 +17,24 @@ function getSupabaseAdmin() {
  * Signed payload: `${timestamp}.${rawBody}`
  * https://docs.mux.com/guides/system/listen-for-webhooks#validate-the-signature
  */
+// Tolerancia de frescura del timestamp (segundos). Rechaza reenvíos capturados
+// (AUDITORIA-2026-07 B3).
+const MUX_SIGNATURE_TOLERANCE_S = 5 * 60
+
 function verifyMuxSignature(rawBody: string, header: string | null, secret: string): boolean {
   if (!header) return false
   const parts = Object.fromEntries(header.split(',').map(p => p.split('=')))
   const t = parts.t
   const v1 = parts.v1
   if (!t || !v1) return false
+
+  // Frescura: |ahora - t| dentro de la tolerancia. Sin esto, una entrega firmada
+  // válida puede reenviarse indefinidamente.
+  const ts = Number(t)
+  if (!Number.isFinite(ts)) return false
+  const nowS = Math.floor(Date.now() / 1000)
+  if (Math.abs(nowS - ts) > MUX_SIGNATURE_TOLERANCE_S) return false
+
   const expected = crypto
     .createHmac('sha256', secret)
     .update(`${t}.${rawBody}`)
@@ -50,7 +62,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid_signature' }, { status: 401 })
   }
 
-  let event: { type?: string; data?: { id?: string; playback_ids?: { id: string }[] } }
+  let event: { type?: string; data?: { id?: string; playback_ids?: { id: string; policy?: string }[] } }
   try {
     event = JSON.parse(rawBody)
   } catch {
@@ -61,7 +73,12 @@ export async function POST(req: Request) {
 
   if (event.type === 'video.asset.ready') {
     const assetId = event.data?.id
-    const playbackId = event.data?.playback_ids?.[0]?.id ?? null
+    // Preferir SIEMPRE el playback id con policy 'signed' (como hace la ruta de
+    // polling). Los uploads se crean con playback_policy ['signed']; coger
+    // ciegamente playback_ids[0] podría guardar un id público y saltarse el
+    // gating por JWT si el orden cambiara (AUDITORIA-2026-07 B3).
+    const ids = event.data?.playback_ids ?? []
+    const playbackId = (ids.find(p => p.policy === 'signed') ?? ids[0])?.id ?? null
     if (assetId) {
       await supabase
         .from('lessons')

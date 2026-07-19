@@ -46,7 +46,13 @@ export default async function AdminHome({
 
       <section className={styles.kpiGrid} aria-label="Métricas principales">
         <AdminKpiCard Icon={Users} label="Alumnos totales" value={String(k.totalStudents)} sub={`+${k.newThisWeek} esta semana`} />
-        <AdminKpiCard Icon={Sparkles} label="Suscripciones activas" value={String(k.activeSubs)} sub={`MRR ~ €${k.mrrEur.toFixed(0)}/mes`} />
+        {/* MRR oculto mientras PLAN_PRICES_EUR esté a 0 (subs aparcadas) — evitar mostrar "MRR €0" falso. */}
+        <AdminKpiCard
+          Icon={Sparkles}
+          label="Suscripciones activas"
+          value={String(k.activeSubs)}
+          sub={k.mrrEur > 0 ? `MRR ~ €${k.mrrEur.toFixed(0)}/mes` : undefined}
+        />
         <AdminKpiCard
           Icon={Sparkles}
           label="Ingresos del mes"

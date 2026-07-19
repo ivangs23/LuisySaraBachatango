@@ -2,12 +2,21 @@ import type { Dictionary } from '@/utils/i18n/types'
 
 export const ja: Dictionary = {
   header: {
-    courses: "コース", events: "イベント", music: "音楽", community: "コミュニティ", about: "私達について", login: "ログイン", profile: "プロフィール", dashboard: "ダッシュボード", logout: "ログアウト"
+    courses: "コース", events: "イベント", music: "音楽", community: "コミュニティ", about: "私達について", login: "ログイン", profile: "プロフィール", dashboard: "ダッシュボード", logout: "ログアウト",
+    sessionOpen: "ログイン中",
+    openMenu: "メニューを開く",
+    closeMenu: "メニューを閉じる",
+    menuNavigation: "メニュー・ナビゲーション",
+    mainNav: "メインナビゲーション",
+    mainMenu: "メインメニュー",
+    home: "ホーム",
+    dancer: "ダンサー"
   },
   common: {
     processing: "処理中...",
     subscribeNow: "今すぐ登録",
-    login: "ログイン"
+    login: "ログイン",
+    skipToContent: "メインコンテンツにスキップ"
   },
   footer: {
     description: "ルイスとサラと一緒にバチャタンゴを学びましょう。バチャータの官能性とタンゴの優雅さの完璧な融合。",
@@ -132,9 +141,19 @@ export const ja: Dictionary = {
     assignmentSending: "送信中...",
     assignmentSuccess: "提出が正常に送信されました！",
     assignmentViewSubmissions: "すべての提出を見る",
+    assignmentInReview: "提出物は確認中です。講師が採点したらお知らせします。",
+    assignmentFeedbackLabel: "講師からのフィードバック：",
+    assignmentUrlLabel: "動画や資料のリンク（任意）",
+    assignmentUrlPlaceholder: "https://...（YouTube、Driveなど）",
+    assignmentError: "提出できませんでした。もう一度お試しください。",
+    assignmentEmptyDescription: "このレッスンには説明がありません。",
     previousLesson: "前へ",
     nextLesson: "次へ",
-    lessonNavigation: "レッスン切り替え"
+    lessonNavigation: "レッスン切り替え",
+    lessonPosition: "レッスン {current}/{total}",
+    completed: "完了",
+    videoPreparing: "動画を準備中",
+    videoProcessing: "このレッスンの動画はまだ処理中です。数分後にもう一度ご確認ください。"
   },
   dashboard: {
     title: "マイコース",
@@ -225,7 +244,30 @@ export const ja: Dictionary = {
     dangerZone: "危険ゾーン",
     undoableWarning: "これらの操作は元に戻せません。",
     logout: "ログアウト",
-    deleteAccount: "アカウントを削除"
+    deleteAccount: "アカウントを削除",
+    roleMember: "メンバー",
+    roleAdmin: "管理者",
+    rolePremium: "プレミアム",
+    roleAdminFull: "管理者",
+    subscriptionActiveBadge: "アクティブなサブスクリプション",
+    sinceBadge: "{date}から",
+    coursesPurchased: "購入したコース",
+    lifetimeAccess: "永久アクセス",
+    lessonsCompleted: "完了したレッスン",
+    globalProgress: "全体の進捗",
+    statActive: "アクティブ",
+    statNoPlan: "プランなし",
+    renewsOn: "{date}に更新",
+    noPlanActive: "アクティブなプランはありません",
+    personalInfo: "個人情報",
+    yourPlan: "あなたのプラン",
+    account: "アカウント",
+    role: "役割",
+    memberSince: "登録日",
+    irreversibleActions: "取り消せない操作",
+    password: "パスワード",
+    currentPasswordPlaceholder: "現在のパスワード",
+    viewCourses: "コースを見る"
   },
   pricing: {
     title: "サブスクリプション",
@@ -249,5 +291,53 @@ export const ja: Dictionary = {
     email_confirmation: "登録プロセスを続けるにはメールを確認してください。",
     email_reset: "パスワードリセットプロセスを続けるにはメールを確認してください。",
     account_deleted: "アカウントが正常に削除されました。"
+  },
+  notifications: {
+    ariaLabel: "通知",
+    title: "通知",
+    markAllRead: "すべて既読にする",
+    empty: "新しい通知はありません。",
+    someone: "誰か",
+    andOthers: "他{count}人",
+    commentLike: "があなたのコメントにいいねしました",
+    commentReply: "があなたのコメントに返信しました",
+    postComment: "があなたの投稿にコメントしました",
+    postLike: "があなたの投稿にいいねしました",
+    assignmentGraded: "課題が採点されました",
+    defaultText: "通知"
+  },
+  community: {
+    searchPlaceholder: "コミュニティを検索...",
+    read: "読む",
+    like: "いいね",
+    comments: "コメント",
+    anonymous: "ユーザー",
+    noResults: "「{term}」の結果はありません",
+    noResultsSub: "別のキーワードで検索するか、最初に投稿してみましょう。",
+    noPosts: "まだ投稿がありません",
+    noPostsSub: "コミュニティで最初に何かを共有しましょう。",
+    commentPlaceholder: "コメントを残す...",
+    publishComment: "コメントを投稿",
+    publishing: "投稿中...",
+    loadingComments: "コメントを読み込み中...",
+    loadError: "コメントを読み込めませんでした。",
+    retry: "再試行",
+    firstToComment: "最初にコメントしましょう。",
+    writeComment: "コメントを書く...",
+    sending: "送信中…",
+    comment: "コメント",
+    cancel: "キャンセル",
+    reply: "返信",
+    writeReply: "返信を書く…",
+    publish: "投稿",
+    backToCommunity: "コミュニティに戻る",
+    postEyebrow: "コミュニティの投稿",
+    loginCta: "ログイン",
+    toLeaveComment: "してコメントを残しましょう。",
+    noCommentsYet: "まだコメントはありません。最初に参加しましょう。",
+    prevComments: "← 前へ",
+    nextComments: "次へ →",
+    conversation: "会話",
+    commentsPageLabel: "コメント — {total}ページ中{page}ページ目"
   }
 }

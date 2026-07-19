@@ -6,6 +6,7 @@ import { useClickOutside } from '@/hooks/useClickOutside';
 import styles from './NotificationBell.module.css';
 import { createClient } from '@/utils/supabase/client';
 import { markAsRead, markAllRead } from '@/app/actions/notifications';
+import { useLanguage } from '@/context/LanguageContext';
 
 type NotificationRow = {
   id: string;
@@ -20,23 +21,25 @@ type NotificationRow = {
   updated_at: string;
 };
 
-function renderText(n: NotificationRow): string {
+type NotificationsDict = ReturnType<typeof useLanguage>['t']['notifications'];
+
+function renderText(n: NotificationRow, nt: NotificationsDict): string {
   const others = (n.actor_count ?? 1) - 1;
-  const namePart = n.actor_name ?? 'Alguien';
-  const suffix = others > 0 ? ` y ${others} más` : '';
+  const namePart = n.actor_name ?? nt.someone;
+  const suffix = others > 0 ? ` ${nt.andOthers.replace('{count}', String(others))}` : '';
   switch (n.type) {
     case 'comment_like':
-      return `${namePart}${suffix} dio like a tu comentario`;
+      return `${namePart}${suffix} ${nt.commentLike}`;
     case 'comment_reply':
-      return `${namePart} respondió a tu comentario`;
+      return `${namePart} ${nt.commentReply}`;
     case 'post_comment':
-      return `${namePart} comentó tu publicación`;
+      return `${namePart} ${nt.postComment}`;
     case 'post_like':
-      return `${namePart}${suffix} dio like a tu publicación`;
+      return `${namePart}${suffix} ${nt.postLike}`;
     case 'assignment_graded':
-      return n.title ?? 'Tu tarea ha sido corregida';
+      return n.title ?? nt.assignmentGraded;
     default:
-      return n.title ?? n.message ?? 'Notificación';
+      return n.title ?? n.message ?? nt.defaultText;
   }
 }
 
@@ -46,6 +49,7 @@ export default function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLanguage();
 
   useClickOutside(dropdownRef, () => {
     if (isOpen) setIsOpen(false);
@@ -136,7 +140,7 @@ export default function NotificationBell() {
       <button
         className={styles.bell}
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Notificaciones"
+        aria-label={t.notifications.ariaLabel}
         aria-expanded={isOpen}
         aria-controls="notifications-dropdown"
       >
@@ -154,15 +158,15 @@ export default function NotificationBell() {
       {isOpen && (
         <div className={styles.dropdown} id="notifications-dropdown">
           <div className={styles.header}>
-            <h3 className={styles.title}>Notificaciones</h3>
+            <h3 className={styles.title}>{t.notifications.title}</h3>
             {unreadCount > 0 && (
               <button className={styles.markAllBtn} onClick={handleMarkAll}>
-                Marcar todas como leídas
+                {t.notifications.markAllRead}
               </button>
             )}
           </div>
           {items.length === 0 ? (
-            <p className={styles.empty}>No tienes notificaciones nuevas.</p>
+            <p className={styles.empty}>{t.notifications.empty}</p>
           ) : (
             <ul className={styles.list}>
               {items.map((n) => (
@@ -179,7 +183,7 @@ export default function NotificationBell() {
                   role="button"
                   tabIndex={0}
                 >
-                  {renderText(n)}
+                  {renderText(n, t.notifications)}
                 </li>
               ))}
             </ul>

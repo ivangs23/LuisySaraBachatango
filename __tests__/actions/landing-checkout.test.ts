@@ -18,7 +18,11 @@ vi.mock('@/utils/checkout/password-hash', () => ({ hashPassword: (p: string) => 
 vi.mock('@/utils/checkout/provision-registration', () => ({ provisionFromPending: (...a: unknown[]) => H.provisionPending(...a) }))
 vi.mock('@/utils/stripe/server', () => ({ stripe: { checkout: { sessions: { create: H.sessionCreate } } } }))
 vi.mock('next/navigation', () => ({ redirect: (u: string) => H.redirect(u) }))
-vi.mock('next/headers', () => ({ headers: vi.fn().mockResolvedValue({ get: () => '' }) }))
+vi.mock('next/headers', () => ({
+  headers: vi.fn().mockResolvedValue({ get: () => '' }),
+  // back() guarda el re-echo de campos en una cookie flash (PII fuera de la URL).
+  cookies: vi.fn().mockResolvedValue({ set: vi.fn() }),
+}))
 vi.mock('@/utils/rate-limit', () => ({ rateLimit: (...a: unknown[]) => H.rateLimit(...a), rateLimitKey: (p: (string | null | undefined)[]) => p.map(x => x ?? 'anon').join(':') }))
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({
