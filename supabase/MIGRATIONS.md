@@ -76,7 +76,16 @@ venta y la superficie de SEO, muertos.
 | # | Fichero | Qué hace | Estado |
 |---|---|---|---|
 | 1 | `2026_08_fix_anon_read_admin_check.sql` | Añade `public.is_admin()` (SECURITY DEFINER, `search_path` fijado) y reescribe las policies de `courses`, `lessons` y `events` para usarla en lugar de leer `profiles.role` directamente. No relaja el endurecimiento de julio. Idempotente. | ✅ Aplicado 2026-08-11 — `courses` y `events` arreglados, `lessons` no (ver #2) |
-| 2 | `2026_08_fix2_lessons_refund_regression.sql` | **Corrige una regresión de #1:** aquella copió la policy de `lessons` de `2026_05_audit4_rls_lessons_null_guard.sql`, pero la versión vigente era la de `2026_07_fix1_refunds.sql`, con `and cp.refunded_at is null`. Sin esa línea, **una compra reembolsada recupera el acceso**. Incluye además la consulta de diagnóstico de la policy que aún rompe `lessons`. | 🔴 Pendiente |
+| 2 | `2026_08_fix2_lessons_refund_regression.sql` | **Corrige una regresión de #1:** aquella copió la policy de `lessons` de `2026_05_audit4_rls_lessons_null_guard.sql`, pero la versión vigente era la de `2026_07_fix1_refunds.sql`, con `and cp.refunded_at is null`. Sin esa línea, **una compra reembolsada recupera el acceso**. | ⏭️ Superada por #3, que la incluye |
+| 3 | `2026_08_fix3_lessons_purchase_check.sql` | Añade `public.has_course_purchase(uuid)` y lo usa en la policy de `lessons`. La rama de compra hacía una subconsulta a `course_purchases`, cuya propia policy lee `profiles.role` y revienta para `anon` — el error se propagaba a `lessons`. Incluye el arreglo de reembolsos de #2. | 🔴 Pendiente |
+
+**Aplicar #3 basta:** contiene lo de #2. Si ya aplicaste #2, #3 es idempotente y no hace daño.
+
+**Deuda que queda:** la policy SELECT de `course_purchases` sigue leyendo
+`profiles.role` y no está en ningún fichero de `supabase/` — vive solo en la BD.
+Hoy no rompe nada, pero es la misma bomba de relojería. Para limpiarla hace
+falta ver su definición con `pg_get_expr(polqual, polrelid)` y reescribirla con
+`public.is_admin()`.
 
 **Lección para futuras migraciones de RLS:** antes de recrear una policy, comprobar
 cuál es la definición **vigente** en la BD (`pg_policy`), no la del fichero que
