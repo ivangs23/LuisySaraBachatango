@@ -18,7 +18,8 @@ export const en: Dictionary = {
     mainNav: "Main navigation",
     mainMenu: "Main menu",
     home: "Home",
-    dancer: "Dancer"
+    dancer: "Dancer",
+    buyCourse: "View the course"
   },
   common: {
     processing: "Processing...",
@@ -37,7 +38,8 @@ export const en: Dictionary = {
     privacy: "Privacy Policy",
     cookies: "Cookie Policy",
     rights: "All rights reserved.",
-    blog: "Blog"
+    blog: "Blog",
+    buyCourse: "The course"
   },
   hero: {
     title: "Master the Art of Bachatango",
@@ -46,6 +48,23 @@ export const en: Dictionary = {
     sampleClass: "Watch sample class",
     scrollLabel: "Scroll to see more",
     stats: { years: "YEARS DANCING", students: "STUDENTS", countries: "COUNTRIES" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "THE OFFER",
+      title: "The complete method, in one course",
+      lead: "Luis and Sara's full progression: technique, connection and musicality, broken down step by step so you improve without getting stuck.",
+      includes: [
+        "Lifetime access to every lesson",
+        "Guided progression from beginner to advanced",
+        "Solo and partner practice",
+        "Private community of dancers"
+      ],
+      priceNote: "One-time payment · Lifetime access",
+      cta: "View the course",
+      micro: "Secure payment with Stripe"
+    }
   },
   features: {
     monthly: {

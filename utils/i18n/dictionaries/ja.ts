@@ -10,7 +10,7 @@ export const ja: Dictionary = {
     mainNav: "メインナビゲーション",
     mainMenu: "メインメニュー",
     home: "ホーム",
-    dancer: "ダンサー"
+    dancer: "ダンサー", buyCourse: "コースを見る"
   },
   common: {
     processing: "処理中...",
@@ -21,7 +21,7 @@ export const ja: Dictionary = {
   footer: {
     description: "ルイスとサラと一緒にバチャタンゴを学びましょう。バチャータの官能性とタンゴの優雅さの完璧な融合。",
     explore: "探索", home: "ホーム", contact: "お問い合わせ", notice: "法的通知",
-    legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", rights: "全著作権所有。", blog: "ブログ"
+    legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", rights: "全著作権所有。", blog: "ブログ", buyCourse: "コース"
   },
   hero: {
     title: "バチャタンゴの芸術をマスターする",
@@ -30,6 +30,23 @@ export const ja: Dictionary = {
     sampleClass: "サンプルクラスを見る",
     scrollLabel: "スクロールして詳細を見る",
     stats: { years: "ダンス歴", students: "受講生", countries: "訪問国" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "オファー",
+      title: "完全なメソッドを、ひとつのコースに",
+      lead: "ルイスとサラのカリキュラムのすべて。テクニック、コネクション、音楽性を一歩ずつ分解し、つまずかずに上達できます。",
+      includes: [
+        "全レッスンに永久アクセス",
+        "初心者から上級者までの段階的カリキュラム",
+        "ソロとペア、両方の練習",
+        "ダンサー限定コミュニティ"
+      ],
+      priceNote: "買い切り · 永久アクセス",
+      cta: "コースを見る",
+      micro: "Stripeによる安全な決済"
+    }
   },
   features: {
     monthly: { title: "完全コース", desc: "初心者から上級者まで、最初から最後まで学べる総合プログラム。一度のお支払いで生涯アクセス可能。" },

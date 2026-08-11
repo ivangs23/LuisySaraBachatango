@@ -10,7 +10,7 @@ export const de: Dictionary = {
     mainNav: "Hauptnavigation",
     mainMenu: "Hauptmenü",
     home: "Startseite",
-    dancer: "Tänzer"
+    dancer: "Tänzer", buyCourse: "Kurs ansehen"
   },
   common: {
     processing: "Verarbeitung...",
@@ -21,7 +21,7 @@ export const de: Dictionary = {
   footer: {
     description: "Lerne Bachatango mit Luis und Sara. Die perfekte Fusion zwischen der Sinnlichkeit von Bachata und der Eleganz des Tango.",
     explore: "Entdecken", home: "Startseite", contact: "Kontakt", notice: "Impressum",
-    legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", rights: "Alle Rechte vorbehalten.", blog: "Blog"
+    legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", rights: "Alle Rechte vorbehalten.", blog: "Blog", buyCourse: "Der Kurs"
   },
   hero: {
     title: "Meistere die Kunst des Bachatango",
@@ -30,6 +30,23 @@ export const de: Dictionary = {
     sampleClass: "Musterklasse ansehen",
     scrollLabel: "Nach unten scrollen",
     stats: { years: "JAHRE TANZEND", students: "SCHÜLER", countries: "LÄNDER" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "DAS ANGEBOT",
+      title: "Die komplette Methode, in einem Kurs",
+      lead: "Der gesamte Aufbau von Luis und Sara: Technik, Verbindung und Musikalität, Schritt für Schritt erklärt, damit du ohne Frust vorankommst.",
+      includes: [
+        "Lebenslanger Zugang zu allen Lektionen",
+        "Geführter Aufbau vom Einstieg bis Fortgeschritten",
+        "Übungen allein und zu zweit",
+        "Private Community von Tanzenden"
+      ],
+      priceNote: "Einmalzahlung · Lebenslanger Zugang",
+      cta: "Kurs ansehen",
+      micro: "Sichere Zahlung mit Stripe"
+    }
   },
   features: {
     monthly: { title: "Komplette Kurse", desc: "Umfassende Programme von Anfang bis Ende. Lerne vom Anfänger bis zum Fortgeschrittenen mit einer einmaligen Zahlung und lebenslangem Zugang." },

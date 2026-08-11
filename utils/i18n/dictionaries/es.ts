@@ -16,7 +16,8 @@ export const es = {
     mainNav: "Navegación principal",
     mainMenu: "Menú principal",
     home: "Inicio",
-    dancer: "Bailarín"
+    dancer: "Bailarín",
+    buyCourse: "Ver el curso"
   },
   common: {
     processing: "Procesando...",
@@ -35,7 +36,8 @@ export const es = {
     privacy: "Política de Privacidad",
     cookies: "Política de Cookies",
     rights: "Todos los derechos reservados.",
-    blog: "Blog"
+    blog: "Blog",
+    buyCourse: "El curso"
   },
   hero: {
     title: "Domina el Arte del Bachatango",
@@ -44,6 +46,23 @@ export const es = {
     sampleClass: "Ver clase de muestra",
     scrollLabel: "Bajar para ver más",
     stats: { years: "AÑOS BAILANDO", students: "ALUMNOS", countries: "PAÍSES" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "LA OFERTA",
+      title: "El método completo, en un solo curso",
+      lead: "Toda la progresión de Luis y Sara: técnica, conexión y musicalidad, desglosadas paso a paso para que avances sin frustrarte.",
+      includes: [
+        "Acceso de por vida a todas las lecciones",
+        "Progresión guiada de iniciación a avanzado",
+        "Práctica en solitario y en pareja",
+        "Comunidad privada de bailarines"
+      ],
+      priceNote: "Pago único · Acceso de por vida",
+      cta: "Ver el curso",
+      micro: "Pago seguro con Stripe"
+    }
   },
   features: {
     monthly: {

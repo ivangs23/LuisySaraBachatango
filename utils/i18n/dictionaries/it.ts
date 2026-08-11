@@ -10,7 +10,7 @@ export const it: Dictionary = {
     mainNav: "Navigazione principale",
     mainMenu: "Menu principale",
     home: "Home",
-    dancer: "Ballerino"
+    dancer: "Ballerino", buyCourse: "Vedi il corso"
   },
   common: {
     processing: "Elaborazione...",
@@ -21,7 +21,7 @@ export const it: Dictionary = {
   footer: {
     description: "Impara il Bachatango con Luis e Sara. La fusione perfetta tra la sensualità della bachata e l'eleganza del tango.",
     explore: "Esplora", home: "Home", contact: "Contatti", notice: "Avviso Legale",
-    legal: "Legale", terms: "Termini e Condizioni", privacy: "Privacy", cookies: "Cookies", rights: "Tutti i diritti riservati.", blog: "Blog"
+    legal: "Legale", terms: "Termini e Condizioni", privacy: "Privacy", cookies: "Cookies", rights: "Tutti i diritti riservati.", blog: "Blog", buyCourse: "Il corso"
   },
   hero: {
     title: "Domina l'Arte del Bachatango",
@@ -30,6 +30,23 @@ export const it: Dictionary = {
     sampleClass: "Guarda la classe di esempio",
     scrollLabel: "Scorri per vedere di più",
     stats: { years: "ANNI DI BALLO", students: "STUDENTI", countries: "PAESI" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "L'OFFERTA",
+      title: "Il metodo completo, in un solo corso",
+      lead: "Tutta la progressione di Luis e Sara: tecnica, connessione e musicalità, spiegate passo dopo passo per migliorare senza frustrazione.",
+      includes: [
+        "Accesso a vita a tutte le lezioni",
+        "Progressione guidata da principiante ad avanzato",
+        "Pratica da solo e in coppia",
+        "Comunità privata di ballerini"
+      ],
+      priceNote: "Pagamento unico · Accesso a vita",
+      cta: "Vedi il corso",
+      micro: "Pagamento sicuro con Stripe"
+    }
   },
   features: {
     monthly: { title: "Corsi Completi", desc: "Programmi integrali dall'inizio alla fine. Impara dal livello principiante ad avanzato con un unico pagamento e accesso a vita." },
