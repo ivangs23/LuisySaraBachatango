@@ -50,6 +50,37 @@ NULL, 0 comentarios huérfanos) y las 12 comprobaciones post-aplicación pasaron
 | 4 | `2026_07_fix4_last_admin_atomic.sql` | Función `set_user_role` con guard atómico del último admin (B8). | ✅ Aplicado |
 | 5 | `2026_07_fix5_definer_function_lockdown.sql` | Revoca EXECUTE de anon/authenticated en `handle_new_user` y `upsert_notification` (hallazgo del advisor 0028/0029). | ✅ Aplicado |
 
+## Regresión de agosto 2026 — 🔴 PENDIENTE DE APLICAR
+
+`2026_07_fix2` (B5) revocó a `anon` el SELECT sobre `public.profiles` y se lo
+devolvió solo por columnas, dejando `role` fuera a propósito. Correcto en sí,
+pero no se revisaron las policies RLS que comprueban el rol leyendo esa columna.
+PostgreSQL no garantiza cortocircuito en `OR`, así que evalúa la rama de admin
+aunque `is_published = true` ya sea cierta — y para `anon` esa evaluación aborta
+el SELECT entero.
+
+Verificado con la anon key contra producción el 2026-08-11:
+
+| Tabla | Lectura anónima |
+|---|---|
+| `courses` | 🔴 `permission denied for table profiles` |
+| `lessons` | 🔴 `permission denied for table profiles` |
+| `events` | 🔴 `permission denied for table profiles` |
+| `posts` | ✅ OK |
+| `profiles` | ✅ OK (columnas sociales) |
+
+Efecto en la app: `/curso-bachatango` responde **404** a todo visitante anónimo,
+`/courses` sale vacío y `sitemap.xml` pierde las URLs de curso. El embudo de
+venta y la superficie de SEO, muertos.
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_08_fix_anon_read_admin_check.sql` | Añade `public.is_admin()` (SECURITY DEFINER, `search_path` fijado) y reescribe las policies de `courses`, `lessons` y `events` para usarla en lugar de leer `profiles.role` directamente. No relaja el endurecimiento de julio. Idempotente. | 🔴 Pendiente |
+
+Tras aplicarlo, ejecutar la sección **VALIDACIÓN** del propio fichero. La
+comprobación crítica es que `GET /rest/v1/profiles?select=role` con la anon key
+**siga fallando**: si empieza a funcionar, el endurecimiento se ha roto.
+
 ### Pendiente NO-SQL tras aplicar
 
 - **Stripe** → Developers → Webhooks → endpoint de prod: añadir los eventos
