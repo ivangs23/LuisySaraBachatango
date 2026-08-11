@@ -361,6 +361,15 @@
   transition: color 0.25s ease, transform 0.25s ease;
 }
 
+/* El reabridor del banner de cookies es un <button> y no un <a>: sin este
+   reset heredaría fondo y borde del navegador y desentonaría con la lista. */
+button.link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
 .link::before {
   content: "";
   width: 0;

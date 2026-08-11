@@ -64,6 +64,8 @@ import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { getCurrentUser } from "@/utils/supabase/get-user";
 
 import { LanguageProvider } from '@/context/LanguageContext';
+import { ConsentProvider } from '@/context/ConsentContext';
+import CookieConsent from '@/components/CookieConsent';
 import { safeJsonLd } from '@/utils/jsonld';
 
 // Cache profile per user for 60 seconds — reduces DB load on every page render.
@@ -121,16 +123,19 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <LanguageProvider initialLocale={locale}>
-          <a href="#main-content" className="skip-link">
-            {dict.common.skipToContent}
-          </a>
-          {(await isTestPurchaseMode()) && <DemoBanner />}
-          <Header user={user} profile={profile} />
-          <main id="main-content" tabIndex={-1} style={{ minHeight: '80vh' }}>
-            {children}
-          </main>
-          <Footer />
-          <FunnelLegalFooter />
+          <ConsentProvider>
+            <a href="#main-content" className="skip-link">
+              {dict.common.skipToContent}
+            </a>
+            {(await isTestPurchaseMode()) && <DemoBanner />}
+            <Header user={user} profile={profile} />
+            <main id="main-content" tabIndex={-1} style={{ minHeight: '80vh' }}>
+              {children}
+            </main>
+            <Footer />
+            <FunnelLegalFooter />
+            <CookieConsent />
+          </ConsentProvider>
         </LanguageProvider>
       </body>
     </html>
