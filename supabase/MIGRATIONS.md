@@ -75,7 +75,13 @@ venta y la superficie de SEO, muertos.
 
 | # | Fichero | Qué hace | Estado |
 |---|---|---|---|
-| 1 | `2026_08_fix_anon_read_admin_check.sql` | Añade `public.is_admin()` (SECURITY DEFINER, `search_path` fijado) y reescribe las policies de `courses`, `lessons` y `events` para usarla en lugar de leer `profiles.role` directamente. No relaja el endurecimiento de julio. Idempotente. | 🔴 Pendiente |
+| 1 | `2026_08_fix_anon_read_admin_check.sql` | Añade `public.is_admin()` (SECURITY DEFINER, `search_path` fijado) y reescribe las policies de `courses`, `lessons` y `events` para usarla en lugar de leer `profiles.role` directamente. No relaja el endurecimiento de julio. Idempotente. | ✅ Aplicado 2026-08-11 — `courses` y `events` arreglados, `lessons` no (ver #2) |
+| 2 | `2026_08_fix2_lessons_refund_regression.sql` | **Corrige una regresión de #1:** aquella copió la policy de `lessons` de `2026_05_audit4_rls_lessons_null_guard.sql`, pero la versión vigente era la de `2026_07_fix1_refunds.sql`, con `and cp.refunded_at is null`. Sin esa línea, **una compra reembolsada recupera el acceso**. Incluye además la consulta de diagnóstico de la policy que aún rompe `lessons`. | 🔴 Pendiente |
+
+**Lección para futuras migraciones de RLS:** antes de recrear una policy, comprobar
+cuál es la definición **vigente** en la BD (`pg_policy`), no la del fichero que
+parezca canónico. En este repo varias migraciones recrean la misma policy por
+nombre, así que el fichero más descriptivo no es necesariamente el más reciente.
 
 Tras aplicarlo, ejecutar la sección **VALIDACIÓN** del propio fichero. La
 comprobación crítica es que `GET /rest/v1/profiles?select=role` con la anon key
