@@ -66,6 +66,16 @@ export const it: Dictionary = {
       micro: "Pagamento sicuro con Stripe"
     }
   },
+  freeClass: {
+    eyebrow: "LEZIONE GRATUITA",
+    title: "Provala prima di decidere",
+    lead: "Una lezione completa del corso, integrale e senza tagli. Senza carta, senza account, senza impegno.",
+    ctaTitle: "Ti è piaciuta?",
+    ctaBody: "Questa è una lezione fra tante. Il corso completo ti porta passo dopo passo dalle basi fino a ballare con sicurezza.",
+    cta: "Vedi il corso completo",
+    unavailable: "La lezione di prova non è disponibile in questo momento. Torna più tardi o scrivici.",
+    unavailableCta: "Vedi i corsi"
+  },
   features: {
     monthly: { title: "Corsi Completi", desc: "Programmi integrali dall'inizio alla fine. Impara dal livello principiante ad avanzato con un unico pagamento e accesso a vita." },
     exclusive: { title: "Contenuto Esclusivo", desc: "Accedi a segreti di tecnica e musicalità." },

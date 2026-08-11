@@ -66,6 +66,16 @@ export const de: Dictionary = {
       micro: "Sichere Zahlung mit Stripe"
     }
   },
+  freeClass: {
+    eyebrow: "GRATIS-STUNDE",
+    title: "Probier es aus, bevor du dich entscheidest",
+    lead: "Eine komplette Stunde aus dem Kurs, ungekürzt. Ohne Karte, ohne Konto, ohne Verpflichtung.",
+    ctaTitle: "Hat es dir gefallen?",
+    ctaBody: "Das ist eine von vielen Stunden. Der komplette Kurs führt dich Schritt für Schritt von den Grundlagen bis zum sicheren Tanzen.",
+    cta: "Den kompletten Kurs ansehen",
+    unavailable: "Die Probestunde ist gerade nicht verfügbar. Schau später wieder vorbei oder schreib uns.",
+    unavailableCta: "Kurse ansehen"
+  },
   features: {
     monthly: { title: "Komplette Kurse", desc: "Umfassende Programme von Anfang bis Ende. Lerne vom Anfänger bis zum Fortgeschrittenen mit einer einmaligen Zahlung und lebenslangem Zugang." },
     exclusive: { title: "Exklusiver Inhalt", desc: "Zugang zu Geheimnissen der Technik, Musikalität und Verbindung. Masterclasses von Experten." },

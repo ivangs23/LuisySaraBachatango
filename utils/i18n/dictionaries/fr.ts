@@ -66,6 +66,16 @@ export const fr: Dictionary = {
       micro: "Paiement sécurisé avec Stripe"
     }
   },
+  freeClass: {
+    eyebrow: "COURS GRATUIT",
+    title: "Essayez avant de décider",
+    lead: "Un cours complet tiré du programme, intégral et sans coupure. Sans carte, sans compte, sans engagement.",
+    ctaTitle: "Ça vous a plu ?",
+    ctaBody: "C'est un cours parmi beaucoup d'autres. Le programme complet vous mène pas à pas des bases jusqu'à danser en confiance.",
+    cta: "Voir le cours complet",
+    unavailable: "Le cours d'essai n'est pas disponible pour le moment. Revenez bientôt ou écrivez-nous.",
+    unavailableCta: "Voir les cours"
+  },
   features: {
     monthly: { title: "Cours Complets", desc: "Programmes complets de A à Z. Apprenez du niveau débutant à avancé avec un paiement unique et un accès à vie." },
     exclusive: { title: "Contenu Exclusif", desc: "Accédez à des secrets de technique, de musicalité et de connexion introuvables ailleurs. Masterclasses d'experts." },

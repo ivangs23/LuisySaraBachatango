@@ -82,6 +82,16 @@ export const es = {
       micro: "Pago seguro con Stripe"
     }
   },
+  freeClass: {
+    eyebrow: "CLASE GRATUITA",
+    title: "Pruébalo antes de decidir",
+    lead: "Una clase completa del curso, íntegra y sin recortes. Sin tarjeta, sin cuenta, sin compromiso.",
+    ctaTitle: "¿Te ha gustado?",
+    ctaBody: "Esto es una clase de muchas. El curso completo te lleva paso a paso desde la base hasta bailar con seguridad.",
+    cta: "Ver el curso completo",
+    unavailable: "La clase de muestra no está disponible ahora mismo. Vuelve en un rato o escríbenos.",
+    unavailableCta: "Ver los cursos"
+  },
   features: {
     monthly: {
       title: "Cursos Completos",

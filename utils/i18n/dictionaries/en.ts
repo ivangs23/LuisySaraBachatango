@@ -84,6 +84,16 @@ export const en: Dictionary = {
       micro: "Secure payment with Stripe"
     }
   },
+  freeClass: {
+    eyebrow: "FREE CLASS",
+    title: "Try it before you decide",
+    lead: "A full class from the course, complete and uncut. No card, no account, no strings.",
+    ctaTitle: "Enjoyed it?",
+    ctaBody: "This is one class out of many. The full course takes you step by step from the basics to dancing with confidence.",
+    cta: "See the full course",
+    unavailable: "The sample class is not available right now. Check back shortly or get in touch.",
+    unavailableCta: "Browse the courses"
+  },
   features: {
     monthly: {
       title: "Complete Courses",
