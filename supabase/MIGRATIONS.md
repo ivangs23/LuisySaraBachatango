@@ -50,7 +50,11 @@ NULL, 0 comentarios huérfanos) y las 12 comprobaciones post-aplicación pasaron
 | 4 | `2026_07_fix4_last_admin_atomic.sql` | Función `set_user_role` con guard atómico del último admin (B8). | ✅ Aplicado |
 | 5 | `2026_07_fix5_definer_function_lockdown.sql` | Revoca EXECUTE de anon/authenticated en `handle_new_user` y `upsert_notification` (hallazgo del advisor 0028/0029). | ✅ Aplicado |
 
-## Regresión de agosto 2026 — 🔴 PENDIENTE DE APLICAR
+## Regresión de agosto 2026 — ✅ RESUELTA en producción (2026-08-11)
+
+`scripts/verify-anon-read.ts` pasa las 6 comprobaciones. `/curso-bachatango`
+volvió a responder 200 a visitantes anónimos.
+
 
 `2026_07_fix2` (B5) revocó a `anon` el SELECT sobre `public.profiles` y se lo
 devolvió solo por columnas, dejando `role` fuera a propósito. Correcto en sí,
@@ -77,9 +81,9 @@ venta y la superficie de SEO, muertos.
 |---|---|---|---|
 | 1 | `2026_08_fix_anon_read_admin_check.sql` | Añade `public.is_admin()` (SECURITY DEFINER, `search_path` fijado) y reescribe las policies de `courses`, `lessons` y `events` para usarla en lugar de leer `profiles.role` directamente. No relaja el endurecimiento de julio. Idempotente. | ✅ Aplicado 2026-08-11 — `courses` y `events` arreglados, `lessons` no (ver #2) |
 | 2 | `2026_08_fix2_lessons_refund_regression.sql` | **Corrige una regresión de #1:** aquella copió la policy de `lessons` de `2026_05_audit4_rls_lessons_null_guard.sql`, pero la versión vigente era la de `2026_07_fix1_refunds.sql`, con `and cp.refunded_at is null`. Sin esa línea, **una compra reembolsada recupera el acceso**. | ⏭️ Superada por #3, que la incluye |
-| 3 | `2026_08_fix3_lessons_purchase_check.sql` | Añade `public.has_course_purchase(uuid)` y lo usa en la policy de `lessons`. La rama de compra hacía una subconsulta a `course_purchases`, cuya propia policy lee `profiles.role` y revienta para `anon` — el error se propagaba a `lessons`. Incluye el arreglo de reembolsos de #2. | 🔴 Pendiente |
+| 3 | `2026_08_fix3_lessons_purchase_check.sql` | Añade `public.has_course_purchase(uuid)` y lo usa en la policy de `lessons`. La rama de compra hacía una subconsulta a `course_purchases`, cuya propia policy lee `profiles.role` y revienta para `anon` — el error se propagaba a `lessons`. Incluye el arreglo de reembolsos de #2. | ✅ Aplicado 2026-08-11 |
 
-**Aplicar #3 basta:** contiene lo de #2. Si ya aplicaste #2, #3 es idempotente y no hace daño.
+**#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
 **Deuda que queda:** la policy SELECT de `course_purchases` sigue leyendo
 `profiles.role` y no está en ningún fichero de `supabase/` — vive solo en la BD.
