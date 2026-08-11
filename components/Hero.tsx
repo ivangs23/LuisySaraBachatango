@@ -172,7 +172,7 @@ export default function Hero() {
             <span>{t.hero.cta}</span>
             <span className={styles.ctaArrow} aria-hidden="true">→</span>
           </Link>
-          <Link href="/courses" className={styles.ctaSecondary}>
+          <Link href="/clase-gratis" className={styles.ctaSecondary}>
             <Play size={16} strokeWidth={2.5} aria-hidden="true" />
             <span>{t.hero.sampleClass}</span>
           </Link>

@@ -24,4 +24,10 @@ describe('Hero CTAs', () => {
     expect(screen.getByRole('link', { name: /descubre nuestros cursos/i }))
       .toHaveAttribute('href', '/curso-bachatango')
   })
+
+  it('el CTA secundario lleva a la clase gratis', () => {
+    renderHero()
+    expect(screen.getByRole('link', { name: /ver clase de muestra/i }))
+      .toHaveAttribute('href', '/clase-gratis')
+  })
 })
