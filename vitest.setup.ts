@@ -13,3 +13,33 @@ process.env.MUX_TOKEN_SECRET = 'test-token-secret'
 process.env.MUX_SIGNING_KEY_ID = 'test-signing-key-id'
 // base64 of a dummy RSA private key PEM header — never used in tests (signPlaybackToken paths are exercised via mocks)
 process.env.MUX_SIGNING_KEY_PRIVATE = 'dGVzdC1wcml2YXRlLWtleQ=='
+
+// jsdom no implementa IntersectionObserver, y motion/react lo necesita para
+// `whileInView` (components/Reveal.tsx) y hooks/useInView.ts. Sin este stub,
+// cualquier test de componente que renderice una sección animada revienta con
+// "ReferenceError: IntersectionObserver is not defined".
+//
+// El stub reporta el elemento como visible en cuanto se observa, que es el
+// estado que los tests quieren afirmar: contenido revelado, no oculto.
+class IntersectionObserverStub implements IntersectionObserver {
+  readonly root: Element | Document | null = null
+  readonly rootMargin: string = '0px'
+  readonly thresholds: ReadonlyArray<number> = [0]
+
+  constructor(private readonly callback: IntersectionObserverCallback) {}
+
+  observe(target: Element): void {
+    this.callback(
+      [{ isIntersecting: true, intersectionRatio: 1, target } as IntersectionObserverEntry],
+      this,
+    )
+  }
+
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] { return [] }
+}
+
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  globalThis.IntersectionObserver = IntersectionObserverStub as unknown as typeof IntersectionObserver
+}
