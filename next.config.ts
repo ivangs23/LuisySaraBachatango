@@ -51,15 +51,19 @@ const nextConfig: NextConfig = {
             // and JSON-LD scripts. Removing it would require switching to nonces (larger refactor).
             value: [
               "default-src 'self'",
-              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://js.stripe.com https://*.mux.com https://www.instagram.com https://platform.instagram.com https://www.gstatic.com`,
+              // Cada host aquí puede ejecutar JS en el dominio con plena
+              // confianza. Los tres últimos son los mínimos para GA4, Meta
+              // Pixel y Vercel Analytics — no ampliar "por si acaso": ante un
+              // proveedor que no carga, leer primero el error exacto de CSP.
+              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://js.stripe.com https://*.mux.com https://www.instagram.com https://platform.instagram.com https://www.gstatic.com https://www.googletagmanager.com https://connect.facebook.net https://va.vercel-scripts.com`,
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: https://${SUPABASE_HOST} https://image.mux.com https://*.googleusercontent.com https://flagcdn.com https://*.cdninstagram.com https://*.fbcdn.net`,
+              `img-src 'self' data: blob: https://${SUPABASE_HOST} https://image.mux.com https://*.googleusercontent.com https://flagcdn.com https://*.cdninstagram.com https://*.fbcdn.net https://www.google-analytics.com https://www.googletagmanager.com https://www.facebook.com`,
               "media-src 'self' blob: https://stream.mux.com https://*.mux.com",
               // hls.js (inside Mux Player) spawns blob: workers; without an
               // explicit worker-src, CSP3 falls back to default-src and blocks them.
               "worker-src 'self' blob:",
-              `connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.mux.com`,
-              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://open.spotify.com https://www.instagram.com",
+              `connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.mux.com https://www.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://*.vercel-insights.com https://www.instagram.com https://graph.instagram.com`,
+              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://open.spotify.com https://www.instagram.com https://www.facebook.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

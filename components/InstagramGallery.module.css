@@ -35,3 +35,44 @@
 blockquote.instagram-media {
   min-height: 400px; /* Placeholder height */
 }
+
+/* ---------- Placeholder cuando falta consentimiento de marketing ---------- */
+
+.blocked {
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px dashed var(--border-subtle);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.blockedText {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.blockedCta {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.65rem 1.4rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.blockedCta:hover {
+  background: var(--primary);
+  color: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blockedCta { transition: none; }
+}

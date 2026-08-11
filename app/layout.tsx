@@ -66,6 +66,9 @@ import { getCurrentUser } from "@/utils/supabase/get-user";
 import { LanguageProvider } from '@/context/LanguageContext';
 import { ConsentProvider } from '@/context/ConsentContext';
 import CookieConsent from '@/components/CookieConsent';
+import ThirdPartyScripts from '@/components/ThirdPartyScripts';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { safeJsonLd } from '@/utils/jsonld';
 
 // Cache profile per user for 60 seconds — reduces DB load on every page render.
@@ -135,6 +138,11 @@ export default async function RootLayout({
             <Footer />
             <FunnelLegalFooter />
             <CookieConsent />
+            <ThirdPartyScripts />
+            {/* Sin cookies ni identificadores persistentes: no requieren
+                consentimiento previo, así que van fuera del gate. */}
+            <Analytics />
+            <SpeedInsights />
           </ConsentProvider>
         </LanguageProvider>
       </body>
