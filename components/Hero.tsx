@@ -168,7 +168,7 @@ export default function Hero() {
           animate="visible"
           transition={{ delay: 1.25, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Link href="/courses" className={styles.ctaPrimary}>
+          <Link href="/curso-bachatango" className={styles.ctaPrimary}>
             <span>{t.hero.cta}</span>
             <span className={styles.ctaArrow} aria-hidden="true">→</span>
           </Link>

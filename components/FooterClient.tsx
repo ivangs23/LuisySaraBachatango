@@ -46,6 +46,7 @@ export default function FooterClient({ adminProfile }: FooterClientProps) {
     'https://www.youtube.com/@LuisySaraBachatango';
 
   const exploreLinks = [
+    { href: '/curso-bachatango', label: t.footer.buyCourse },
     { href: '/', label: t.footer.home },
     { href: '/courses', label: t.header.courses },
     { href: '/events', label: t.header.events },

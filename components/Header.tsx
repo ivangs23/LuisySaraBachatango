@@ -67,6 +67,7 @@ export default function Header({ user, profile }: HeaderProps) {
   }, [isMenuOpen]);
 
   const NAV_LINKS = [
+    { href: '/curso-bachatango', label: t.header.buyCourse },
     { href: '/courses', label: t.header.courses },
     { href: '/events', label: t.header.events },
     { href: '/music', label: t.header.music },
