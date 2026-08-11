@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getLandingCourse } from './get-landing-course';
+import { getLandingCourse } from '@/utils/courses/landing-course';
 import { getCurrentUser } from '@/utils/supabase/get-user';
 import { safeJsonLd } from '@/utils/jsonld';
 import LandingHero from './_components/LandingHero';

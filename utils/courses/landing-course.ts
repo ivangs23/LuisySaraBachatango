@@ -1,5 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
-import { COURSE_ID } from './copy';
+
+/** Curso fijo que vende el funnel `/curso-bachatango` y anuncia la home. */
+export const COURSE_ID = 'f89a576f-4a77-40f7-93e9-23e6c820ee92';
 
 export interface LandingCourse {
   id: string;
@@ -10,7 +12,8 @@ export interface LandingCourse {
 
 /**
  * Lee el curso fijo de la landing (publicado). Devuelve null si no existe
- * o no está publicado. Se usa desde el Server Component de la landing.
+ * o no está publicado. Lo consumen el Server Component de `/` y el de
+ * `/curso-bachatango`, que es la única fuente de verdad del precio.
  */
 export async function getLandingCourse(): Promise<LandingCourse | null> {
   const supabase = await createClient();

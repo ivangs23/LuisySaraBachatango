@@ -1,5 +1,6 @@
 import Reveal from '@/components/Reveal';
-import { LANDING_COPY, COURSE_ID } from '../copy';
+import { LANDING_COPY } from '../copy';
+import { COURSE_ID } from '@/utils/courses/landing-course';
 import CourseCtaButton from './CourseCtaButton';
 import LandingFaq from './LandingFaq';
 import styles from '../page.module.css';
