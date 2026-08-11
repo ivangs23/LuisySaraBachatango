@@ -18,6 +18,24 @@ export const ja: Dictionary = {
     login: "ログイン",
     skipToContent: "メインコンテンツにスキップ"
   },
+  consent: {
+    title: "プライバシーについて",
+    body: "サイトの動作に必要な自社クッキーを使用しています。同意いただける場合は、関心を把握するための分析クッキーと、Instagramのコンテンツを表示するためのマーケティングクッキーも使用します。",
+    accept: "すべて許可",
+    reject: "拒否する",
+    configure: "設定する",
+    save: "設定を保存",
+    necessaryLabel: "必須",
+    necessaryDesc: "セッション、言語、セキュリティに必要です。無効にできません。",
+    analyticsLabel: "分析",
+    analyticsDesc: "どのページが閲覧されたかを把握し、サイト改善に役立てます。Google Analytics。",
+    marketingLabel: "マーケティング",
+    marketingDesc: "キャンペーンの計測と、埋め込みInstagram投稿の表示に使用します。Meta。",
+    policyLink: "クッキーポリシー",
+    manage: "クッキー設定",
+    embedBlocked: "Instagramの投稿を表示するには、マーケティングクッキーへの同意が必要です。",
+    enableEmbed: "許可して表示"
+  },
   footer: {
     description: "ルイスとサラと一緒にバチャタンゴを学びましょう。バチャータの官能性とタンゴの優雅さの完璧な融合。",
     explore: "探索", home: "ホーム", contact: "お問い合わせ", notice: "法的通知",

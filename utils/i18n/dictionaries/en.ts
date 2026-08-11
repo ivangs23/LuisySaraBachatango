@@ -27,6 +27,24 @@ export const en: Dictionary = {
     login: "Login",
     skipToContent: "Skip to main content"
   },
+  consent: {
+    title: "Your privacy",
+    body: "We use first-party cookies that are needed for the site to work. With your permission, we will also use analytics and marketing cookies to understand what interests you and to show you Instagram content.",
+    accept: "Accept all",
+    reject: "Reject",
+    configure: "Customise",
+    save: "Save preferences",
+    necessaryLabel: "Necessary",
+    necessaryDesc: "Required for your session, language and security. These cannot be turned off.",
+    analyticsLabel: "Analytics",
+    analyticsDesc: "Tell us which pages get visited so we can improve the site. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Let us measure campaigns and display embedded Instagram posts. Meta.",
+    policyLink: "Cookie policy",
+    manage: "Cookie preferences",
+    embedBlocked: "To show Instagram posts we need your permission for marketing cookies.",
+    enableEmbed: "Enable and view"
+  },
   footer: {
     description: "Learn Bachatango with Luis & Sara. The perfect fusion between the sensuality of bachata and the elegance of tango.",
     explore: "Explore",

@@ -25,6 +25,24 @@ export const es = {
     login: "Iniciar Sesión",
     skipToContent: "Saltar al contenido principal"
   },
+  consent: {
+    title: "Tu privacidad",
+    body: "Usamos cookies propias necesarias para que la web funcione. Con tu permiso, también usaremos cookies de análisis y de marketing para entender qué te interesa y mostrarte contenido de Instagram.",
+    accept: "Aceptar todo",
+    reject: "Rechazar",
+    configure: "Configurar",
+    save: "Guardar preferencias",
+    necessaryLabel: "Necesarias",
+    necessaryDesc: "Imprescindibles para la sesión, el idioma y la seguridad. No se pueden desactivar.",
+    analyticsLabel: "Análisis",
+    analyticsDesc: "Nos dicen qué páginas se visitan para mejorar la web. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Permiten medir campañas y ver las publicaciones de Instagram integradas. Meta.",
+    policyLink: "Política de cookies",
+    manage: "Preferencias de cookies",
+    embedBlocked: "Para ver las publicaciones de Instagram necesitamos tu permiso para cookies de marketing.",
+    enableEmbed: "Activar y ver"
+  },
   footer: {
     description: "Aprende Bachatango con Luis y Sara. La fusión perfecta entre la sensualidad de la bachata y la elegancia del tango.",
     explore: "Explorar",

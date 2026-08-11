@@ -18,6 +18,24 @@ export const fr: Dictionary = {
     login: "Connexion",
     skipToContent: "Aller au contenu principal"
   },
+  consent: {
+    title: "Votre vie privée",
+    body: "Nous utilisons des cookies internes nécessaires au fonctionnement du site. Avec votre accord, nous utiliserons aussi des cookies d'analyse et de marketing pour comprendre ce qui vous intéresse et afficher du contenu Instagram.",
+    accept: "Tout accepter",
+    reject: "Refuser",
+    configure: "Personnaliser",
+    save: "Enregistrer mes préférences",
+    necessaryLabel: "Nécessaires",
+    necessaryDesc: "Indispensables à votre session, votre langue et la sécurité. Non désactivables.",
+    analyticsLabel: "Analyse",
+    analyticsDesc: "Nous indiquent quelles pages sont visitées afin d'améliorer le site. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Permettent de mesurer les campagnes et d'afficher les publications Instagram intégrées. Meta.",
+    policyLink: "Politique de cookies",
+    manage: "Préférences de cookies",
+    embedBlocked: "Pour afficher les publications Instagram, nous avons besoin de votre accord pour les cookies marketing.",
+    enableEmbed: "Activer et voir"
+  },
   footer: {
     description: "Apprenez le Bachatango avec Luis et Sara. La fusion parfaite entre la sensualité de la bachata et l'élégance du tango.",
     explore: "Explorer", home: "Accueil", contact: "Contact", notice: "Mentions Légales",
