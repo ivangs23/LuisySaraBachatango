@@ -36,20 +36,14 @@ export const metadata: Metadata = {
     siteName: "Luis y Sara Bachatango",
     title: "Luis y Sara Bachatango | Cursos Online de Bachata y Bachatango",
     description: "Aprende Bachata y Bachatango con Luis y Sara, instructores internacionales. Cursos online exclusivos, técnica profesional y comunidad de bailarines.",
-    images: [
-      {
-        url: "/luis-sara-about.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Luis y Sara Bachatango",
-      },
-    ],
+    // Sin `images`: las inyecta app/opengraph-image.tsx con las dimensiones
+    // correctas. Declararlas aquí también produciría dos etiquetas og:image
+    // y los scrapers elegirían una al azar.
   },
   twitter: {
     card: "summary_large_image",
     title: "Luis y Sara Bachatango | Cursos Online de Bachata y Bachatango",
     description: "Aprende Bachata y Bachatango con Luis y Sara, instructores internacionales.",
-    images: ["/luis-sara-about.jpg"],
   },
   alternates: {
     canonical: BASE_URL,
