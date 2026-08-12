@@ -20,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
           '/signup',
           '/forgot-password',
           '/reset-password',
+          '/unsubscribe',
           '/courses/create',
           '/courses/*/edit',
           '/courses/*/add-lesson',
