@@ -127,7 +127,7 @@ export const en: Dictionary = {
     title: "Frequently Asked Questions",
     q1: {
       q: "Do I need previous dance experience?",
-      a: "Basic concepts of bachata or tango."
+      a: "No. The course starts from scratch and builds up step by step. If you already dance bachata or tango you will have a head start, but it is not a requirement — all we assume is that you want to learn."
     },
     q2: {
       q: "How do I access the courses?",

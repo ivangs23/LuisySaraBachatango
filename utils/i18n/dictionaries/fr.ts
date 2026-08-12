@@ -89,7 +89,7 @@ export const fr: Dictionary = {
   },
   faq: {
     title: "Questions Fréquentes",
-    q1: { q: "Ai-je besoin d'expérience en danse ?", a: "Des notions de base de bachata ou de tango." },
+    q1: { q: "Ai-je besoin d'expérience en danse ?", a: "Non. Le cours part de zéro et progresse pas à pas. Si vous dansez déjà la bachata ou le tango, vous aurez une longueur d'avance, mais ce n'est pas obligatoire : la seule chose que nous supposons, c'est votre envie d'apprendre." },
     q2: { q: "Comment accéder aux cours ?", a: "Une fois que vous achetez un cours, vous avez un accès immédiat à tout le contenu du cours sur la plateforme. Vous pouvez voir les cours autant de fois que vous le souhaitez." },
     q3: { q: "Est-ce utile si je n'ai pas de partenaire ?", a: "Absolument. Bien que le Bachatango soit une danse de couple, de nombreuses leçons se concentrent sur la technique individuelle, la musicalité et le style." }
   },

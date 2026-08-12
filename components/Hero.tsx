@@ -7,10 +7,13 @@ import { Play, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './Hero.module.css';
 
+// Estas cifras deben coincidir con app/sobre-nosotros/AboutClient.tsx y con
+// app/opengraph-image.tsx. Antes el hero decía +50 países y la página "Sobre
+// nosotros" 30+; se unifica en la menor a la espera de confirmación.
 const STATS = [
   { value: '+25', labelKey: 'years' },
   { value: '+500', labelKey: 'students' },
-  { value: '+50', labelKey: 'countries' },
+  { value: '+30', labelKey: 'countries' },
 ] as const;
 
 type StatKey = typeof STATS[number]['labelKey'];

@@ -89,7 +89,7 @@ export const de: Dictionary = {
   },
   faq: {
     title: "Häufige Fragen",
-    q1: { q: "Brauche ich Vorkenntnisse?", a: "Grundkenntnisse in Bachata oder Tango." },
+    q1: { q: "Brauche ich Vorkenntnisse?", a: "Nein. Der Kurs beginnt bei null und baut Schritt für Schritt auf. Wenn du schon Bachata oder Tango tanzt, hast du einen Vorsprung, aber Voraussetzung ist es nicht — wir setzen nur voraus, dass du lernen willst." },
     q2: { q: "Wie greife ich auf die Kurse zu?", a: "Sobald du einen Kurs kaufst, hast du sofortigen Zugriff auf den gesamten Kursinhalt über die Plattform. Du kannst die Klassen so oft ansehen, wie du möchtest." },
     q3: { q: "Geht das auch ohne Tanzpartner?", a: "Absolut. Viele Lektionen konzentrieren sich auf individuelle Technik." }
   },

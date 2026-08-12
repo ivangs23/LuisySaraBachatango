@@ -89,7 +89,7 @@ export const it: Dictionary = {
   },
   faq: {
     title: "Domande Frequenti",
-    q1: { q: "Ho bisogno di esperienza?", a: "Nozioni di base di bachata o tango." },
+    q1: { q: "Ho bisogno di esperienza?", a: "No. Il corso parte da zero e procede passo dopo passo. Se balli già bachata o tango partirai avvantaggiato, ma non è un requisito: l'unica cosa che diamo per scontata è la voglia di imparare." },
     q2: { q: "Come accedo ai corsi?", a: "Una volta acquistato un corso, hai accesso immediato a tutto il contenuto del corso attraverso la piattaforma. Puoi vedere le lezioni tutte le volte che vuoi." },
     q3: { q: "Serve il partner?", a: "No, molte lezioni sono individuali." }
   },

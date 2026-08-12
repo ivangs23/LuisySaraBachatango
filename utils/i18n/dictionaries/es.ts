@@ -126,7 +126,7 @@ export const es = {
     title: "Preguntas Frecuentes",
     q1: {
       q: "¿Necesito tener experiencia previa en baile?",
-      a: "Conceptos básicos de bachata o tango."
+      a: "No hace falta. El curso empieza desde cero y avanza paso a paso. Si ya bailas bachata o tango partirás con ventaja, pero no es un requisito: lo único que damos por hecho es que quieres aprender."
     },
     q2: {
       q: "¿Cómo accedo a los cursos?",
