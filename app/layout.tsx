@@ -105,6 +105,13 @@ export default async function RootLayout({
     url: BASE_URL,
     logo: `${BASE_URL}/logo.png`,
     description: 'Plataforma exclusiva de cursos de Bachata y Bachatango con Luis y Sara, instructores internacionales.',
+    // Solo perfiles verificados. Un `sameAs` que apunta a un perfil
+    // inexistente o ajeno perjudica al Knowledge Graph, así que es mejor
+    // corto y cierto que largo y dudoso.
+    //
+    // Comprobado 2026-08-12: youtube.com/@luisysaradance devuelve 404.
+    // Facebook y TikTok responden 200 pero con muro de login, que no prueba
+    // que el perfil sea vuestro — añadirlos cuando estén confirmados.
     sameAs: [
       'https://www.instagram.com/luisysaradance',
     ],
