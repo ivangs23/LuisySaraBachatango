@@ -9,16 +9,22 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#050505',
     theme_color: '#c0a062',
+    // /icon lo genera app/icon.tsx: 512x512 cuadrado. Antes se declaraba
+    // /logo.png con sizes:'any', pero es 576x1024 y quedaba deformado al
+    // instalar la PWA. `maskable` evita que Android recorte las siglas
+    // dentro de su máscara circular.
     icons: [
       {
-        src: '/logo.png',
-        sizes: 'any',
+        src: '/icon',
+        sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
       },
       {
-        src: '/favicon.ico',
-        sizes: '32x32',
-        type: 'image/x-icon',
+        src: '/icon',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
     ],
   }
