@@ -160,13 +160,45 @@
   }
 }
 
+/* En móvil el banner competía con el hero entero: apilar los tres botones en
+   columna lo hacía ~390px de alto sobre un viewport de 667, tapando título,
+   subtítulo y ambos CTAs. Aceptar y rechazar van ahora en la misma fila —
+   siguen teniendo idéntico peso— y solo "Configurar" baja a su propia línea. */
 @media (max-width: 560px) {
-  .actions {
-    flex-direction: column;
+  .panel {
+    max-height: 62vh;
+    padding: 1rem 1.1rem 1.1rem;
+    border-radius: 14px;
   }
+
+  .title {
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .body {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .actions {
+    margin-top: 0.9rem;
+    gap: 0.5rem;
+  }
+
   .primary,
-  .secondary,
+  .secondary {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.7rem 0.75rem;
+  }
+
   .tertiary {
-    width: 100%;
+    flex: 1 1 100%;
+    padding: 0.4rem 0;
+  }
+
+  .policy {
+    margin-top: 0.6rem;
   }
 }
