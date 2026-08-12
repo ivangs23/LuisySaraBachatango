@@ -85,6 +85,21 @@ venta y la superficie de SEO, muertos.
 
 **#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
+## Newsletter — agosto 2026 · 🔴 PENDIENTE DE APLICAR
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_08_newsletter_consent.sql` | Columnas `consent_ip`, `consent_at`, `consent_source` en `newsletter_subscribers` (prueba de consentimiento, RGPD art. 7.1) + índice parcial sobre `unsubscribed_at`. Aditiva e idempotente. | 🔴 Pendiente |
+
+La tabla tenía **0 filas** al escribir la migración (2026-08-12), así que el
+backfill es un no-op y el riesgo es nulo.
+
+Requiere además la variable `NEWSLETTER_UNSUBSCRIBE_SECRET` (ver `CLAUDE.md`).
+Sin ella el email de bienvenida **no se envía**: no podría llevar enlace de
+baja, y enviar comunicación comercial sin él incumple el art. 21 de la LSSI.
+
+---
+
 **Deuda que queda:** la policy SELECT de `course_purchases` sigue leyendo
 `profiles.role` y no está en ningún fichero de `supabase/` — vive solo en la BD.
 Hoy no rompe nada, pero es la misma bomba de relojería. Para limpiarla hace

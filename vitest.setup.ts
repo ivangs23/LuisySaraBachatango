@@ -14,6 +14,8 @@ process.env.MUX_SIGNING_KEY_ID = 'test-signing-key-id'
 // base64 of a dummy RSA private key PEM header — never used in tests (signPlaybackToken paths are exercised via mocks)
 process.env.MUX_SIGNING_KEY_PRIVATE = 'dGVzdC1wcml2YXRlLWtleQ=='
 
+process.env.NEWSLETTER_UNSUBSCRIBE_SECRET = 'test-unsubscribe-secret'
+
 // jsdom no implementa IntersectionObserver, y motion/react lo necesita para
 // `whileInView` (components/Reveal.tsx) y hooks/useInView.ts. Sin este stub,
 // cualquier test de componente que renderice una sección animada revienta con
