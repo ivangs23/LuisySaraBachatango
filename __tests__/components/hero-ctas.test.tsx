@@ -31,3 +31,17 @@ describe('Hero CTAs', () => {
       .toHaveAttribute('href', '/clase-gratis')
   })
 })
+
+describe('Hero background', () => {
+  it('no renderiza un elemento video sin fuentes', () => {
+    const { container } = renderHero()
+    expect(container.querySelector('video')).toBeNull()
+  })
+
+  it('renderiza la imagen de fondo del hero', () => {
+    const { container } = renderHero()
+    const img = container.querySelector('img')
+    expect(img).not.toBeNull()
+    expect(img?.getAttribute('src')).toContain('hero-bg')
+  })
+})

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import { Play, ChevronDown } from 'lucide-react';
@@ -21,13 +21,6 @@ type StatKey = typeof STATS[number]['labelKey'];
 export default function Hero() {
   const { t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (prefersReducedMotion && videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [prefersReducedMotion]);
 
   // Split del título por palabras para animarlas escalonadas.
   // Mantenemos los saltos de línea originales del diccionario (whiteSpace: pre-line).
@@ -64,20 +57,18 @@ export default function Hero() {
 
   return (
     <section className={styles.hero} aria-label="Bachatango con Luis y Sara">
-      {/* Capa de fondo: vídeo con poster fallback */}
+      {/* Capa de fondo: imagen optimizada + gradiente cinemático.
+          `priority` emite el <link rel="preload"> que no existía cuando el
+          fondo era una background-image de CSS: es el elemento LCP. */}
       <div className={styles.bgLayer} aria-hidden="true">
-        <video
-          ref={videoRef}
-          className={styles.bgVideo}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster="/hero-bg.webp"
-        >
-        </video>
-        {/* Gradiente cinemático y viñeta */}
+        <Image
+          src="/hero-bg.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className={styles.bgImage}
+        />
         <div className={styles.bgOverlay} />
         <div className={styles.bgVignette} />
       </div>
