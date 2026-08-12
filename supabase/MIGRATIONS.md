@@ -85,11 +85,14 @@ venta y la superficie de SEO, muertos.
 
 **#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
-## Newsletter — agosto 2026 · 🔴 PENDIENTE DE APLICAR
+## Newsletter — agosto 2026 · ✅ APLICADA (2026-08-12)
 
 | # | Fichero | Qué hace | Estado |
 |---|---|---|---|
-| 1 | `2026_08_newsletter_consent.sql` | Columnas `consent_ip`, `consent_at`, `consent_source` en `newsletter_subscribers` (prueba de consentimiento, RGPD art. 7.1) + índice parcial sobre `unsubscribed_at`. Aditiva e idempotente. | 🔴 Pendiente |
+| 1 | `2026_08_newsletter_consent.sql` | Columnas `consent_ip`, `consent_at`, `consent_source` en `newsletter_subscribers` (prueba de consentimiento, RGPD art. 7.1) + índice parcial sobre `unsubscribed_at`. Aditiva e idempotente. | ✅ Aplicada |
+
+Verificado contra producción: un upsert con el payload exacto de
+`subscribeNewsletter` (incluidas las tres columnas nuevas) se acepta.
 
 La tabla tenía **0 filas** al escribir la migración (2026-08-12), así que el
 backfill es un no-op y el riesgo es nulo.
