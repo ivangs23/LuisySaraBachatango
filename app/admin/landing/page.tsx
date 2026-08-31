@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import RangePicker from '@/components/admin/charts/RangePicker'
 import LandingFunnelChart from '@/components/admin/charts/LandingFunnelChart'
 import LandingTrafficChart from '@/components/admin/charts/LandingTrafficChart'
@@ -32,7 +33,10 @@ export default async function LandingStatsPage({
     <div className={styles.container}>
       <header className={styles.header}>
         <h1 className={styles.title}>Landing</h1>
-        <RangePicker value={rangeKey} />
+        <div className={styles.headerActions}>
+          <Link href="/admin/landing/contenido" className={styles.navLink}>Editar contenido →</Link>
+          <RangePicker value={rangeKey} />
+        </div>
       </header>
 
       <p className={styles.intro}>

@@ -1,0 +1,125 @@
+.sections { display: grid; gap: 1.5rem; }
+
+.card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cardTitle { font-size: 1.05rem; margin: 0 0 0.35rem; }
+
+.cardHint {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  opacity: 0.7;
+  max-width: 62ch;
+}
+
+.item {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1rem;
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.summary { cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+
+.form { display: grid; gap: 0.85rem; }
+
+.field, .fieldSmall { display: grid; gap: 0.3rem; }
+.fieldSmall { max-width: 8rem; }
+
+.fieldHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.input:focus-visible { outline: none; border-color: var(--primary); }
+
+/* ---------- Pestañas de idioma ---------- */
+
+.tabs { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+
+.tab {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.tab:hover { opacity: 0.85; }
+
+.tabActive {
+  opacity: 1;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.row { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; }
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.checkbox input { accent-color: var(--primary); }
+
+/* ---------- Pie del formulario ---------- */
+
+.formFooter { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+.submit {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.submit:disabled { opacity: 0.6; cursor: default; }
+
+.saved { font-size: 0.78rem; color: var(--primary); }
+.error { font-size: 0.78rem; color: #e88; }
+
+.statsGrid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
