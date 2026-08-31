@@ -228,6 +228,24 @@ fichero ya exporta 17 funciones y no necesita crecer más.
 - E2E: navegar a `/curso-bachatango` como anónimo dispara exactamente una
   petición a `/api/landing-event`.
 
+## Riesgo operativo conocido: desarrollo local contamina producción
+
+`.env.local` apunta a la base de datos de **producción**, así que ejecutar
+`npm run dev`, la suite E2E o Lighthouse contra localhost **escribe eventos
+reales**. La suite E2E metió 23 filas en la primera ejecución.
+
+El filtro de bots no lo evita: Playwright manda un user-agent de Chrome
+normal, no `HeadlessChrome`.
+
+Formas de cerrarlo, cuando moleste:
+
+1. Un proyecto de Supabase aparte para desarrollo — lo correcto, y arregla de
+   paso el mismo problema con compras y usuarios de prueba.
+2. No registrar nada cuando `isDemoMode()` sea true (local y preview). Cambio
+   de dos líneas en la ruta de API, y resuelve solo este caso.
+
+Mientras tanto: purgar la tabla tras ejecutar E2E en local.
+
 ## Cuándo habrá que volver
 
 **Volumen.** Con el tráfico actual son miles de filas al mes y los índices
