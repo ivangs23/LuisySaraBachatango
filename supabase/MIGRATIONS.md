@@ -7,30 +7,40 @@ son peligrosos de re-aplicar (AUDITORIA-2026-07 M4).
 
 ## Cómo levantar la BD desde cero
 
-**Usar `schema_canonical.sql`.** Es un `supabase db dump` del estado real de
-producción, generado el 2026-08-31: 22 tablas, 64 policies, 7 funciones, sin
-datos.
+El estado canónico es **`supabase/migrations/20260831000000_canonical_schema.sql`**,
+un `supabase db dump` de producción del 2026-08-31: 22 tablas, 64 policies, 7
+funciones, sin datos.
+
+Refleja producción **tal como está**, con el endurecimiento de mayo y julio ya
+dentro. Comprobado: no contiene la policy `"Lessons are viewable by everyone"`
+que `rbac_setup.sql` sí recrearía.
+
+### Entorno local (Docker)
 
 ```bash
-psql '<cadena de conexión del proyecto destino>' -f supabase/schema_canonical.sql
+supabase start
 ```
 
-Ese fichero refleja producción **tal como está**, con el endurecimiento de mayo
-y julio ya dentro. Comprobado: no contiene la policy
-`"Lessons are viewable by everyone"` que `rbac_setup.sql` sí recrearía.
+Aplica sola la migración y `supabase/seed.sql`. No toca ninguna base de datos en
+la nube.
 
-Regenerarlo cuando el esquema cambie:
+### Otro proyecto en la nube
 
 ```bash
-supabase db dump --linked -f supabase/schema_canonical.sql
+supabase db push --db-url '<cadena de conexión del destino>'
+```
+
+### Regenerar el canónico cuando cambie el esquema de producción
+
+```bash
+supabase db dump --linked -f supabase/migrations/<timestamp>_canonical_schema.sql
 ```
 
 ### El camino antiguo, y por qué ya no se usa
 
-Aplicar los 69 ficheros en orden por bloques (`schema.sql` → parches de features
-→ audits de mayo → cambios de julio → fixes `fix1`..`fix5` → agosto) produce una
-base de datos **distinta** de producción: reabre agujeros ya cerrados. Ver la
-sección siguiente. Se conserva la lista por valor histórico, no como receta.
+Aplicar los 69 ficheros sueltos en orden produce una base de datos **distinta**
+de producción: reabre agujeros ya cerrados. Ver la sección siguiente. Se
+conservan por valor histórico, no como receta.
 
 ## ⚠️ Ficheros peligrosos de re-aplicar sobre una BD ya endurecida
 
