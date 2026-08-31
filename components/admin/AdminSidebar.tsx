@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   FlaskConical,
+  Megaphone,
 } from 'lucide-react'
 import styles from './AdminSidebar.module.css'
 
@@ -28,6 +29,7 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
     { href: '/admin', label: 'Inicio', Icon: LayoutDashboard },
     { href: '/admin/alumnos', label: 'Alumnos', Icon: Users },
     { href: '/admin/estadisticas', label: 'Estadísticas', Icon: BarChart3 },
+    { href: '/admin/landing', label: 'Landing', Icon: Megaphone },
     { href: '/admin/entregas', label: 'Entregas', Icon: Inbox, badge: pendingSubmissions },
     { href: '/admin/cursos', label: 'Cursos', Icon: GraduationCap },
     { href: '/admin/eventos', label: 'Eventos', Icon: CalendarDays },

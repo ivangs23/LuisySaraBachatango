@@ -15,6 +15,7 @@ process.env.MUX_SIGNING_KEY_ID = 'test-signing-key-id'
 process.env.MUX_SIGNING_KEY_PRIVATE = 'dGVzdC1wcml2YXRlLWtleQ=='
 
 process.env.NEWSLETTER_UNSUBSCRIBE_SECRET = 'test-unsubscribe-secret'
+process.env.LANDING_ANALYTICS_SECRET = 'test-landing-analytics-secret'
 
 // jsdom no implementa IntersectionObserver, y motion/react lo necesita para
 // `whileInView` (components/Reveal.tsx) y hooks/useInView.ts. Sin este stub,

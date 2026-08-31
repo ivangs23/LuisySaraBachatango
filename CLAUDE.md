@@ -112,6 +112,7 @@ RESEND_API_KEY                 # Resend API key; sender/domain for transactional
 NEXT_PUBLIC_GA_MEASUREMENT_ID  # Optional. GA4 measurement ID (G-XXXXXXXXXX). Fail-closed: if unset, GA4 never loads even with analytics consent granted.
 NEXT_PUBLIC_META_PIXEL_ID      # Optional. Numeric Meta Pixel ID. Fail-closed: if unset, the Pixel never loads even with marketing consent granted.
 NEWSLETTER_UNSUBSCRIBE_SECRET  # HMAC key for newsletter unsubscribe links. Fail-closed: if unset, the welcome email is not sent (it could not carry a compliant unsubscribe link) and /unsubscribe rejects every token. Rotating it invalidates all outstanding links.
+LANDING_ANALYTICS_SECRET       # HMAC key for the daily visitor-hash salt used by /api/landing-event. Fail-closed: if unset, no landing events are recorded and the route still returns 204. Rotating it breaks unique-visitor continuity for that day.
 ```
 
 ## Cookie Consent

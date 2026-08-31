@@ -176,3 +176,38 @@ test.describe('Móvil', () => {
     }
   })
 })
+
+test.describe('Analítica de la landing', () => {
+  test('manda exactamente un evento por visita a una ruta medida', async ({ page }) => {
+    const events: string[] = []
+    page.on('request', (r) => {
+      if (r.url().includes('/api/landing-event')) events.push(r.url())
+    })
+
+    await page.goto('/curso-bachatango')
+    await page.waitForLoadState('networkidle')
+
+    expect(events).toHaveLength(1)
+  })
+
+  test('no manda eventos en rutas no medidas', async ({ page }) => {
+    const events: string[] = []
+    page.on('request', (r) => {
+      if (r.url().includes('/api/landing-event')) events.push(r.url())
+    })
+
+    await page.goto('/legal/privacy')
+    await page.waitForLoadState('networkidle')
+
+    expect(events).toEqual([])
+  })
+
+  test('el beacon no deja cookies', async ({ page, context }) => {
+    await page.goto('/curso-bachatango')
+    await page.waitForLoadState('networkidle')
+
+    const cookies = await context.cookies()
+    expect(cookies.map((c) => c.name)).not.toContain('ls_visitor')
+    expect(cookies.filter((c) => c.name.startsWith('ls_analytics'))).toEqual([])
+  })
+})

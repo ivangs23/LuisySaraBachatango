@@ -61,6 +61,7 @@ import { LanguageProvider } from '@/context/LanguageContext';
 import { ConsentProvider } from '@/context/ConsentContext';
 import CookieConsent from '@/components/CookieConsent';
 import ThirdPartyScripts from '@/components/ThirdPartyScripts';
+import LandingAnalytics from '@/components/LandingAnalytics';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { safeJsonLd } from '@/utils/jsonld';
@@ -144,6 +145,7 @@ export default async function RootLayout({
                 consentimiento previo, así que van fuera del gate. */}
             <Analytics />
             <SpeedInsights />
+            <LandingAnalytics />
           </ConsentProvider>
         </LanguageProvider>
       </body>
