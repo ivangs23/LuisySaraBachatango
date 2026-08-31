@@ -1,8 +1,16 @@
 import { ImageResponse } from 'next/og';
+import { getLandingStats } from '@/utils/landing/content';
 
 export const alt = 'Luis y Sara Bachatango — Cursos online de Bachata y Bachatango';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
+
+/**
+ * Sin esto la imagen se prerenderiza en build y se queda congelada: editar una
+ * cifra en el panel no se reflejaría hasta el siguiente despliegue. Con ISR se
+ * regenera como mucho cada 5 minutos, igual que la home.
+ */
+export const revalidate = 300;
 
 /**
  * OG image generada en lugar de un archivo estático. El motivo: la anterior
@@ -13,6 +21,9 @@ export const contentType = 'image/png';
  * con más de un hijo, y no soporta `gap` fuera de flex. Respetar eso al editar.
  */
 export default async function OpengraphImage() {
+  // Era la tercera copia de las cifras y la razón de que se desincronizaran.
+  const stats = await getLandingStats();
+
   return new ImageResponse(
     (
       <div
@@ -78,9 +89,9 @@ export default async function OpengraphImage() {
             letterSpacing: 3,
           }}
         >
-          <div style={{ display: 'flex' }}>+25 AÑOS</div>
-          <div style={{ display: 'flex' }}>+500 ALUMNOS</div>
-          <div style={{ display: 'flex' }}>+30 PAÍSES</div>
+          <div style={{ display: 'flex' }}>+{stats.years} AÑOS</div>
+          <div style={{ display: 'flex' }}>+{stats.students} ALUMNOS</div>
+          <div style={{ display: 'flex' }}>+{stats.countries} PAÍSES</div>
         </div>
       </div>
     ),

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import AboutClient from './AboutClient'
+import { getLandingStats } from '@/utils/landing/content'
 
 export const metadata: Metadata = {
   title: 'Sobre nosotros | Luis y Sara Bachatango',
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/sobre-nosotros' },
 }
 
-export default function AboutPage() {
-  return <AboutClient />
+export default async function AboutPage() {
+  const stats = await getLandingStats()
+  return <AboutClient stats={stats} />
 }

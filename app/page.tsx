@@ -11,12 +11,17 @@ import { getLandingCourse } from "@/utils/courses/landing-course";
 import { getDict } from "@/utils/get-dict";
 import { buildFaqJsonLd } from "@/utils/seo/faq-jsonld";
 import { safeJsonLd } from "@/utils/jsonld";
+import { getLandingStats } from "@/utils/landing/content";
 
 // ISR: el precio del curso se relee como mucho cada 5 minutos.
 export const revalidate = 300;
 
 export default async function Home() {
-  const [course, dict] = await Promise.all([getLandingCourse(), getDict()]);
+  const [course, dict, stats] = await Promise.all([
+    getLandingCourse(),
+    getDict(),
+    getLandingStats(),
+  ]);
 
   // Se alimenta del mismo diccionario que renderiza <FAQ />, así que el
   // marcado nunca puede divergir de lo que el visitante ve en pantalla.
@@ -33,7 +38,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
       />
       {/* Hero cinemático con imagen de fondo y animaciones de entrada */}
-      <Hero />
+      <Hero stats={stats} />
 
       {/* Quiénes somos — bloque cinemático con parallax */}
       <AboutSection />

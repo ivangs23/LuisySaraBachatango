@@ -5,20 +5,23 @@ import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import { Play, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import type { LandingStats } from '@/utils/landing/content';
 import styles from './Hero.module.css';
 
-// Estas cifras deben coincidir con app/sobre-nosotros/AboutClient.tsx y con
-// app/opengraph-image.tsx. Antes el hero decía +50 países y la página "Sobre
-// nosotros" 30+; se unifica en la menor a la espera de confirmación.
-const STATS = [
-  { value: '+25', labelKey: 'years' },
-  { value: '+500', labelKey: 'students' },
-  { value: '+30', labelKey: 'countries' },
+/**
+ * Orden y etiqueta de las cifras. El valor llega por props desde la base de
+ * datos: antes estaba copiado aquí, en AboutClient y en la OG image, y las tres
+ * copias se desincronizaron (el hero decía 50 países y "sobre nosotros" 30).
+ */
+const STAT_KEYS = [
+  { key: 'years', labelKey: 'years' },
+  { key: 'students', labelKey: 'students' },
+  { key: 'countries', labelKey: 'countries' },
 ] as const;
 
-type StatKey = typeof STATS[number]['labelKey'];
+type StatKey = typeof STAT_KEYS[number]['labelKey'];
 
-export default function Hero() {
+export default function Hero({ stats }: { stats: LandingStats }) {
   const { t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
 
@@ -180,9 +183,10 @@ export default function Hero() {
           animate="visible"
           transition={{ delay: 1.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          {STATS.map((stat) => (
-            <li key={stat.labelKey} className={styles.statItem}>
-              <span className={styles.statValue}>{stat.value}</span>
+          {STAT_KEYS.map((stat) => (
+            <li key={stat.key} className={styles.statItem}>
+              {/* El '+' lo pone la vista: la tabla guarda el número pelado. */}
+              <span className={styles.statValue}>+{stats[stat.key]}</span>
               <span className={styles.statLabel}>
                 {t.hero.stats[stat.labelKey as StatKey]}
               </span>

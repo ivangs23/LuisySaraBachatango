@@ -13,15 +13,20 @@ import {
 import Reveal from '@/components/Reveal';
 import styles from './page.module.css';
 import { useLanguage } from '@/context/LanguageContext';
+import type { LandingStats } from '@/utils/landing/content';
 
-const STATS = [
-  { value: '25', suffix: '+', icon: GraduationCap, key: 's1' as const },
-  { value: '500', suffix: '+', icon: Users, key: 's2' as const },
-  { value: '30', suffix: '+', icon: MapPin, key: 's3' as const },
-  { value: '100', suffix: '+', icon: Trophy, key: 's4' as const },
+/**
+ * Orden, icono y etiqueta. El valor llega por props desde la base de datos:
+ * antes estaba copiado aquí, en Hero y en la OG image.
+ */
+const STAT_KEYS = [
+  { statKey: 'years' as const, suffix: '+', icon: GraduationCap, key: 's1' as const },
+  { statKey: 'students' as const, suffix: '+', icon: Users, key: 's2' as const },
+  { statKey: 'countries' as const, suffix: '+', icon: MapPin, key: 's3' as const },
+  { statKey: 'titles' as const, suffix: '+', icon: Trophy, key: 's4' as const },
 ];
 
-export default function SobreNosotros() {
+export default function SobreNosotros({ stats }: { stats: LandingStats }) {
   const { t } = useLanguage();
 
   const titleWords = t.about.heroTitle.split(' ');
@@ -134,7 +139,7 @@ export default function SobreNosotros() {
           </Reveal>
 
           <div className={styles.statsGrid}>
-            {STATS.map((stat, i) => {
+            {STAT_KEYS.map((stat, i) => {
               const Icon = stat.icon;
               return (
                 <Reveal key={stat.key} delay={0.05 + i * 0.06}>
@@ -148,7 +153,7 @@ export default function SobreNosotros() {
                       </span>
                     </div>
                     <span className={styles.statValue}>
-                      {stat.value}
+                      {stats[stat.statKey]}
                       <span className={styles.statSuffix}>{stat.suffix}</span>
                     </span>
                     <p className={styles.statDescription}>
