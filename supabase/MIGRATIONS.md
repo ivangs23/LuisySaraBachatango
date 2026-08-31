@@ -85,6 +85,21 @@ venta y la superficie de SEO, muertos.
 
 **#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
+## Analítica de la landing — agosto 2026 · ✅ APLICADA (2026-08-13)
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_08_landing_events.sql` | Tabla `landing_events` (vistas de página sin cookies), índices por fecha y por ruta, y RLS: solo admin lee (vía `public.is_admin()`), nadie escribe con la anon key. Aditiva e idempotente. | ✅ Aplicada |
+
+Verificado tras aplicar: con la anon key, `SELECT` devuelve 0 filas e `INSERT`
+falla con *"new row violates row-level security policy"*. Las escrituras van con
+service role desde `/api/landing-event`, que valida la ruta contra una allowlist.
+
+Requiere la variable `LANDING_ANALYTICS_SECRET` (ver `CLAUDE.md`). Sin ella la
+ruta responde 204 y no guarda nada.
+
+---
+
 ## Newsletter — agosto 2026 · ✅ APLICADA (2026-08-12)
 
 | # | Fichero | Qué hace | Estado |
