@@ -21,14 +21,11 @@ export const LANDING_COPY = {
   },
   learn: {
     title: 'Qué vas a aprender',
-    items: [
-      { title: 'Técnica y postura', body: 'Bases sólidas para moverte con control y elegancia.' },
-      { title: 'Conexión en pareja', body: 'Guía y respuesta para bailar como uno solo.' },
-      { title: 'Musicalidad y tiempo', body: 'Entiende la música y baila dentro de ella.' },
-      { title: 'Figuras y combinaciones', body: 'Repertorio progresivo, paso a paso.' },
-      { title: 'Estilo propio', body: 'Encuentra tu sello sobre la pista.' },
-      { title: 'Progresión guiada', body: 'De cero a avanzado, sin saltos ni lagunas.' },
-    ],
+    // El detalle sale de la BD (utils/courses/curriculum.ts): son los módulos
+    // reales del curso. Antes había seis viñetas genéricas que valdrían para
+    // cualquier curso de baile y no probaban que este existiera.
+    subtitle: 'El temario completo, módulo a módulo.',
+    summary: '{modules} módulos · {lessons} lecciones · {duration}',
   },
   method: {
     title: 'El método Luis y Sara',

@@ -82,6 +82,7 @@ venta y la superficie de SEO, muertos.
 | 1 | `2026_08_fix_anon_read_admin_check.sql` | Añade `public.is_admin()` (SECURITY DEFINER, `search_path` fijado) y reescribe las policies de `courses`, `lessons` y `events` para usarla en lugar de leer `profiles.role` directamente. No relaja el endurecimiento de julio. Idempotente. | ✅ Aplicado 2026-08-11 — `courses` y `events` arreglados, `lessons` no (ver #2) |
 | 2 | `2026_08_fix2_lessons_refund_regression.sql` | **Corrige una regresión de #1:** aquella copió la policy de `lessons` de `2026_05_audit4_rls_lessons_null_guard.sql`, pero la versión vigente era la de `2026_07_fix1_refunds.sql`, con `and cp.refunded_at is null`. Sin esa línea, **una compra reembolsada recupera el acceso**. | ⏭️ Superada por #3, que la incluye |
 | 3 | `2026_08_fix3_lessons_purchase_check.sql` | Añade `public.has_course_purchase(uuid)` y lo usa en la policy de `lessons`. La rama de compra hacía una subconsulta a `course_purchases`, cuya propia policy lee `profiles.role` y revienta para `anon` — el error se propagaba a `lessons`. Incluye el arreglo de reembolsos de #2. | ✅ Aplicado 2026-08-11 |
+| 4 | `2026_08_fix4_course_purchases_policy.sql` | Reescribe `"Admins can view all purchases"` con `public.is_admin()`. Definición vigente leída de `pg_policy` antes de tocarla; las otras dos policies de la tabla no se tocan. | ✅ Aplicado 2026-08-31 |
 
 **#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
@@ -132,11 +133,30 @@ baja, y enviar comunicación comercial sin él incumple el art. 21 de la LSSI.
 
 ---
 
-**Deuda que queda:** la policy SELECT de `course_purchases` sigue leyendo
-`profiles.role` y no está en ningún fichero de `supabase/` — vive solo en la BD.
-Hoy no rompe nada, pero es la misma bomba de relojería. Para limpiarla hace
-falta ver su definición con `pg_get_expr(polqual, polrelid)` y reescribirla con
-`public.is_admin()`.
+**Deuda que queda (revisada 2026-08-31).** `course_purchases` ya está cerrada
+(`2026_08_fix4_course_purchases_policy.sql`). Quedan **12 policies** que siguen
+comprobando el rol leyendo `profiles.role` directamente:
+
+| Tabla | Policies |
+|---|---|
+| `account_deletions`, `contact_submissions`, `newsletter_subscribers` | SELECT de admin |
+| `assignments` | SELECT + ALL |
+| `comments` | SELECT |
+| `submissions` | SELECT + UPDATE |
+| `courses`, `lessons` | solo UPDATE y DELETE |
+
+**Ninguna rompe nada hoy.** Comprobado con la anon key el 2026-08-31: las cinco
+tablas afectadas (`account_deletions`, `assignments`, `contact_submissions`,
+`newsletter_subscribers`, `submissions`) son tablas que `anon` **no debe leer
+nunca**, así que fallar es el resultado correcto — solo que falla con
+*"permission denied for table profiles"* en vez de devolver cero filas. Las de
+`courses` y `lessons` son UPDATE/DELETE, que no intervienen en un SELECT.
+
+El riesgo es latente, no actual: si alguna policy de una tabla pública llegara a
+subconsultar una de estas —exactamente lo que pasó con `lessons` →
+`course_purchases`— volvería a romperse la lectura anónima. Migrarlas todas a
+`public.is_admin()` es mejora de robustez, no corrección de un fallo, y toca
+policies de tablas sensibles: merece su propia migración y su propia validación.
 
 **Lección para futuras migraciones de RLS:** antes de recrear una policy, comprobar
 cuál es la definición **vigente** en la BD (`pg_policy`), no la del fichero que
