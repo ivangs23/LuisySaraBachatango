@@ -92,12 +92,35 @@ RLS: lectura pública de las filas publicadas; escritura solo admin vía
 `public.is_admin()` — **no** leyendo `profiles.role` directamente, que es el
 patrón que dejó el embudo en 404 durante semanas (ver `supabase/MIGRATIONS.md`).
 
-### El conjunto de cifras es fijo
+### El conjunto de cifras es fijo: cuatro claves
 
-`landing_stats` tiene exactamente tres filas: `years`, `students`, `countries`.
-El panel deja **editar sus valores, no añadir ni borrar**. Una cuarta cifra
-necesitaría su etiqueta traducida a seis idiomas en los diccionarios, o sea
-código: fingir que se puede añadir desde el panel dejaría una cifra sin nombre.
+`landing_stats` tiene exactamente cuatro filas:
+
+| clave | valor hoy | dónde se ve |
+|---|---|---|
+| `years` | 25 | hero, sobre-nosotros, OG image |
+| `students` | 500 | hero, sobre-nosotros, OG image |
+| `countries` | 30 | hero, sobre-nosotros, OG image |
+| `titles` | 100 | solo sobre-nosotros |
+
+`titles` («títulos internacionales») entra aunque el hero no la muestre: si se
+quedara fuera seguiría hardcodeada en `AboutClient.tsx`, con exactamente el
+problema que esto viene a arreglar.
+
+El panel deja **editar los valores, no añadir ni borrar filas**. Una quinta
+cifra necesitaría su etiqueta traducida a seis idiomas en los diccionarios, o
+sea código: fingir que se puede añadir desde el panel dejaría una cifra sin
+nombre.
+
+### Se guarda el número pelado, no el formato
+
+`Hero.tsx` escribe `'+25'` y `AboutClient.tsx` escribe `value: '25', suffix: '+'`:
+el mismo número con dos presentaciones. La tabla guarda **`25`**, y cada
+consumidor le pone su prefijo o sufijo.
+
+Guardar `'+25'` obligaría a que todos los consumidores compartieran formato, o a
+recortar el signo en uno de ellos. El número es el dato; el adorno es de la
+vista.
 
 ### Por qué las etiquetas de las cifras no se mueven
 
