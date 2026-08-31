@@ -55,3 +55,7 @@ supabase/.temp/
 
 # Lighthouse / load-test artifacts
 tmp/
+
+# Stack local de Supabase (Docker). El esquema y el seed SÍ se versionan.
+supabase/.branches/
+supabase/.temp/
