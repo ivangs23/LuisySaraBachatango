@@ -14,6 +14,9 @@ vi.mock('@/utils/rate-limit', () => ({
 
 vi.mock('@/utils/auth/client-ip', () => ({ getClientIp: () => '1.2.3.4' }))
 
+const demoMock = vi.fn(() => false)
+vi.mock('@/utils/demo/mode', () => ({ isDemoMode: () => demoMock() }))
+
 import { POST } from '@/app/api/landing-event/route'
 
 const BROWSER_UA =
@@ -30,6 +33,7 @@ function req(body: unknown, ua: string = BROWSER_UA): Request {
 describe('POST /api/landing-event', () => {
   beforeEach(() => {
     insertMock.mockReset().mockResolvedValue({ error: null })
+    demoMock.mockReturnValue(false)
     process.env.LANDING_ANALYTICS_SECRET = 'test-secret'
   })
 
@@ -94,6 +98,13 @@ describe('POST /api/landing-event', () => {
     const { rateLimit } = await import('@/utils/rate-limit')
     vi.mocked(rateLimit).mockResolvedValueOnce({ ok: false, retryAfter: 60 })
     const res = await POST(req({ path: '/' }))
+    expect(res.status).toBe(204)
+    expect(insertMock).not.toHaveBeenCalled()
+  })
+
+  it('no registra nada en local ni en preview', async () => {
+    demoMock.mockReturnValue(true)
+    const res = await POST(req({ path: '/curso-bachatango' }))
     expect(res.status).toBe(204)
     expect(insertMock).not.toHaveBeenCalled()
   })

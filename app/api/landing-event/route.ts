@@ -4,6 +4,7 @@ import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 import { getClientIp } from '@/utils/auth/client-ip'
 import { normalisePath } from '@/utils/analytics/tracked-paths'
 import { dailyVisitorHash, isBot } from '@/utils/analytics/visitor-hash'
+import { isDemoMode } from '@/utils/demo/mode'
 
 /** Respuesta única. Nunca se filtra al cliente por qué se descartó un evento. */
 function noContent(): NextResponse {
@@ -24,6 +25,13 @@ function noContent(): NextResponse {
  */
 export async function POST(request: Request): Promise<NextResponse> {
   try {
+    // Local y preview escriben en la MISMA base de datos que producción, así
+    // que `npm run dev`, la suite E2E y Lighthouse inflarían las métricas
+    // reales. La suite E2E metió 23 filas la primera vez que se ejecutó.
+    // No sustituye a tener un proyecto de Supabase aparte para desarrollo,
+    // que arreglaría además compras y usuarios de prueba.
+    if (isDemoMode()) return noContent()
+
     const userAgent = request.headers.get('user-agent')
     if (isBot(userAgent)) return noContent()
 
