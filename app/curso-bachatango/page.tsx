@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getLandingCourse } from '@/utils/courses/landing-course';
+import { getCurriculum } from '@/utils/courses/curriculum';
 import { getCurrentUser } from '@/utils/supabase/get-user';
 import { safeJsonLd } from '@/utils/jsonld';
 import LandingHero from './_components/LandingHero';
@@ -34,7 +35,7 @@ export default async function CursoBachatangoLanding() {
   const course = await getLandingCourse();
   if (!course) notFound();
 
-  const user = await getCurrentUser();
+  const [user, curriculum] = await Promise.all([getCurrentUser(), getCurriculum()]);
   const isAuthed = !!user;
 
   const jsonLd = {
@@ -60,7 +61,7 @@ export default async function CursoBachatangoLanding() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <LandingHero courseId={course.id} isAuthed={isAuthed} price={course.price_eur} imageUrl={course.image_url} />
-      <LandingSections courseId={course.id} price={course.price_eur} />
+      <LandingSections courseId={course.id} price={course.price_eur} curriculum={curriculum} />
       <StickyBuyBar courseId={course.id} price={course.price_eur} />
     </div>
   );

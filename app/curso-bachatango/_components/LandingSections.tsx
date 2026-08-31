@@ -2,14 +2,18 @@ import Reveal from '@/components/Reveal';
 import { LANDING_COPY } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import LandingFaq from './LandingFaq';
+import CourseCurriculum from './CourseCurriculum';
+import type { Curriculum } from '@/utils/courses/curriculum';
 import styles from '../page.module.css';
 
 interface SectionsProps {
   courseId: string;
   price: number;
+  /** null si la BD no responde: la página sigue vendiendo sin el temario. */
+  curriculum: Curriculum | null;
 }
 
-export default function LandingSections({ courseId, price }: SectionsProps) {
+export default function LandingSections({ courseId, price, curriculum }: SectionsProps) {
   const c = LANDING_COPY;
   return (
     <>
@@ -24,20 +28,8 @@ export default function LandingSections({ courseId, price }: SectionsProps) {
         </Reveal>
       </section>
 
-      {/* Qué aprendes */}
-      <section className={styles.section}>
-        <Reveal><h2 className={styles.h2}>{c.learn.title}</h2></Reveal>
-        <div className={styles.grid}>
-          {c.learn.items.map((it, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <div className={styles.card}>
-                <h3 className={styles.h3}>{it.title}</h3>
-                <p className={styles.cardBody}>{it.body}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* Temario real, desde la BD */}
+      {curriculum && <CourseCurriculum curriculum={curriculum} />}
 
       {/* Método */}
       <section className={styles.section}>

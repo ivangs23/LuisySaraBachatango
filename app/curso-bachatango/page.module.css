@@ -79,3 +79,87 @@
 .faqQ { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md) 0; background: none; border: none; color: var(--text-main); font: var(--h4); cursor: pointer; text-align: left; }
 .faqIconOpen { transform: rotate(180deg); transition: transform 0.2s ease; }
 .faqA { color: var(--text-muted); font: var(--body); padding-bottom: var(--spacing-md); }
+
+/* ---------- Temario ---------- */
+
+.curriculumSummary {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin: 0.75rem 0 0;
+}
+
+.curriculumList {
+  list-style: none;
+  padding: 0;
+  margin: clamp(1.75rem, 4vh, 2.5rem) 0 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.curriculumModule {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.curriculumHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+}
+
+.curriculumNum {
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.curriculumTitle {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-main);
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.curriculumDuration {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.curriculumLessons {
+  list-style: none;
+  padding: 0;
+  margin: 0.55rem 0 0 1.7rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.curriculumLessons li {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.curriculumBullet {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .curriculumHead { flex-wrap: wrap; gap: 0.4rem 0.7rem; }
+  .curriculumTitle { flex: 1 1 100%; order: 2; }
+  .curriculumDuration { order: 1; }
+}
