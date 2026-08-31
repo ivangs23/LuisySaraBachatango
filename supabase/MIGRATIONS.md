@@ -85,6 +85,20 @@ venta y la superficie de SEO, muertos.
 
 **#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
+## Contenido editable de la landing — agosto 2026 · ✅ APLICADA (2026-08-13)
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_08_landing_content.sql` | Tablas `landing_stats`, `landing_testimonials` y `landing_faq` (texto en `jsonb` por idioma, español obligatorio por constraint), índices parciales y RLS: lectura pública de lo publicado, escritura solo admin vía `public.is_admin()`. Sembradas con los valores actuales. Idempotente. | ✅ Aplicada |
+
+El seed lo genera `scripts/generate-landing-seed.ts` desde los diccionarios: 3
+testimonios y 3 preguntas por 6 idiomas transcritos a mano invitan a erratas.
+
+Verificado tras aplicar: 4/3/3 filas, los 6 idiomas presentes, cifras guardadas
+**sin signo** (`25`, no `+25`), e `INSERT` anónimo denegado por RLS.
+
+---
+
 ## Analítica de la landing — agosto 2026 · ✅ APLICADA (2026-08-13)
 
 | # | Fichero | Qué hace | Estado |
