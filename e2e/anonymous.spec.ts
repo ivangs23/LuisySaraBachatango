@@ -14,14 +14,18 @@ import { test, expect } from '@playwright/test'
  */
 
 test.describe('Anonymous user flows', () => {
-  test('home page loads and hero CTA links to /courses', async ({ page }) => {
+  test('home page loads and hero CTAs point at the funnel and the free class', async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveTitle(/Luis y Sara/i)
-    // The hero CTA is a <Link href="/courses"> rendered as an <a>.
-    // We locate it by its href to be resilient to CTA copy changes.
-    const cta = page.locator('a[href="/courses"]').first()
-    await expect(cta).toBeVisible()
-    await expect(cta).toHaveAttribute('href', '/courses')
+
+    // Scoped to the hero section on purpose. Matching on href alone would
+    // silently pick up the header nav link instead — which is exactly how the
+    // previous version of this test kept passing after the hero CTA changed.
+    const hero = page.locator('section[aria-label="Bachatango con Luis y Sara"]')
+    await expect(hero).toBeVisible()
+
+    await expect(hero.locator('a[href="/curso-bachatango"]')).toBeVisible()
+    await expect(hero.locator('a[href="/clase-gratis"]')).toBeVisible()
   })
 
   test('courses page loads with section heading or empty state', async ({ page }) => {

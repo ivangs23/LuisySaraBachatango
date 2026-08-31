@@ -1,5 +1,5 @@
 import Reveal from '@/components/Reveal';
-import { LANDING_COPY, COURSE_ID } from '../copy';
+import { LANDING_COPY } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import LandingFaq from './LandingFaq';
 import styles from '../page.module.css';
@@ -75,7 +75,7 @@ export default function LandingSections({ courseId, price }: SectionsProps) {
         <Reveal>
           <h2 className={styles.h2}>{c.freeClass.title}</h2>
           <p className={styles.lead}>{c.freeClass.body}</p>
-          <a href={`/courses/${COURSE_ID}`} className={styles.ctaOutline}>{c.freeClass.cta}</a>
+          <a href="/clase-gratis" className={styles.ctaOutline}>{c.freeClass.cta}</a>
           <ul className={styles.trustRow}>
             {c.freeClass.trust.map((t, i) => <li key={i}>{t}</li>)}
           </ul>

@@ -23,6 +23,7 @@ vi.mock('@/context/LanguageContext', () => ({
         cookies: 'Política de Cookies',
         rights: 'Todos los derechos reservados.',
         blog: 'Blog',
+        buyCourse: 'El curso',
       },
       header: {
         courses: 'Cursos',
@@ -31,7 +32,21 @@ vi.mock('@/context/LanguageContext', () => ({
         community: 'Comunidad',
         about: 'Sobre Nosotros',
       },
+      consent: {
+        manage: 'Preferencias de cookies',
+      },
     },
+  }),
+}))
+// El footer expone el reabridor del banner de cookies. Aquí solo se comprueba
+// el comportamiento chromeless, así que basta con un doble del contexto.
+vi.mock('@/context/ConsentContext', () => ({
+  useConsent: () => ({
+    state: null,
+    hydrated: true,
+    isOpen: false,
+    save: () => {},
+    reopen: () => {},
   }),
 }))
 vi.mock('@/components/Reveal', () => ({

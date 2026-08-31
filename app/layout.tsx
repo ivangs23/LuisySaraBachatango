@@ -36,20 +36,14 @@ export const metadata: Metadata = {
     siteName: "Luis y Sara Bachatango",
     title: "Luis y Sara Bachatango | Cursos Online de Bachata y Bachatango",
     description: "Aprende Bachata y Bachatango con Luis y Sara, instructores internacionales. Cursos online exclusivos, técnica profesional y comunidad de bailarines.",
-    images: [
-      {
-        url: "/luis-sara-about.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Luis y Sara Bachatango",
-      },
-    ],
+    // Sin `images`: las inyecta app/opengraph-image.tsx con las dimensiones
+    // correctas. Declararlas aquí también produciría dos etiquetas og:image
+    // y los scrapers elegirían una al azar.
   },
   twitter: {
     card: "summary_large_image",
     title: "Luis y Sara Bachatango | Cursos Online de Bachata y Bachatango",
     description: "Aprende Bachata y Bachatango con Luis y Sara, instructores internacionales.",
-    images: ["/luis-sara-about.jpg"],
   },
   alternates: {
     canonical: BASE_URL,
@@ -64,6 +58,11 @@ import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { getCurrentUser } from "@/utils/supabase/get-user";
 
 import { LanguageProvider } from '@/context/LanguageContext';
+import { ConsentProvider } from '@/context/ConsentContext';
+import CookieConsent from '@/components/CookieConsent';
+import ThirdPartyScripts from '@/components/ThirdPartyScripts';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { safeJsonLd } from '@/utils/jsonld';
 
 // Cache profile per user for 60 seconds — reduces DB load on every page render.
@@ -106,6 +105,13 @@ export default async function RootLayout({
     url: BASE_URL,
     logo: `${BASE_URL}/logo.png`,
     description: 'Plataforma exclusiva de cursos de Bachata y Bachatango con Luis y Sara, instructores internacionales.',
+    // Solo perfiles verificados. Un `sameAs` que apunta a un perfil
+    // inexistente o ajeno perjudica al Knowledge Graph, así que es mejor
+    // corto y cierto que largo y dudoso.
+    //
+    // Comprobado 2026-08-12: youtube.com/@luisysaradance devuelve 404.
+    // Facebook y TikTok responden 200 pero con muro de login, que no prueba
+    // que el perfil sea vuestro — añadirlos cuando estén confirmados.
     sameAs: [
       'https://www.instagram.com/luisysaradance',
     ],
@@ -121,16 +127,24 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <LanguageProvider initialLocale={locale}>
-          <a href="#main-content" className="skip-link">
-            {dict.common.skipToContent}
-          </a>
-          {(await isTestPurchaseMode()) && <DemoBanner />}
-          <Header user={user} profile={profile} />
-          <main id="main-content" tabIndex={-1} style={{ minHeight: '80vh' }}>
-            {children}
-          </main>
-          <Footer />
-          <FunnelLegalFooter />
+          <ConsentProvider>
+            <a href="#main-content" className="skip-link">
+              {dict.common.skipToContent}
+            </a>
+            {(await isTestPurchaseMode()) && <DemoBanner />}
+            <Header user={user} profile={profile} />
+            <main id="main-content" tabIndex={-1} style={{ minHeight: '80vh' }}>
+              {children}
+            </main>
+            <Footer />
+            <FunnelLegalFooter />
+            <CookieConsent />
+            <ThirdPartyScripts />
+            {/* Sin cookies ni identificadores persistentes: no requieren
+                consentimiento previo, así que van fuera del gate. */}
+            <Analytics />
+            <SpeedInsights />
+          </ConsentProvider>
         </LanguageProvider>
       </body>
     </html>

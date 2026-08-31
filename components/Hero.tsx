@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import { Play, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './Hero.module.css';
 
+// Estas cifras deben coincidir con app/sobre-nosotros/AboutClient.tsx y con
+// app/opengraph-image.tsx. Antes el hero decía +50 países y la página "Sobre
+// nosotros" 30+; se unifica en la menor a la espera de confirmación.
 const STATS = [
   { value: '+25', labelKey: 'years' },
   { value: '+500', labelKey: 'students' },
-  { value: '+50', labelKey: 'countries' },
+  { value: '+30', labelKey: 'countries' },
 ] as const;
 
 type StatKey = typeof STATS[number]['labelKey'];
@@ -18,13 +21,6 @@ type StatKey = typeof STATS[number]['labelKey'];
 export default function Hero() {
   const { t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (prefersReducedMotion && videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [prefersReducedMotion]);
 
   // Split del título por palabras para animarlas escalonadas.
   // Mantenemos los saltos de línea originales del diccionario (whiteSpace: pre-line).
@@ -61,20 +57,18 @@ export default function Hero() {
 
   return (
     <section className={styles.hero} aria-label="Bachatango con Luis y Sara">
-      {/* Capa de fondo: vídeo con poster fallback */}
+      {/* Capa de fondo: imagen optimizada + gradiente cinemático.
+          `priority` emite el <link rel="preload"> que no existía cuando el
+          fondo era una background-image de CSS: es el elemento LCP. */}
       <div className={styles.bgLayer} aria-hidden="true">
-        <video
-          ref={videoRef}
-          className={styles.bgVideo}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster="/hero-bg.webp"
-        >
-        </video>
-        {/* Gradiente cinemático y viñeta */}
+        <Image
+          src="/hero-bg.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className={styles.bgImage}
+        />
         <div className={styles.bgOverlay} />
         <div className={styles.bgVignette} />
       </div>
@@ -168,11 +162,11 @@ export default function Hero() {
           animate="visible"
           transition={{ delay: 1.25, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Link href="/courses" className={styles.ctaPrimary}>
+          <Link href="/curso-bachatango" className={styles.ctaPrimary}>
             <span>{t.hero.cta}</span>
             <span className={styles.ctaArrow} aria-hidden="true">→</span>
           </Link>
-          <Link href="/courses" className={styles.ctaSecondary}>
+          <Link href="/clase-gratis" className={styles.ctaSecondary}>
             <Play size={16} strokeWidth={2.5} aria-hidden="true" />
             <span>{t.hero.sampleClass}</span>
           </Link>

@@ -109,4 +109,20 @@ MUX_SIGNING_KEY_PRIVATE        # Base64-encoded PEM of the Mux signing private k
 TEST_MODE_SECRET               # Optional. HMAC key for the admin per-browser test-mode cookie (/admin/pruebas). Fail-closed: if unset, the test-mode toggle is inert and checkout always uses real Stripe.
 CRON_SECRET                    # Bearer token for the scheduled purge route (/api/cron/purge-pending, Vercel cron). Fail-closed: if unset, the route returns 401 and stale pending_registrations are never purged.
 RESEND_API_KEY                 # Resend API key; sender/domain for transactional emails (guest access, purchase confirmation). If unset, those emails silently no-op.
+NEXT_PUBLIC_GA_MEASUREMENT_ID  # Optional. GA4 measurement ID (G-XXXXXXXXXX). Fail-closed: if unset, GA4 never loads even with analytics consent granted.
+NEXT_PUBLIC_META_PIXEL_ID      # Optional. Numeric Meta Pixel ID. Fail-closed: if unset, the Pixel never loads even with marketing consent granted.
+NEWSLETTER_UNSUBSCRIBE_SECRET  # HMAC key for newsletter unsubscribe links. Fail-closed: if unset, the welcome email is not sent (it could not carry a compliant unsubscribe link) and /unsubscribe rejects every token. Rotating it invalidates all outstanding links.
 ```
+
+## Cookie Consent
+
+`ConsentProvider` ([context/ConsentContext.tsx](context/ConsentContext.tsx)) holds two opt-in categories, both denied by default, in the `ls_consent` cookie:
+
+| Category | Gates |
+|---|---|
+| `analytics` | GA4 |
+| `marketing` | Meta Pixel, Instagram embeds |
+
+Anything that drops third-party cookies **must** go through `useConsent()` — see [components/ThirdPartyScripts.tsx](components/ThirdPartyScripts.tsx) for the pattern. Vercel Analytics and Speed Insights are deliberately outside the gate: no cookies, no consent needed.
+
+Bump `CONSENT_VERSION` in [utils/consent/categories.ts](utils/consent/categories.ts) whenever a category or provider is added — old consent does not cover new processing, so the banner must re-prompt. Adding a provider also means updating the CSP in [next.config.ts](next.config.ts).

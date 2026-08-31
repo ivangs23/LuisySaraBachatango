@@ -18,13 +18,32 @@ export const en: Dictionary = {
     mainNav: "Main navigation",
     mainMenu: "Main menu",
     home: "Home",
-    dancer: "Dancer"
+    dancer: "Dancer",
+    buyCourse: "View the course"
   },
   common: {
     processing: "Processing...",
     subscribeNow: "Subscribe Now",
     login: "Login",
     skipToContent: "Skip to main content"
+  },
+  consent: {
+    title: "Your privacy",
+    body: "We use first-party cookies that are needed for the site to work. With your permission, we will also use analytics and marketing cookies to understand what interests you and to show you Instagram content.",
+    accept: "Accept all",
+    reject: "Reject",
+    configure: "Customise",
+    save: "Save preferences",
+    necessaryLabel: "Necessary",
+    necessaryDesc: "Required for your session, language and security. These cannot be turned off.",
+    analyticsLabel: "Analytics",
+    analyticsDesc: "Tell us which pages get visited so we can improve the site. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Let us measure campaigns and display embedded Instagram posts. Meta.",
+    policyLink: "Cookie policy",
+    manage: "Cookie preferences",
+    embedBlocked: "To show Instagram posts we need your permission for marketing cookies.",
+    enableEmbed: "Enable and view"
   },
   footer: {
     description: "Learn Bachatango with Luis & Sara. The perfect fusion between the sensuality of bachata and the elegance of tango.",
@@ -37,7 +56,8 @@ export const en: Dictionary = {
     privacy: "Privacy Policy",
     cookies: "Cookie Policy",
     rights: "All rights reserved.",
-    blog: "Blog"
+    blog: "Blog",
+    buyCourse: "The course"
   },
   hero: {
     title: "Master the Art of Bachatango",
@@ -46,6 +66,33 @@ export const en: Dictionary = {
     sampleClass: "Watch sample class",
     scrollLabel: "Scroll to see more",
     stats: { years: "YEARS DANCING", students: "STUDENTS", countries: "COUNTRIES" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "THE OFFER",
+      title: "The complete method, in one course",
+      lead: "Luis and Sara's full progression: technique, connection and musicality, broken down step by step so you improve without getting stuck.",
+      includes: [
+        "Lifetime access to every lesson",
+        "Guided progression from beginner to advanced",
+        "Solo and partner practice",
+        "Private community of dancers"
+      ],
+      priceNote: "One-time payment · Lifetime access",
+      cta: "View the course",
+      micro: "Secure payment with Stripe"
+    }
+  },
+  freeClass: {
+    eyebrow: "FREE CLASS",
+    title: "Try it before you decide",
+    lead: "A full class from the course, complete and uncut. No card, no account, no strings.",
+    ctaTitle: "Enjoyed it?",
+    ctaBody: "This is one class out of many. The full course takes you step by step from the basics to dancing with confidence.",
+    cta: "See the full course",
+    unavailable: "The sample class is not available right now. Check back shortly or get in touch.",
+    unavailableCta: "Browse the courses"
   },
   features: {
     monthly: {
@@ -80,7 +127,7 @@ export const en: Dictionary = {
     title: "Frequently Asked Questions",
     q1: {
       q: "Do I need previous dance experience?",
-      a: "Basic concepts of bachata or tango."
+      a: "No. The course starts from scratch and builds up step by step. If you already dance bachata or tango you will have a head start, but it is not a requirement — all we assume is that you want to learn."
     },
     q2: {
       q: "How do I access the courses?",

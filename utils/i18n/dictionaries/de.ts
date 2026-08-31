@@ -10,7 +10,7 @@ export const de: Dictionary = {
     mainNav: "Hauptnavigation",
     mainMenu: "Hauptmenü",
     home: "Startseite",
-    dancer: "Tänzer"
+    dancer: "Tänzer", buyCourse: "Kurs ansehen"
   },
   common: {
     processing: "Verarbeitung...",
@@ -18,10 +18,28 @@ export const de: Dictionary = {
     login: "Anmelden",
     skipToContent: "Zum Hauptinhalt springen"
   },
+  consent: {
+    title: "Deine Privatsphäre",
+    body: "Wir setzen eigene Cookies ein, die für den Betrieb der Website nötig sind. Mit deiner Zustimmung nutzen wir zusätzlich Analyse- und Marketing-Cookies, um zu verstehen, was dich interessiert, und dir Instagram-Inhalte zu zeigen.",
+    accept: "Alle akzeptieren",
+    reject: "Ablehnen",
+    configure: "Anpassen",
+    save: "Einstellungen speichern",
+    necessaryLabel: "Notwendig",
+    necessaryDesc: "Erforderlich für Sitzung, Sprache und Sicherheit. Nicht abwählbar.",
+    analyticsLabel: "Analyse",
+    analyticsDesc: "Zeigen uns, welche Seiten besucht werden, damit wir die Website verbessern können. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Ermöglichen die Messung von Kampagnen und die Anzeige eingebetteter Instagram-Beiträge. Meta.",
+    policyLink: "Cookie-Richtlinie",
+    manage: "Cookie-Einstellungen",
+    embedBlocked: "Um Instagram-Beiträge anzuzeigen, brauchen wir deine Zustimmung für Marketing-Cookies.",
+    enableEmbed: "Aktivieren und ansehen"
+  },
   footer: {
     description: "Lerne Bachatango mit Luis und Sara. Die perfekte Fusion zwischen der Sinnlichkeit von Bachata und der Eleganz des Tango.",
     explore: "Entdecken", home: "Startseite", contact: "Kontakt", notice: "Impressum",
-    legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", rights: "Alle Rechte vorbehalten.", blog: "Blog"
+    legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", rights: "Alle Rechte vorbehalten.", blog: "Blog", buyCourse: "Der Kurs"
   },
   hero: {
     title: "Meistere die Kunst des Bachatango",
@@ -30,6 +48,33 @@ export const de: Dictionary = {
     sampleClass: "Musterklasse ansehen",
     scrollLabel: "Nach unten scrollen",
     stats: { years: "JAHRE TANZEND", students: "SCHÜLER", countries: "LÄNDER" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "DAS ANGEBOT",
+      title: "Die komplette Methode, in einem Kurs",
+      lead: "Der gesamte Aufbau von Luis und Sara: Technik, Verbindung und Musikalität, Schritt für Schritt erklärt, damit du ohne Frust vorankommst.",
+      includes: [
+        "Lebenslanger Zugang zu allen Lektionen",
+        "Geführter Aufbau vom Einstieg bis Fortgeschritten",
+        "Übungen allein und zu zweit",
+        "Private Community von Tanzenden"
+      ],
+      priceNote: "Einmalzahlung · Lebenslanger Zugang",
+      cta: "Kurs ansehen",
+      micro: "Sichere Zahlung mit Stripe"
+    }
+  },
+  freeClass: {
+    eyebrow: "GRATIS-STUNDE",
+    title: "Probier es aus, bevor du dich entscheidest",
+    lead: "Eine komplette Stunde aus dem Kurs, ungekürzt. Ohne Karte, ohne Konto, ohne Verpflichtung.",
+    ctaTitle: "Hat es dir gefallen?",
+    ctaBody: "Das ist eine von vielen Stunden. Der komplette Kurs führt dich Schritt für Schritt von den Grundlagen bis zum sicheren Tanzen.",
+    cta: "Den kompletten Kurs ansehen",
+    unavailable: "Die Probestunde ist gerade nicht verfügbar. Schau später wieder vorbei oder schreib uns.",
+    unavailableCta: "Kurse ansehen"
   },
   features: {
     monthly: { title: "Komplette Kurse", desc: "Umfassende Programme von Anfang bis Ende. Lerne vom Anfänger bis zum Fortgeschrittenen mit einer einmaligen Zahlung und lebenslangem Zugang." },
@@ -44,7 +89,7 @@ export const de: Dictionary = {
   },
   faq: {
     title: "Häufige Fragen",
-    q1: { q: "Brauche ich Vorkenntnisse?", a: "Grundkenntnisse in Bachata oder Tango." },
+    q1: { q: "Brauche ich Vorkenntnisse?", a: "Nein. Der Kurs beginnt bei null und baut Schritt für Schritt auf. Wenn du schon Bachata oder Tango tanzt, hast du einen Vorsprung, aber Voraussetzung ist es nicht — wir setzen nur voraus, dass du lernen willst." },
     q2: { q: "Wie greife ich auf die Kurse zu?", a: "Sobald du einen Kurs kaufst, hast du sofortigen Zugriff auf den gesamten Kursinhalt über die Plattform. Du kannst die Klassen so oft ansehen, wie du möchtest." },
     q3: { q: "Geht das auch ohne Tanzpartner?", a: "Absolut. Viele Lektionen konzentrieren sich auf individuelle Technik." }
   },

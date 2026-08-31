@@ -10,7 +10,7 @@ export const fr: Dictionary = {
     mainNav: "Navigation principale",
     mainMenu: "Menu principal",
     home: "Accueil",
-    dancer: "Danseur"
+    dancer: "Danseur", buyCourse: "Voir le cours"
   },
   common: {
     processing: "Traitement...",
@@ -18,10 +18,28 @@ export const fr: Dictionary = {
     login: "Connexion",
     skipToContent: "Aller au contenu principal"
   },
+  consent: {
+    title: "Votre vie privée",
+    body: "Nous utilisons des cookies internes nécessaires au fonctionnement du site. Avec votre accord, nous utiliserons aussi des cookies d'analyse et de marketing pour comprendre ce qui vous intéresse et afficher du contenu Instagram.",
+    accept: "Tout accepter",
+    reject: "Refuser",
+    configure: "Personnaliser",
+    save: "Enregistrer mes préférences",
+    necessaryLabel: "Nécessaires",
+    necessaryDesc: "Indispensables à votre session, votre langue et la sécurité. Non désactivables.",
+    analyticsLabel: "Analyse",
+    analyticsDesc: "Nous indiquent quelles pages sont visitées afin d'améliorer le site. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Permettent de mesurer les campagnes et d'afficher les publications Instagram intégrées. Meta.",
+    policyLink: "Politique de cookies",
+    manage: "Préférences de cookies",
+    embedBlocked: "Pour afficher les publications Instagram, nous avons besoin de votre accord pour les cookies marketing.",
+    enableEmbed: "Activer et voir"
+  },
   footer: {
     description: "Apprenez le Bachatango avec Luis et Sara. La fusion parfaite entre la sensualité de la bachata et l'élégance du tango.",
     explore: "Explorer", home: "Accueil", contact: "Contact", notice: "Mentions Légales",
-    legal: "Légal", terms: "Conditions Générales", privacy: "Politique de Confidentialité", cookies: "Politique de Cookies", rights: "Tous droits réservés.", blog: "Blog"
+    legal: "Légal", terms: "Conditions Générales", privacy: "Politique de Confidentialité", cookies: "Politique de Cookies", rights: "Tous droits réservés.", blog: "Blog", buyCourse: "Le cours"
   },
   hero: {
     title: "Maîtrisez l'Art du Bachatango",
@@ -30,6 +48,33 @@ export const fr: Dictionary = {
     sampleClass: "Voir la classe exemple",
     scrollLabel: "Défiler pour voir plus",
     stats: { years: "ANS DE DANSE", students: "ÉLÈVES", countries: "PAYS" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "L'OFFRE",
+      title: "La méthode complète, en un seul cours",
+      lead: "Toute la progression de Luis et Sara : technique, connexion et musicalité, décomposées pas à pas pour progresser sans frustration.",
+      includes: [
+        "Accès à vie à toutes les leçons",
+        "Progression guidée du débutant à l'avancé",
+        "Pratique en solo et en couple",
+        "Communauté privée de danseurs"
+      ],
+      priceNote: "Paiement unique · Accès à vie",
+      cta: "Voir le cours",
+      micro: "Paiement sécurisé avec Stripe"
+    }
+  },
+  freeClass: {
+    eyebrow: "COURS GRATUIT",
+    title: "Essayez avant de décider",
+    lead: "Un cours complet tiré du programme, intégral et sans coupure. Sans carte, sans compte, sans engagement.",
+    ctaTitle: "Ça vous a plu ?",
+    ctaBody: "C'est un cours parmi beaucoup d'autres. Le programme complet vous mène pas à pas des bases jusqu'à danser en confiance.",
+    cta: "Voir le cours complet",
+    unavailable: "Le cours d'essai n'est pas disponible pour le moment. Revenez bientôt ou écrivez-nous.",
+    unavailableCta: "Voir les cours"
   },
   features: {
     monthly: { title: "Cours Complets", desc: "Programmes complets de A à Z. Apprenez du niveau débutant à avancé avec un paiement unique et un accès à vie." },
@@ -44,7 +89,7 @@ export const fr: Dictionary = {
   },
   faq: {
     title: "Questions Fréquentes",
-    q1: { q: "Ai-je besoin d'expérience en danse ?", a: "Des notions de base de bachata ou de tango." },
+    q1: { q: "Ai-je besoin d'expérience en danse ?", a: "Non. Le cours part de zéro et progresse pas à pas. Si vous dansez déjà la bachata ou le tango, vous aurez une longueur d'avance, mais ce n'est pas obligatoire : la seule chose que nous supposons, c'est votre envie d'apprendre." },
     q2: { q: "Comment accéder aux cours ?", a: "Une fois que vous achetez un cours, vous avez un accès immédiat à tout le contenu du cours sur la plateforme. Vous pouvez voir les cours autant de fois que vous le souhaitez." },
     q3: { q: "Est-ce utile si je n'ai pas de partenaire ?", a: "Absolument. Bien que le Bachatango soit une danse de couple, de nombreuses leçons se concentrent sur la technique individuelle, la musicalité et le style." }
   },

@@ -10,7 +10,7 @@ export const it: Dictionary = {
     mainNav: "Navigazione principale",
     mainMenu: "Menu principale",
     home: "Home",
-    dancer: "Ballerino"
+    dancer: "Ballerino", buyCourse: "Vedi il corso"
   },
   common: {
     processing: "Elaborazione...",
@@ -18,10 +18,28 @@ export const it: Dictionary = {
     login: "Accedi",
     skipToContent: "Vai al contenuto principale"
   },
+  consent: {
+    title: "La tua privacy",
+    body: "Usiamo cookie di prima parte necessari al funzionamento del sito. Con il tuo consenso useremo anche cookie di analisi e di marketing per capire cosa ti interessa e mostrarti contenuti di Instagram.",
+    accept: "Accetta tutto",
+    reject: "Rifiuta",
+    configure: "Personalizza",
+    save: "Salva preferenze",
+    necessaryLabel: "Necessari",
+    necessaryDesc: "Indispensabili per sessione, lingua e sicurezza. Non disattivabili.",
+    analyticsLabel: "Analisi",
+    analyticsDesc: "Ci dicono quali pagine vengono visitate per migliorare il sito. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Permettono di misurare le campagne e di mostrare i post di Instagram incorporati. Meta.",
+    policyLink: "Informativa sui cookie",
+    manage: "Preferenze cookie",
+    embedBlocked: "Per mostrare i post di Instagram ci serve il tuo consenso per i cookie di marketing.",
+    enableEmbed: "Attiva e guarda"
+  },
   footer: {
     description: "Impara il Bachatango con Luis e Sara. La fusione perfetta tra la sensualità della bachata e l'eleganza del tango.",
     explore: "Esplora", home: "Home", contact: "Contatti", notice: "Avviso Legale",
-    legal: "Legale", terms: "Termini e Condizioni", privacy: "Privacy", cookies: "Cookies", rights: "Tutti i diritti riservati.", blog: "Blog"
+    legal: "Legale", terms: "Termini e Condizioni", privacy: "Privacy", cookies: "Cookies", rights: "Tutti i diritti riservati.", blog: "Blog", buyCourse: "Il corso"
   },
   hero: {
     title: "Domina l'Arte del Bachatango",
@@ -30,6 +48,33 @@ export const it: Dictionary = {
     sampleClass: "Guarda la classe di esempio",
     scrollLabel: "Scorri per vedere di più",
     stats: { years: "ANNI DI BALLO", students: "STUDENTI", countries: "PAESI" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "L'OFFERTA",
+      title: "Il metodo completo, in un solo corso",
+      lead: "Tutta la progressione di Luis e Sara: tecnica, connessione e musicalità, spiegate passo dopo passo per migliorare senza frustrazione.",
+      includes: [
+        "Accesso a vita a tutte le lezioni",
+        "Progressione guidata da principiante ad avanzato",
+        "Pratica da solo e in coppia",
+        "Comunità privata di ballerini"
+      ],
+      priceNote: "Pagamento unico · Accesso a vita",
+      cta: "Vedi il corso",
+      micro: "Pagamento sicuro con Stripe"
+    }
+  },
+  freeClass: {
+    eyebrow: "LEZIONE GRATUITA",
+    title: "Provala prima di decidere",
+    lead: "Una lezione completa del corso, integrale e senza tagli. Senza carta, senza account, senza impegno.",
+    ctaTitle: "Ti è piaciuta?",
+    ctaBody: "Questa è una lezione fra tante. Il corso completo ti porta passo dopo passo dalle basi fino a ballare con sicurezza.",
+    cta: "Vedi il corso completo",
+    unavailable: "La lezione di prova non è disponibile in questo momento. Torna più tardi o scrivici.",
+    unavailableCta: "Vedi i corsi"
   },
   features: {
     monthly: { title: "Corsi Completi", desc: "Programmi integrali dall'inizio alla fine. Impara dal livello principiante ad avanzato con un unico pagamento e accesso a vita." },
@@ -44,7 +89,7 @@ export const it: Dictionary = {
   },
   faq: {
     title: "Domande Frequenti",
-    q1: { q: "Ho bisogno di esperienza?", a: "Nozioni di base di bachata o tango." },
+    q1: { q: "Ho bisogno di esperienza?", a: "No. Il corso parte da zero e procede passo dopo passo. Se balli già bachata o tango partirai avvantaggiato, ma non è un requisito: l'unica cosa che diamo per scontata è la voglia di imparare." },
     q2: { q: "Come accedo ai corsi?", a: "Una volta acquistato un corso, hai accesso immediato a tutto il contenuto del corso attraverso la piattaforma. Puoi vedere le lezioni tutte le volte che vuoi." },
     q3: { q: "Serve il partner?", a: "No, molte lezioni sono individuali." }
   },

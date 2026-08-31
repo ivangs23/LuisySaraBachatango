@@ -14,6 +14,7 @@ import {
 import Reveal from './Reveal';
 import styles from './Footer.module.css';
 import { useLanguage } from '@/context/LanguageContext';
+import { useConsent } from '@/context/ConsentContext';
 import { safeSocialUrl } from '@/utils/sanitize';
 import { isChromelessRoute } from '@/utils/nav/chromeless-routes';
 
@@ -29,6 +30,7 @@ type FooterClientProps = {
 export default function FooterClient({ adminProfile }: FooterClientProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { reopen } = useConsent();
 
   if (isChromelessRoute(pathname)) return null;
 
@@ -46,6 +48,7 @@ export default function FooterClient({ adminProfile }: FooterClientProps) {
     'https://www.youtube.com/@LuisySaraBachatango';
 
   const exploreLinks = [
+    { href: '/curso-bachatango', label: t.footer.buyCourse },
     { href: '/', label: t.footer.home },
     { href: '/courses', label: t.header.courses },
     { href: '/events', label: t.header.events },
@@ -192,6 +195,20 @@ export default function FooterClient({ adminProfile }: FooterClientProps) {
                   </Link>
                 </li>
               ))}
+              {/* Retirar el consentimiento debe costar lo mismo que darlo
+                  (RGPD art. 7.3), así que el reabridor vive junto a los
+                  enlaces legales, no escondido. */}
+              <li>
+                <button type="button" onClick={reopen} className={styles.link}>
+                  {t.consent.manage}
+                  <ArrowUpRight
+                    size={12}
+                    strokeWidth={2.4}
+                    className={styles.linkArrow}
+                    aria-hidden="true"
+                  />
+                </button>
+              </li>
             </ul>
           </div>
         </Reveal>

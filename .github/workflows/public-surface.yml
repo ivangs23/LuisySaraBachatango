@@ -1,0 +1,44 @@
+name: Public surface monitor
+
+# Vigila que la web siga en pie PARA UN VISITANTE SIN SESIÓN.
+#
+# Existe por un incidente real: una migración de endurecimiento revocó a `anon`
+# el acceso a `profiles.role` y dejó policies RLS que seguían leyéndolo. El
+# funnel de venta devolvió 404 a todo visitante deslogueado durante semanas sin
+# que nada lo detectara — los tests corren con sesión o con mocks, y nadie
+# navegaba la web sin cuenta.
+#
+# No usa credenciales: solo HTTP contra el dominio público.
+
+on:
+  schedule:
+    # Cada 6 horas. El incidente tardó semanas en salir a la luz; seis horas
+    # de margen es más que suficiente y no genera ruido.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL a comprobar (por defecto, producción)'
+        required: false
+        type: string
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check public surface
+        run: npx tsx scripts/check-public-surface.ts
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://luisysarabachatango.com' }}

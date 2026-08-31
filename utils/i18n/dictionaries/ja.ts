@@ -10,7 +10,7 @@ export const ja: Dictionary = {
     mainNav: "メインナビゲーション",
     mainMenu: "メインメニュー",
     home: "ホーム",
-    dancer: "ダンサー"
+    dancer: "ダンサー", buyCourse: "コースを見る"
   },
   common: {
     processing: "処理中...",
@@ -18,10 +18,28 @@ export const ja: Dictionary = {
     login: "ログイン",
     skipToContent: "メインコンテンツにスキップ"
   },
+  consent: {
+    title: "プライバシーについて",
+    body: "サイトの動作に必要な自社クッキーを使用しています。同意いただける場合は、関心を把握するための分析クッキーと、Instagramのコンテンツを表示するためのマーケティングクッキーも使用します。",
+    accept: "すべて許可",
+    reject: "拒否する",
+    configure: "設定する",
+    save: "設定を保存",
+    necessaryLabel: "必須",
+    necessaryDesc: "セッション、言語、セキュリティに必要です。無効にできません。",
+    analyticsLabel: "分析",
+    analyticsDesc: "どのページが閲覧されたかを把握し、サイト改善に役立てます。Google Analytics。",
+    marketingLabel: "マーケティング",
+    marketingDesc: "キャンペーンの計測と、埋め込みInstagram投稿の表示に使用します。Meta。",
+    policyLink: "クッキーポリシー",
+    manage: "クッキー設定",
+    embedBlocked: "Instagramの投稿を表示するには、マーケティングクッキーへの同意が必要です。",
+    enableEmbed: "許可して表示"
+  },
   footer: {
     description: "ルイスとサラと一緒にバチャタンゴを学びましょう。バチャータの官能性とタンゴの優雅さの完璧な融合。",
     explore: "探索", home: "ホーム", contact: "お問い合わせ", notice: "法的通知",
-    legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", rights: "全著作権所有。", blog: "ブログ"
+    legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", rights: "全著作権所有。", blog: "ブログ", buyCourse: "コース"
   },
   hero: {
     title: "バチャタンゴの芸術をマスターする",
@@ -30,6 +48,33 @@ export const ja: Dictionary = {
     sampleClass: "サンプルクラスを見る",
     scrollLabel: "スクロールして詳細を見る",
     stats: { years: "ダンス歴", students: "受講生", countries: "訪問国" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "オファー",
+      title: "完全なメソッドを、ひとつのコースに",
+      lead: "ルイスとサラのカリキュラムのすべて。テクニック、コネクション、音楽性を一歩ずつ分解し、つまずかずに上達できます。",
+      includes: [
+        "全レッスンに永久アクセス",
+        "初心者から上級者までの段階的カリキュラム",
+        "ソロとペア、両方の練習",
+        "ダンサー限定コミュニティ"
+      ],
+      priceNote: "買い切り · 永久アクセス",
+      cta: "コースを見る",
+      micro: "Stripeによる安全な決済"
+    }
+  },
+  freeClass: {
+    eyebrow: "無料レッスン",
+    title: "決める前に、試してみてください",
+    lead: "コースの1レッスンを、カットなしで丸ごと公開。カード不要、アカウント不要、条件なし。",
+    ctaTitle: "気に入りましたか？",
+    ctaBody: "これは数あるレッスンのひとつです。コース全体では、基礎から自信を持って踊れるようになるまで段階的に進みます。",
+    cta: "コース全体を見る",
+    unavailable: "現在、体験レッスンはご利用いただけません。しばらくしてからもう一度お試しいただくか、ご連絡ください。",
+    unavailableCta: "コース一覧を見る"
   },
   features: {
     monthly: { title: "完全コース", desc: "初心者から上級者まで、最初から最後まで学べる総合プログラム。一度のお支払いで生涯アクセス可能。" },
@@ -44,7 +89,7 @@ export const ja: Dictionary = {
   },
   faq: {
     title: "よくある質問",
-    q1: { q: "経験は必要ですか？", a: "バチャータまたはタンゴの基礎知識。" },
+    q1: { q: "経験は必要ですか？", a: "必要ありません。コースはゼロから始まり、一歩ずつ進みます。バチャータやタンゴの経験があれば有利ですが、必須ではありません。前提となるのは、学びたいという気持ちだけです。" },
     q2: { q: "コースへのアクセス方法は？", a: "コースを購入すると、プラットフォームを通じてコースのすべてのコンテンツにすぐにアクセスできます。レッスンは何度でも視聴できます。" },
     q3: { q: "パートナーがいなくても大丈夫？", a: "もちろんです。" }
   },

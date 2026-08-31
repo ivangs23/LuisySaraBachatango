@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getLandingCourse } from './get-landing-course';
+import { getLandingCourse } from '@/utils/courses/landing-course';
 import { getCurrentUser } from '@/utils/supabase/get-user';
 import { safeJsonLd } from '@/utils/jsonld';
 import LandingHero from './_components/LandingHero';
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: 'El método completo de Luis y Sara para dominar el bachatango a tu ritmo, desde casa.',
     url: `${BASE_URL}/curso-bachatango`,
     type: 'website',
-    images: [{ url: '/luis-sara-about.jpg', width: 1200, height: 630 }],
+    // Sin `images`: las inyecta ./opengraph-image.tsx.
     siteName: 'Luis y Sara Bachatango',
     locale: 'es_ES',
   },
@@ -26,7 +26,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Curso de Bachatango online | Luis y Sara',
     description: 'El método completo de Luis y Sara para dominar el bachatango a tu ritmo, desde casa.',
-    images: ['/luis-sara-about.jpg'],
   },
   alternates: { canonical: `${BASE_URL}/curso-bachatango` },
 };

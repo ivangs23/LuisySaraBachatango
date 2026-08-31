@@ -1,5 +1,3 @@
-export const COURSE_ID = 'f89a576f-4a77-40f7-93e9-23e6c820ee92';
-
 export const LANDING_COPY = {
   hero: {
     h1: 'Baila bachatango como nunca imaginaste',

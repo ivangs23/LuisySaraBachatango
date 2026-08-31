@@ -1,0 +1,204 @@
+.overlay {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  pointer-events: none;
+}
+
+.panel {
+  pointer-events: auto;
+  width: min(46rem, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #0b0b0b;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.9);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--text-main);
+  margin: 0 0 0.5rem;
+}
+
+.body {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ---------- Detalle por categoría ---------- */
+
+.categories {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.category {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.9rem;
+}
+
+.categoryHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.categoryName {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.always {
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.toggle {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.categoryDesc {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ---------- Acciones ---------- */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+.primary,
+.secondary,
+.tertiary {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.7rem 1.25rem;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  flex: 1 1 auto;
+  min-width: 8rem;
+}
+
+.primary {
+  background: var(--primary);
+  color: #000;
+}
+
+.primary:hover {
+  background: var(--primary-hover);
+}
+
+/* Mismo tamaño y prominencia que "aceptar": denegar no puede costar más. */
+.secondary {
+  background: transparent;
+  border-color: var(--border-subtle);
+  color: var(--text-main);
+}
+
+.secondary:hover {
+  border-color: var(--primary);
+}
+
+.tertiary {
+  background: transparent;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tertiary:hover {
+  color: var(--text-main);
+}
+
+.policy {
+  display: inline-block;
+  margin-top: 0.9rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.policy:hover {
+  color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary,
+  .tertiary {
+    transition: none;
+  }
+}
+
+/* En móvil el banner competía con el hero entero: apilar los tres botones en
+   columna lo hacía ~390px de alto sobre un viewport de 667, tapando título,
+   subtítulo y ambos CTAs. Aceptar y rechazar van ahora en la misma fila —
+   siguen teniendo idéntico peso— y solo "Configurar" baja a su propia línea. */
+@media (max-width: 560px) {
+  .panel {
+    max-height: 62vh;
+    padding: 1rem 1.1rem 1.1rem;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .body {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .actions {
+    margin-top: 0.9rem;
+    gap: 0.5rem;
+  }
+
+  .primary,
+  .secondary {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.7rem 0.75rem;
+  }
+
+  .tertiary {
+    flex: 1 1 100%;
+    padding: 0.4rem 0;
+  }
+
+  .policy {
+    margin-top: 0.6rem;
+  }
+}

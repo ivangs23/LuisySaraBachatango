@@ -16,13 +16,32 @@ export const es = {
     mainNav: "Navegación principal",
     mainMenu: "Menú principal",
     home: "Inicio",
-    dancer: "Bailarín"
+    dancer: "Bailarín",
+    buyCourse: "Ver el curso"
   },
   common: {
     processing: "Procesando...",
     subscribeNow: "Suscribirse Ahora",
     login: "Iniciar Sesión",
     skipToContent: "Saltar al contenido principal"
+  },
+  consent: {
+    title: "Tu privacidad",
+    body: "Usamos cookies propias necesarias para que la web funcione. Con tu permiso, también usaremos cookies de análisis y de marketing para entender qué te interesa y mostrarte contenido de Instagram.",
+    accept: "Aceptar todo",
+    reject: "Rechazar",
+    configure: "Configurar",
+    save: "Guardar preferencias",
+    necessaryLabel: "Necesarias",
+    necessaryDesc: "Imprescindibles para la sesión, el idioma y la seguridad. No se pueden desactivar.",
+    analyticsLabel: "Análisis",
+    analyticsDesc: "Nos dicen qué páginas se visitan para mejorar la web. Google Analytics.",
+    marketingLabel: "Marketing",
+    marketingDesc: "Permiten medir campañas y ver las publicaciones de Instagram integradas. Meta.",
+    policyLink: "Política de cookies",
+    manage: "Preferencias de cookies",
+    embedBlocked: "Para ver las publicaciones de Instagram necesitamos tu permiso para cookies de marketing.",
+    enableEmbed: "Activar y ver"
   },
   footer: {
     description: "Aprende Bachatango con Luis y Sara. La fusión perfecta entre la sensualidad de la bachata y la elegancia del tango.",
@@ -35,7 +54,8 @@ export const es = {
     privacy: "Política de Privacidad",
     cookies: "Política de Cookies",
     rights: "Todos los derechos reservados.",
-    blog: "Blog"
+    blog: "Blog",
+    buyCourse: "El curso"
   },
   hero: {
     title: "Domina el Arte del Bachatango",
@@ -44,6 +64,33 @@ export const es = {
     sampleClass: "Ver clase de muestra",
     scrollLabel: "Bajar para ver más",
     stats: { years: "AÑOS BAILANDO", students: "ALUMNOS", countries: "PAÍSES" }
+  },
+  home: {
+    offer: {
+      chapter: "04",
+      label: "LA OFERTA",
+      title: "El método completo, en un solo curso",
+      lead: "Toda la progresión de Luis y Sara: técnica, conexión y musicalidad, desglosadas paso a paso para que avances sin frustrarte.",
+      includes: [
+        "Acceso de por vida a todas las lecciones",
+        "Progresión guiada de iniciación a avanzado",
+        "Práctica en solitario y en pareja",
+        "Comunidad privada de bailarines"
+      ],
+      priceNote: "Pago único · Acceso de por vida",
+      cta: "Ver el curso",
+      micro: "Pago seguro con Stripe"
+    }
+  },
+  freeClass: {
+    eyebrow: "CLASE GRATUITA",
+    title: "Pruébalo antes de decidir",
+    lead: "Una clase completa del curso, íntegra y sin recortes. Sin tarjeta, sin cuenta, sin compromiso.",
+    ctaTitle: "¿Te ha gustado?",
+    ctaBody: "Esto es una clase de muchas. El curso completo te lleva paso a paso desde la base hasta bailar con seguridad.",
+    cta: "Ver el curso completo",
+    unavailable: "La clase de muestra no está disponible ahora mismo. Vuelve en un rato o escríbenos.",
+    unavailableCta: "Ver los cursos"
   },
   features: {
     monthly: {
@@ -79,7 +126,7 @@ export const es = {
     title: "Preguntas Frecuentes",
     q1: {
       q: "¿Necesito tener experiencia previa en baile?",
-      a: "Conceptos básicos de bachata o tango."
+      a: "No hace falta. El curso empieza desde cero y avanza paso a paso. Si ya bailas bachata o tango partirás con ventaja, pero no es un requisito: lo único que damos por hecho es que quieres aprender."
     },
     q2: {
       q: "¿Cómo accedo a los cursos?",
