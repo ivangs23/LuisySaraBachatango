@@ -9,11 +9,14 @@ vi.mock('next/navigation', () => ({
 }))
 
 import Hero from '@/components/Hero'
+import type { LandingStats } from '@/utils/landing/content'
+
+const STATS: LandingStats = { years: '25', students: '500', countries: '30', titles: '100' }
 
 function renderHero() {
   return render(
     <LanguageProvider initialLocale="es">
-      <Hero />
+      <Hero stats={STATS} />
     </LanguageProvider>,
   )
 }

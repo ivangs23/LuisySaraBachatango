@@ -4,16 +4,15 @@ import styles from './Testimonials.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { useInView } from '@/hooks/useInView';
 import Reveal from './Reveal';
+import type { Testimonial } from '@/utils/landing/content';
 
-export default function Testimonials() {
+export default function Testimonials({ items }: { items: Testimonial[] }) {
   const { t } = useLanguage();
   const { ref, inView } = useInView();
 
-  const TESTIMONIALS = [
-    { id: 1, name: "Elena M.",     quote: t.testimonials.t1.quote, stars: 5 },
-    { id: 2, name: "Carlos R.",    quote: t.testimonials.t2.quote, stars: 5 },
-    { id: 3, name: "Sofía y Marc", quote: t.testimonials.t3.quote, stars: 5 },
-  ];
+  // Sin testimonios no se pinta la sección: mejor nada que un titular
+  // colgando sobre un hueco.
+  if (items.length === 0) return null;
 
   return (
     <section
@@ -37,7 +36,7 @@ export default function Testimonials() {
       </Reveal>
 
       <div className={styles.grid}>
-        {TESTIMONIALS.map((item, idx) => (
+        {items.map((item, idx) => (
           <div
             key={item.id}
             className={`${styles.card} ${inView ? styles.cardRevealed : ''}`}
@@ -47,7 +46,7 @@ export default function Testimonials() {
               {String(idx + 1).padStart(2, '0')}
             </span>
             <span className={styles.quoteMark} aria-hidden="true">&ldquo;</span>
-            <div className={styles.stars}>{'★'.repeat(item.stars)}</div>
+            <div className={styles.stars} data-stars={item.stars}>{'★'.repeat(item.stars)}</div>
             <p className={styles.quote}>&ldquo;{item.quote}&rdquo;</p>
             <p className={styles.author}>{item.name}</p>
           </div>
