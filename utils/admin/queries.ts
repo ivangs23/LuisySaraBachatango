@@ -566,7 +566,7 @@ export async function getStudentDetail(userId: string): Promise<StudentDetail | 
 
 export type Range = 30 | 90 | 365 | 'all'
 
-function rangeStartIso(range: Range): string | null {
+export function rangeStartIso(range: Range): string | null {
   if (range === 'all') return null
   const d = new Date(Date.now() - range * 86_400_000)
   d.setUTCHours(0, 0, 0, 0)
