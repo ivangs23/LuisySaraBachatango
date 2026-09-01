@@ -200,9 +200,11 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
           </Reveal>
 
           <Reveal delay={0.1}>
-            <p className={styles.headerSub}>
-              {tc.completeSub} · {tc.monthlySub}
-            </p>
+            {/* Solo la promesa de los cursos completos. El detalle de los
+                mensuales sigue estando, pero en la cabecera de su propia
+                sección: aquí obligaba a partir el subtítulo en dos líneas y
+                mezclaba dos modelos de compra antes de enseñar ninguno. */}
+            <p className={styles.headerSub}>{tc.completeSub}</p>
           </Reveal>
 
           <Reveal delay={0.15}>
