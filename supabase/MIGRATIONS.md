@@ -7,18 +7,40 @@ son peligrosos de re-aplicar (AUDITORIA-2026-07 M4).
 
 ## Cómo levantar la BD desde cero
 
-El estado canónico es `schema.sql` **más** los parches aditivos posteriores.
-Aplicar en este orden por bloques:
+El estado canónico es **`supabase/migrations/20260831000000_canonical_schema.sql`**,
+un `supabase db dump` de producción del 2026-08-31: 22 tablas, 64 policies, 7
+funciones, sin datos.
 
-1. `schema.sql` (tablas base, RLS inicial, `handle_new_user`).
-2. Los parches de features (por fecha/tema): `rbac_setup.sql`, `course_types.sql`,
-   `course_purchases*.sql`, `events.sql`, `lesson_hierarchy.sql`,
-   `assignments_submissions.sql`, `community_setup.sql`, `comments_setup.sql`,
-   `notifications*.sql`, `enhanced_upload.sql`, `mux_migration.sql`, etc.
-3. Los endurecimientos de auditoría de mayo 2026 (`2026_05_audit*.sql`), en orden
-   numérico (`audit` → `audit2` → `audit3` → `audit4`).
-4. Los cambios de julio 2026 (`2026_07_*.sql`), en orden numérico.
-5. Los **fixes de la auditoría de julio 2026** (ver abajo), en orden `fix1`→`fix4`.
+Refleja producción **tal como está**, con el endurecimiento de mayo y julio ya
+dentro. Comprobado: no contiene la policy `"Lessons are viewable by everyone"`
+que `rbac_setup.sql` sí recrearía.
+
+### Entorno local (Docker)
+
+```bash
+supabase start
+```
+
+Aplica sola la migración y `supabase/seed.sql`. No toca ninguna base de datos en
+la nube.
+
+### Otro proyecto en la nube
+
+```bash
+supabase db push --db-url '<cadena de conexión del destino>'
+```
+
+### Regenerar el canónico cuando cambie el esquema de producción
+
+```bash
+supabase db dump --linked -f supabase/migrations/<timestamp>_canonical_schema.sql
+```
+
+### El camino antiguo, y por qué ya no se usa
+
+Aplicar los 69 ficheros sueltos en orden produce una base de datos **distinta**
+de producción: reabre agujeros ya cerrados. Ver la sección siguiente. Se
+conservan por valor histórico, no como receta.
 
 ## ⚠️ Ficheros peligrosos de re-aplicar sobre una BD ya endurecida
 

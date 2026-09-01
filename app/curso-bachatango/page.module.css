@@ -67,7 +67,11 @@
 .quote { color: var(--text-main); font-style: italic; margin-bottom: var(--spacing-sm); }
 .cite { color: var(--primary); font: var(--small); }
 .trustRow { list-style: none; display: flex; gap: var(--spacing-lg); justify-content: center; flex-wrap: wrap; padding: var(--spacing-lg) 0 0; color: var(--text-muted); font: var(--small); }
-.ctaOutline { display: inline-block; margin: var(--spacing-md) auto 0; padding: 0.8rem 1.8rem; border: 1px solid var(--primary); color: var(--primary); border-radius: var(--radius-pill); text-align: center; }
+/* `width: fit-content` + `display: block` para que `margin: auto` centre de
+   verdad: sobre un `inline-block` los márgenes automáticos no hacen nada, y el
+   botón caía a la izquierda. No se centra desde `.section` porque otras
+   secciones que la usan van alineadas a la izquierda (el temario). */
+.ctaOutline { display: block; width: fit-content; margin: var(--spacing-md) auto 0; padding: 0.8rem 1.8rem; border: 1px solid var(--primary); color: var(--primary); border-radius: var(--radius-pill); text-align: center; }
 .offer { max-width: 620px; margin: var(--spacing-2xl) auto; padding: var(--spacing-2xl) var(--page-pad); text-align: center; background: var(--surface); border: 1px solid var(--primary); border-radius: var(--radius-lg); }
 .includes { list-style: none; padding: 0; margin: 0 auto var(--spacing-lg); max-width: 420px; text-align: left; color: var(--text-main); }
 .includes li { padding: var(--spacing-xs) 0; }

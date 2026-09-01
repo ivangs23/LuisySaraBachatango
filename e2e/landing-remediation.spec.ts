@@ -211,3 +211,33 @@ test.describe('Analítica de la landing', () => {
     expect(cookies.filter((c) => c.name.startsWith('ls_analytics'))).toEqual([])
   })
 })
+
+test.describe('Alineación del funnel', () => {
+  /**
+   * El CTA "Ver clase gratis" era un `inline-block` con `margin: auto`, y sobre
+   * un inline-block los márgenes automáticos no centran nada: el botón caía a
+   * la izquierda mientras el titular y la fila de confianza iban centrados.
+   * Se mide en un navegador real porque es exactamente el tipo de fallo que
+   * ninguna aserción sobre el DOM detecta: el marcado siempre fue correcto.
+   */
+  for (const vp of [
+    { name: 'escritorio', width: 1280, height: 900 },
+    { name: 'móvil', width: 390, height: 844 },
+  ]) {
+    test(`el CTA de clase gratis está centrado en ${vp.name}`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height })
+      await page.goto('/curso-bachatango')
+
+      const section = page.locator('#clase-gratis')
+      const cta = section.getByRole('link', { name: /ver clase gratis/i })
+      await expect(cta).toBeVisible()
+
+      const s = (await section.boundingBox())!
+      const c = (await cta.boundingBox())!
+      const desvio = Math.abs((s.x + s.width / 2) - (c.x + c.width / 2))
+      expect(desvio, 'el CTA no está centrado en su sección').toBeLessThan(5)
+      // Y sigue siendo una píldora: centrarlo no debe estirarlo a todo el ancho.
+      expect(c.width).toBeLessThan(s.width * 0.9)
+    })
+  }
+})
