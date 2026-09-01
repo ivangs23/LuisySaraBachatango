@@ -29,11 +29,11 @@ export const LANDING_COPY = {
   },
   method: {
     title: 'El método Luis y Sara',
-    body: 'Cada movimiento desglosado y explicado, con práctica guiada y una progresión pensada para que interiorices sin frustrarte. No son clases sueltas: es un camino completo.',
+    body: 'Cada movimiento desglosado y explicado desde una base sólida, estudiada y probada, con práctica guiada y una progresión pensada para que interiorices sin frustrarte. No son clases sueltas: es un camino completo.',
   },
   bio: {
     title: 'Quiénes son Luis y Sara',
-    body: 'Instructores internacionales de bachata y bachatango. Años formando bailarines dentro y fuera de la pista, con un método propio que ahora tienes a tu alcance desde casa.',
+    body: 'Instructores internacionales de bailes de salón, latinos y bachatango. Años formando bailarines dentro y fuera de la pista, con un método propio que ahora tienes a tu alcance desde casa.',
   },
   testimonials: {
     title: 'Lo que dicen sus alumnos',
