@@ -39,7 +39,7 @@ export default function UnsubscribeForm({ email, token }: { email: string; token
       {status === 'invalid' && (
         <p className={styles.error} role="alert">
           El enlace no es válido o ha sido modificado. Escríbenos a{' '}
-          <a href="mailto:contacto@luisysarabachatango.com">contacto@luisysarabachatango.com</a>{' '}
+          <a href="mailto:luisysarabachatango@gmail.com">luisysarabachatango@gmail.com</a>{' '}
           y te damos de baja a mano.
         </p>
       )}

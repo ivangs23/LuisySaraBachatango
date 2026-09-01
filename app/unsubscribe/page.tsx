@@ -21,7 +21,7 @@ export default async function UnsubscribePage(
         <h1 className={styles.title}>Enlace no válido</h1>
         <p className={styles.body}>
           Este enlace de baja está incompleto. Escríbenos a{' '}
-          <a href="mailto:contacto@luisysarabachatango.com">contacto@luisysarabachatango.com</a>{' '}
+          <a href="mailto:luisysarabachatango@gmail.com">luisysarabachatango@gmail.com</a>{' '}
           y te damos de baja a mano.
         </p>
         <Link href="/" className={styles.link}>Volver al inicio</Link>
