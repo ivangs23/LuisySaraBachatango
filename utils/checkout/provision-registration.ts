@@ -36,7 +36,7 @@ export async function provisionFromPending(
 
   const { data: pending } = await admin
     .from('pending_registrations')
-    .select('id, email, full_name, password_hash, country, city, postal_code, date_of_birth, phone, marketing_consent, marketing_consent_at, dance_level, terms_version, terms_accepted_at, course_id')
+    .select('id, email, full_name, password_hash, country, city, postal_code, date_of_birth, phone, marketing_consent, marketing_consent_at, dance_level, terms_version, terms_accepted_at, digital_execution_consent_at, course_id')
     .eq('id', pendingId)
     .maybeSingle()
 
@@ -125,6 +125,9 @@ export async function provisionFromPending(
       dance_level: pending.dance_level ?? null,
       terms_version: pending.terms_version ?? null,
       terms_accepted_at: pending.terms_accepted_at ?? null,
+      // La fila pendiente se purga a los 30 días; la evidencia del art. 103.m
+      // tiene que sobrevivir a esa purga o no se podrá acreditar más adelante.
+      digital_execution_consent_at: pending.digital_execution_consent_at ?? null,
     }).eq('id', userId)
     // Don't block provisioning on a profile-column write (those fields aren't
     // access-gating) — but surface it instead of swallowing it silently.

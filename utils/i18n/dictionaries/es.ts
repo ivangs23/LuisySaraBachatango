@@ -53,6 +53,7 @@ export const es = {
     terms: "Términos y Condiciones",
     privacy: "Política de Privacidad",
     cookies: "Política de Cookies",
+    social: "Privacidad en Redes Sociales",
     rights: "Todos los derechos reservados.",
     blog: "Blog",
     buyCourse: "El curso"

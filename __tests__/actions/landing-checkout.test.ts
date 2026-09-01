@@ -38,6 +38,7 @@ const valid = {
   courseId: 'c1', fullName: 'Ana', email: 'ana@example.com',
   password: 'Bachata2026', repeatPassword: 'Bachata2026', country: 'ES', city: 'Madrid',
   postalCode: '28001', dateOfBirth: '1995-05-20', danceLevel: 'principiante', acceptTerms: 'on',
+  acceptDigitalExecution: 'on',
 }
 beforeEach(() => { vi.clearAllMocks(); H.isTest.mockResolvedValue(false); H.readCookie.mockResolvedValue(false); H.rateLimit.mockResolvedValue({ ok: true }) })
 
@@ -66,6 +67,8 @@ describe('landingCheckout (full registration)', () => {
   })
   it('validation error: redirects with ?error= code and NEVER hashes or inserts', async () => {
     await expect(landingCheckout(fd({ ...valid, acceptTerms: '' }))).rejects.toThrow(/REDIRECT:.*error=terms_not_accepted/)
+    await expect(landingCheckout(fd({ ...valid, acceptDigitalExecution: '' })))
+      .rejects.toThrow(/REDIRECT:.*error=digital_execution_not_accepted/)
     expect(H.hash).not.toHaveBeenCalled()
     expect(H.pendingInsert).not.toHaveBeenCalled()
     expect(H.sessionCreate).not.toHaveBeenCalled()

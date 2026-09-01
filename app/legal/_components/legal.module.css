@@ -406,3 +406,68 @@
 .docFooterCta:hover svg {
   transform: translate(2px, -2px);
 }
+
+/* ---------- Listas y tablas dentro de una sección ---------- */
+
+.bulletList {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 60ch;
+}
+.bulletList li {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.3vw, 1rem);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+.bulletList li strong {
+  color: var(--text-main);
+}
+
+/* La tabla de cookies es ancha por naturaleza. Se desborda DENTRO de su
+   propio contenedor para que la página nunca haga scroll horizontal. */
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0.35rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+}
+.table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.tableCaption {
+  caption-side: top;
+  text-align: left;
+  padding: 0.7rem 0.85rem 0.4rem;
+  color: var(--text-main);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.table th {
+  text-align: left;
+  padding: 0.6rem 0.85rem;
+  color: var(--text-main);
+  font-weight: 600;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table td {
+  padding: 0.6rem 0.85rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}

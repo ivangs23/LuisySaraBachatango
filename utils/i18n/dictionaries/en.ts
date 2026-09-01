@@ -55,6 +55,7 @@ export const en: Dictionary = {
     terms: "Terms & Conditions",
     privacy: "Privacy Policy",
     cookies: "Cookie Policy",
+    social: "Social Media Privacy",
     rights: "All rights reserved.",
     blog: "Blog",
     buyCourse: "The course"

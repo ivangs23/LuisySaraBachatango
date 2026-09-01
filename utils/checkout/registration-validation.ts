@@ -13,6 +13,14 @@ export type CleanRegistration = {
   danceLevel: string
   phone: string | null
   marketingConsent: boolean
+  /**
+   * Consentimiento previo y expreso al inicio inmediato de la ejecución, con
+   * reconocimiento de que ello hace perder el derecho de desistimiento
+   * (art. 103.m RDL 1/2007). Va en casilla propia y obligatoria, separada de
+   * la aceptación de términos: el art. 103.m exige un acto específico para
+   * este punto, y una casilla genérica de "acepto los términos" no lo prueba.
+   */
+  acceptDigitalExecution: boolean
 }
 
 export type RegistrationResult =
@@ -58,6 +66,8 @@ export function validateRegistration(
   const phoneRaw = str(raw.phone)
   const marketingConsent = raw.marketingConsent === 'on' || raw.marketingConsent === 'true'
   const acceptTerms = raw.acceptTerms === 'on' || raw.acceptTerms === 'true'
+  const acceptDigitalExecution =
+    raw.acceptDigitalExecution === 'on' || raw.acceptDigitalExecution === 'true'
 
   if (!fullName) return { ok: false, code: 'missing' }
   if (!EMAIL_RE.test(email)) return { ok: false, code: 'invalid_email' }
@@ -73,12 +83,13 @@ export function validateRegistration(
   if (!DANCE_LEVELS.has(danceLevel)) return { ok: false, code: 'missing' }
   if (phoneRaw && !PHONE_RE.test(phoneRaw)) return { ok: false, code: 'invalid_phone' }
   if (!acceptTerms) return { ok: false, code: 'terms_not_accepted' }
+  if (!acceptDigitalExecution) return { ok: false, code: 'digital_execution_not_accepted' }
 
   return {
     ok: true,
     data: {
       fullName, email, password, country, city, postalCode, dateOfBirth, danceLevel,
-      phone: phoneRaw || null, marketingConsent,
+      phone: phoneRaw || null, marketingConsent, acceptDigitalExecution,
     },
   }
 }

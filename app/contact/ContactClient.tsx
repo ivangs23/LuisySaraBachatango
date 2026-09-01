@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import FormPrivacyNotice from '@/components/FormPrivacyNotice';
 import { motion } from 'motion/react';
 import {
   User,
@@ -301,6 +302,10 @@ export default function ContactPage() {
                   <Send size={13} strokeWidth={2.4} aria-hidden="true" />
                   {isPending ? 'Enviando…' : t.contact.form.submit}
                 </motion.button>
+                <FormPrivacyNotice
+                  purpose="Atender y responder la consulta que nos envías, y conservar el histórico de la conversación mientras siga siendo pertinente."
+                  legalBasis="Tu consentimiento al remitir la solicitud y, cuando la consulta verse sobre una contratación, la aplicación de medidas precontractuales a petición tuya (arts. 6.1.a y 6.1.b RGPD)."
+                />
               </form>
             )}
           </div>

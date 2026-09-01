@@ -68,6 +68,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     dateOfBirth: formData.get('dateOfBirth'), danceLevel: formData.get('danceLevel'),
     phone: formData.get('phone'), marketingConsent: formData.get('marketingConsent'),
     acceptTerms: formData.get('acceptTerms'),
+    acceptDigitalExecution: formData.get('acceptDigitalExecution'),
   });
   if (!courseId) redirect(await back('missing'));
   if (!v.ok) redirect(await back(v.code));
@@ -107,6 +108,10 @@ export async function landingCheckout(formData: FormData): Promise<void> {
       // Consent provenance (GDPR Art. 7): stamp WHEN + WHICH version was accepted.
       terms_version: CURRENT_TERMS_VERSION,
       terms_accepted_at: new Date().toISOString(),
+      // Evidencia del art. 103.m: se sella ANTES del pago, que es cuando el
+      // usuario lo declaró. La validación ya rechaza el envío sin la casilla,
+      // así que aquí siempre hay fecha.
+      digital_execution_consent_at: reg.acceptDigitalExecution ? new Date().toISOString() : null,
       marketing_consent_at: reg.marketingConsent ? new Date().toISOString() : null,
       course_id: courseId, amount_expected: amountExpected,
     })

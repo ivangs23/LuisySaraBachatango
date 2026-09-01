@@ -39,7 +39,7 @@ export const ja: Dictionary = {
   footer: {
     description: "ルイスとサラと一緒にバチャタンゴを学びましょう。バチャータの官能性とタンゴの優雅さの完璧な融合。",
     explore: "探索", home: "ホーム", contact: "お問い合わせ", notice: "法的通知",
-    legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", rights: "全著作権所有。", blog: "ブログ", buyCourse: "コース"
+    legal: "法的事項", terms: "利用規約", privacy: "プライバシーポリシー", cookies: "クッキーポリシー", social: "ソーシャルメディアのプライバシー", rights: "全著作権所有。", blog: "ブログ", buyCourse: "コース"
   },
   hero: {
     title: "バチャタンゴの芸術をマスターする",
