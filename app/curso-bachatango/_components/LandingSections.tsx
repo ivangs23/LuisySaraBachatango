@@ -3,6 +3,7 @@ import { LANDING_COPY } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import LandingFaq from './LandingFaq';
 import CourseCurriculum from './CourseCurriculum';
+import LandingFreeClass from './LandingFreeClass';
 import type { Curriculum } from '@/utils/courses/curriculum';
 import styles from '../page.module.css';
 
@@ -11,9 +12,20 @@ interface SectionsProps {
   price: number;
   /** null si la BD no responde: la página sigue vendiendo sin el temario. */
   curriculum: Curriculum | null;
+  /**
+   * Clase gratis lista para incrustar, con sus tokens ya firmados. null si no
+   * hay lección gratuita o si falta la configuración de Mux: en ese caso la
+   * sección cae al enlace de siempre en vez de dejar un hueco.
+   */
+  freeClass: {
+    playbackId: string;
+    playbackToken: string;
+    thumbnailToken: string;
+    title: string;
+  } | null;
 }
 
-export default function LandingSections({ courseId, price, curriculum }: SectionsProps) {
+export default function LandingSections({ courseId, price, curriculum, freeClass }: SectionsProps) {
   const c = LANDING_COPY;
   return (
     <>
@@ -67,7 +79,16 @@ export default function LandingSections({ courseId, price, curriculum }: Section
         <Reveal>
           <h2 className={styles.h2}>{c.freeClass.title}</h2>
           <p className={styles.lead}>{c.freeClass.body}</p>
-          <a href="/clase-gratis" className={styles.ctaOutline}>{c.freeClass.cta}</a>
+          {freeClass ? (
+            <LandingFreeClass
+              playbackId={freeClass.playbackId}
+              playbackToken={freeClass.playbackToken}
+              thumbnailToken={freeClass.thumbnailToken}
+              title={freeClass.title}
+            />
+          ) : (
+            <a href="/clase-gratis" className={styles.ctaOutline}>{c.freeClass.cta}</a>
+          )}
           <ul className={styles.trustRow}>
             {c.freeClass.trust.map((t, i) => <li key={i}>{t}</li>)}
           </ul>

@@ -214,30 +214,35 @@ test.describe('Analítica de la landing', () => {
 
 test.describe('Alineación del funnel', () => {
   /**
-   * El CTA "Ver clase gratis" era un `inline-block` con `margin: auto`, y sobre
-   * un inline-block los márgenes automáticos no centran nada: el botón caía a
-   * la izquierda mientras el titular y la fila de confianza iban centrados.
-   * Se mide en un navegador real porque es exactamente el tipo de fallo que
-   * ninguna aserción sobre el DOM detecta: el marcado siempre fue correcto.
+   * La sección de clase gratis llevaba un CTA `inline-block` con `margin: auto`,
+   * y sobre un inline-block los márgenes automáticos no centran nada: caía a la
+   * izquierda mientras el titular y la fila de confianza iban centrados.
+   *
+   * Ese CTA es hoy el vídeo incrustado, pero sigue siendo un bloque suelto que
+   * tiene que quedar centrado en su sección, así que la comprobación se mantiene
+   * sobre lo que ahora ocupa ese sitio. Se mide en un navegador real porque es
+   * el tipo de fallo que ninguna aserción sobre el DOM detecta: el marcado
+   * siempre fue correcto.
    */
   for (const vp of [
     { name: 'escritorio', width: 1280, height: 900 },
     { name: 'móvil', width: 390, height: 844 },
   ]) {
-    test(`el CTA de clase gratis está centrado en ${vp.name}`, async ({ page }) => {
+    test(`el bloque de clase gratis está centrado en ${vp.name}`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height })
       await page.goto('/curso-bachatango')
 
       const section = page.locator('#clase-gratis')
-      const cta = section.getByRole('link', { name: /ver clase gratis/i })
-      await expect(cta).toBeVisible()
+      // El vídeo cuando hay lección gratis; el enlace de respaldo si no la hay.
+      const block = section.getByRole('button', { name: /reproducir la clase gratis/i })
+        .or(section.getByRole('link', { name: /ver clase gratis/i }))
+      await expect(block).toBeVisible()
 
       const s = (await section.boundingBox())!
-      const c = (await cta.boundingBox())!
+      const c = (await block.boundingBox())!
       const desvio = Math.abs((s.x + s.width / 2) - (c.x + c.width / 2))
-      expect(desvio, 'el CTA no está centrado en su sección').toBeLessThan(5)
-      // Y sigue siendo una píldora: centrarlo no debe estirarlo a todo el ancho.
-      expect(c.width).toBeLessThan(s.width * 0.9)
+      expect(desvio, 'el bloque no está centrado en su sección').toBeLessThan(5)
+      expect(c.width).toBeLessThanOrEqual(s.width)
     })
   }
 })
