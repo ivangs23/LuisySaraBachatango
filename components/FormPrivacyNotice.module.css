@@ -1,0 +1,56 @@
+/* Plegado por defecto: la información debe estar AL LADO del formulario, pero
+   desplegada empujaría el botón de envío fuera de pantalla en móvil, que es
+   peor para el usuario que un resumen visible y un clic para leer el resto. */
+.wrap {
+  margin-top: 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  list-style: revert;
+}
+.summary:hover {
+  color: var(--text-main);
+}
+.summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.list {
+  margin: 0.6rem 0 0;
+  display: grid;
+  grid-template-columns: minmax(6.5rem, auto) 1fr;
+  gap: 0.3rem 0.9rem;
+}
+.list dt {
+  color: var(--text-main);
+  font-weight: 600;
+}
+.list dd {
+  margin: 0;
+}
+.list a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  /* En pantallas estrechas las dos columnas dejan la definición en 3-4
+     caracteres por línea; se apilan. */
+  .list {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+  .list dd {
+    margin-bottom: 0.5rem;
+  }
+}

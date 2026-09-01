@@ -6,6 +6,7 @@ const base = {
   password: 'Bachata2026', repeatPassword: 'Bachata2026',
   country: 'ES', city: 'Madrid', postalCode: '28001', dateOfBirth: '1995-05-20',
   danceLevel: 'principiante', phone: '', marketingConsent: '', acceptTerms: 'on',
+  acceptDigitalExecution: 'on',
 }
 const r = (o: Partial<typeof base>) => validateRegistration({ ...base, ...o })
 
@@ -23,6 +24,16 @@ describe('validateRegistration', () => {
   it('lowercases/trims email', () => {
     const out = r({ email: '  Ana@Example.COM ' })
     expect(out.ok && out.data.email).toBe('ana@example.com')
+  })
+  it('requires the art. 103.m consent in its own checkbox', () => {
+    // Aceptar los términos NO vale como consentimiento a la ejecución
+    // inmediata: son dos casillas y el desistimiento depende de la segunda.
+    expect(r({ acceptDigitalExecution: '' }))
+      .toEqual({ ok: false, code: 'digital_execution_not_accepted' })
+  })
+  it('carries the art. 103.m consent through to the cleaned data', () => {
+    const out = r({})
+    expect(out.ok && out.data.acceptDigitalExecution).toBe(true)
   })
   it('rejects invalid email', () => { expect(r({ email: 'nope' })).toEqual({ ok: false, code: 'invalid_email' }) })
   it('rejects short password', () => { expect(r({ password: 'Ab1', repeatPassword: 'Ab1' })).toEqual({ ok: false, code: 'password_too_short' }) })

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import FormPrivacyNotice from './FormPrivacyNotice';
 import { useFormStatus } from 'react-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { landingCheckout } from '@/app/curso-bachatango/comprar/actions';
@@ -29,6 +30,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_birthdate: 'Introduce una fecha de nacimiento válida (edad 16–100).',
   invalid_phone: 'El teléfono no es válido.',
   terms_not_accepted: 'Debes aceptar los términos y la privacidad.',
+  digital_execution_not_accepted:
+    'Debes solicitar el acceso inmediato y reconocer que pierdes el derecho de desistimiento.',
   account_creation_failed: 'No pudimos procesar tu registro. Inténtalo de nuevo.',
   rate: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
   stripe: 'No pudimos iniciar el pago. Inténtalo de nuevo.',
@@ -116,6 +119,28 @@ export default function LandingCheckoutForm({ courseId, defaultEmail, defaultNam
         <input name="acceptTerms" type="checkbox" value="on" required />
         <span>Acepto los <a href="/legal/terms" target="_blank" rel="noopener noreferrer">términos</a> y la <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">privacidad</a>.</span>
       </label>
+
+      {/*
+        Casilla propia y obligatoria, separada de la de términos. El art. 103.m
+        RDL 1/2007 solo excluye el desistimiento si el consumidor consintió
+        expresamente el inicio inmediato de la ejecución Y reconoció que con
+        ello pierde el derecho: son dos declaraciones sobre este punto
+        concreto, y una casilla genérica de "acepto los términos" no las
+        acredita. La fecha de aceptación se guarda como evidencia.
+      */}
+      <label className={styles.checkboxRow}>
+        <input name="acceptDigitalExecution" type="checkbox" value="on" required />
+        <span>
+          Solicito el acceso inmediato al curso y reconozco que, al comenzar la
+          ejecución, pierdo mi derecho de desistimiento de 14 días (art. 103.m
+          RDL 1/2007).
+        </span>
+      </label>
+
+      <FormPrivacyNotice
+        purpose="Crear y gestionar tu cuenta de alumno, procesar el pago, darte acceso al curso y emitir la factura."
+        legalBasis="La ejecución del contrato de compraventa (art. 6.1.b RGPD) y, para la facturación, una obligación legal (art. 6.1.c RGPD)."
+      />
 
       <SubmitButton />
       <p className={styles.note}>Creamos tu cuenta al confirmarse el pago. No se cobra nada hasta entonces.</p>

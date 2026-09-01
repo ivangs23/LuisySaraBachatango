@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import FormPrivacyNotice from './FormPrivacyNotice';
 import styles from './Newsletter.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { useInView } from '@/hooks/useInView';
@@ -48,6 +49,10 @@ export default function Newsletter() {
             {isPending ? '...' : t.newsletter.button}
           </button>
         </form>
+        <FormPrivacyNotice
+          purpose="Enviarte el boletín con novedades, contenidos y ofertas sobre nuestros cursos."
+          legalBasis="Tu consentimiento (art. 6.1.a RGPD), que puedes retirar en cualquier momento desde el enlace de baja de cada correo."
+        />
         {status.kind === 'ok' && <p role="status" aria-live="polite">{t.newsletter.success}</p>}
         {status.kind === 'err' && <p role="alert">{t.newsletter.error}</p>}
       </div>

@@ -39,7 +39,7 @@ export const de: Dictionary = {
   footer: {
     description: "Lerne Bachatango mit Luis und Sara. Die perfekte Fusion zwischen der Sinnlichkeit von Bachata und der Eleganz des Tango.",
     explore: "Entdecken", home: "Startseite", contact: "Kontakt", notice: "Impressum",
-    legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", rights: "Alle Rechte vorbehalten.", blog: "Blog", buyCourse: "Der Kurs"
+    legal: "Rechtliches", terms: "AGB", privacy: "Datenschutz", cookies: "Cookie-Richtlinie", social: "Datenschutz in sozialen Netzwerken", rights: "Alle Rechte vorbehalten.", blog: "Blog", buyCourse: "Der Kurs"
   },
   hero: {
     title: "Meistere die Kunst des Bachatango",

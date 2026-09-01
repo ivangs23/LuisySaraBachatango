@@ -108,6 +108,17 @@ venta y la superficie de SEO, muertos.
 
 **#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
+## Consentimiento del art. 103.m — septiembre 2026 · ⛔ SIN APLICAR
+
+**Bloquea el despliegue.** El código del checkout ya escribe
+`digital_execution_consent_at` al insertar en `pending_registrations`. Si se
+despliega antes de aplicar esta migración, ese insert falla y **la compra deja
+de funcionar para todo el mundo**. Aplicar primero, desplegar después.
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_09_digital_execution_consent.sql` | Columna `digital_execution_consent_at` en `pending_registrations` y en `profiles`: evidencia de que el comprador consintió el acceso inmediato y reconoció perder el desistimiento (art. 103.m RDL 1/2007). Sin esa prueba el alumno conserva los 14 días. Aditiva e idempotente. | ⛔ Sin aplicar |
+
 ## Contenido editable de la landing — agosto 2026 · ✅ APLICADA (2026-08-13)
 
 | # | Fichero | Qué hace | Estado |

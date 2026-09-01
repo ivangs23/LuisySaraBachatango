@@ -3,12 +3,28 @@ import { ArrowUpRight, CalendarDays, FileText } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import styles from './legal.module.css';
 
+/**
+ * Tabla dentro de una sección legal. La política de cookies obliga a
+ * declararlas una a una (propiedad, nombre, finalidad y plazo), y esa
+ * información en prosa es ilegible: la AEPD espera un inventario que se pueda
+ * recorrer.
+ */
+export type LegalTable = {
+  caption?: string;
+  headers: string[];
+  rows: string[][];
+};
+
 export type LegalSection = {
   /** Optional explicit slug. Defaults to derived from heading. */
   id?: string;
   heading: string;
   /** Single string with paragraphs separated by '\n\n', or an array of paragraphs. */
   body: string | string[];
+  /** Listas de viñetas que siguen al cuerpo. */
+  bullets?: string[];
+  /** Tablas que siguen a las viñetas. */
+  tables?: LegalTable[];
 };
 
 type LegalShellProps = {
@@ -70,6 +86,8 @@ export default function LegalShell({
       id,
       heading: s.heading,
       paragraphs,
+      bullets: s.bullets ?? [],
+      tables: s.tables ?? [],
       number: String(i + 1).padStart(2, '0'),
     };
   });
@@ -157,6 +175,40 @@ export default function LegalShell({
                 <div className={styles.sectionBody}>
                   {s.paragraphs.map((p, i) => (
                     <p key={i}>{p}</p>
+                  ))}
+
+                  {s.bullets.length > 0 && (
+                    <ul className={styles.bulletList}>
+                      {s.bullets.map((b, i) => (
+                        <li key={i}>{b}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {s.tables.map((t, i) => (
+                    <div key={i} className={styles.tableScroll}>
+                      <table className={styles.table}>
+                        {t.caption && (
+                          <caption className={styles.tableCaption}>{t.caption}</caption>
+                        )}
+                        <thead>
+                          <tr>
+                            {t.headers.map((h, j) => (
+                              <th key={j} scope="col">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {t.rows.map((row, j) => (
+                            <tr key={j}>
+                              {row.map((cell, k) => (
+                                <td key={k}>{cell}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   ))}
                 </div>
               </section>

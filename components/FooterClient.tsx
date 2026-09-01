@@ -63,6 +63,7 @@ export default function FooterClient({ adminProfile }: FooterClientProps) {
     { href: '/legal/privacy', label: t.footer.privacy },
     { href: '/legal/terms', label: t.footer.terms },
     { href: '/legal/cookies', label: t.footer.cookies },
+    { href: '/legal/redes-sociales', label: t.footer.social },
     { href: '/legal/notice', label: t.footer.notice },
   ];
 
