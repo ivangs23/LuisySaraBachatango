@@ -61,8 +61,8 @@ export const LANDING_COPY = {
     cta: 'Comprar ahora',
   },
   faq: [
-    { q: '¿Necesito pareja?', a: 'No. El curso enseña tanto el rol de guía como el de respuesta; puedes practicar solo/a y aplicarlo en pareja después.' },
-    { q: '¿Qué nivel necesito?', a: 'Ninguno. Empieza desde cero y progresa hasta nivel avanzado.' },
+    { q: '¿Necesito pareja?', a: 'No. El curso enseña tanto el rol de LIDER como el de FOLLOWER; puedes practicar solo/a y aplicarlo en pareja después.' },
+    { q: '¿Qué nivel necesito?', a: 'Nivel básico de bachata. Empieza desde cero y progresa hasta nivel avanzado.' },
     { q: '¿En qué dispositivos lo veo?', a: 'En cualquier dispositivo con navegador: móvil, tablet u ordenador.' },
     { q: '¿Cuánto dura el acceso?', a: 'Acceso de por vida. Compras una vez y es tuyo para siempre.' },
     { q: '¿Es seguro el pago?', a: 'Sí. El pago se procesa con Stripe; no almacenamos datos de tu tarjeta.' },
