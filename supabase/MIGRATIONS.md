@@ -108,16 +108,17 @@ venta y la superficie de SEO, muertos.
 
 **#3 contiene lo de #2**, así que aplicar solo #3 es suficiente.
 
-## Consentimiento del art. 103.m — septiembre 2026 · ⛔ SIN APLICAR
+## Consentimiento del art. 103.m — septiembre 2026 · ✅ APLICADA (2026-09-01)
 
-**Bloquea el despliegue.** El código del checkout ya escribe
-`digital_execution_consent_at` al insertar en `pending_registrations`. Si se
-despliega antes de aplicar esta migración, ese insert falla y **la compra deja
-de funcionar para todo el mundo**. Aplicar primero, desplegar después.
+Se aplicó ANTES de desplegar el código del checkout, que escribe
+`digital_execution_consent_at` al insertar en `pending_registrations`: con la
+columna ausente ese insert falla y la compra deja de funcionar para todo el
+mundo. Verificado tras aplicarla que ambas columnas existen como `timestamptz`
+nullable.
 
 | # | Fichero | Qué hace | Estado |
 |---|---|---|---|
-| 1 | `2026_09_digital_execution_consent.sql` | Columna `digital_execution_consent_at` en `pending_registrations` y en `profiles`: evidencia de que el comprador consintió el acceso inmediato y reconoció perder el desistimiento (art. 103.m RDL 1/2007). Sin esa prueba el alumno conserva los 14 días. Aditiva e idempotente. | ⛔ Sin aplicar |
+| 1 | `2026_09_digital_execution_consent.sql` | Columna `digital_execution_consent_at` en `pending_registrations` y en `profiles`: evidencia de que el comprador consintió el acceso inmediato y reconoció perder el desistimiento (art. 103.m RDL 1/2007). Sin esa prueba el alumno conserva los 14 días. Aditiva e idempotente. | ✅ Aplicada |
 
 ## Contenido editable de la landing — agosto 2026 · ✅ APLICADA (2026-08-13)
 
