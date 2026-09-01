@@ -30,11 +30,10 @@ export const ENTITY = {
    * y el propio revisor pedía unificarlas: dos canales para lo mismo se
    * contradicen entre sí y complican demostrar que se atendió un derecho.
    *
-   * Se mantiene la dirección que el sitio ya venía publicando. PENDIENTE de
-   * confirmar cuál será la definitiva; al cambiarla aquí se actualizan los
-   * cinco documentos a la vez.
+   * Cambiarla aquí actualiza los cinco documentos legales y los avisos de los
+   * formularios a la vez.
    */
-  email: 'contacto@luisysarabachatango.com',
+  email: 'luisysarabachatango@gmail.com',
 } as const
 
 /** Autoridad de control competente en materia de protección de datos. */
