@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LANDING_COPY } from '../copy';
+import type { LandingCopy } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import styles from '../page.module.css';
 
 interface StickyProps {
+  copy: LandingCopy;
   courseId: string;
   price: number;
 }
 
-export default function StickyBuyBar({ courseId, price }: StickyProps) {
+export default function StickyBuyBar({ courseId, price, copy }: StickyProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -22,8 +23,8 @@ export default function StickyBuyBar({ courseId, price }: StickyProps) {
 
   return (
     <div className={`${styles.sticky} ${visible ? styles.stickyVisible : ''}`} inert={!visible}>
-      <span className={styles.stickyBrand}>{LANDING_COPY.sticky.brand}</span>
-      <CourseCtaButton courseId={courseId} label={`${LANDING_COPY.sticky.cta} · €${price}`} className={styles.stickyCta} />
+      <span className={styles.stickyBrand}>{copy.sticky.brand}</span>
+      <CourseCtaButton courseId={courseId} label={`${copy.sticky.cta} · €${price}`} className={styles.stickyCta} />
     </div>
   );
 }

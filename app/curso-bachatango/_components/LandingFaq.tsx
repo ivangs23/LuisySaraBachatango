@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { LANDING_COPY } from '../copy';
+import type { LandingCopy } from '../copy';
 import styles from '../page.module.css';
 
-export default function LandingFaq() {
+export default function LandingFaq({ copy }: { copy: LandingCopy }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
     <div className={styles.faq}>
-      {LANDING_COPY.faq.map((item, i) => {
+      {copy.faq.map((item, i) => {
         const isOpen = open === i;
         return (
           <div key={i} className={styles.faqItem}>

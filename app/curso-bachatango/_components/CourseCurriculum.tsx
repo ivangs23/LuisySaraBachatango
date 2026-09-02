@@ -1,4 +1,4 @@
-import { LANDING_COPY } from '../copy';
+import type { LandingCopy } from '../copy';
 import { formatDuration, type Curriculum } from '@/utils/courses/curriculum';
 import styles from '../page.module.css';
 
@@ -9,8 +9,8 @@ import styles from '../page.module.css';
  *
  * Componente de servidor: no hay interactividad, así que no viaja al cliente.
  */
-export default function CourseCurriculum({ curriculum }: { curriculum: Curriculum }) {
-  const c = LANDING_COPY.learn;
+export default function CourseCurriculum({ curriculum, copy }: { curriculum: Curriculum; copy: LandingCopy }) {
+  const c = copy.learn;
 
   const summary = c.summary
     .replace('{modules}', String(curriculum.moduleCount))
