@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+// La página importa ahora `provisionFromPending`, marcado `server-only`.
+// Se neutraliza igual que en el resto de la suite.
+vi.mock('server-only', () => ({}))
 import type Stripe from 'stripe'
 
 vi.mock('@/utils/stripe/server', () => {
