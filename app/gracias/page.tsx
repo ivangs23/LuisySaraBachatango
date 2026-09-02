@@ -4,6 +4,7 @@ import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/server';
 import { isTestPurchaseMode } from '@/utils/demo/test-mode';
 import { maskEmail } from '@/utils/sanitize';
+import { provisionFromPending } from '@/utils/checkout/provision-registration';
 import styles from './gracias.module.css';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com';
@@ -68,6 +69,45 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
     try {
       const session = await stripe.checkout.sessions.retrieve(session_id);
       paid = session.payment_status === 'paid';
+
+      // Red de seguridad contra el limbo: si el pago entró pero el webhook aún
+      // no concedió el acceso, se aprovisiona aquí mismo.
+      //
+      // El webhook sigue siendo el camino principal, pero puede fallar de
+      // formas que Stripe NO reintenta: devuelve 200 ante `no-course` o una
+      // sesión sin metadatos de la app, y ahí el comprador quedaría pagando sin
+      // acceso para siempre. Aunque reintente, tarda minutos u horas.
+      //
+      // Esta página es lo primero que ve quien acaba de pagar, así que su
+      // propia visita repara el fallo al instante. `provisionFromPending` es
+      // idempotente (única por stripe_session_id), de modo que ejecutarla a la
+      // vez que el webhook no duplica nada.
+      //
+      // No amplía privilegios: el acceso se concede al email de la sesión de
+      // Stripe, que es exactamente a quien le corresponde. Un session_id
+      // robado solo provocaría el alta que ya tocaba hacer.
+      if (paid) {
+        try {
+          const admin = createSupabaseAdmin(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          );
+          const { data: yaConcedida } = await admin
+            .from('course_purchases').select('id').eq('stripe_session_id', session.id).maybeSingle();
+          if (!yaConcedida) {
+            console.warn('[gracias] pago sin acceso concedido, aprovisionando desde la página: %s', session.id);
+            const r = await provisionFromPending(session, admin);
+            if (!r.ok) {
+              console.error('[gracias] NO se pudo aprovisionar %s: %s', session.id, r.reason);
+            }
+          }
+        } catch (e) {
+          // Nunca romper la página de gracias: quien ha pagado debe ver su
+          // confirmación aunque la reparación falle.
+          console.error('[gracias] fallo aprovisionando %s: %s', session.id, (e as Error).message);
+        }
+      }
+
       // Enmascarado (i***@g***.com): el session_id viaja por URL y puede
       // acabar en manos de terceros (capturas, logs, referrers) — esta página
       // no debe funcionar como oráculo del email completo del comprador.
