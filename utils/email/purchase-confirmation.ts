@@ -1,43 +1,62 @@
-const FROM = 'Luis y Sara Bachatango <noreply@luisysarabachatango.com>'
+import 'server-only'
+import { renderEmail, renderTexto, enviar, esc } from './layout'
+
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
 
-function esc(s: string): string {
-  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
-}
-
 /**
- * Post-payment confirmation. Sent as the LAST step of provisioning, exactly once
- * per genuine provision. Never throws: a failed email must not fail the webhook
- * (the purchase is already committed). No-op if RESEND_API_KEY is unset.
+ * Confirmación posterior al pago. Se envía como ÚLTIMO paso del
+ * aprovisionamiento, exactamente una vez por alta genuina. Nunca lanza: un
+ * fallo de email no puede tumbar el webhook, porque la compra ya está
+ * comprometida. No hace nada si falta RESEND_API_KEY.
+ *
+ * Es el primer correo que recibe alguien que acaba de pagar 119 €, así que
+ * dice explícitamente CON QUÉ CONTRASEÑA entrar: es la duda número uno cuando
+ * la cuenta se crea durante la compra y no antes.
  */
 export async function sendPurchaseConfirmation(opts: {
   email: string
   fullName: string | null
   existingAccount: boolean
 }): Promise<void> {
-  const key = process.env.RESEND_API_KEY
-  if (!key) return
+  const nombre = opts.fullName ? esc(opts.fullName.split(' ')[0]) : null
+  const saludo = nombre ? `Hola ${nombre},` : 'Hola,'
 
-  const hi = opts.fullName ? `Hola ${esc(opts.fullName)},` : 'Hola,'
-  const html = opts.existingAccount
-    ? `<h2>¡Compra confirmada! 🎉</h2><p>${hi} ya tienes acceso al curso. Como ya tenías una cuenta, entra con tu <b>contraseña habitual</b>. Si no la recuerdas, <a href="${BASE}/forgot-password">recupérala aquí</a>.</p><p><a href="${BASE}/login">Entrar al curso</a></p>`
-    : `<h2>¡Bienvenido/a! 🎉</h2><p>${hi} tu compra está confirmada y tu cuenta lista. Entra con tu email y la <b>contraseña que elegiste</b> al comprar.</p><p><a href="${BASE}/login">Entrar al curso</a></p>`
+  const titulo = opts.existingAccount ? 'Compra confirmada' : 'Ya tienes acceso al curso'
 
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: FROM,
-        to: [opts.email],
-        subject: 'Tu compra del CURSO BACHATANGO está lista',
-        html,
-      }),
-    })
-    if (!res.ok) {
-      console.error('[purchase-confirmation] resend failed', res.status, await res.text().catch(() => ''))
-    }
-  } catch (e) {
-    console.error('[purchase-confirmation] resend threw', e)
-  }
+  const parrafos = opts.existingAccount
+    ? [
+        `${saludo} tu compra del <strong>CURSO BACHATANGO</strong> está confirmada y el acceso ya está activo en tu cuenta.`,
+        `Como ya tenías cuenta con nosotros, entra con tu <strong>contraseña habitual</strong>.`,
+      ]
+    : [
+        `${saludo} tu compra del <strong>CURSO BACHATANGO</strong> está confirmada y tu cuenta ya está lista.`,
+        `Entra con este mismo correo y la <strong>contraseña que elegiste durante la compra</strong>.`,
+      ]
+
+  parrafos.push(
+    'Tienes acceso de por vida a las 28 lecciones, así que puedes ir a tu ritmo y volver a cualquier módulo cuando quieras.',
+  )
+
+  const nota = opts.existingAccount
+    ? `¿No recuerdas tu contraseña? <a href="${BASE}/forgot-password" style="color:#a8823c;">Recupérala aquí</a> en un minuto.`
+    : `Guarda este correo: aquí tienes el enlace de acceso siempre a mano. Si olvidas la contraseña, puedes <a href="${BASE}/forgot-password" style="color:#a8823c;">restablecerla</a>.`
+
+  const boton = { texto: 'Entrar al curso', url: `${BASE}/login` }
+
+  const html = renderEmail({
+    preheader: 'Tu acceso al CURSO BACHATANGO ya está activo.',
+    titulo,
+    parrafos,
+    boton,
+    nota,
+  })
+  const text = renderTexto({ titulo, parrafos, boton, nota })
+
+  await enviar({
+    to: opts.email,
+    subject: 'Tu acceso al CURSO BACHATANGO ya está activo',
+    html,
+    text,
+    etiqueta: 'purchase-confirmation',
+  })
 }

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// `utils/email/*` está marcado `server-only`, que lanza fuera de un Server
+// Component. Se neutraliza igual que en el resto de la suite.
+vi.mock('server-only', () => ({}))
+
 const fetchMock = vi.fn()
 beforeEach(() => {
   vi.clearAllMocks()
@@ -25,6 +29,30 @@ describe('sendPurchaseConfirmation', () => {
     await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: null, existingAccount: true })
     const body = JSON.parse(fetchMock.mock.calls[0][1].body)
     expect(body.html).toMatch(/cuenta/i)
+  })
+  it('sends a plain-text alternative alongside the HTML', async () => {
+    // Un correo sin text/plain puntúa peor en los filtros antispam y es lo
+    // único que ven los clientes que bloquean HTML.
+    await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(typeof body.text).toBe('string')
+    expect(body.text.length).toBeGreaterThan(80)
+    expect(body.text).not.toMatch(/<[a-z]/i)          // sin etiquetas sueltas
+    expect(body.text).toMatch(/https?:\/\//)          // los enlaces sobreviven
+  })
+  it('carries the brand header and a preheader', async () => {
+    await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body.html).toContain('/icon.png')           // el logo real
+    expect(body.html).toMatch(/alt="[^"]+"/)           // con texto alternativo
+    // La línea de vista previa de la bandeja va oculta en el cuerpo.
+    expect(body.html).toMatch(/max-height:0;overflow:hidden/)
+  })
+  it('identifies the sender in the footer, as commercial email requires', async () => {
+    await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body.html).toContain('LS ESCUELA DE BAILES')
+    expect(body.html).toContain('E09928052')
   })
   it('never throws when Resend fails', async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => 'boom' })

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// `utils/email/*` está marcado `server-only`, que lanza fuera de un Server
+// Component. Se neutraliza igual que en el resto de la suite.
+vi.mock('server-only', () => ({}))
+
 const mockNotFound = vi.fn(() => { throw new Error('NOT_FOUND') })
 vi.mock('next/navigation', () => ({ notFound: () => mockNotFound() }))
 // La página lee la cookie flash `landing_form` (re-echo de campos sin PII en la URL).

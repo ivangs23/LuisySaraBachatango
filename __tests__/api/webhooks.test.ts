@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// `utils/email/*` está marcado `server-only`, que lanza fuera de un Server
+// Component. Se neutraliza igual que en el resto de la suite.
+vi.mock('server-only', () => ({}))
 import Stripe from 'stripe'
 
 // ── Stripe mock ───────────────────────────────────────────────────────────────
