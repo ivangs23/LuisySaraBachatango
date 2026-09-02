@@ -6,6 +6,7 @@ import Stripe from 'stripe';
 import { assertProdEnv } from '@/utils/env/validate-prod';
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest';
 import { provisionFromPending } from '@/utils/checkout/provision-registration';
+import { alertaCritica } from '@/utils/alerta';
 
 assertProdEnv();
 
@@ -48,10 +49,20 @@ export async function POST(req: Request) {
     if (pendingId) {
       const result = await provisionFromPending(session, supabase);
       if (!result.ok) {
-        console.error('Webhook: pending provisioning failed:', result.reason, 'session:', session.id);
         // Non-retryable reasons (validation/idempotent) -> 200. DB/create errors -> 500 for Stripe retry.
         const nonRetryable = ['not-paid', 'bad-amount', 'no-pending-id', 'no-course'];
-        if (nonRetryable.includes(result.reason)) return new NextResponse(null, { status: 200 });
+        const seRindeStripe = nonRetryable.includes(result.reason);
+        // `not-paid` no debe a nadie nada. El resto de motivos no reintentables
+        // sí: Stripe deja de insistir y el comprador se queda pagando sin
+        // acceso de forma permanente, así que eso hay que verlo.
+        if (seRindeStripe && result.reason !== 'not-paid') {
+          alertaCritica('Pago sin acceso y Stripe NO reintentará', {
+            sesion: session.id, motivo: result.reason,
+          });
+        } else {
+          console.error('Webhook: pending provisioning failed:', result.reason, 'session:', session.id);
+        }
+        if (seRindeStripe) return new NextResponse(null, { status: 200 });
         return new NextResponse('Provisioning Error', { status: 500 });
       }
       return new NextResponse(null, { status: 200 });
@@ -78,7 +89,16 @@ export async function POST(req: Request) {
       // checkout creado a mano en el dashboard sobre la misma cuenta Stripe).
       // 200, no 400: un 4xx haría a Stripe reintentar durante días y marcar el
       // endpoint como failing por eventos que no son de esta app.
-      console.warn('Webhook: checkout.session.completed sin metadata de la app — ignorada. session:', session.id);
+      // Un pago real sin metadatos de la app (p. ej. un Payment Link creado a
+      // mano en el dashboard) nunca concede acceso y Stripe no reintenta: si
+      // alguien pagó por ahí, se queda sin nada y en silencio.
+      if (session.payment_status === 'paid') {
+        alertaCritica('Pago recibido por un checkout ajeno a la app: nadie recibirá acceso', {
+          sesion: session.id, importe: session.amount_total ?? null,
+        });
+      } else {
+        console.warn('Webhook: checkout.session.completed sin metadata de la app — ignorada. session:', session.id);
+      }
       return new NextResponse(null, { status: 200 });
     }
 

@@ -324,6 +324,8 @@ export const ja: Dictionary = {
   },
   errors: {
     invalid_credentials: "認証情報が正しくありません。メールとパスワードを確認してください。",
+    email_not_confirmed: "メールアドレスがまだ確認されていません。受信トレイ（および迷惑メール）をご確認いただくか、確認メールの再送をご依頼ください。",
+    resend_confirmation: "確認メールを再送する",
     signup_failed: "アカウントの作成に失敗しました。もう一度お試しください。",
     invalid_email: "メールアドレスが無効です。",
     password_too_short: "パスワードは8文字以上である必要があります。",

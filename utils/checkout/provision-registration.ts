@@ -2,6 +2,8 @@ import type Stripe from 'stripe'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendPurchaseConfirmation } from '@/utils/email/purchase-confirmation'
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest'
+import { alertaCritica } from '@/utils/alerta'
+
 
 export type ProvisionResult =
   | { ok: true; userId: string; created: boolean }
@@ -56,7 +58,9 @@ export async function provisionFromPending(
       // email) so money never ends up without access. Idempotent.
       const rec = await provisionGuestPurchase(session, admin, { source: 'landing' })
       if (rec.ok) return { ok: true, userId: rec.userId, created: false }
-      console.error('[orphaned-paid-session] guest recovery failed: %s', rec.reason)
+      alertaCritica('Sesión pagada sin acceso: falló también la recuperación de invitado', {
+        sesion: session.id, motivo: rec.reason,
+      })
       return { ok: false, reason: `orphan-recovery-failed:${rec.reason}` }
     }
     return { ok: true, userId: '', created: false }
@@ -114,11 +118,15 @@ export async function provisionFromPending(
       if (authUser?.user && !authUser.user.email_confirmed_at) {
         const { error: confirmErr } = await admin.auth.admin.updateUserById(userId, { email_confirm: true })
         if (confirmErr) {
-          console.error('[provision] CANNOT CONFIRM paid user=%s: %s', userId, confirmErr.message)
+          alertaCritica('Comprador pagado que no se pudo confirmar: no podrá iniciar sesión', {
+            usuario: userId, motivo: confirmErr.message,
+          })
         }
       }
     } catch (e) {
-      console.error('[provision] CANNOT CONFIRM paid user=%s: %s', userId, (e as Error).message)
+      alertaCritica('Comprador pagado que no se pudo confirmar: no podrá iniciar sesión', {
+        usuario: userId, motivo: (e as Error).message,
+      })
     }
   }
 
