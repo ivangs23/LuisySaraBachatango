@@ -4,6 +4,7 @@ import { Disc3, Music2, Headphones, Heart, ArrowUpRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import styles from './page.module.css';
 import { useLanguage } from '@/context/LanguageContext';
+import { useConsent } from '@/context/ConsentContext';
 
 const PLAYLIST_EMBED_URL =
   'https://open.spotify.com/embed/playlist/0ifxajxVxpgIoQe9ymIre5?utm_source=generator&theme=0';
@@ -67,6 +68,13 @@ function VinylSVG({ className }: { className?: string }) {
 }
 
 export default function MusicPage() {
+  // El embed de Spotify deja cookies de terceros (sp_t, sp_landing) en cuanto
+  // se monta el iframe. La política de cookies las declara como sujetas a
+  // consentimiento, así que el iframe no puede existir hasta concederlo:
+  // bastaba con que la página cargara para instalarlas.
+  const { state, hydrated, reopen } = useConsent();
+  const spotifyAllowed = hydrated && state?.marketing === true;
+
   const { t } = useLanguage();
 
   return (
@@ -157,12 +165,31 @@ export default function MusicPage() {
               <span className={styles.frameCornerBR} aria-hidden="true" />
 
               <div className={styles.playlistWrapper}>
-                <iframe
-                  title="Playlist oficial Luis y Sara Bachatango"
-                  src={PLAYLIST_EMBED_URL}
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                />
+                {spotifyAllowed ? (
+                  <iframe
+                    title="Playlist oficial Luis y Sara Bachatango"
+                    src={PLAYLIST_EMBED_URL}
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className={styles.playlistBlocked}>
+                    <p className={styles.playlistBlockedText}>{t.consent.embedBlocked}</p>
+                    <button type="button" className={styles.playlistBlockedCta} onClick={reopen}>
+                      {t.consent.enableEmbed}
+                    </button>
+                    {/* La playlist no queda inaccesible por rechazar cookies:
+                        el enlace directo abre Spotify en su propio dominio. */}
+                    <a
+                      className={styles.playlistBlockedLink}
+                      href={PLAYLIST_OPEN_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Abrir en Spotify
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className={styles.frameMeta}>
