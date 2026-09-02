@@ -5,6 +5,8 @@ import { getCurriculum } from '@/utils/courses/curriculum';
 import { getFreeLesson } from '@/utils/courses/free-lesson';
 import { signPublicPlaybackToken, signPublicThumbnailToken } from '@/utils/mux/public-token';
 import { getCurrentUser } from '@/utils/supabase/get-user';
+import { getCurrentLocale } from '@/utils/i18n/get-locale';
+import { getLandingCopy } from './copy';
 import { safeJsonLd } from '@/utils/jsonld';
 import LandingHero from './_components/LandingHero';
 import LandingSections from './_components/LandingSections';
@@ -37,9 +39,13 @@ export default async function CursoBachatangoLanding() {
   const course = await getLandingCourse();
   if (!course) notFound();
 
-  const [user, curriculum, lesson] = await Promise.all([
-    getCurrentUser(), getCurriculum(), getFreeLesson(),
+  const [user, curriculum, lesson, locale] = await Promise.all([
+    getCurrentUser(), getCurriculum(), getFreeLesson(), getCurrentLocale(),
   ]);
+  // El idioma se resuelve en servidor desde la cookie, no en el contexto de
+  // cliente: así el HTML sale ya en el idioma correcto y no hay un parpadeo
+  // en español justo en la página que vende.
+  const copy = getLandingCopy(locale);
   const isAuthed = !!user;
 
   // Se firma en cada render, nunca se cachea: el token viaja embebido en el
@@ -88,9 +94,9 @@ export default async function CursoBachatangoLanding() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
-      <LandingHero courseId={course.id} isAuthed={isAuthed} price={course.price_eur} imageUrl={course.image_url} />
-      <LandingSections courseId={course.id} price={course.price_eur} curriculum={curriculum} freeClass={freeClass} />
-      <StickyBuyBar courseId={course.id} price={course.price_eur} />
+      <LandingHero courseId={course.id} isAuthed={isAuthed} price={course.price_eur} imageUrl={course.image_url} copy={copy} />
+      <LandingSections courseId={course.id} price={course.price_eur} curriculum={curriculum} freeClass={freeClass} copy={copy} />
+      <StickyBuyBar courseId={course.id} price={course.price_eur} copy={copy} />
     </div>
   );
 }

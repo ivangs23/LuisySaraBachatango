@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest'
+import { getLandingCopy } from '@/app/curso-bachatango/copy'
 import { render, screen } from '@testing-library/react'
 
 vi.mock('next/navigation', () => ({
@@ -9,21 +10,24 @@ vi.mock('next/navigation', () => ({
 
 import LandingHero from '@/app/curso-bachatango/_components/LandingHero'
 
+// El copy ahora llega por props desde la página, que lo resuelve por idioma.
+const COPY = getLandingCopy('es')
+
 describe('LandingHero', () => {
   it('muestra titular, precio y CTA', () => {
-    render(<LandingHero courseId="c1" isAuthed={false} price={199} imageUrl={null} />)
+    render(<LandingHero copy={COPY} courseId="c1" isAuthed={false} price={199} imageUrl={null} />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Baila bachatango')
     expect(screen.getByText(/€199/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Empieza ahora/ })).toBeInTheDocument()
   })
 
   it('muestra link de login cuando no está autenticado', () => {
-    render(<LandingHero courseId="c1" isAuthed={false} price={199} imageUrl={null} />)
+    render(<LandingHero copy={COPY} courseId="c1" isAuthed={false} price={199} imageUrl={null} />)
     expect(screen.getByRole('link', { name: /Inicia sesión/i })).toHaveAttribute('href', '/login')
   })
 
   it('no muestra link de login cuando está autenticado', () => {
-    render(<LandingHero courseId="c1" isAuthed={true} price={199} imageUrl={null} />)
+    render(<LandingHero copy={COPY} courseId="c1" isAuthed={true} price={199} imageUrl={null} />)
     expect(screen.queryByRole('link', { name: /Inicia sesión/i })).toBeNull()
   })
 })

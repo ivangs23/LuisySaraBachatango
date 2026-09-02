@@ -1,5 +1,5 @@
 import Reveal from '@/components/Reveal';
-import { LANDING_COPY } from '../copy';
+import type { LandingCopy } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import LandingFaq from './LandingFaq';
 import CourseCurriculum from './CourseCurriculum';
@@ -8,6 +8,7 @@ import type { Curriculum } from '@/utils/courses/curriculum';
 import styles from '../page.module.css';
 
 interface SectionsProps {
+  copy: LandingCopy;
   courseId: string;
   price: number;
   /** null si la BD no responde: la página sigue vendiendo sin el temario. */
@@ -25,8 +26,8 @@ interface SectionsProps {
   } | null;
 }
 
-export default function LandingSections({ courseId, price, curriculum, freeClass }: SectionsProps) {
-  const c = LANDING_COPY;
+export default function LandingSections({ courseId, price, curriculum, freeClass, copy }: SectionsProps) {
+  const c = copy;
   return (
     <>
       {/* Dolor → promesa */}
@@ -41,7 +42,7 @@ export default function LandingSections({ courseId, price, curriculum, freeClass
       </section>
 
       {/* Temario real, desde la BD */}
-      {curriculum && <CourseCurriculum curriculum={curriculum} />}
+      {curriculum && <CourseCurriculum curriculum={curriculum} copy={copy} />}
 
       {/* Método */}
       <section className={styles.section}>
@@ -111,7 +112,7 @@ export default function LandingSections({ courseId, price, curriculum, freeClass
       {/* FAQ */}
       <section className={styles.section}>
         <Reveal><h2 className={styles.h2}>Preguntas frecuentes</h2></Reveal>
-        <LandingFaq />
+        <LandingFaq copy={copy} />
       </section>
 
       {/* CTA final */}

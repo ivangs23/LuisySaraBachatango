@@ -1,19 +1,20 @@
 'use client';
 
 import { sanitizeUrl } from '@/utils/sanitize';
-import { LANDING_COPY } from '../copy';
+import type { LandingCopy } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import styles from '../page.module.css';
 
 interface HeroProps {
+  copy: LandingCopy;
   courseId: string;
   isAuthed: boolean;
   price: number;
   imageUrl: string | null;
 }
 
-export default function LandingHero({ courseId, isAuthed, price, imageUrl }: HeroProps) {
-  const c = LANDING_COPY.hero;
+export default function LandingHero({ courseId, isAuthed, price, imageUrl, copy }: HeroProps) {
+  const c = copy.hero;
   const safeBg = imageUrl ? sanitizeUrl(imageUrl) : null;
   return (
     <section
@@ -30,7 +31,7 @@ export default function LandingHero({ courseId, isAuthed, price, imageUrl }: Her
         <p className={styles.heroMicro}>{c.micro}</p>
         {!isAuthed && (
           <p className={styles.heroLogin}>
-            ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+            {c.haveAccount} <a href="/login">{c.login}</a>
           </p>
         )}
       </div>
