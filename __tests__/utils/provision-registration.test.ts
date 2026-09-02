@@ -16,12 +16,15 @@ function makeAdmin(opts: {
   pending?: Record<string, unknown> | null
   profileByEmail?: { id: string; terms_accepted_at?: string | null } | null
   createUser?: { id?: string; error?: { message: string; status?: number } }
+  /** Estado de confirmación del usuario YA existente que resuelva por email. */
+  existingConfirmed?: boolean
   purchaseInserted?: Array<{ id: string }>          // [] => idempotent duplicate (no email)
   purchaseError?: { code?: string; message?: string }
   profileSequence?: Array<{ id: string; terms_accepted_at?: string | null } | null>    // successive profiles-by-email lookups (race)
   existingPurchase?: { id: string } | null          // course_purchases row for session.id (orphan check)
 } = {}) {
-  const calls = { profileColumns: [] as unknown[], customerId: [] as unknown[], purchaseUpsert: [] as unknown[], pendingDelete: [] as string[], createUser: [] as unknown[] }
+  const calls = { profileColumns: [] as unknown[], customerId: [] as unknown[], purchaseUpsert: [] as unknown[], pendingDelete: [] as string[], createUser: [] as unknown[],
+    getUserById: [] as string[], confirmed: [] as string[] }
   const seq = opts.profileSequence
   let seqI = 0
   const nextProfile = () => seq ? (seq[Math.min(seqI++, seq.length - 1)] ?? null) : (opts.profileByEmail ?? null)
@@ -52,11 +55,24 @@ function makeAdmin(opts: {
       }
       throw new Error('unexpected table ' + table)
     },
-    auth: { admin: { createUser: async (attrs: unknown) => {
-      calls.createUser.push(attrs)
-      if (opts.createUser?.error) return { data: { user: null }, error: opts.createUser.error }
-      return { data: { user: { id: opts.createUser?.id ?? 'new-user' } }, error: null }
-    } } },
+    auth: { admin: {
+      createUser: async (attrs: unknown) => {
+        calls.createUser.push(attrs)
+        if (opts.createUser?.error) return { data: { user: null }, error: opts.createUser.error }
+        return { data: { user: { id: opts.createUser?.id ?? 'new-user' } }, error: null }
+      },
+      getUserById: async (id: string) => {
+        calls.getUserById.push(id)
+        return {
+          data: { user: { id, email_confirmed_at: opts.existingConfirmed === false ? null : '2026-01-01T00:00:00Z' } },
+          error: null,
+        }
+      },
+      updateUserById: async (id: string, attrs: { email_confirm?: boolean }) => {
+        if (attrs.email_confirm) calls.confirmed.push(id)
+        return { data: { user: { id } }, error: null }
+      },
+    } },
     __calls: calls,
   }
   return admin as unknown as import('@supabase/supabase-js').SupabaseClient & { __calls: typeof calls }
@@ -101,6 +117,41 @@ describe('provisionFromPending', () => {
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-old' }))
     expect(admin.__calls.pendingDelete).toEqual(['pend-1'])
     expect(sendMock).toHaveBeenCalledWith({ email: 'ana@example.com', fullName: 'Ana', existingAccount: true })
+  })
+
+  it('cuenta preexistente SIN confirmar: la confirma, o el comprador no podría entrar', async () => {
+    // Se registró por /signup, nunca pulsó el enlace de confirmación y ahora
+    // compra. Sin esto paga, se le concede el acceso y no puede iniciar sesión:
+    // `email_confirm: true` solo se ejecuta en la rama de creación.
+    const admin = makeAdmin({
+      pending: PENDING,
+      profileByEmail: { id: 'u-old', terms_accepted_at: '2025-01-01T00:00:00Z' },
+      existingConfirmed: false,
+    })
+    const res = await provisionFromPending(session(), admin)
+    expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+    expect(admin.__calls.getUserById).toEqual(['u-old'])
+    expect(admin.__calls.confirmed, 'no se confirmó al comprador').toEqual(['u-old'])
+    // Y la compra se concede igualmente
+    expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-old' }))
+  })
+
+  it('cuenta preexistente YA confirmada: no la toca', async () => {
+    const admin = makeAdmin({
+      pending: PENDING,
+      profileByEmail: { id: 'u-old', terms_accepted_at: '2025-01-01T00:00:00Z' },
+      existingConfirmed: true,
+    })
+    await provisionFromPending(session(), admin)
+    expect(admin.__calls.getUserById).toEqual(['u-old'])
+    expect(admin.__calls.confirmed).toEqual([])
+  })
+
+  it('cuenta nueva: no hace la comprobación, ya nace confirmada', async () => {
+    const admin = makeAdmin({ pending: PENDING, profileByEmail: null, createUser: { id: 'u-new' } })
+    await provisionFromPending(session(), admin)
+    expect(admin.__calls.createUser[0]).toEqual(expect.objectContaining({ email_confirm: true }))
+    expect(admin.__calls.getUserById, 'consulta innecesaria en la ruta habitual').toEqual([])
   })
 
   it('B2: cuenta resuelta SIN terms_accepted_at → backfill del consentimiento en el reintento', async () => {

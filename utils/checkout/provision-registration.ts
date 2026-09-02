@@ -97,6 +97,31 @@ export async function provisionFromPending(
     }
   }
 
+  // An account that already existed may still be unconfirmed: someone who
+  // signed up through /signup, never clicked the confirmation link, and has
+  // now bought the course. Without this they pay, the purchase is granted —
+  // and they cannot log in, because `email_confirm: true` above only runs on
+  // the create branch.
+  //
+  // Confirming here is safe: completing a Stripe payment sent to that address
+  // is stronger proof of control over the mailbox than clicking a link in it.
+  //
+  // Never blocks provisioning — the purchase matters more — but it is logged
+  // loudly, because the failure mode is a paying customer locked out.
+  if (userId && !created) {
+    try {
+      const { data: authUser } = await admin.auth.admin.getUserById(userId)
+      if (authUser?.user && !authUser.user.email_confirmed_at) {
+        const { error: confirmErr } = await admin.auth.admin.updateUserById(userId, { email_confirm: true })
+        if (confirmErr) {
+          console.error('[provision] CANNOT CONFIRM paid user=%s: %s', userId, confirmErr.message)
+        }
+      }
+    } catch (e) {
+      console.error('[provision] CANNOT CONFIRM paid user=%s: %s', userId, (e as Error).message)
+    }
+  }
+
   // Populate the enumerated profile columns (incl. GDPR Art. 7 consent
   // provenance). NEVER write password_hash into profiles.
   //
