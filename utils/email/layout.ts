@@ -1,6 +1,20 @@
 import { ENTITY } from '@/utils/legal/entity'
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
+const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? `https://${ENTITY.domain}`
+
+/**
+ * Origen del logo del correo, deducido del dominio de la entidad y NO de
+ * NEXT_PUBLIC_BASE_URL.
+ *
+ * Un cliente de correo no tiene "localhost": si esa variable apunta a un
+ * entorno de desarrollo, la imagen se rompe en la bandeja de TODOS los
+ * compradores y no hay forma de enterarse hasta que alguien lo comenta. Pasó
+ * en una prueba y el correo salió con `http://localhost:3000/icon.png`.
+ *
+ * Los enlaces sí siguen usando BASE: en una preview conviene que apunten a esa
+ * preview, y si ahí estuvieran mal se nota al primer clic.
+ */
+const ORIGEN_LOGO = `https://${ENTITY.domain}`
 
 /** El remitente único de todo el correo transaccional. */
 export const FROM = `${ENTITY.tradeName === 'LUIS Y SARA BACHATANGO' ? 'Luis y Sara Bachatango' : ENTITY.tradeName} <noreply@${ENTITY.domain}>`
@@ -104,7 +118,7 @@ export function renderEmail(opts: {
           <!-- Cabecera con el logo -->
           <tr>
             <td align="center" style="padding:0 0 24px;">
-              <img src="${BASE}/icon.png" width="64" height="64" alt="${esc(ENTITY.tradeName)}"
+              <img src="${ORIGEN_LOGO}/icon.png" width="64" height="64" alt="${esc(ENTITY.tradeName)}"
                    style="display:block;width:64px;height:64px;border:0;border-radius:12px;">
             </td>
           </tr>
