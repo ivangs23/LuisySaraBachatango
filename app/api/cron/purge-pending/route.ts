@@ -8,6 +8,11 @@ export const dynamic = 'force-dynamic';
 // late-settling paid session is never dropped before its webhook lands.
 const TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+// Los latidos de presencia solo importan durante dos minutos (ONLINE_WINDOW_MS).
+// Una hora es margen de sobra, y el hash del visitante rota a medianoche UTC:
+// sin esta purga la tabla acumularía una fila muerta por visitante y día.
+const PRESENCE_TTL_MS = 60 * 60 * 1000;
+
 export async function GET(req: Request): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET
   const header = req.headers.get('authorization') ?? ''
@@ -27,5 +32,17 @@ export async function GET(req: Request): Promise<NextResponse> {
     console.error('[purge-pending] failed', error);
     return new NextResponse('Error', { status: 500 });
   }
-  return NextResponse.json({ ok: true, cutoff });
+
+  // Los latidos fríos se borran aparte: que fallen no debe tirar la purga de
+  // registros pendientes, que es la que tiene consecuencias para un comprador.
+  const presenceCutoff = new Date(Date.now() - PRESENCE_TTL_MS).toISOString();
+  const { error: presenceError } = await admin
+    .from('online_pings')
+    .delete()
+    .lt('last_seen', presenceCutoff);
+  if (presenceError) {
+    console.error('[purge-pending] presence purge failed', presenceError);
+  }
+
+  return NextResponse.json({ ok: true, cutoff, presenceCutoff });
 }

@@ -10,6 +10,8 @@ import {
   getRevenueTimeseries,
 } from '@/utils/admin/queries'
 import AdminRevenueChart from '@/components/admin/AdminRevenueChart'
+import OnlineNowCard from '@/components/admin/OnlineNowCard'
+import { getOnlineNow } from '@/utils/admin/presence-queries'
 import { pctChange, formatRelative } from '@/utils/admin/metrics'
 import styles from './page.module.css'
 
@@ -23,12 +25,13 @@ export default async function AdminHome({
   const sp = await searchParams
   const range: 30 | 90 = sp.range === '90' ? 90 : 30
 
-  const [k, latestStudents, recentPayments, activeCourses, revenueSeries] = await Promise.all([
+  const [k, latestStudents, recentPayments, activeCourses, revenueSeries, onlineNow] = await Promise.all([
     getOverviewKpis(),
     getLatestStudents(),
     getRecentPayments(),
     getActiveCourses(),
     getRevenueTimeseries(range),
+    getOnlineNow(),
   ])
 
   const change = pctChange(k.prevMonthRevenueEur, k.monthRevenueEur)
@@ -45,6 +48,9 @@ export default async function AdminHome({
       </header>
 
       <section className={styles.kpiGrid} aria-label="Métricas principales">
+        {/* Solo visible aquí: /admin ya está tras el guard de admin, y
+            `getOnlineNow()` vuelve a exigirlo antes de contar. */}
+        <OnlineNowCard initial={onlineNow} />
         <AdminKpiCard Icon={Users} label="Alumnos totales" value={String(k.totalStudents)} sub={`+${k.newThisWeek} esta semana`} />
         {/* MRR oculto mientras PLAN_PRICES_EUR esté a 0 (subs aparcadas) — evitar mostrar "MRR €0" falso. */}
         <AdminKpiCard

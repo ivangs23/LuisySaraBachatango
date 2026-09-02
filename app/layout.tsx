@@ -62,6 +62,7 @@ import { ConsentProvider } from '@/context/ConsentContext';
 import CookieConsent from '@/components/CookieConsent';
 import ThirdPartyScripts from '@/components/ThirdPartyScripts';
 import LandingAnalytics from '@/components/LandingAnalytics';
+import PresenceHeartbeat from '@/components/PresenceHeartbeat';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { safeJsonLd } from '@/utils/jsonld';
@@ -146,6 +147,7 @@ export default async function RootLayout({
             <Analytics />
             <SpeedInsights />
             <LandingAnalytics />
+            <PresenceHeartbeat />
           </ConsentProvider>
         </LanguageProvider>
       </body>
