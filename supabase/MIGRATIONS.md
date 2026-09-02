@@ -134,6 +134,47 @@ Verificado tras aplicar: 4/3/3 filas, los 6 idiomas presentes, cifras guardadas
 
 ---
 
+## Fecha de alta de los alumnos — septiembre 2026 · ✅ APLICADA (2026-09-02)
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_09_profiles_created_at.sql` | Añade `profiles.created_at`, lo rellena desde `auth.users.created_at`, crea los perfiles que faltaban y lo deja `not null default now()`. Aditiva e idempotente. | ✅ Aplicada |
+
+`profiles` nunca tuvo columna de alta, así que el panel usaba `updated_at` como
+sustituto — y lo decía por escrito en `utils/admin/queries.ts`. Pero
+`handle_new_user` inserta solo `(id, email, full_name)` y `updated_at` no tiene
+default, así que queda NULL hasta que el alumno edita su perfil.
+
+Medido en producción el 2026-09-02: **17 de 18 perfiles con `updated_at` NULL**.
+El panel mostraba «1 nuevo esta semana» y «1 hoy» cuando las altas reales eran
+**9 y 4**.
+
+Además había **2 cuentas de `auth.users` sin fila en `profiles`** (anteriores al
+trigger actual), una de ellas con una compra real de 199 €. No salían en
+`/admin/alumnos` ni contaban en «Alumnos totales». La migración las crea.
+
+El orden de los pasos importa: la columna se añade **nullable**, se rellena, y
+solo entonces se le pone `default now()` y `NOT NULL`. Crearla ya con default
+pondría la fecha de hoy a todos los perfiles y perdería el histórico.
+
+`updated_at` se queda como lo que de verdad es —la última edición del perfil,
+que `app/profile/actions.ts` sí escribe— y alimenta solo «última actividad».
+
+Verificado tras aplicar (2026-09-02):
+
+| Comprobación | Resultado |
+|---|---|
+| Perfiles sin `created_at` | 0 |
+| Cuentas de `auth.users` sin perfil | 0 (antes 2) — 20 perfiles / 20 cuentas |
+| `profiles.created_at` ≠ `auth.users.created_at` | 0 desajustes |
+| Altas de la semana: panel vs. real | 9 vs. 9 ✅ (antes 1 vs. 9) |
+| Altas de hoy: panel vs. real | 4 vs. 4 ✅ (antes 1 vs. 4) |
+| Histórico conservado | abril → septiembre, 5 meses distintos |
+
+La columna quedó `NOT NULL DEFAULT now()`.
+
+---
+
 ## Presencia en vivo — septiembre 2026 · ✅ APLICADA (2026-09-02)
 
 | # | Fichero | Qué hace | Estado |

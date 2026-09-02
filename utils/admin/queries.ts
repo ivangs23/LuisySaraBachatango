@@ -46,8 +46,8 @@ export async function getOverviewKpis(): Promise<OverviewKpis> {
     oldestPending,
   ] = await Promise.all([
     sb.from('profiles').select('id', { count: 'exact', head: true }),
-    sb.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', weekAgo),
-    sb.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', dayAgo),
+    sb.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo),
+    sb.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', dayAgo),
     sb.from('subscriptions')
       .select('plan_type')
       .in('status', ['active', 'trialing']),
@@ -100,7 +100,7 @@ export type LatestStudent = {
   full_name: string | null
   email: string | null
   avatar_url: string | null
-  created_at: string  // we use updated_at as proxy
+  created_at: string
 }
 
 export type RecentPayment =
@@ -119,15 +119,15 @@ export async function getLatestStudents(limit = 5): Promise<LatestStudent[]> {
   const sb = createSupabaseAdmin()
   const { data } = await sb
     .from('profiles')
-    .select('id, full_name, email, avatar_url, updated_at')
-    .order('updated_at', { ascending: false })
+    .select('id, full_name, email, avatar_url, created_at')
+    .order('created_at', { ascending: false })
     .limit(limit)
   return (data ?? []).map((r) => ({
     id: r.id as string,
     full_name: r.full_name as string | null,
     email: r.email as string | null,
     avatar_url: r.avatar_url as string | null,
-    created_at: r.updated_at as string,
+    created_at: r.created_at as string,
   }))
 }
 
@@ -303,7 +303,7 @@ export async function listStudents(args: {
   const to = from + PAGE_SIZE - 1
 
   let q = sb.from('profiles')
-    .select('id, full_name, email, avatar_url, role, updated_at', { count: 'exact' })
+    .select('id, full_name, email, avatar_url, role, created_at, updated_at', { count: 'exact' })
 
   if (args.q && args.q.trim()) {
     // Two escaping layers before interpolating into `.or()`:
@@ -324,7 +324,7 @@ export async function listStudents(args: {
   if (args.sub === 'newMonth') {
     const monthStart = new Date()
     monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0)
-    q = q.gte('updated_at', monthStart.toISOString())
+    q = q.gte('created_at', monthStart.toISOString())
   }
 
   switch (args.sort) {
@@ -332,7 +332,7 @@ export async function listStudents(args: {
     case 'recent': q = q.order('updated_at', { ascending: false }); break
     case 'created':
     default:
-      q = q.order('updated_at', { ascending: false })
+      q = q.order('created_at', { ascending: false })
   }
 
   q = q.range(from, to)
@@ -342,7 +342,7 @@ export async function listStudents(args: {
 
   type RawRow = {
     id: string; full_name: string | null; email: string | null; avatar_url: string | null
-    role: StudentRole; updated_at: string
+    role: StudentRole; created_at: string; updated_at: string
   }
   const profiles = (data ?? []) as RawRow[]
 
@@ -371,7 +371,7 @@ export async function listStudents(args: {
       email: r.email,
       avatar_url: r.avatar_url,
       role: r.role,
-      created_at: r.updated_at,
+      created_at: r.created_at,
       lastActivity: r.updated_at,
       subPlan: active?.plan_type ?? null,
       subPeriodEnd: active?.current_period_end ?? null,
@@ -425,7 +425,7 @@ export async function getStudentDetail(userId: string): Promise<StudentDetail | 
 
   const profileRes = await sb
     .from('profiles')
-    .select('id, full_name, email, avatar_url, role, instagram, facebook, tiktok, youtube, updated_at, stripe_customer_id')
+    .select('id, full_name, email, avatar_url, role, instagram, facebook, tiktok, youtube, created_at, stripe_customer_id')
     .eq('id', userId)
     .maybeSingle()
 
@@ -534,7 +534,7 @@ export async function getStudentDetail(userId: string): Promise<StudentDetail | 
       facebook: profileRes.data.facebook as string | null,
       tiktok: profileRes.data.tiktok as string | null,
       youtube: profileRes.data.youtube as string | null,
-      created_at: profileRes.data.updated_at as string,
+      created_at: profileRes.data.created_at as string,
       stripe_customer_id: profileRes.data.stripe_customer_id as string | null,
     },
     subscription: sub ?? null,
@@ -618,13 +618,13 @@ export async function getStatsSignupsByMonth(range: Range): Promise<CountMonthRo
   const { groupByMonth } = await import('@/utils/admin/metrics')
   const since = rangeStartIso(range)
 
-  let q = sb.from('profiles').select('updated_at')
-  if (since) q = q.gte('updated_at', since)
+  let q = sb.from('profiles').select('created_at')
+  if (since) q = q.gte('created_at', since)
   const { data } = await q
 
   return groupByMonth(
-    (data ?? []) as { updated_at: string }[],
-    r => r.updated_at,
+    (data ?? []) as { created_at: string }[],
+    r => r.created_at,
     () => 1,
   )
 }
