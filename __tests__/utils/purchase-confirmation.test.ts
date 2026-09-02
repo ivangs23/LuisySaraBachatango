@@ -48,6 +48,21 @@ describe('sendPurchaseConfirmation', () => {
     // La línea de vista previa de la bandeja va oculta en el cuerpo.
     expect(body.html).toMatch(/max-height:0;overflow:hidden/)
   })
+  it('points the logo at the public domain even if BASE_URL is a dev origin', async () => {
+    // Un cliente de correo no tiene localhost: si el logo colgara de
+    // NEXT_PUBLIC_BASE_URL y ese valor apuntara a desarrollo, la imagen se
+    // rompería en la bandeja de todos los compradores sin aviso. Pasó en una
+    // prueba real, así que se fija aquí.
+    vi.resetModules()
+    process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000'
+    const { sendPurchaseConfirmation: fresco } = await import('@/utils/email/purchase-confirmation')
+    await fresco({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    const src = body.html.match(/<img src="([^"]+)"/)?.[1]
+    expect(src).toBe('https://luisysarabachatango.com/icon.png')
+    expect(src).not.toContain('localhost')
+    delete process.env.NEXT_PUBLIC_BASE_URL
+  })
   it('identifies the sender in the footer, as commercial email requires', async () => {
     await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
     const body = JSON.parse(fetchMock.mock.calls[0][1].body)
