@@ -134,6 +134,33 @@ Verificado tras aplicar: 4/3/3 filas, los 6 idiomas presentes, cifras guardadas
 
 ---
 
+## Presencia en vivo — septiembre 2026 · ✅ APLICADA (2026-09-02)
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_09_online_pings.sql` | Tabla `online_pings` (`visitor_hash` como PK + `last_seen`), índice por `last_seen`, y RLS: solo admin lee (vía `public.is_admin()`), nadie inserta ni actualiza con la anon key. Aditiva e idempotente. | ✅ Aplicada |
+
+Alimenta el contador «Online ahora» del panel (`/admin`). La fila se sobrescribe
+en cada latido, así que la tabla crece con visitantes distintos del día, no con
+el tráfico; el cron `/api/cron/purge-pending` borra lo que lleva más de una hora
+frío.
+
+Reutiliza `LANDING_ANALYTICS_SECRET`: no hace falta ninguna variable nueva. Sin
+ella, `/api/presence` responde 204 y no guarda nada.
+
+Verificado tras aplicar (2026-09-02), con una fila de prueba dentro de la tabla:
+
+| Como `anon` | Resultado |
+|---|---|
+| `select count(*) from online_pings` | `0` — la fila existe y no la ve |
+| `insert into online_pings(...)` | `ERROR 42501: new row violates row-level security policy` |
+| `update online_pings set last_seen = now()` | 0 filas afectadas |
+
+`relrowsecurity = true`, 3 policies. El advisor de seguridad no añadió ningún
+aviso nuevo. La fila de prueba se borró: la tabla quedó vacía.
+
+---
+
 ## Analítica de la landing — agosto 2026 · ✅ APLICADA (2026-08-13)
 
 | # | Fichero | Qué hace | Estado |

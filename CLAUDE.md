@@ -80,6 +80,7 @@ All translations live in `utils/dictionaries.ts` as a single typed object with k
 | `lesson_progress` | Tracks completed lessons per user |
 | `notifications` | In-app notifications (e.g., graded assignment) |
 | `posts` / `comments` | Community forum |
+| `online_pings` | Live presence heartbeats; one row per ephemeral `visitor_hash`, read by admins only to render the "Online ahora" counter |
 
 SQL migration files are in `supabase/`. The canonical schema is `supabase/schema.sql` with additive patches in other files (e.g., `rbac_setup.sql`, `course_types.sql`). **See [supabase/MIGRATIONS.md](supabase/MIGRATIONS.md) for the apply order and which legacy files are dangerous to re-run** — some (`rbac_setup.sql`, `events.sql`, `full_setup.sql`) reopen hardened policies if replayed over a hardened DB.
 
