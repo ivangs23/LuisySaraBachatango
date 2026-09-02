@@ -6,6 +6,8 @@ import { isTestPurchaseMode } from '@/utils/demo/test-mode';
 import { maskEmail } from '@/utils/sanitize';
 import { provisionFromPending } from '@/utils/checkout/provision-registration';
 import styles from './gracias.module.css';
+import { alertaCritica } from '@/utils/alerta'
+
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com';
 
@@ -98,13 +100,17 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
             console.warn('[gracias] pago sin acceso concedido, aprovisionando desde la página: %s', session.id);
             const r = await provisionFromPending(session, admin);
             if (!r.ok) {
-              console.error('[gracias] NO se pudo aprovisionar %s: %s', session.id, r.reason);
+              alertaCritica('Pago sin acceso: la reparación desde /gracias también falló', {
+                sesion: session.id, motivo: r.reason,
+              });
             }
           }
         } catch (e) {
           // Nunca romper la página de gracias: quien ha pagado debe ver su
           // confirmación aunque la reparación falle.
-          console.error('[gracias] fallo aprovisionando %s: %s', session.id, (e as Error).message);
+          alertaCritica('Pago sin acceso: excepción reparando desde /gracias', {
+            sesion: session.id, motivo: (e as Error).message,
+          });
         }
       }
 

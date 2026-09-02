@@ -324,6 +324,8 @@ export const it: Dictionary = {
   },
   errors: {
     invalid_credentials: "Credenziali errate. Controlla la tua email e la password.",
+    email_not_confirmed: "La tua email non è ancora confermata. Controlla la posta (e lo spam), oppure chiedici di inviarla di nuovo.",
+    resend_confirmation: "Invia di nuovo l'email di conferma",
     signup_failed: "Impossibile creare l'account. Riprova.",
     invalid_email: "Email non valida.",
     password_too_short: "La password deve contenere almeno 8 caratteri.",

@@ -395,6 +395,8 @@ export const es = {
   },
   errors: {
     invalid_credentials: "Credenciales incorrectas. Comprueba tu email y contraseña.",
+    email_not_confirmed: "Tu email aún no está confirmado. Revisa tu bandeja (y el spam) o pídenos otro correo de confirmación.",
+    resend_confirmation: "Reenviar correo de confirmación",
     signup_failed: "Error al crear la cuenta. Inténtalo de nuevo.",
     invalid_email: "Email no válido.",
     password_too_short: "La contraseña debe tener al menos 8 caracteres.",

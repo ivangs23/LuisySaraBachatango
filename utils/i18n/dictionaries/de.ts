@@ -324,6 +324,8 @@ export const de: Dictionary = {
   },
   errors: {
     invalid_credentials: "Falsche Anmeldedaten. Überprüfe deine E-Mail und dein Passwort.",
+    email_not_confirmed: "Deine E-Mail ist noch nicht bestätigt. Sieh in deinem Posteingang (und im Spam) nach, oder fordere die Bestätigung erneut an.",
+    resend_confirmation: "Bestätigungsmail erneut senden",
     signup_failed: "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
     invalid_email: "Ungültige E-Mail.",
     password_too_short: "Das Passwort muss mindestens 8 Zeichen haben.",
