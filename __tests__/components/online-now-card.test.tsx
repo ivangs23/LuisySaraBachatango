@@ -36,6 +36,41 @@ describe('OnlineNowCard', () => {
     expect(screen.getByText('3')).toBeInTheDocument()
   })
 
+  /**
+   * Sentry recogió esto en producción como `TypeError: Failed to fetch` en
+   * /admin, sin capturar, con la traza en `fetchServerAction` de Next: la red se
+   * cae o el móvil duerme la pestaña, la llamada a la server action se rechaza y
+   * nadie la atrapa. La acción devuelve null ante un error de servidor, pero un
+   * fallo de TRANSPORTE revienta antes de llegar a ejecutarse.
+   */
+  it('no deja escapar el rechazo cuando la red falla', async () => {
+    const unhandled = vi.fn()
+    process.on('unhandledRejection', unhandled)
+
+    render(<OnlineNowCard initial={3} />)
+    fetchOnlineNow.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await act(async () => { vi.advanceTimersByTime(POLL_MS) })
+
+    // Node solo emite `unhandledRejection` en un macrotask real, y los timers
+    // falsos no dan ninguno: hay que soltarlos para que llegue a notificarlo.
+    vi.useRealTimers()
+    await new Promise(r => setTimeout(r, 10))
+
+    process.off('unhandledRejection', unhandled)
+    expect(unhandled).not.toHaveBeenCalled()
+    expect(screen.getByText('3')).toBeInTheDocument()
+  })
+
+  it('sigue consultando después de un fallo de red', async () => {
+    render(<OnlineNowCard initial={3} />)
+    fetchOnlineNow.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await act(async () => { vi.advanceTimersByTime(POLL_MS) })
+
+    fetchOnlineNow.mockResolvedValueOnce(7)
+    await act(async () => { vi.advanceTimersByTime(POLL_MS) })
+    expect(screen.getByText('7')).toBeInTheDocument()
+  })
+
   it('no sigue consultando tras desmontar', async () => {
     const { unmount } = render(<OnlineNowCard initial={3} />)
     unmount()
