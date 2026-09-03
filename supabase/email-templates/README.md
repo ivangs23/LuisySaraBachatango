@@ -65,13 +65,40 @@ destrocen, y la URL visible al final para quien no pueda pulsar el botón.
 
 ## Limitaciones que no se arreglan aquí
 
-**Sin texto plano.** El editor de Supabase solo acepta un cuerpo HTML, así que
-estos correos salen sin parte `text/plain` — justo lo que
-`utils/email/layout.ts` evita para el resto. Es una limitación de Supabase, no
-del HTML.
-
 **Un solo idioma.** El sitio habla seis; estas plantillas hablan español.
 Supabase no conoce la preferencia de idioma del destinatario.
+
+**El asunto se edita aparte.** Está en su propio campo del dashboard, no en el
+HTML: pegar la plantilla no lo cambia. Pasó la primera vez —cuerpo en español y
+asunto en el `Reset Your Password` de fábrica—, y esa frase es de las más
+gastadas en phishing.
+
+## Sí llevan texto plano
+
+Aunque el editor de Supabase solo acepte un cuerpo HTML, el correo **no** sale
+sin versión en texto: su cliente SMTP (Nodemailer) la genera desde el HTML y
+manda un `multipart/alternative`. Comprobado en las cabeceras de un envío real
+del 2026-09-03:
+
+    Content-Type: multipart/alternative; boundary="--_NmP-4d63114ad0b75df8-Part_1"
+      → Content-Type: text/plain; charset=utf-8
+      → Content-Type: text/html;  charset=utf-8
+
+Queda escrito porque lo contrario parece de sentido común y llevó a diagnosticar
+mal la entrega en spam. La versión en texto sale correcta, con los enlaces entre
+corchetes, así que la maquetación con tablas y el orden del contenido también
+mandan sobre cómo se lee ese texto.
+
+## Sobre la entrega
+
+Un envío real a Outlook el 2026-09-03 pasó **todo**: `spf=pass`, `dkim=pass`
+(por `luisysarabachatango.com` y por `amazonses.com`), `dmarc=pass` y
+`compauth=pass reason=100`. Aun así aterrizó en no deseado con `SCL 5`.
+
+O sea: la autenticación y el DNS están bien y no hay nada que tocar ahí. Lo que
+queda es reputación —dominio joven, volumen bajo, IP compartida de Amazon SES— y
+el filtro concreto del destinatario. Antes de tocar DNS por una queja de spam,
+mirar las cabeceras: si `dmarc=pass`, el problema no está en este repo.
 
 Las dos se resuelven igual: con un **Send Email Hook**, que deja que la
 aplicación envíe estos correos por Resend usando `utils/email/layout.ts`

@@ -34,3 +34,40 @@ export function alertaCritica(
     // Sentry caído o sin configurar: el console.error de arriba ya dejó rastro.
   }
 }
+
+/**
+ * Deja constancia de un enlace por email que no se pudo canjear.
+ *
+ * Va en `warning` y no en `error`, y con su propia `seccion`, por dos razones
+ * opuestas que hay que respetar a la vez.
+ *
+ * Un enlace caducado es comportamiento NORMAL: la gente abre el correo al día
+ * siguiente. Tratarlo como error llenaría Sentry de ruido y enterraría los
+ * avisos de `alertaCritica`, que es justo lo que ese helper existe para evitar.
+ *
+ * Pero el silencio absoluto sale caro: el restablecimiento de contraseña estuvo
+ * roto desde que existía —3 intentos, 0 completados— y nadie pudo verlo porque
+ * los dos routes de auth se tragaban el error. Con esto, «300 fallos esta
+ * semana, todos `flow_state_expired`» se ve de un vistazo, que es la señal que
+ * habría destapado el fallo en su primer día.
+ *
+ * Nunca recibe el token: el contexto lo arma quien llama, y solo con el tipo de
+ * enlace y el código del error.
+ *
+ * Nunca lanza: avisar de un problema no puede provocar otro.
+ */
+export function avisoAuth(
+  mensaje: string,
+  contexto: Record<string, string | number | boolean | null | undefined> = {},
+): void {
+  console.warn(`[auth] ${mensaje}`, contexto)
+  try {
+    Sentry.captureMessage(mensaje, {
+      level: 'warning',
+      tags: { seccion: 'auth' },
+      extra: contexto,
+    })
+  } catch {
+    // Sentry caído o sin configurar: el console.warn de arriba ya dejó rastro.
+  }
+}

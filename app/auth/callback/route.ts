@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 // The client you created from the Server-Side Auth instructions
 import { createClient } from '@/utils/supabase/server'
 import { isSafeRedirect } from './redirect'
+import { avisoAuth } from '@/utils/alerta'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -14,6 +15,16 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      // Sin esto no había forma de ver que el canje fallaba. El
+      // restablecimiento de contraseña estuvo roto desde que existía y el
+      // único rastro quedaba en el navegador de quien se quedaba fuera.
+      avisoAuth('callback: exchangeCodeForSession rechazó el código', {
+        codigo: error.code,
+        estado: error.status,
+        destino: next,
+      })
+    }
     if (!error) {
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'
@@ -26,6 +37,14 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}${next}`)
       }
     }
+  }
+
+  if (!code) {
+    // Un enlace que llega aquí sin `code` no es un despiste del usuario: o la
+    // plantilla apunta al sitio equivocado, o Supabase respondió por fragmento
+    // de URL (los enlaces generados con la Admin API no llevan PKCE). Merece
+    // quedar registrado, porque desde el servidor las dos cosas son invisibles.
+    avisoAuth('callback: enlace sin parámetro code', { destino: next })
   }
 
   // return the user to an error page with instructions
