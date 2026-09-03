@@ -260,6 +260,20 @@ export const de: Dictionary = {
     panelFeatures: ["Link für begrenzte Zeit gültig", "Dein Konto und deine Kurse bleiben unversehrt", "Falls er nicht ankommt, überprüfe deinen Spam-Ordner"],
     cardEyebrow: "WIEDERHERSTELLEN"
   },
+  authCodeError: {
+    title: "Dieser Link gilt nicht mehr",
+    subtitle: "Zugangslinks laufen ab und lassen sich nur einmal verwenden.",
+    body: "Fordere einen neuen an und öffne ihn gleich nach Erhalt. Dein Konto und deine Kurse bleiben unberührt.",
+    requestNew: "Neuen Link anfordern",
+    backToLogin: "Zurück zur Anmeldung",
+    panelEyebrow: "LINK ABGELAUFEN",
+    panelTitle: "Du hast nichts ",
+    panelTitleEmphasis: "verloren",
+    panelTitleSuffix: ".",
+    panelLead: "Der Link ist abgelaufen oder wurde bereits benutzt. Fordere einen neuen an und öffne ihn diesmal zügig.",
+    panelFeatures: ["Konto und Fortschritt sind unverändert", "Der neue Link geht an dieselbe Adresse", "Öffne ihn bald – er läuft schnell ab"],
+    cardEyebrow: "LINK ABGELAUFEN"
+  },
   resetPassword: {
     title: "Passwort Festlegen",
     subtitle: "Erstelle ein neues Passwort für den Zugang zu deinem Konto",

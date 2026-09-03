@@ -332,6 +332,20 @@ export const en: Dictionary = {
     panelFeatures: ["Link valid for a limited time", "Your account and classes remain intact", "If it doesn't arrive, check your spam folder"],
     cardEyebrow: "RECOVER"
   },
+  authCodeError: {
+    title: "This link no longer works",
+    subtitle: "Access links expire, and each one can only be used once.",
+    body: "Ask for a new one and open it as soon as it arrives. Your account and your classes are untouched.",
+    requestNew: "Request a new link",
+    backToLogin: "Back to sign in",
+    panelEyebrow: "LINK EXPIRED",
+    panelTitle: "You haven't ",
+    panelTitleEmphasis: "lost",
+    panelTitleSuffix: " anything.",
+    panelLead: "The link expired or had already been used. Ask for another one and open it promptly this time.",
+    panelFeatures: ["Your account and progress are still there", "The new link goes to the same address", "Open it soon — it expires quickly"],
+    cardEyebrow: "LINK EXPIRED"
+  },
   resetPassword: {
     title: "Set Your Password",
     subtitle: "Create a new password to access your account",

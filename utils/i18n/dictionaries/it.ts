@@ -260,6 +260,20 @@ export const it: Dictionary = {
     panelFeatures: ["Link valido per un tempo limitato", "Il tuo account e le tue lezioni rimangono intatti", "Se non arriva, controlla la cartella spam"],
     cardEyebrow: "RECUPERA"
   },
+  authCodeError: {
+    title: "Questo link non è più valido",
+    subtitle: "I link di accesso scadono e si possono usare una sola volta.",
+    body: "Chiedine uno nuovo e aprilo appena arriva. Il tuo account e i tuoi corsi sono intatti.",
+    requestNew: "Richiedi un nuovo link",
+    backToLogin: "Torna all'accesso",
+    panelEyebrow: "LINK SCADUTO",
+    panelTitle: "Non hai perso ",
+    panelTitleEmphasis: "niente",
+    panelTitleSuffix: ".",
+    panelLead: "Il link è scaduto o era già stato usato. Chiedine un altro e questa volta aprilo subito.",
+    panelFeatures: ["Account e progressi sono al loro posto", "Il nuovo link arriva allo stesso indirizzo", "Aprilo presto: scade in fretta"],
+    cardEyebrow: "LINK SCADUTO"
+  },
   resetPassword: {
     title: "Imposta la Password",
     subtitle: "Crea una nuova password per accedere al tuo account",

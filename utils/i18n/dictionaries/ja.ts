@@ -260,6 +260,20 @@ export const ja: Dictionary = {
     panelFeatures: ["リンクは限られた時間有効です", "アカウントとクラスは無傷のままです", "届かない場合はスパムフォルダを確認してください"],
     cardEyebrow: "回復する"
   },
+  authCodeError: {
+    title: "このリンクは使えません",
+    subtitle: "アクセスリンクには有効期限があり、一度しか使えません。",
+    body: "新しいリンクを申請し、届いたらすぐに開いてください。アカウントとレッスンはそのままです。",
+    requestNew: "新しいリンクを申請",
+    backToLogin: "ログインに戻る",
+    panelEyebrow: "リンクの有効期限切れ",
+    panelTitle: "何も",
+    panelTitleEmphasis: "失われて",
+    panelTitleSuffix: "いません。",
+    panelLead: "リンクの有効期限が切れたか、すでに使用されています。もう一度申請して、今度は早めに開いてください。",
+    panelFeatures: ["アカウントと進捗はそのまま", "新しいリンクは同じアドレスに届きます", "有効期限が短いので早めに開いてください"],
+    cardEyebrow: "リンクの有効期限切れ"
+  },
   resetPassword: {
     title: "パスワードを設定",
     subtitle: "アカウントにアクセスするための新しいパスワードを作成してください",

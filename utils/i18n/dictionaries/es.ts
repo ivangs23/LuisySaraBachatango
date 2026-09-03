@@ -331,6 +331,20 @@ export const es = {
     panelFeatures: ["Enlace válido durante un tiempo limitado", "Tu cuenta y tus clases siguen intactas", "Si no llega, revisa la carpeta de spam"],
     cardEyebrow: "RECUPERAR"
   },
+  authCodeError: {
+    title: "Este enlace ya no vale",
+    subtitle: "Los enlaces de acceso caducan y solo se pueden usar una vez.",
+    body: "Pide uno nuevo y ábrelo en cuanto llegue. Tu cuenta y tus clases están intactas.",
+    requestNew: "Pedir un enlace nuevo",
+    backToLogin: "Volver al inicio de sesión",
+    panelEyebrow: "ENLACE CADUCADO",
+    panelTitle: "No has ",
+    panelTitleEmphasis: "perdido",
+    panelTitleSuffix: " nada.",
+    panelLead: "El enlace ha caducado o ya se había usado. Se arregla pidiendo otro, y esta vez abriéndolo cuanto antes.",
+    panelFeatures: ["Tu cuenta y tu progreso siguen ahí", "El enlace nuevo llega al mismo correo", "Ábrelo pronto: caduca en poco tiempo"],
+    cardEyebrow: "ENLACE CADUCADO"
+  },
   resetPassword: {
     title: "Fija tu Contraseña",
     subtitle: "Crea una nueva contraseña para acceder a tu cuenta",

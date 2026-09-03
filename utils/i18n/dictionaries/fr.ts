@@ -260,6 +260,20 @@ export const fr: Dictionary = {
     panelFeatures: ["Lien valide pendant un temps limité", "Votre compte et vos cours restent intacts", "S'il n'arrive pas, vérifiez vos spams"],
     cardEyebrow: "RÉCUPÉRER"
   },
+  authCodeError: {
+    title: "Ce lien n'est plus valable",
+    subtitle: "Les liens d'accès expirent et ne peuvent servir qu'une fois.",
+    body: "Demandez-en un nouveau et ouvrez-le dès son arrivée. Votre compte et vos cours sont intacts.",
+    requestNew: "Demander un nouveau lien",
+    backToLogin: "Retour à la connexion",
+    panelEyebrow: "LIEN EXPIRÉ",
+    panelTitle: "Vous n'avez rien ",
+    panelTitleEmphasis: "perdu",
+    panelTitleSuffix: ".",
+    panelLead: "Le lien a expiré ou avait déjà été utilisé. Demandez-en un autre et ouvrez-le rapidement cette fois.",
+    panelFeatures: ["Votre compte et votre progression sont intacts", "Le nouveau lien arrive à la même adresse", "Ouvrez-le vite : il expire rapidement"],
+    cardEyebrow: "LIEN EXPIRÉ"
+  },
   resetPassword: {
     title: "Définissez votre mot de passe",
     subtitle: "Créez un nouveau mot de passe pour accéder à votre compte",
