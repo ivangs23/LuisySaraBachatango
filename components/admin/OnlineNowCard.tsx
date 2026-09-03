@@ -21,9 +21,17 @@ export default function OnlineNowCard({ initial }: { initial: number }) {
   useEffect(() => {
     let alive = true
 
-    const timer = setInterval(async () => {
-      const next = await fetchOnlineNow()
-      if (alive && next !== null) setCount(next)
+    const timer = setInterval(() => {
+      // El `.catch` no es decorativo. `fetchOnlineNow()` ya devuelve null ante un
+      // error de servidor, pero un fallo de TRANSPORTE —red caída, móvil que
+      // duerme la pestaña— rechaza la llamada antes de que llegue a ejecutarse.
+      // Sin esto, cada fallo dejaba escapar un rechazo sin capturar y Sentry lo
+      // registraba como `TypeError: Failed to fetch` en /admin. Un contador que
+      // se refresca solo no puede ensuciar el canal donde vigilas los cobros.
+      // El siguiente tick reintenta; no hace falta más.
+      fetchOnlineNow()
+        .then((next) => { if (alive && next !== null) setCount(next) })
+        .catch(() => {})
     }, POLL_MS)
 
     return () => {
