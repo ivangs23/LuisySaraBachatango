@@ -1,3 +1,6 @@
+const notifyMock = vi.fn().mockResolvedValue(undefined)
+vi.mock('@/utils/notifications/server', () => ({ notify: (...a: unknown[]) => notifyMock(...a) }))
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { hasCourseAccess } from '@/utils/auth/course-access'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
@@ -547,14 +550,13 @@ describe('gradeSubmission', () => {
     expect(result).toEqual({ error: 'submission_not_found' })
   })
 
-  // Builds a fake admin client whose from() routes 'submissions' to the given
-  // update mock and anything else (e.g. 'notifications') to a no-op upsert mock,
-  // mirroring gradeSubmission's move of the grade write to the service-role client.
+  // Cliente admin falso: from() solo tiene que servir a 'submissions'. El aviso
+  // al alumno ya NO se escribe aquí a mano — va por notify(), que está mockeado
+  // arriba. Antes este doble enrutaba 'notifications' a un upsert que no hacía
+  // nada, y con eso el test daba por buena una escritura que en producción
+  // fallaba SIEMPRE con 42P10.
   function makeAdminClient(updateMock: ReturnType<typeof vi.fn>) {
-    const upsertMock = vi.fn().mockResolvedValue({ error: null })
-    const adminFromMock = vi.fn((table: string) =>
-      table === 'submissions' ? { update: updateMock } : { upsert: upsertMock }
-    )
+    const adminFromMock = vi.fn(() => ({ update: updateMock }))
     return { from: adminFromMock } as unknown as ReturnType<typeof createSupabaseAdmin>
   }
 
@@ -576,6 +578,15 @@ describe('gradeSubmission', () => {
     }))
     expect(eqMock).toHaveBeenCalledWith('id', 's1')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/courses/c1/l1/submissions')
+    // El alumno recibe el aviso por la RPC, que sí respeta el índice parcial.
+    expect(notifyMock).toHaveBeenCalledWith({
+      recipientId: 'u1',
+      actorId: 'admin-1',
+      type: 'assignment_graded',
+      entityType: 'submission',
+      entityId: 's1',
+      link: '/courses/c1/l1',
+    })
     // Ownership check was the only from() call on the user-session client.
     expect(fromMock).toHaveBeenCalledTimes(1)
   })

@@ -1,6 +1,7 @@
 // utils/rate-limit.ts
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { alertaCritica } from '@/utils/alerta'
 
 export type RateLimitResult = { ok: boolean; retryAfter: number }
 
@@ -64,6 +65,15 @@ export async function rateLimit(
     }
   } catch (err) {
     console.error('[rate-limit] Upstash error', err)
+    // Fallar cerrado en producción convierte una caída de Upstash en una caída
+    // del sitio: tumba login, alta, los dos checkouts y /monitoring, que es el
+    // túnel por el que Sentry recibe los errores de navegador. Es decir, el
+    // incidente apaga a la vez el servicio y media capacidad de verlo.
+    //
+    // Con freno a propósito: este catch se ejecuta en CADA petición mientras
+    // dure el corte. Sin él, el aviso se convertiría en la inundación que
+    // `alertaCritica` existe para evitar.
+    avisarCorteDeLimitador(err)
     if (process.env.NODE_ENV === 'production') {
       // Fail closed in production rather than serving requests without rate
       // limiting at scale (the local Map fallback is per-instance only on
@@ -72,6 +82,20 @@ export async function rateLimit(
     }
     return localRateLimit(key, limit, windowMs)
   }
+}
+
+/** Una alerta cada 5 minutos como mucho, por instancia. */
+const INTERVALO_AVISO_MS = 5 * 60 * 1000
+let ultimoAviso = 0
+
+function avisarCorteDeLimitador(err: unknown): void {
+  const ahora = Date.now()
+  if (ahora - ultimoAviso < INTERVALO_AVISO_MS) return
+  ultimoAviso = ahora
+  alertaCritica('Limitador caído: en producción esto deniega login, alta y checkout', {
+    mensaje: err instanceof Error ? err.message : String(err),
+    fallaCerrado: process.env.NODE_ENV === 'production',
+  })
 }
 
 export function rateLimitKey(parts: (string | null | undefined)[]): string {

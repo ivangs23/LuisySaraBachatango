@@ -193,6 +193,16 @@ export async function provisionFromPending(
     // success, but flag distinctively as a refund candidate for ops. No email.
     if (purchaseError.code === '23505') {
       console.error('[double-charge candidate] session=%s user=%s course=%s', session.id, userId, courseId)
+      // Devolver ok:true es correcto —no hay segundo producto que entregar y
+      // reintentar no arregla nada—, pero alguien ha PAGADO DOS VECES. Sin este
+      // aviso el único rastro era una línea en los logs de Vercel, que es donde
+      // murió el fallo del restablecimiento durante meses. Aquí además hay que
+      // devolver dinero, y eso no lo hace el código.
+      alertaCritica('Cobro duplicado: el comprador ya tenía el curso, hay que reembolsar', {
+        sessionId: session.id,
+        userId: userId as string,
+        courseId,
+      })
       await admin.from('pending_registrations').delete().eq('id', pendingId)
       return { ok: true, userId: userId as string, created }
     }

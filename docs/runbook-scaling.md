@@ -23,9 +23,14 @@ responding when something degrades.
 ### Upstash — https://console.upstash.com
 - **Commands/sec**: <100 normal. Alert at 500/sec sustained.
 - **Bandwidth**: pay-per-use; check the daily total in the dashboard.
-- If Upstash is unreachable, `utils/rate-limit.ts` falls back to local
-  in-memory limiting. Rate limiting becomes per-instance (effectively
-  off at scale) but no requests fail.
+- If Upstash is unreachable **in production**, `utils/rate-limit.ts` fails
+  **closed**: it returns `ok: false` and the request is denied. That takes down
+  login, signup, both checkout paths, contact, newsletter and `/monitoring` —
+  the Sentry browser tunnel — so the incident disables the site and half the
+  means of seeing it at the same time. `alertaCritica` fires (throttled to one
+  alert per 5 minutes per instance) under `seccion: aprovisionamiento`.
+- The in-memory fallback applies **only outside production**. It was never the
+  production behaviour; this document said otherwise until 2026-09-04.
 
 ### Vercel — https://vercel.com/dashboard
 - **Function concurrency**: Pro plan default is 1000 concurrent invocations
@@ -38,10 +43,11 @@ responding when something degrades.
 | Symptom | Likely cause | First action |
 |---|---|---|
 | 500s on `/api/checkout` | Stripe rate limit (429) | Check Stripe dashboard → API logs. SDK now retries 3× automatically; if still failing, the burst exceeds Stripe's per-account limit. |
-| 500s on Stripe webhook | Idempotent write failed or Stripe retry storm | Verify the event in Stripe → Webhooks → Recent deliveries. The webhook always returns 200 on guard violations; a 500 means a real DB error — check Sentry. |
+| 500s on Stripe webhook | Idempotent write failed or Stripe retry storm | Verify the event in Stripe → Webhooks → Recent deliveries. The webhook always returns 200 on guard violations; a 500 means a real DB error. It now raises `alertaCritica` before returning, so it IS in Sentry — until 2026-09-04 it was `console.error` only and Sentry was empty (a returned 500 is not a thrown error, so `captureRequestError` never saw it). |
 | Slow `/courses/[id]/[lessonId]` | DB connection pool saturation OR cold start | Check Supabase DB connections. If <40, it's cold start (Mux JWT signing on uncached paths). If ≥50, scale up. |
 | Bell never updates | Realtime down OR client did not subscribe | Devtools → WS → check subscription. Server-side: confirm `notifications` is in `supabase_realtime` publication. Fallback poll fires every 5min anyway. |
-| Rate limit not blocking abuse | Upstash unreachable, fallback active | Upstash status page; project env vars set in Vercel. Redeploy with env to refresh runtime. |
+| Login/signup/checkout all rejected at once | Upstash unreachable → limiter fails closed | Upstash status page; check `UPSTASH_REDIS_REST_*` in Vercel. A rotated or revoked token fails fast and hits this branch. Look for `Limitador caído` in Sentry. |
+| Rate limit not blocking abuse | Only possible outside production (in-memory fallback is per-instance) | Confirm the env vars are actually set for the Production environment. |
 | Homepage slow on first hit | ISR cache miss (first request after revalidate) | Expected behavior. Subsequent hits within 5min are CDN-cached. |
 
 ## Upgrade procedures

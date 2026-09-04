@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
+import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { getCurrentUser } from '@/utils/supabase/get-user'
 import { safeJsonLd } from '@/utils/jsonld'
 import { notFound } from 'next/navigation'
@@ -94,12 +95,23 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   const [
     { data: lessons, error: lessonsError },
     { data: profile },
+    { count: lessonCount },
   ] = await Promise.all([
     supabase.from('lessons')
       .select('id, title, order, release_date, parent_lesson_id')
       .eq('course_id', params.courseId)
       .order('order', { ascending: true }),
     supabase.from('profiles').select('role').eq('id', user.id).single(),
+    // Cuántas lecciones tiene el curso DE VERDAD. La consulta de arriba pasa por
+    // la RLS del paywall, que a quien no ha comprado le deja solo las gratuitas
+    // — y el héroe llegaba a anunciar «0 LECCIONES» encima del botón de comprar,
+    // mientras /curso-bachatango mostraba el número correcto del mismo curso
+    // porque su temario se lee con el service role (utils/courses/curriculum.ts).
+    // Solo sale un número: ningún dato de lección cruza este límite.
+    createSupabaseAdmin()
+      .from('lessons')
+      .select('id', { count: 'exact', head: true })
+      .eq('course_id', params.courseId),
   ])
 
   if (lessonsError) console.error('Error fetching lessons:', lessonsError)
@@ -165,6 +177,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
           price_eur: course.price_eur ?? null,
         }}
         lessons={lessons ?? []}
+        lessonCount={lessonCount ?? (lessons?.length ?? 0)}
         hasAccess={hasAccess}
         isAdmin={isAdmin}
         completedLessonIds={completedLessonIds}

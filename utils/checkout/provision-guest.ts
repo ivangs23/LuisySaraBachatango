@@ -1,5 +1,6 @@
 import type Stripe from 'stripe';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { alertaCritica } from '@/utils/alerta';
 
 export type ProvisionResult = { ok: true; userId: string } | { ok: false; reason: string };
 
@@ -80,7 +81,16 @@ export async function provisionGuestPurchase(
     // that constraint instead of the onConflict target above — the user
     // already owns the course, so treat it as idempotent success rather than
     // failing the webhook and triggering a Stripe retry storm.
-    if (purchaseError.code === '23505') return { ok: true, userId };
+    if (purchaseError.code === '23505') {
+      // Mismo caso que en provision-registration: pago repetido de un curso que
+      // ya se tenía. Aquí no había ni siquiera un console.error.
+      alertaCritica('Cobro duplicado: el comprador ya tenía el curso, hay que reembolsar', {
+        sessionId: session.id,
+        userId,
+        courseId,
+      });
+      return { ok: true, userId };
+    }
     return { ok: false, reason: `purchase-error:${purchaseError.message}` };
   }
 

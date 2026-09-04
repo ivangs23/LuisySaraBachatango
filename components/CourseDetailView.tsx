@@ -48,7 +48,17 @@ type LessonNode = CourseDetailLesson & {
 
 type Props = {
   course: CourseDetailCourse;
+  /** Lo que ESTE usuario puede ver: la RLS lo filtra a las gratuitas si no ha comprado. */
   lessons: CourseDetailLesson[];
+  /**
+   * Cuántas lecciones tiene el curso de verdad, contadas sin RLS.
+   *
+   * No se puede derivar de `lessons`: para quien no ha comprado esa lista llega
+   * filtrada, y el héroe llegó a anunciar «0 LECCIONES» encima del botón de
+   * comprar. El progreso sí usa `lessons`, que es lo correcto — solo se puede
+   * completar lo que se ve.
+   */
+  lessonCount: number;
   hasAccess: boolean;
   isAdmin: boolean;
   completedLessonIds: string[];
@@ -114,6 +124,7 @@ const BENEFITS = [
 export default function CourseDetailView({
   course,
   lessons,
+  lessonCount,
   hasAccess,
   isAdmin,
   completedLessonIds,
@@ -210,9 +221,9 @@ export default function CourseDetailView({
           <Reveal delay={0.28}>
             <div className={styles.heroStats}>
               <div className={styles.heroStat}>
-                <span className={styles.heroStatValue}>{lessons.length}</span>
+                <span className={styles.heroStatValue}>{lessonCount}</span>
                 <span className={styles.heroStatLabel}>
-                  {lessons.length === 1 ? 'LECCIÓN' : 'LECCIONES'}
+                  {lessonCount === 1 ? 'LECCIÓN' : 'LECCIONES'}
                 </span>
               </div>
 

@@ -133,8 +133,28 @@ export async function POST(req: Request) {
 
         // 23505 = UNIQUE(user_id,course_id): el usuario ya posee el curso →
         // idempotente (200), no 500 (que provocaría reintentos infinitos de Stripe).
+        if (error?.code === '23505') {
+          alertaCritica('Cobro duplicado: el comprador ya tenía el curso, hay que reembolsar', {
+            sessionId: session.id,
+            userId,
+            courseId,
+          });
+        }
         if (error && error.code !== '23505') {
           console.error('Error saving course purchase:', error);
+          // Este camino NO se autorrepara: /api/checkout manda al comprador a
+          // /profile, y profile/actions.ts se niega a aprovisionar a propósito
+          // ("el webhook es la única fuente de verdad"). Stripe reintenta unos
+          // días y se rinde. Sin este aviso, un comprador se queda sin acceso
+          // para siempre y el 500 no llega ni a Sentry: es una respuesta
+          // devuelta, no una excepción, así que captureRequestError no la ve.
+          alertaCritica('Compra pagada que no se pudo guardar: el comprador se queda sin acceso', {
+            sessionId: session.id,
+            userId,
+            courseId,
+            codigo: error.code,
+            mensaje: error.message,
+          });
           return new NextResponse('Database Error', { status: 500 });
         }
       }
