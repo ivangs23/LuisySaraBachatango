@@ -22,6 +22,17 @@ function startOfMonthUTC(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1))
 }
 
+/**
+ * Toda consulta de DINERO filtra `refunded_at` e `is_demo`.
+ *
+ * Una compra demo escribe el PRECIO COMPLETO (`app/api/checkout/route.ts:61`)
+ * con `is_demo: true`, así que una sola prueba desde /admin/pruebas inflaba los
+ * ingresos de por vida; y un reembolso seguía contando como venta para siempre.
+ * Las rutas de ACCESO ya filtraban `refunded_at`; las de reporte no.
+ *
+ * Excepción deliberada: `getStudentDetail` no filtra. Un admin mirando la ficha
+ * de un alumno necesita ver que se le reembolsó.
+ */
 export async function getOverviewKpis(): Promise<OverviewKpis> {
   await requireAdmin()
   const sb = createSupabaseAdmin()
@@ -53,9 +64,11 @@ export async function getOverviewKpis(): Promise<OverviewKpis> {
       .in('status', ['active', 'trialing']),
     sb.from('course_purchases')
       .select('amount_paid')
+      .is('refunded_at', null).eq('is_demo', false)
       .gte('created_at', monthStart),
     sb.from('course_purchases')
       .select('amount_paid')
+      .is('refunded_at', null).eq('is_demo', false)
       .gte('created_at', prevMonthStart)
       .lt('created_at', monthStart),
     sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
@@ -139,6 +152,7 @@ export async function getRecentPayments(limit = 5): Promise<RecentPayment[]> {
   const [purchases, subs] = await Promise.all([
     sb.from('course_purchases')
       .select('user_id, amount_paid, created_at, courses(title), profiles!inner(full_name)')
+      .is('refunded_at', null).eq('is_demo', false)
       .order('created_at', { ascending: false })
       .limit(limit),
     sb.from('subscriptions')
@@ -242,7 +256,7 @@ export async function getRevenueTimeseries(rangeDays: 30 | 90): Promise<RevenueD
   const sinceIso = since.toISOString()
 
   const [purchases, subs] = await Promise.all([
-    sb.from('course_purchases').select('amount_paid, created_at').gte('created_at', sinceIso),
+    sb.from('course_purchases').select('amount_paid, created_at').is('refunded_at', null).eq('is_demo', false).gte('created_at', sinceIso),
     sb.from('subscriptions').select('plan_type, created_at').gte('created_at', sinceIso),
   ])
 
@@ -587,7 +601,7 @@ export async function getStatsIncomeByMonth(range: Range): Promise<IncomeMonthRo
   const { PLAN_PRICES_EUR } = await import('@/utils/admin/plan-prices')
   const since = rangeStartIso(range)
 
-  let pq = sb.from('course_purchases').select('amount_paid, created_at')
+  let pq = sb.from('course_purchases').select('amount_paid, created_at').is('refunded_at', null).eq('is_demo', false)
   let sq = sb.from('subscriptions').select('plan_type, created_at')
   if (since) { pq = pq.gte('created_at', since); sq = sq.gte('created_at', since) }
   const [purchases, subs] = await Promise.all([pq, sq])
@@ -661,7 +675,7 @@ export async function getStatsTopCourses(): Promise<TopCourseRow[]> {
   const sb = createSupabaseAdmin()
 
   const [purchases, progress, courses] = await Promise.all([
-    sb.from('course_purchases').select('course_id'),
+    sb.from('course_purchases').select('course_id').is('refunded_at', null).eq('is_demo', false),
     sb.from('lesson_progress').select('user_id, lessons!inner(course_id)').eq('is_completed', true),
     sb.from('courses').select('id, title'),
   ])
@@ -816,7 +830,7 @@ export async function listCoursesWithStats(): Promise<CourseStatsRow[]> {
   const [coursesRes, lessonsRes, purchasesRes, progressRes] = await Promise.all([
     sb.from('courses').select('id, title, image_url, course_type, is_published'),
     sb.from('lessons').select('id, course_id'),
-    sb.from('course_purchases').select('course_id, user_id, amount_paid'),
+    sb.from('course_purchases').select('course_id, user_id, amount_paid').is('refunded_at', null).eq('is_demo', false),
     sb.from('lesson_progress').select('lesson_id, user_id, is_completed, lessons!inner(course_id)'),
   ])
 
