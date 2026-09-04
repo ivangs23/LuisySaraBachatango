@@ -2,13 +2,20 @@ import { NextResponse } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/server'
 import { isSafeRedirect } from '../callback/redirect'
+import { avisoAuth } from '@/utils/alerta'
 
 /**
  * Tipos de enlace por email que emite este proyecto. Se comprueba contra la
  * lista antes de llamar a Supabase: `type` viene de la URL y acaba dentro de
  * `verifyOtp`, así que no puede pasar en crudo.
+ *
+ * `email` está aquí aunque hoy no se use: es el valor que aparece en la
+ * plantilla de ejemplo de la documentación de Supabase para Confirm signup y
+ * Magic link. Sin él, migrar el alta a esta ruta copiando esa línea mandaría
+ * cada confirmación a la página de error, y el motivo no se vería por ningún
+ * lado.
  */
-const ALLOWED_TYPES = ['recovery', 'invite', 'signup', 'magiclink', 'email_change'] as const
+const ALLOWED_TYPES = ['recovery', 'invite', 'signup', 'magiclink', 'email_change', 'email'] as const
 
 function isAllowedType(value: string | null): value is EmailOtpType {
   return !!value && (ALLOWED_TYPES as readonly string[]).includes(value)
@@ -54,6 +61,17 @@ export async function GET(request: Request): Promise<NextResponse> {
     // La redirección deja el token fuera de la URL: no queda en el historial ni
     // se filtra por el Referer de la página siguiente.
     if (!error) return NextResponse.redirect(`${base}${next}`)
+
+    avisoAuth('confirm: verifyOtp rechazó el enlace', {
+      tipo: type,
+      codigo: error.code,
+      estado: error.status,
+    })
+  } else {
+    avisoAuth('confirm: enlace sin token_hash o con type no permitido', {
+      tipo: type,
+      tokenPresente: !!tokenHash,
+    })
   }
 
   return NextResponse.redirect(`${base}/auth/auth-code-error`)
