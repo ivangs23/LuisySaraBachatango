@@ -15,6 +15,7 @@ import { hashPassword } from '@/utils/checkout/password-hash';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
 import { CURRENT_TERMS_VERSION } from '@/utils/legal/terms-version';
+import { alertaCritica } from '@/utils/alerta';
 
 export async function landingCheckout(formData: FormData): Promise<void> {
   const ip = getClientIp(await headers());
@@ -79,9 +80,17 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { data: course } = await admin
+  const { data: course, error: courseErr } = await admin
     .from('courses').select('title, price_eur').eq('id', courseId).eq('is_published', true).single();
   if (!course || !course.price_eur || course.price_eur <= 0 || course.price_eur > 10000) {
+    // Un curso despublicado por error, un precio a 0 o un fallo de la consulta
+    // dejan la página de venta cobrando a nadie. Se distingue el fallo real de
+    // la ausencia legítima para no alertar cuando el enlace trae un id inventado.
+    if (courseErr) {
+      alertaCritica('Checkout de la landing: no se pudo leer el curso, nadie puede comprar', {
+        courseId, codigo: courseErr.code, mensaje: courseErr.message,
+      });
+    }
     redirect(await back('course'));
   }
   const amountExpected = Math.round(course.price_eur * 100);
@@ -117,7 +126,19 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     })
     .select('id')
     .single();
-  if (pendingErr || !pending) redirect(await back('account_creation_failed'));
+  if (pendingErr || !pending) {
+    // El punto más ciego que tenía el repo: este error se capturaba y se usaba
+    // solo como booleano, así que no llegaba ni a los logs de Vercel. La fila
+    // escribe 17 columnas, y las migraciones se aplican a mano: un despliegue
+    // que adelante a su SQL mata el 100% de las ventas nuevas sin una sola
+    // señal en ninguna parte.
+    alertaCritica('Checkout de la landing: no se pudo crear el registro pendiente, la venta se pierde', {
+      courseId,
+      codigo: pendingErr?.code,
+      mensaje: pendingErr?.message,
+    });
+    redirect(await back('account_creation_failed'));
+  }
   const pendingId = pending.id as string;
 
   // Demo/test: provision inline (simulate the webhook) behind the prod guard.
@@ -178,6 +199,10 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     url = session.url;
   } catch (e) {
     console.error('[landingCheckout] stripe', e);
+    alertaCritica('Checkout de la landing: Stripe no devolvió sesión, la venta se pierde', {
+      courseId,
+      mensaje: e instanceof Error ? e.message : String(e),
+    });
   }
   if (!url) {
     // Stripe session couldn't be created — delete the just-inserted pending row

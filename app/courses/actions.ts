@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { hasCourseAccess } from '@/utils/auth/course-access'
 import { sanitizeUrl } from '@/utils/sanitize'
+import { notify } from '@/utils/notifications/server'
 
 export async function createLesson(formData: FormData) {
   await requireAdmin()
@@ -429,24 +430,27 @@ export async function gradeSubmission(
     return { error: error.message }
   }
 
-  // Notify the student
-  // Use admin client to bypass RLS (notifications has no INSERT policy for users).
-  // UPSERT so re-grading updates the existing notification instead of conflicting on the dedupe unique index.
-  await adminSupabase.from('notifications').upsert(
-    {
-      user_id: submittedUserId,
-      title: 'Tu tarea ha sido corregida',
-      message: `El profesor ha revisado tu entrega. Calificación: ${grade || 'Sin nota'}`,
-      type: 'assignment_graded',
-      entity_type: 'submission',
-      entity_id: submissionId,
-      link: `/courses/${courseId}/${lessonId}`,
-      actor_ids: [admin.id],
-      is_read: false,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,type,entity_type,entity_id' }
-  )
+  // Avisar al alumno.
+  //
+  // Antes esto era un `upsert` con `onConflict: 'user_id,type,entity_type,entity_id'`,
+  // y nunca funcionó: el único índice único sobre esas columnas es PARCIAL
+  // (`notifications_dedupe_key ... WHERE entity_type IS NOT NULL AND entity_id
+  // IS NOT NULL`), y Postgres no puede inferir un índice parcial desde una lista
+  // de columnas pelada. Lanza 42P10 al planificar, en la PRIMERA corrección,
+  // antes de que exista ningún conflicto. El resultado se descartaba, así que la
+  // interfaz decía «alumno notificado» y no se había notificado a nadie nunca.
+  //
+  // `notify()` va por la RPC `upsert_notification`, que repite el predicado del
+  // índice, registra los fallos y deja el título a NotificationBell — que lo
+  // traduce, en vez del castellano fijo que recibían los alumnos de fr/de/it/ja.
+  await notify({
+    recipientId: submittedUserId,
+    actorId: admin.id,
+    type: 'assignment_graded',
+    entityType: 'submission',
+    entityId: submissionId,
+    link: `/courses/${courseId}/${lessonId}`,
+  })
 
   revalidatePath(`/courses/${courseId}/${lessonId}/submissions`)
 }

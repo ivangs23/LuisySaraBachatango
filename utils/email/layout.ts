@@ -1,4 +1,5 @@
 import { ENTITY } from '@/utils/legal/entity'
+import { alertaCritica } from '@/utils/alerta'
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? `https://${ENTITY.domain}`
 
@@ -213,7 +214,16 @@ export async function enviar(opts: {
   etiqueta: string
 }): Promise<void> {
   const key = process.env.RESEND_API_KEY
-  if (!key) return
+  if (!key) {
+    // El no-op sin clave es deliberado en local y preview. En producción
+    // significa que NADIE está recibiendo correo —ni confirmaciones de compra—
+    // y como Outlook ya los archiva como spam, «no le ha llegado» es
+    // indistinguible de lo normal.
+    if (process.env.NODE_ENV === 'production') {
+      alertaCritica('Sin RESEND_API_KEY en producción: no sale ningún correo', { etiqueta: opts.etiqueta })
+    }
+    return
+  }
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -228,9 +238,16 @@ export async function enviar(opts: {
       }),
     })
     if (!res.ok) {
-      console.error(`[${opts.etiqueta}] resend failed`, res.status, await res.text().catch(() => ''))
+      const detalle = await res.text().catch(() => '')
+      console.error(`[${opts.etiqueta}] resend failed`, res.status, detalle)
+      alertaCritica('Correo transaccional no entregado a Resend', {
+        etiqueta: opts.etiqueta, estado: res.status, detalle: detalle.slice(0, 300),
+      })
     }
   } catch (e) {
     console.error(`[${opts.etiqueta}] resend threw`, e)
+    alertaCritica('Correo transaccional falló al enviarse', {
+      etiqueta: opts.etiqueta, mensaje: e instanceof Error ? e.message : String(e),
+    })
   }
 }

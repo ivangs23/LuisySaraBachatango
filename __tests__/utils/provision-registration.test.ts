@@ -3,6 +3,11 @@ import type Stripe from 'stripe'
 
 const sendMock = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/utils/email/purchase-confirmation', () => ({ sendPurchaseConfirmation: (...a: unknown[]) => sendMock(...a) }))
+const alertaMock = vi.fn()
+vi.mock('@/utils/alerta', async (orig) => ({
+  ...(await orig() as object),
+  alertaCritica: (...a: unknown[]) => alertaMock(...a),
+}))
 const guestMock = vi.fn().mockResolvedValue({ ok: true, userId: 'u-guest' })
 vi.mock('@/utils/checkout/provision-guest', () => ({ provisionGuestPurchase: (...a: unknown[]) => guestMock(...a) }))
 
@@ -193,6 +198,31 @@ describe('provisionFromPending', () => {
     expect(sendMock).not.toHaveBeenCalled()
     expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('double-charge candidate'), 'cs_1', 'u-old', 'course-1')
     expect(admin.__calls.pendingDelete).toEqual(['pend-1'])
+  })
+
+  /**
+   * Un cobro duplicado se detectaba, se nombraba y se devolvía como éxito. El
+   * único rastro era una línea en los logs de Vercel, que es donde murió el
+   * fallo del restablecimiento de contraseña durante meses. Aquí hay dinero
+   * cobrado sin producto que entregar: tiene que llegar a alguien.
+   */
+  it('23505 avisa a Sentry: hay un cobro que reembolsar', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    alertaMock.mockClear()
+    const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old' }, purchaseError: { code: '23505', message: 'dup' } })
+    await provisionFromPending(session(), admin)
+
+    expect(alertaMock).toHaveBeenCalledTimes(1)
+    const [mensaje, ctx] = alertaMock.mock.calls[0] as [string, Record<string, unknown>]
+    expect(mensaje).toMatch(/cobro duplicado|double/i)
+    expect(ctx).toMatchObject({ sessionId: 'cs_1', userId: 'u-old', courseId: 'course-1' })
+  })
+
+  it('un alta normal no dispara ninguna alerta', async () => {
+    alertaMock.mockClear()
+    const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old' }, purchaseInserted: [{ id: 'p1' }] })
+    await provisionFromPending(session(), admin)
+    expect(alertaMock).not.toHaveBeenCalled()
   })
   it('non-23505 purchase error -> ok:false, pending NOT deleted (retryable)', async () => {
     const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old' }, purchaseError: { code: '55000', message: 'boom' } })
