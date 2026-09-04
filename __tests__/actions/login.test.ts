@@ -176,6 +176,39 @@ describe('resetPassword action', () => {
     expect(url).toContain('message')
   })
 
+  /**
+   * Era el único punto de entrada anónimo de este módulo sin límite: `login`,
+   * `resendConfirmation` y `signup` sí lo tenían. El presupuesto de correo de
+   * auth de Supabase es común, y por él pasa `inviteUserByEmail`, que es como
+   * recibe su acceso quien acaba de pagar.
+   */
+  it('limita por IP, como el resto de acciones anónimas', async () => {
+    const { rateLimit } = await import('@/utils/rate-limit')
+    mockResetPasswordForEmail.mockResolvedValueOnce({ error: null })
+    const { resetPassword } = await import('@/app/login/actions')
+
+    const fd = new FormData()
+    fd.set('email', 'user@example.com')
+    await resetPassword(fd).catch(getRedirectUrl)
+
+    expect(vi.mocked(rateLimit)).toHaveBeenCalledWith(
+      expect.stringContaining('reset-password'), 5, 60 * 60 * 1000,
+    )
+  })
+
+  it('no manda correo si se pasa del límite', async () => {
+    const { rateLimit } = await import('@/utils/rate-limit')
+    vi.mocked(rateLimit).mockResolvedValueOnce({ ok: false, retryAfter: 60 })
+    const { resetPassword } = await import('@/app/login/actions')
+
+    const fd = new FormData()
+    fd.set('email', 'user@example.com')
+    const url = await resetPassword(fd).catch(getRedirectUrl)
+
+    expect(url).toContain('rate_limit')
+    expect(mockResetPasswordForEmail).not.toHaveBeenCalled()
+  })
+
   it('redirects to same destination on error to prevent account enumeration', async () => {
     mockResetPasswordForEmail.mockResolvedValueOnce({ error: new Error('User not found') })
     const { resetPassword } = await import('@/app/login/actions')
