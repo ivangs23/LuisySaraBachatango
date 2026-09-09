@@ -1,6 +1,7 @@
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
+import { avisoAuth } from '@/utils/alerta';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,17 @@ export async function GET(req: Request): Promise<NextResponse> {
   const a = Buffer.from(header)
   const b = Buffer.from(expected)
   if (!secret || a.length !== b.length || !timingSafeEqual(a, b)) {
+    // Rotar CRON_SECRET en Vercel sin volver a desplegar deja el valor de la
+    // función desincronizado: el cron pasa a devolver 401 y el ÚNICO TTL de
+    // pending_registrations —que guarda correo, hash bcrypt, teléfono, fecha de
+    // nacimiento y dirección— deja de ejecutarse. Sin este aviso, esa retención
+    // se rompe en silencio y nadie se entera hasta una auditoría.
+    //
+    // Sección propia: no diluir el canal de aprovisionamiento, que es el que
+    // avisa de dinero.
+    avisoAuth('Cron de purga rechazado: los datos pendientes dejan de borrarse', {
+      secretoConfigurado: !!secret,
+    })
     return new NextResponse('Unauthorized', { status: 401 })
   }
   const admin = createSupabaseAdmin(
