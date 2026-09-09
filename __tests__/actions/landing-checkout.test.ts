@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// server-only throws fuera de un contexto de servidor de Next.js; se mockea
+// para el entorno de test (mismo patrón que utils/analytics/visitor-hash.ts
+// importa transitivamente desde actions.ts).
+vi.mock('server-only', () => ({}))
+
 const H = vi.hoisted(() => ({
   isTest: vi.fn().mockResolvedValue(false),
   readCookie: vi.fn().mockResolvedValue(false),
@@ -11,8 +16,15 @@ const H = vi.hoisted(() => ({
   pendingDelete: vi.fn().mockResolvedValue({ error: null }),
   redirect: vi.fn((u: string) => { throw new Error('REDIRECT:' + u) }),
   rateLimit: vi.fn().mockResolvedValue({ ok: true, retryAfter: 0 }),
+  // Por defecto en modo demo, igual que el entorno real de test (VERCEL_ENV
+  // sin definir): así los tests que no tocan el evento del embudo no cambian
+  // de comportamiento.
+  demoMode: vi.fn().mockReturnValue(true),
+  eventInsert: vi.fn().mockResolvedValue({ error: null }),
+  eventInsertPayload: null as Record<string, unknown> | null,
 }))
 vi.mock('@/utils/demo/test-mode', () => ({ isTestPurchaseMode: () => H.isTest(), readTestCookie: () => H.readCookie() }))
+vi.mock('@/utils/demo/mode', () => ({ isDemoMode: () => H.demoMode() }))
 vi.mock('@/utils/checkout/provision-registration', () => ({ provisionFromPending: (...a: unknown[]) => H.provisionPending(...a) }))
 vi.mock('@/utils/stripe/server', () => ({ stripe: { checkout: { sessions: { create: H.sessionCreate } } } }))
 vi.mock('next/navigation', () => ({ redirect: (u: string) => H.redirect(u) }))
@@ -26,7 +38,9 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({
     from: (t: string) => t === 'pending_registrations'
       ? { insert: (payload: Record<string, unknown>) => { H.pendingInsertPayload = payload; return { select: () => ({ single: H.pendingInsert }) } }, delete: () => ({ eq: (_c: string, v: string) => H.pendingDelete(v) }) }
-      : { select: () => ({ eq: () => ({ eq: () => ({ single: H.courseSingle }) }) }) },
+      : t === 'landing_events'
+        ? { insert: (payload: Record<string, unknown>) => { H.eventInsertPayload = payload; return H.eventInsert() } }
+        : { select: () => ({ eq: () => ({ eq: () => ({ single: H.courseSingle }) }) }) },
   }),
 }))
 
@@ -49,7 +63,14 @@ function getRedirectUrl(e: unknown): string {
   throw e
 }
 
-beforeEach(() => { vi.clearAllMocks(); H.isTest.mockResolvedValue(false); H.readCookie.mockResolvedValue(false); H.rateLimit.mockResolvedValue({ ok: true }); H.pendingInsertPayload = null })
+beforeEach(() => {
+  vi.clearAllMocks()
+  H.isTest.mockResolvedValue(false); H.readCookie.mockResolvedValue(false); H.rateLimit.mockResolvedValue({ ok: true })
+  H.pendingInsertPayload = null
+  H.demoMode.mockReturnValue(true)
+  H.eventInsert.mockResolvedValue({ error: null })
+  H.eventInsertPayload = null
+})
 
 describe('landingCheckout (formulario reducido)', () => {
   it('real: inserta el pending sin contraseña y crea la sesión de Stripe con client_reference_id=pendingId', async () => {
@@ -125,5 +146,28 @@ describe('landingCheckout (formulario reducido)', () => {
       expect(H.provisionPending).not.toHaveBeenCalled()
       expect(H.pendingDelete).toHaveBeenCalledWith('pend-1')
     } finally { process.env.NEXT_PUBLIC_SUPABASE_URL = prev }
+  })
+
+  it('registra el paso "enviado" del embudo justo tras crear el pending (fuera de modo demo)', async () => {
+    H.demoMode.mockReturnValue(false)
+    await expect(landingCheckout(formularioValido())).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
+    expect(H.eventInsert).toHaveBeenCalledTimes(1)
+    expect(H.eventInsertPayload).toEqual({
+      path: '/curso-bachatango/comprar/enviado',
+      visitor_hash: expect.any(String),
+    })
+  })
+
+  it('en modo demo no registra el evento del embudo (no ensucia métricas de local/preview)', async () => {
+    H.demoMode.mockReturnValue(true)
+    await expect(landingCheckout(formularioValido())).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
+    expect(H.eventInsert).not.toHaveBeenCalled()
+  })
+
+  it('si el insert del evento falla, la compra sigue adelante igualmente', async () => {
+    H.demoMode.mockReturnValue(false)
+    H.eventInsert.mockResolvedValue({ error: { message: 'boom' } })
+    await expect(landingCheckout(formularioValido())).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
+    expect(H.sessionCreate).toHaveBeenCalled()
   })
 })

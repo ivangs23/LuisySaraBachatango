@@ -12,6 +12,7 @@ export const TRACKED_PATHS = [
   '/curso-bachatango',
   '/clase-gratis',
   '/curso-bachatango/comprar',
+  '/curso-bachatango/comprar/enviado',
   '/gracias',
 ] as const
 
@@ -54,5 +55,6 @@ export const FUNNEL_STEPS = [
   { path: '/', label: 'Inicio' },
   { path: '/curso-bachatango', label: 'Página de venta' },
   { path: '/curso-bachatango/comprar', label: 'Formulario de compra' },
+  { path: '/curso-bachatango/comprar/enviado', label: 'Formulario enviado' },
   { path: '/gracias', label: 'Compra completada' },
 ] as const satisfies readonly { path: TrackedPath; label: string }[]

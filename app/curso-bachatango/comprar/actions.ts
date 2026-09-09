@@ -15,9 +15,12 @@ import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
 import { CURRENT_TERMS_VERSION } from '@/utils/legal/terms-version';
 import { alertaCritica } from '@/utils/alerta';
+import { dailyVisitorHash } from '@/utils/analytics/visitor-hash';
+import { isDemoMode } from '@/utils/demo/mode';
 
 export async function landingCheckout(formData: FormData): Promise<void> {
-  const ip = getClientIp(await headers());
+  const hdrs = await headers();
+  const ip = getClientIp(hdrs);
   const courseId = ((formData.get('courseId') as string | null) ?? '').trim();
   // Safe fields re-echoed after a validation error (never the password) so a
   // single typo doesn't wipe the whole 11-field form.
@@ -137,6 +140,31 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     redirect(await back('account_creation_failed'));
   }
   const pendingId = pending.id as string;
+
+  // El embudo solo veía vistas de página, así que "llegó al formulario" y "lo
+  // envió" eran el mismo dato: sin distinguirlos no se puede saber si un
+  // cambio en el formulario funcionó. No es una ruta real, es un evento con
+  // forma de ruta que reutiliza la tabla y el gráfico de embudo que ya
+  // existen (utils/admin/landing-queries.ts). Se registra aquí, justo tras
+  // el insert del pending: un envío que no pasó la validación nunca llega a
+  // este punto y por tanto no cuenta como "enviado".
+  //
+  // Igual que /api/landing-event: se descarta en modo demo (local/preview
+  // escriben en la misma BD que producción y no deben inflar las métricas
+  // reales) y cualquier fallo se traga sin propagar — la analítica nunca
+  // puede tumbar una compra.
+  if (!isDemoMode()) {
+    try {
+      const visitorHash = dailyVisitorHash(ip, hdrs.get('user-agent'), new Date());
+      if (visitorHash) {
+        const { error: eventErr } = await admin.from('landing_events')
+          .insert({ path: '/curso-bachatango/comprar/enviado', visitor_hash: visitorHash });
+        if (eventErr) console.error('[landingCheckout] landing_events insert failed', { message: eventErr.message });
+      }
+    } catch (e) {
+      console.error('[landingCheckout] landing_events unexpected', e);
+    }
+  }
 
   // Demo/test: provision inline (simulate the webhook) behind the prod guard.
   // On ANY handled failure or guard refusal, delete the pending row (it holds

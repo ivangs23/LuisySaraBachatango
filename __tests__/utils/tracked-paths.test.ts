@@ -38,10 +38,17 @@ describe('normalisePath', () => {
   })
 
   it('el embudo solo usa rutas medidas y está ordenado', () => {
-    expect(FUNNEL_STEPS.length).toBe(4)
+    expect(FUNNEL_STEPS.length).toBe(5)
     for (const s of FUNNEL_STEPS) expect(TRACKED_PATHS).toContain(s.path)
     expect(FUNNEL_STEPS.map(s => s.path)).toEqual([
-      '/', '/curso-bachatango', '/curso-bachatango/comprar', '/gracias',
+      '/', '/curso-bachatango', '/curso-bachatango/comprar', '/curso-bachatango/comprar/enviado', '/gracias',
+    ])
+  })
+
+  it('el paso de envío del formulario es una ruta medida y va en el embudo', () => {
+    expect(normalisePath('/curso-bachatango/comprar/enviado')).toBe('/curso-bachatango/comprar/enviado')
+    expect(FUNNEL_STEPS.map(s => s.path)).toEqual([
+      '/', '/curso-bachatango', '/curso-bachatango/comprar', '/curso-bachatango/comprar/enviado', '/gracias',
     ])
   })
 })

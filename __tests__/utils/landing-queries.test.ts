@@ -30,7 +30,8 @@ beforeEach(() => {
 describe('getLandingFunnel', () => {
   it('cuenta únicos por paso', async () => {
     const f = await getLandingFunnel(90)
-    expect(f.map(s => s.visitors)).toEqual([3, 2, 1, 1])
+    // Nadie en ROWS llega a '/curso-bachatango/comprar/enviado': 0 ahí.
+    expect(f.map(s => s.visitors)).toEqual([3, 2, 1, 0, 1])
   })
 
   it('calcula el porcentaje que pasa al siguiente paso', async () => {
@@ -38,7 +39,10 @@ describe('getLandingFunnel', () => {
     expect(f[0].dropFromPrev).toBeNull()
     expect(f[1].dropFromPrev).toBeCloseTo(66.67, 1)
     expect(f[2].dropFromPrev).toBeCloseTo(50, 1)
-    expect(f[3].dropFromPrev).toBeCloseTo(100, 1)
+    expect(f[3].dropFromPrev).toBeCloseTo(0, 1)
+    // El paso anterior (enviado) está a 0, así que el guard anti-división-por-cero
+    // deja este en null en vez de 100.
+    expect(f[4].dropFromPrev).toBeNull()
   })
 
   it('no divide por cero cuando un paso está vacío', async () => {
@@ -46,20 +50,20 @@ describe('getLandingFunnel', () => {
     const f = await getLandingFunnel(90)
     expect(f[0].visitors).toBe(0)
     expect(f[1].dropFromPrev).toBeNull()
-    expect(Number.isFinite(f[3].visitors)).toBe(true)
+    expect(Number.isFinite(f[4].visitors)).toBe(true)
   })
 
   it('devuelve los pasos aunque no haya datos', async () => {
     gteMock.mockResolvedValue({ data: [], error: null })
     const f = await getLandingFunnel(90)
-    expect(f).toHaveLength(4)
+    expect(f).toHaveLength(5)
     expect(f.every(s => s.visitors === 0)).toBe(true)
   })
 
   it('devuelve los pasos a cero si la query falla', async () => {
     gteMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
     const f = await getLandingFunnel(90)
-    expect(f).toHaveLength(4)
+    expect(f).toHaveLength(5)
     expect(f.every(s => s.visitors === 0)).toBe(true)
   })
 })
