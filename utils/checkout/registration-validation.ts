@@ -1,24 +1,15 @@
 import { EMAIL_RE } from '@/utils/auth/email'
-import { MIN_PASSWORD_LENGTH } from '@/utils/auth/password'
-import { isValidCountry } from '@/utils/i18n/countries'
 
 export type CleanRegistration = {
   fullName: string
   email: string
-  password: string
-  country: string
-  city: string
-  postalCode: string
-  dateOfBirth: string
-  danceLevel: string
-  phone: string | null
   marketingConsent: boolean
   /**
    * Consentimiento previo y expreso al inicio inmediato de la ejecución, con
    * reconocimiento de que ello hace perder el derecho de desistimiento
-   * (art. 103.m RDL 1/2007). Va en casilla propia y obligatoria, separada de
-   * la aceptación de términos: el art. 103.m exige un acto específico para
-   * este punto, y una casilla genérica de "acepto los términos" no lo prueba.
+   * (art. 103.m RDL 1/2007). Casilla propia y obligatoria, separada de la
+   * aceptación de términos: el artículo exige un acto específico, y una
+   * casilla genérica de "acepto los términos" no lo prueba.
    */
   acceptDigitalExecution: boolean
 }
@@ -27,28 +18,12 @@ export type RegistrationResult =
   | { ok: true; data: CleanRegistration }
   | { ok: false; code: string }
 
-const DANCE_LEVELS = new Set(['principiante', 'intermedio', 'avanzado'])
-const PHONE_RE = /^[+()\d][\d\s()-]{5,19}$/
-// Lenient international postal code: 2-11 chars, alphanumeric + space/hyphen
-// (covers ES "28001", UK "SW1A 1AA", etc.).
-const POSTAL_RE = /^[A-Za-z0-9][A-Za-z0-9\s-]{1,10}$/
-
 function str(v: FormDataEntryValue | null): string {
   return typeof v === 'string' ? v.trim() : ''
 }
 
-function ageFrom(iso: string): number | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
-  if (!m) return null
-  const y = Number(m[1]), mo = Number(m[2]), da = Number(m[3])
-  const d = new Date(Date.UTC(y, mo - 1, da))
-  // reject rolled-over / impossible dates (e.g. 2020-02-30 -> Mar 1)
-  if (d.getUTCFullYear() !== y || d.getUTCMonth() !== mo - 1 || d.getUTCDate() !== da) return null
-  const now = new Date()
-  let age = now.getUTCFullYear() - d.getUTCFullYear()
-  const mm = now.getUTCMonth() - d.getUTCMonth()
-  if (mm < 0 || (mm === 0 && now.getUTCDate() < d.getUTCDate())) age--
-  return age
+function marcada(v: FormDataEntryValue | null): boolean {
+  return v === 'on' || v === 'true'
 }
 
 export function validateRegistration(
@@ -56,40 +31,20 @@ export function validateRegistration(
 ): RegistrationResult {
   const fullName = str(raw.fullName)
   const email = str(raw.email).toLowerCase()
-  const password = typeof raw.password === 'string' ? raw.password : ''
-  const repeatPassword = typeof raw.repeatPassword === 'string' ? raw.repeatPassword : ''
-  const country = str(raw.country)
-  const city = str(raw.city)
-  const postalCode = str(raw.postalCode)
-  const dateOfBirth = str(raw.dateOfBirth)
-  const danceLevel = str(raw.danceLevel)
-  const phoneRaw = str(raw.phone)
-  const marketingConsent = raw.marketingConsent === 'on' || raw.marketingConsent === 'true'
-  const acceptTerms = raw.acceptTerms === 'on' || raw.acceptTerms === 'true'
-  const acceptDigitalExecution =
-    raw.acceptDigitalExecution === 'on' || raw.acceptDigitalExecution === 'true'
 
-  if (!fullName) return { ok: false, code: 'missing' }
-  if (!EMAIL_RE.test(email)) return { ok: false, code: 'invalid_email' }
-  if (password.length < MIN_PASSWORD_LENGTH) return { ok: false, code: 'password_too_short' }
-  if (!(/[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password)))
-    return { ok: false, code: 'password_weak' }
-  if (password !== repeatPassword) return { ok: false, code: 'password_mismatch' }
-  if (!isValidCountry(country)) return { ok: false, code: 'invalid_country' }
-  if (!city) return { ok: false, code: 'missing' }
-  if (!POSTAL_RE.test(postalCode)) return { ok: false, code: 'invalid_postal' }
-  const age = ageFrom(dateOfBirth)
-  if (age === null || age < 16 || age > 100) return { ok: false, code: 'invalid_birthdate' }
-  if (!DANCE_LEVELS.has(danceLevel)) return { ok: false, code: 'missing' }
-  if (phoneRaw && !PHONE_RE.test(phoneRaw)) return { ok: false, code: 'invalid_phone' }
-  if (!acceptTerms) return { ok: false, code: 'terms_not_accepted' }
-  if (!acceptDigitalExecution) return { ok: false, code: 'digital_execution_not_accepted' }
+  if (fullName.length < 2 || fullName.length > 120) return { ok: false, code: 'invalid_name' }
+  if (!EMAIL_RE.test(email) || email.length > 254) return { ok: false, code: 'invalid_email' }
+
+  // La fecha de nacimiento se pedía solo para esto. Las condiciones exigen 16
+  // años (app/legal/terms/page.tsx:40) y una casilla lo declara igual de bien,
+  // sin cobrar un campo de fecha a cada comprador ni guardar un dato que
+  // ninguna pantalla de la aplicación lee.
+  if (!marcada(raw.isAdult)) return { ok: false, code: 'age_required' }
+  if (!marcada(raw.acceptTerms)) return { ok: false, code: 'terms_required' }
+  if (!marcada(raw.acceptDigitalExecution)) return { ok: false, code: 'digital_execution_required' }
 
   return {
     ok: true,
-    data: {
-      fullName, email, password, country, city, postalCode, dateOfBirth, danceLevel,
-      phone: phoneRaw || null, marketingConsent, acceptDigitalExecution,
-    },
+    data: { fullName, email, marketingConsent: marcada(raw.marketingConsent), acceptDigitalExecution: true },
   }
 }
