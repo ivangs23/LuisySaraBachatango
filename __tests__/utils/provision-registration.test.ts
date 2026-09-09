@@ -98,6 +98,7 @@ const PENDING = {
   country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true,
   marketing_consent_at: '2026-07-14T10:00:00Z', dance_level: 'principiante',
   terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z',
+  digital_execution_consent_at: '2026-07-14T10:00:00Z',
   course_id: 'course-1', amount_expected: 12900,
 }
 const session = (over: Partial<Stripe.Checkout.Session> = {}) => ({
@@ -114,7 +115,7 @@ describe('provisionFromPending', () => {
     expect(res).toEqual({ ok: true, userId: 'u-new', created: true })
     expect(admin.__calls.createUser[0]).toEqual(expect.objectContaining({ email: 'ana@example.com', password_hash: '$2b$12$abc', email_confirm: true, user_metadata: { full_name: 'Ana' } }))
     // enumerated columns bucket only — never password_hash, never stripe_customer_id
-    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante', terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z' }))
+    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante', terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z', digital_execution_consent_at: '2026-07-14T10:00:00Z' }))
     expect(admin.__calls.profileColumns[0]).not.toHaveProperty('password_hash')
     expect(admin.__calls.customerId[0]).toEqual({ stripe_customer_id: 'cus_1' })
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-new', course_id: 'course-1', stripe_session_id: 'cs_1', amount_paid: 9900, source: 'landing' }))
@@ -178,6 +179,7 @@ describe('provisionFromPending', () => {
     expect(admin.__calls.createUser).toEqual([])
     expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({
       terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z', marketing_consent: true,
+      digital_execution_consent_at: '2026-07-14T10:00:00Z',
     }))
   })
   it('isDemo: marks user_metadata.is_demo and purchase.is_demo', async () => {
