@@ -70,6 +70,11 @@ export async function provisionFromPending(
   const courseId = pending.course_id as string | null
   if (!courseId) return { ok: false, reason: 'no-course' }
 
+  // La contraseña ya no se pide en el formulario de la landing (password_hash
+  // llega a null), pero una compra que estuviera en vuelo al desplegar este
+  // cambio todavía trae su hash. Se respetan los dos casos.
+  const sinContrasena = !pending.password_hash
+
   // Resolve-or-create.
   const { data: existing } = await admin
     .from('profiles').select('id').eq('email', email).maybeSingle()
@@ -82,8 +87,8 @@ export async function provisionFromPending(
     if (opts.isDemo) userMeta.is_demo = true // reapable by cleanup_demo_data
     const { data: createdUser, error: createErr } = await admin.auth.admin.createUser({
       email,
-      password_hash: pending.password_hash as string,
       email_confirm: true,
+      ...(sinContrasena ? {} : { password_hash: pending.password_hash as string }),
       user_metadata: userMeta,
     })
     if (createdUser?.user?.id) {
@@ -213,6 +218,31 @@ export async function provisionFromPending(
   // Consume the pending row (last data op).
   await admin.from('pending_registrations').delete().eq('id', pendingId)
 
+  // Un solo correo, no dos. Se podría dejar que Supabase mandase su
+  // invitación, pero entonces el comprador recibiría dos mensajes casi
+  // idénticos y el de Supabase no lleva la plantilla de la casa. Aquí se
+  // genera el enlace y viaja dentro del correo de compra, que ya se envía y
+  // ya está maquetado.
+  //
+  // Solo para un alta genuinamente nueva y sin contraseña: una cuenta
+  // preexistente (o resuelta por la carrera de createUser) conserva su
+  // contraseña de siempre, y una fila en vuelo con hash ya trae la suya.
+  let setPasswordUrl: string | undefined
+  if (genuineInsert && !opts.isDemo && sinContrasena && created) {
+    const { data: link } = await admin.auth.admin.generateLink({ type: 'recovery', email })
+    const th = link?.properties?.hashed_token
+    if (th) {
+      const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
+      setPasswordUrl = `${base}/auth/confirm?token_hash=${th}&type=recovery&next=/reset-password`
+    } else {
+      // Sin enlace el comprador no puede entrar. Tiene salida —"olvidé mi
+      // contraseña" funciona— pero nadie se enteraría de que hizo falta.
+      alertaCritica('Compra sin enlace para fijar contraseña: el comprador tendrá que recuperarla', {
+        sesion: session.id, usuario: userId as string,
+      })
+    }
+  }
+
   // Email last, exactly once — only on a genuine new purchase insert. A
   // duplicate delivery (empty `inserted`) or an already-owned course does not
   // re-send. Demo/test provisioning does NOT email (it's an admin dry-run).
@@ -221,6 +251,7 @@ export async function provisionFromPending(
       email,
       fullName: (pending.full_name as string | null) ?? null,
       existingAccount: !created,
+      setPasswordUrl,
     })
   }
 

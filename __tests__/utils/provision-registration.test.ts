@@ -27,9 +27,11 @@ function makeAdmin(opts: {
   purchaseError?: { code?: string; message?: string }
   profileSequence?: Array<{ id: string; terms_accepted_at?: string | null } | null>    // successive profiles-by-email lookups (race)
   existingPurchase?: { id: string } | null          // course_purchases row for session.id (orphan check)
+  /** Token que devuelve generateLink. `null` simula la respuesta sin hashed_token. */
+  generateLinkToken?: string | null
 } = {}) {
   const calls = { profileColumns: [] as unknown[], customerId: [] as unknown[], purchaseUpsert: [] as unknown[], pendingDelete: [] as string[], createUser: [] as unknown[],
-    getUserById: [] as string[], confirmed: [] as string[] }
+    getUserById: [] as string[], confirmed: [] as string[], generateLink: [] as unknown[] }
   const seq = opts.profileSequence
   let seqI = 0
   const nextProfile = () => seq ? (seq[Math.min(seqI++, seq.length - 1)] ?? null) : (opts.profileByEmail ?? null)
@@ -76,6 +78,11 @@ function makeAdmin(opts: {
       updateUserById: async (id: string, attrs: { email_confirm?: boolean }) => {
         if (attrs.email_confirm) calls.confirmed.push(id)
         return { data: { user: { id } }, error: null }
+      },
+      generateLink: async (attrs: unknown) => {
+        calls.generateLink.push(attrs)
+        const token = opts.generateLinkToken === undefined ? 'hashed-tok-1' : opts.generateLinkToken
+        return { data: { properties: token ? { hashed_token: token } : {} }, error: null }
       },
     } },
     __calls: calls,
@@ -270,5 +277,66 @@ describe('provisionFromPending', () => {
     const res = await provisionFromPending(session(), admin)
     expect(res).toEqual({ ok: true, userId: 'u-raced', created: false })
     expect(admin.__calls.profileColumns).toEqual([]) // raced + ya con consent -> no enumerated write
+  })
+
+  // La landing ya no pide contraseña: pending_registrations.password_hash
+  // llega a null. Una compra que estuviera en vuelo al desplegar este cambio
+  // todavía trae su hash y debe seguir funcionando exactamente como antes.
+  describe('alta sin contraseña (password_hash: null)', () => {
+    it('sin password_hash crea la cuenta igualmente y la deja confirmada', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }] })
+      const res = await provisionFromPending(session(), admin)
+      expect(res).toEqual({ ok: true, userId: 'u-nuevo', created: true })
+      expect(admin.__calls.createUser[0]).toMatchObject({ email_confirm: true })
+      expect(admin.__calls.createUser[0]).not.toHaveProperty('password_hash')
+    })
+
+    it('manda el enlace para fijar contraseña en el correo de compra', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }] })
+      await provisionFromPending(session(), admin)
+      expect(admin.__calls.generateLink[0]).toEqual({ type: 'recovery', email: 'ana@example.com' })
+      expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({
+        setPasswordUrl: expect.stringContaining('/auth/confirm?token_hash='),
+      }))
+    })
+
+    it('una compra con contraseña (en vuelo al desplegar) sigue funcionando', async () => {
+      const admin = makeAdmin({ pending: PENDING, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }] })
+      const res = await provisionFromPending(session(), admin)
+      expect(res.ok).toBe(true)
+      expect((admin.__calls.createUser[0] as { password_hash?: string }).password_hash).toBe(PENDING.password_hash)
+      expect(admin.__calls.generateLink, 'ya trae contraseña, no hace falta enlace').toEqual([])
+      expect(sendMock.mock.calls[0][0].setPasswordUrl).toBeUndefined()
+    })
+
+    it('cuenta ya existente sin password_hash: no genera enlace, entra con la de siempre', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null },
+                                profileByEmail: { id: 'u-old', terms_accepted_at: '2025-01-01T00:00:00Z' } })
+      const res = await provisionFromPending(session(), admin)
+      expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+      expect(admin.__calls.generateLink).toEqual([])
+      expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({ existingAccount: true, setPasswordUrl: undefined }))
+    })
+
+    it('alta demo sin password_hash: no genera enlace ni email (dry-run)', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-demo' } })
+      await provisionFromPending(session(), admin, { isDemo: true })
+      expect(admin.__calls.generateLink).toEqual([])
+      expect(sendMock).not.toHaveBeenCalled()
+    })
+
+    it('generateLink sin hashed_token: no bloquea la compra pero avisa a Sentry', async () => {
+      alertaMock.mockClear()
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }], generateLinkToken: null })
+      const res = await provisionFromPending(session(), admin)
+      expect(res.ok).toBe(true)
+      expect(sendMock.mock.calls[0][0].setPasswordUrl).toBeUndefined()
+      expect(alertaMock).toHaveBeenCalledWith(expect.stringContaining('enlace'), expect.objectContaining({ sesion: 'cs_1', usuario: 'u-nuevo' }))
+    })
   })
 })
