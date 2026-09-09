@@ -52,7 +52,7 @@ Todo el tráfico es orgánico, desde historias en redes. No hay coste de adquisi
 
 ---
 
-### Tarea 1: Hacer `password_hash` opcional
+### Task 1: Hacer `password_hash` opcional
 
 **Ficheros:**
 - Crear: `supabase/2026_09_pending_password_optional.sql`
@@ -108,7 +108,7 @@ git commit -m "chore(db): allow pending registrations without a password"
 
 ---
 
-### Tarea 2: Validador sin contraseña ni campos muertos
+### Task 2: Validador sin contraseña ni campos muertos
 
 **Ficheros:**
 - Modificar: `utils/checkout/registration-validation.ts`
@@ -252,7 +252,7 @@ git commit -m "refactor(checkout): validate only what the purchase actually need
 
 ---
 
-### Tarea 3: Formulario de dos campos
+### Task 3: Formulario de dos campos
 
 **Ficheros:**
 - Modificar: `components/LandingCheckoutForm.tsx`
@@ -359,7 +359,7 @@ git commit -m "feat(checkout): cut the purchase form to two fields"
 
 ---
 
-### Tarea 4: Acción de servidor — validar antes de limitar
+### Task 4: Acción de servidor — validar antes de limitar
 
 **Ficheros:**
 - Modificar: `app/curso-bachatango/comprar/actions.ts`
@@ -450,7 +450,7 @@ git commit -m "fix(checkout): validate before spending the rate-limit budget"
 
 ---
 
-### Tarea 5: Aprovisionar sin contraseña
+### Task 5: Aprovisionar sin contraseña
 
 **Ficheros:**
 - Modificar: `utils/checkout/provision-registration.ts:84-101`
@@ -554,7 +554,7 @@ git commit -m "feat(checkout): provision buyers without a password"
 
 ---
 
-### Tarea 6: El correo lleva el botón para fijar contraseña
+### Task 6: El correo lleva el botón para fijar contraseña
 
 **Ficheros:**
 - Modificar: `utils/email/purchase-confirmation.ts`
@@ -638,7 +638,7 @@ git commit -m "feat(email): let the purchase email set the password"
 
 ---
 
-### Tarea 7: Medir el envío del formulario
+### Task 7: Medir el envío del formulario
 
 **Ficheros:**
 - Modificar: `utils/analytics/tracked-paths.ts`
@@ -698,7 +698,7 @@ git commit -m "feat(analytics): separate reaching the form from submitting it"
 
 ---
 
-### Tarea 8: Verificación completa y despliegue
+### Task 8: Verificación completa y despliegue
 
 - [ ] **Paso 1: Suite entera**
 
