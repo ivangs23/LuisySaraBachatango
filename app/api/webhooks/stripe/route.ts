@@ -7,6 +7,7 @@ import { assertProdEnv } from '@/utils/env/validate-prod';
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest';
 import { provisionFromPending } from '@/utils/checkout/provision-registration';
 import { alertaCritica } from '@/utils/alerta';
+import { sesionLiquidada } from '@/utils/checkout/session-status';
 
 assertProdEnv();
 
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
 
     if (!userId) {
       // Guest checkout: no hay userId; se provisiona por email tras el pago.
-      if (session.metadata?.guest === '1' && courseId && session.payment_status === 'paid') {
+      if (session.metadata?.guest === '1' && courseId && sesionLiquidada(session)) {
         const result = await provisionGuestPurchase(session, supabase, {
           source: session.metadata?.source,
           fullName: session.metadata?.fullName,
@@ -92,7 +93,7 @@ export async function POST(req: Request) {
       // Un pago real sin metadatos de la app (p. ej. un Payment Link creado a
       // mano en el dashboard) nunca concede acceso y Stripe no reintenta: si
       // alguien pagó por ahí, se queda sin nada y en silencio.
-      if (session.payment_status === 'paid') {
+      if (sesionLiquidada(session)) {
         alertaCritica('Pago recibido por un checkout ajeno a la app: nadie recibirá acceso', {
           sesion: session.id, importe: session.amount_total ?? null,
         });
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
     if (courseId) {
       // One-time course purchase — idempotent on stripe_session_id (UNIQUE).
       // No pre-check needed: concurrent Stripe retries collapse via ON CONFLICT.
-      if (session.payment_status === 'paid') {
+      if (sesionLiquidada(session)) {
         const { error } = await supabase
           .from('course_purchases')
           .upsert(
