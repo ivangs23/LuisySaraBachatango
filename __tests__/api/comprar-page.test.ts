@@ -31,14 +31,16 @@ describe('/curso-bachatango/comprar', () => {
     const el = await ComprarPage({ searchParams: Promise.resolve({ courseId: 'c1' }) })
     expect(JSON.stringify(el)).toContain('Curso')
   })
-  it('re-echoa los campos desde la cookie flash tras un error de validación', async () => {
+  it('re-echoa nombre y email desde la cookie flash tras un error de validación', async () => {
+    // La cookie flash solo lleva nombre y email: el resto de campos del
+    // formulario ya no existen (formulario mínimo, tarea 3).
     mockCookieGet.mockReturnValueOnce({
-      value: JSON.stringify({ name: 'Ana', email: 'ana@example.com', city: 'Madrid' }),
+      value: JSON.stringify({ name: 'Ana', email: 'ana@example.com' }),
     })
-    const el = await ComprarPage({ searchParams: Promise.resolve({ courseId: 'c1', error: 'city' }) })
+    const el = await ComprarPage({ searchParams: Promise.resolve({ courseId: 'c1', error: 'age_required' }) })
     const html = JSON.stringify(el)
     expect(html).toContain('ana@example.com')
-    expect(html).toContain('Madrid')
+    expect(html).toContain('Ana')
   })
   it('cookie flash corrupta → formulario vacío, sin crash', async () => {
     mockCookieGet.mockReturnValueOnce({ value: '{not json' })

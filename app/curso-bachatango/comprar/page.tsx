@@ -8,18 +8,15 @@ import styles from './comprar.module.css';
 export const metadata: Metadata = { title: 'Comprar CURSO BACHATANGO', robots: { index: false, follow: false } };
 export const dynamic = 'force-dynamic';
 
-type FlashFields = {
-  name?: string; email?: string; country?: string; city?: string;
-  postalCode?: string; dateOfBirth?: string; danceLevel?: string; phone?: string;
-};
+type FlashFields = { name?: string; email?: string };
 
 export default async function ComprarPage(props: { searchParams: Promise<{ courseId?: string; error?: string }> }) {
   const { courseId, error } = await props.searchParams;
   if (!courseId) notFound();
 
   // Re-echo de campos tras un error de validación: llegan por cookie flash
-  // (httpOnly, maxAge 120s), nunca por query string — la PII (email, DOB,
-  // teléfono) no debe acabar en logs ni en el historial (AUDITORIA-2026-07 M6).
+  // (httpOnly, maxAge 120s), nunca por query string — la PII (email) no debe
+  // acabar en logs ni en el historial (AUDITORIA-2026-07 M6).
   let flash: FlashFields = {};
   const flashCookie = (await cookies()).get('landing_form')?.value;
   if (flashCookie) {
@@ -30,7 +27,7 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
       // cookie corrupta → formulario vacío
     }
   }
-  const { name, email, country, city, postalCode, dateOfBirth, danceLevel, phone } = flash;
+  const { name, email } = flash;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -58,7 +55,6 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
           defaultEmail={email ?? user?.email ?? ''}
           defaultName={name ?? ''}
           error={error}
-          defaults={{ country, city, postalCode, dateOfBirth, danceLevel, phone }}
         />
       </div>
     </div>

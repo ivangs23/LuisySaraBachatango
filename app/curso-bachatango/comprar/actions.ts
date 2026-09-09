@@ -24,16 +24,13 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   // single typo doesn't wipe the whole 11-field form.
   const rawName = ((formData.get('fullName') as string | null) ?? '').trim();
   const rawEmail = ((formData.get('email') as string | null) ?? '').trim();
-  const g = (k: string) => ((formData.get(k) as string | null) ?? '').trim();
   // Re-echo de campos tras un error de validación vía cookie flash efímera —
-  // NUNCA por query string: un redirect 303 convierte la URL en GET y el email,
-  // DOB y teléfono acabarían en logs de Vercel, historial e intermediarios
-  // (AUDITORIA-2026-07 M6). La contraseña jamás se re-echoa por ningún canal.
+  // NUNCA por query string: un redirect 303 convierte la URL en GET y el email
+  // acabaría en logs de Vercel, historial e intermediarios (AUDITORIA-2026-07
+  // M6). La contraseña jamás se re-echoa por ningún canal.
   const back = async (code: string) => {
     (await cookies()).set('landing_form', JSON.stringify({
       name: rawName, email: rawEmail,
-      country: g('country'), city: g('city'), postalCode: g('postalCode'),
-      dateOfBirth: g('dateOfBirth'), danceLevel: g('danceLevel'), phone: g('phone'),
     }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
