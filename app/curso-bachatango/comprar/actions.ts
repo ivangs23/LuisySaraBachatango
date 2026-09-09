@@ -11,7 +11,6 @@ import { isTestPurchaseMode, readTestCookie } from '@/utils/demo/test-mode';
 import { canProvisionInline } from '@/utils/checkout/demo-provision-guard';
 import { provisionFromPending } from '@/utils/checkout/provision-registration';
 import { validateRegistration } from '@/utils/checkout/registration-validation';
-import { hashPassword } from '@/utils/checkout/password-hash';
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit';
 import { getClientIp } from '@/utils/auth/client-ip';
 import { CURRENT_TERMS_VERSION } from '@/utils/legal/terms-version';
@@ -42,35 +41,35 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     return `/curso-bachatango/comprar?${q.toString()}`;
   };
 
-  // Rate limit against abuse of the unauthenticated pending INSERT (accumulates
-  // PII + bcrypt hashes): per-IP burst, per-email/day, AND a per-IP/day row cap
-  // so one IP cycling many distinct emails is still bounded.
-  const rlIp = await rateLimit(rateLimitKey([ip, 'landing-checkout']), 10, 60_000);
-  if (!rlIp.ok) redirect(await back('rate'));
-  // Per-email limit scoped BY IP: the email is unauthenticated, so keying it
-  // globally would let an attacker burn a specific victim's daily budget
-  // (registration lockout). Scoping to (ip,email) caps repeats without
-  // cross-user harm.
-  const emailForKey = rawEmail.toLowerCase();
-  const rlEmail = await rateLimit(rateLimitKey([ip, emailForKey, 'landing-checkout-email']), 5, 24 * 60 * 60_000);
-  if (!rlEmail.ok) redirect(await back('rate'));
-  const rlIpDay = await rateLimit(rateLimitKey([ip, 'landing-checkout-ip-day']), 30, 24 * 60 * 60_000);
-  if (!rlIpDay.ok) redirect(await back('rate'));
-
-  // Validate ALL fields BEFORE any hashing or DB write.
+  // Validate ALL fields BEFORE spending any rate-limit budget or touching the DB.
   const v = validateRegistration({
     fullName: formData.get('fullName'), email: formData.get('email'),
-    password: formData.get('password'), repeatPassword: formData.get('repeatPassword'),
-    country: formData.get('country'), city: formData.get('city'),
-    postalCode: formData.get('postalCode'),
-    dateOfBirth: formData.get('dateOfBirth'), danceLevel: formData.get('danceLevel'),
-    phone: formData.get('phone'), marketingConsent: formData.get('marketingConsent'),
+    isAdult: formData.get('isAdult'), marketingConsent: formData.get('marketingConsent'),
     acceptTerms: formData.get('acceptTerms'),
     acceptDigitalExecution: formData.get('acceptDigitalExecution'),
   });
   if (!courseId) redirect(await back('missing'));
   if (!v.ok) redirect(await back(v.code));
   const reg = v.data;
+
+  // Los límites van DESPUÉS de validar. Al revés, una errata en el correo
+  // consumía cupo: 5 por (IP,email) al día, y al sexto intento un bloqueo de 24
+  // horas cuyo mensaje decía "Espera un momento". Quien más se equivoca al
+  // teclear es justo quien más quiere comprar.
+  // Rate limit against abuse of the unauthenticated pending INSERT (accumulates
+  // PII): per-IP burst, per-email/day, AND a per-IP/day row cap so one IP
+  // cycling many distinct emails is still bounded.
+  const rlIp = await rateLimit(rateLimitKey([ip, 'landing-checkout']), 10, 60_000);
+  if (!rlIp.ok) redirect(await back('rate'));
+  // Per-email limit scoped BY IP: the email is unauthenticated, so keying it
+  // globally would let an attacker burn a specific victim's daily budget
+  // (registration lockout). Scoping to (ip,email) caps repeats without
+  // cross-user harm.
+  const emailForKey = reg.email.toLowerCase();
+  const rlEmail = await rateLimit(rateLimitKey([ip, emailForKey, 'landing-checkout-email']), 5, 24 * 60 * 60_000);
+  if (!rlEmail.ok) redirect(await back('rate'));
+  const rlIpDay = await rateLimit(rateLimitKey([ip, 'landing-checkout-ip-day']), 30, 24 * 60 * 60_000);
+  if (!rlIpDay.ok) redirect(await back('rate'));
 
   const admin = createSupabaseAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -92,10 +91,6 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   }
   const amountExpected = Math.round(course.price_eur * 100);
 
-  // Hash the password into a local const; the plaintext is dropped immediately
-  // after and NEVER logged, echoed, or sent to Stripe.
-  const passwordHash = await hashPassword(reg.password);
-
   // NOTE: we intentionally do NOT dedupe prior pending rows by email here. The
   // email is unauthenticated, so a delete-by-email would let an attacker wipe a
   // victim's in-flight pending row (submitted between their form post and their
@@ -108,9 +103,14 @@ export async function landingCheckout(formData: FormData): Promise<void> {
     .from('pending_registrations')
     .insert({
       id: randomUUID(),
-      email: reg.email, full_name: reg.fullName, password_hash: passwordHash,
-      country: reg.country, city: reg.city, postal_code: reg.postalCode, date_of_birth: reg.dateOfBirth,
-      phone: reg.phone, marketing_consent: reg.marketingConsent, dance_level: reg.danceLevel,
+      email: reg.email,
+      full_name: reg.fullName,
+      // Ya no se pide contraseña en el alta: la cuenta se aprovisiona sin
+      // contraseña y el usuario la fija más tarde vía invitación (ver
+      // provision-registration.ts). password_hash es nullable desde la
+      // migración de la tarea 1.
+      password_hash: null,
+      marketing_consent: reg.marketingConsent,
       // Consent provenance (GDPR Art. 7): stamp WHEN + WHICH version was accepted.
       terms_version: CURRENT_TERMS_VERSION,
       terms_accepted_at: new Date().toISOString(),
@@ -140,7 +140,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
 
   // Demo/test: provision inline (simulate the webhook) behind the prod guard.
   // On ANY handled failure or guard refusal, delete the pending row (it holds
-  // the password_hash + PII) — never leave it for the 30-day cron.
+  // PII) — never leave it for the 30-day cron.
   if (await isTestPurchaseMode()) {
     const triggeredByAdminCookie = await readTestCookie();
     if (!canProvisionInline({ triggeredByAdminCookie, supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL })) {
@@ -203,7 +203,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   }
   if (!url) {
     // Stripe session couldn't be created — delete the just-inserted pending row
-    // (password_hash + PII) instead of leaving it for the 30-day cron.
+    // (PII) instead of leaving it for the 30-day cron.
     await admin.from('pending_registrations').delete().eq('id', pendingId);
     redirect(await back('stripe'));
   }
