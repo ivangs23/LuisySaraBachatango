@@ -175,6 +175,26 @@ La columna quedó `NOT NULL DEFAULT now()`.
 
 ---
 
+## Contraseña opcional en el checkout — septiembre 2026 · ⏳ PENDIENTE de aplicar
+
+| # | Fichero | Qué hace | Estado |
+|---|---|---|---|
+| 1 | `2026_09_pending_password_optional.sql` | Columna `pending_registrations.password_hash` pasa de `NOT NULL` a nullable. El alumno crea su cuenta sin contraseña en el checkout y la fija desde el correo de confirmación (reutilizando el flujo que ya existía para recuperar compras huérfanas). Aditiva e idempotente. | ⏳ Pendiente |
+
+La contraseña fue siempre un fricción innecesaria: **11 campos obligatorios antes de pagar dejaban fuera a 54 de cada 62 personas que llegaban al formulario** (medición 2026-08-31 → 2026-09-09, funnel real). El checkout envía siempre un correo de confirmación (`CheckoutSuccessEmail`); ese mismo flujo ya contenía la lógica para fijar contraseña si la cuenta la llegaba sin una (`utils/checkout/provision-registration.ts:56-61`).
+
+La columna **no se borra**: las compras aún en vuelo cuando se despliegue esto llevarán su `password_hash` y `provisionFromPending` sigue aceptándolo. Queda `nullable` y `default null` únicamente. La migración no toca ninguna fila existente.
+
+Validación tras aplicar (requerida):
+
+```sql
+select is_nullable from information_schema.columns
+ where table_schema='public' and table_name='pending_registrations'
+   and column_name='password_hash';            → YES
+```
+
+---
+
 ## Presencia en vivo — septiembre 2026 · ✅ APLICADA (2026-09-02)
 
 | # | Fichero | Qué hace | Estado |
