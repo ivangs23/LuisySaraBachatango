@@ -19,12 +19,27 @@ export async function sendPurchaseConfirmation(opts: {
   existingAccount: boolean
   /**
    * Enlace de un solo uso para fijar la contraseña (lo genera el
-   * aprovisionamiento, tarea 5 de este plan). Ausente en dos casos: la
-   * cuenta ya existía (`existingAccount: true`, entra con la de siempre), o
-   * la compra quedó en vuelo con el flujo antiguo y ya trae contraseña
-   * elegida en el checkout.
+   * aprovisionamiento, tarea 5 de este plan). Ausente en tres casos: la
+   * cuenta ya existía (`existingAccount: true`, entra con la de siempre), la
+   * compra quedó en vuelo con el flujo antiguo y ya trae contraseña elegida
+   * en el checkout, o la cuenta es nueva y sin contraseña pero no se pudo
+   * generar el enlace (`accountHasNoPassword: true` distingue este caso del
+   * anterior — ver más abajo).
    */
   setPasswordUrl?: string
+  /**
+   * La cuenta se creó SIN contraseña (password_hash: null, flujo nuevo) —
+   * independientemente de si `setPasswordUrl` se pudo generar. Sin este
+   * campo, "no hay setPasswordUrl" es ambiguo: puede ser una cuenta
+   * genuinamente sin contraseña cuyo enlace falló al generarse (rate limit,
+   * fallo transitorio de Supabase), o una compra en vuelo del flujo antiguo
+   * que sí eligió una contraseña real en el checkout. Confundirlas le decía
+   * al primer comprador que "entrara con la contraseña que eligió durante la
+   * compra" — una contraseña que no existe — con el botón apuntando a
+   * /login en vez de a "¿Olvidaste tu contraseña?" (revisión
+   * AUDITORIA-2026-09, hallazgo 1).
+   */
+  accountHasNoPassword?: boolean
 }): Promise<void> {
   const nombre = opts.fullName ? esc(opts.fullName.split(' ')[0]) : null
   const saludo = nombre ? `Hola ${nombre},` : 'Hola,'
@@ -41,10 +56,15 @@ export async function sendPurchaseConfirmation(opts: {
           `${saludo} tu compra del <strong>CURSO BACHATANGO</strong> está confirmada.`,
           'Solo queda un paso: elige tu contraseña y entras. Puedes hacerlo desde cualquier dispositivo.',
         ]
-      : [
-          `${saludo} tu compra del <strong>CURSO BACHATANGO</strong> está confirmada y tu cuenta ya está lista.`,
-          `Entra con este mismo correo y la <strong>contraseña que elegiste durante la compra</strong>.`,
-        ]
+      : opts.accountHasNoPassword
+        ? [
+            `${saludo} tu compra del <strong>CURSO BACHATANGO</strong> está confirmada y tu cuenta ya está creada.`,
+            `Tu cuenta todavía no tiene contraseña. Pulsa <strong>«¿Olvidaste tu contraseña?»</strong> para crear una y entrar — es cosa de un minuto.`,
+          ]
+        : [
+            `${saludo} tu compra del <strong>CURSO BACHATANGO</strong> está confirmada y tu cuenta ya está lista.`,
+            `Entra con este mismo correo y la <strong>contraseña que elegiste durante la compra</strong>.`,
+          ]
 
   parrafos.push(
     'Tienes acceso de por vida a las 28 lecciones, así que puedes ir a tu ritmo y volver a cualquier módulo cuando quieras.',
@@ -54,11 +74,15 @@ export async function sendPurchaseConfirmation(opts: {
     ? `¿No recuerdas tu contraseña? <a href="${BASE}/forgot-password" style="color:#a8823c;">Recupérala aquí</a> en un minuto.`
     : opts.setPasswordUrl
       ? `El enlace caduca y solo puede usarse una vez. Si se te pasa, entra en la web y pulsa <strong>«¿Olvidaste tu contraseña?»</strong>: tu compra ya está guardada.`
-      : `Guarda este correo: aquí tienes el enlace de acceso siempre a mano. Si olvidas la contraseña, puedes <a href="${BASE}/forgot-password" style="color:#a8823c;">restablecerla</a>.`
+      : opts.accountHasNoPassword
+        ? `Tu compra ya está guardada, así que puedes crear la contraseña cuando quieras: solo hace falta pulsar el botón de arriba.`
+        : `Guarda este correo: aquí tienes el enlace de acceso siempre a mano. Si olvidas la contraseña, puedes <a href="${BASE}/forgot-password" style="color:#a8823c;">restablecerla</a>.`
 
   const boton = opts.setPasswordUrl
     ? { texto: 'Crea tu contraseña', url: opts.setPasswordUrl }
-    : { texto: 'Entrar al curso', url: `${BASE}/login` }
+    : opts.accountHasNoPassword
+      ? { texto: '¿Olvidaste tu contraseña?', url: `${BASE}/forgot-password` }
+      : { texto: 'Entrar al curso', url: `${BASE}/login` }
 
   const html = renderEmail({
     preheader: 'Tu acceso al CURSO BACHATANGO ya está activo.',

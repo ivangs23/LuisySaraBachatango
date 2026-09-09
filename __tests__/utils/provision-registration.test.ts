@@ -29,6 +29,8 @@ function makeAdmin(opts: {
   existingPurchase?: { id: string } | null          // course_purchases row for session.id (orphan check)
   /** Token que devuelve generateLink. `null` simula la respuesta sin hashed_token. */
   generateLinkToken?: string | null
+  /** Simula que generateLink devuelve un `error` real (rate limit, fallo transitorio...). */
+  generateLinkError?: { message: string; status?: number }
 } = {}) {
   const calls = { profileColumns: [] as unknown[], customerId: [] as unknown[], purchaseUpsert: [] as unknown[], pendingDelete: [] as string[], createUser: [] as unknown[],
     getUserById: [] as string[], confirmed: [] as string[], generateLink: [] as unknown[] }
@@ -81,6 +83,7 @@ function makeAdmin(opts: {
       },
       generateLink: async (attrs: unknown) => {
         calls.generateLink.push(attrs)
+        if (opts.generateLinkError) return { data: { properties: {} }, error: opts.generateLinkError }
         const token = opts.generateLinkToken === undefined ? 'hashed-tok-1' : opts.generateLinkToken
         return { data: { properties: token ? { hashed_token: token } : {} }, error: null }
       },
@@ -299,6 +302,7 @@ describe('provisionFromPending', () => {
       expect(admin.__calls.generateLink[0]).toEqual({ type: 'recovery', email: 'ana@example.com' })
       expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({
         setPasswordUrl: expect.stringContaining('/auth/confirm?token_hash='),
+        accountHasNoPassword: true,
       }))
     })
 
@@ -310,6 +314,9 @@ describe('provisionFromPending', () => {
       expect((admin.__calls.createUser[0] as { password_hash?: string }).password_hash).toBe(PENDING.password_hash)
       expect(admin.__calls.generateLink, 'ya trae contraseña, no hace falta enlace').toEqual([])
       expect(sendMock.mock.calls[0][0].setPasswordUrl).toBeUndefined()
+      // Trae contraseña real del checkout antiguo: el correo NO debe tratarla
+      // como una cuenta sin contraseña.
+      expect(sendMock.mock.calls[0][0].accountHasNoPassword).toBeUndefined()
     })
 
     it('cuenta ya existente sin password_hash: no genera enlace, entra con la de siempre', async () => {
@@ -318,7 +325,9 @@ describe('provisionFromPending', () => {
       const res = await provisionFromPending(session(), admin)
       expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
       expect(admin.__calls.generateLink).toEqual([])
-      expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({ existingAccount: true, setPasswordUrl: undefined }))
+      expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({
+        existingAccount: true, setPasswordUrl: undefined, accountHasNoPassword: undefined,
+      }))
     })
 
     it('alta demo sin password_hash: no genera enlace ni email (dry-run)', async () => {
@@ -329,14 +338,45 @@ describe('provisionFromPending', () => {
       expect(sendMock).not.toHaveBeenCalled()
     })
 
-    it('generateLink sin hashed_token: no bloquea la compra pero avisa a Sentry', async () => {
+    /**
+     * Hallazgo 1 de la revisión (AUDITORIA-2026-09): sin `accountHasNoPassword`,
+     * este correo caía en la misma rama que una compra en vuelo del flujo
+     * antiguo (contraseña real elegida en el checkout) y le decía a un
+     * comprador SIN contraseña que usara una que nunca eligió, con el botón
+     * apuntando a /login. Aquí se comprueba que la señal llega al correo y que
+     * el correo (probado también en purchase-confirmation.test.ts) nunca dice
+     * esa frase para esta cuenta.
+     */
+    it('generateLink sin hashed_token: no bloquea la compra, avisa a Sentry, y el correo NO dice que use una contraseña elegida', async () => {
       alertaMock.mockClear()
       const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
                                 createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }], generateLinkToken: null })
       const res = await provisionFromPending(session(), admin)
       expect(res.ok).toBe(true)
+      expect(sendMock.mock.calls[0][0]).toEqual(expect.objectContaining({
+        setPasswordUrl: undefined,
+        accountHasNoPassword: true,
+      }))
+      expect(alertaMock).toHaveBeenCalledWith(expect.stringContaining('enlace'), expect.objectContaining({
+        sesion: 'cs_1', usuario: 'u-nuevo', motivo: expect.stringContaining('hashed_token'),
+      }))
+    })
+
+    // Hallazgo 2 de la revisión: un fallo REAL de generateLink (rate limit,
+    // blip transitorio) no se distinguía en el aviso de una respuesta vacía
+    // sin error — porque `error` nunca se leía. Ahora el motivo real (y su
+    // código de estado) llegan a Sentry, no un "sin hashed_token" genérico.
+    it('generateLink devuelve error real: el aviso lleva el motivo y el estado, no un genérico', async () => {
+      alertaMock.mockClear()
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }],
+                                generateLinkError: { message: 'over_request_rate_limit', status: 429 } })
+      const res = await provisionFromPending(session(), admin)
+      expect(res.ok).toBe(true)
       expect(sendMock.mock.calls[0][0].setPasswordUrl).toBeUndefined()
-      expect(alertaMock).toHaveBeenCalledWith(expect.stringContaining('enlace'), expect.objectContaining({ sesion: 'cs_1', usuario: 'u-nuevo' }))
+      expect(alertaMock).toHaveBeenCalledWith(expect.stringContaining('enlace'), expect.objectContaining({
+        sesion: 'cs_1', usuario: 'u-nuevo', motivo: 'over_request_rate_limit', estado: 429,
+      }))
     })
   })
 })

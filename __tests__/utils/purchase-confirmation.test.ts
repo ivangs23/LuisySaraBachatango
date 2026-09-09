@@ -127,4 +127,32 @@ describe('sendPurchaseConfirmation', () => {
       expect(body.html).not.toMatch(/crea tu contraseña/i)
     })
   })
+
+  // Hallazgo 1 de la revisión (AUDITORIA-2026-09): "sin setPasswordUrl" por sí
+  // solo es ambiguo. Puede ser una compra en vuelo del flujo antiguo (arriba,
+  // SÍ tiene contraseña real) o una cuenta nueva sin contraseña cuyo enlace
+  // falló al generarse (aquí, NO tiene ninguna). Confundirlas le decía al
+  // segundo comprador que usara una contraseña que nunca existió.
+  describe('sin setPasswordUrl, accountHasNoPassword (el enlace no se pudo generar)', () => {
+    it('nunca dice "la contraseña que elegiste" cuando no se eligió ninguna', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, accountHasNoPassword: true })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).not.toMatch(/elegiste durante la compra/i)
+      expect(body.text).not.toMatch(/elegiste durante la compra/i)
+    })
+
+    it('dice explícitamente que la cuenta todavía no tiene contraseña', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, accountHasNoPassword: true })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toMatch(/todavía no tiene contraseña/i)
+    })
+
+    it('el botón principal manda a "¿Olvidaste tu contraseña?" en vez de a /login', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, accountHasNoPassword: true })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toMatch(/olvidaste tu contraseña/i)
+      expect(body.html).toContain('/forgot-password')
+      expect(body.html).not.toContain('/login')
+    })
+  })
 })
