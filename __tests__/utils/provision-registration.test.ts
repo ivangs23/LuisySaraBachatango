@@ -27,9 +27,13 @@ function makeAdmin(opts: {
   purchaseError?: { code?: string; message?: string }
   profileSequence?: Array<{ id: string; terms_accepted_at?: string | null } | null>    // successive profiles-by-email lookups (race)
   existingPurchase?: { id: string } | null          // course_purchases row for session.id (orphan check)
+  /** Token que devuelve generateLink. `null` simula la respuesta sin hashed_token. */
+  generateLinkToken?: string | null
+  /** Simula que generateLink devuelve un `error` real (rate limit, fallo transitorio...). */
+  generateLinkError?: { message: string; status?: number }
 } = {}) {
   const calls = { profileColumns: [] as unknown[], customerId: [] as unknown[], purchaseUpsert: [] as unknown[], pendingDelete: [] as string[], createUser: [] as unknown[],
-    getUserById: [] as string[], confirmed: [] as string[] }
+    getUserById: [] as string[], confirmed: [] as string[], generateLink: [] as unknown[] }
   const seq = opts.profileSequence
   let seqI = 0
   const nextProfile = () => seq ? (seq[Math.min(seqI++, seq.length - 1)] ?? null) : (opts.profileByEmail ?? null)
@@ -77,6 +81,12 @@ function makeAdmin(opts: {
         if (attrs.email_confirm) calls.confirmed.push(id)
         return { data: { user: { id } }, error: null }
       },
+      generateLink: async (attrs: unknown) => {
+        calls.generateLink.push(attrs)
+        if (opts.generateLinkError) return { data: { properties: {} }, error: opts.generateLinkError }
+        const token = opts.generateLinkToken === undefined ? 'hashed-tok-1' : opts.generateLinkToken
+        return { data: { properties: token ? { hashed_token: token } : {} }, error: null }
+      },
     } },
     __calls: calls,
   }
@@ -88,6 +98,7 @@ const PENDING = {
   country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true,
   marketing_consent_at: '2026-07-14T10:00:00Z', dance_level: 'principiante',
   terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z',
+  digital_execution_consent_at: '2026-07-14T10:00:00Z',
   course_id: 'course-1', amount_expected: 12900,
 }
 const session = (over: Partial<Stripe.Checkout.Session> = {}) => ({
@@ -104,7 +115,7 @@ describe('provisionFromPending', () => {
     expect(res).toEqual({ ok: true, userId: 'u-new', created: true })
     expect(admin.__calls.createUser[0]).toEqual(expect.objectContaining({ email: 'ana@example.com', password_hash: '$2b$12$abc', email_confirm: true, user_metadata: { full_name: 'Ana' } }))
     // enumerated columns bucket only — never password_hash, never stripe_customer_id
-    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante', terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z' }))
+    expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante', terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z', digital_execution_consent_at: '2026-07-14T10:00:00Z' }))
     expect(admin.__calls.profileColumns[0]).not.toHaveProperty('password_hash')
     expect(admin.__calls.customerId[0]).toEqual({ stripe_customer_id: 'cus_1' })
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-new', course_id: 'course-1', stripe_session_id: 'cs_1', amount_paid: 9900, source: 'landing' }))
@@ -168,6 +179,7 @@ describe('provisionFromPending', () => {
     expect(admin.__calls.createUser).toEqual([])
     expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({
       terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z', marketing_consent: true,
+      digital_execution_consent_at: '2026-07-14T10:00:00Z',
     }))
   })
   it('isDemo: marks user_metadata.is_demo and purchase.is_demo', async () => {
@@ -270,5 +282,103 @@ describe('provisionFromPending', () => {
     const res = await provisionFromPending(session(), admin)
     expect(res).toEqual({ ok: true, userId: 'u-raced', created: false })
     expect(admin.__calls.profileColumns).toEqual([]) // raced + ya con consent -> no enumerated write
+  })
+
+  // La landing ya no pide contraseña: pending_registrations.password_hash
+  // llega a null. Una compra que estuviera en vuelo al desplegar este cambio
+  // todavía trae su hash y debe seguir funcionando exactamente como antes.
+  describe('alta sin contraseña (password_hash: null)', () => {
+    it('sin password_hash crea la cuenta igualmente y la deja confirmada', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }] })
+      const res = await provisionFromPending(session(), admin)
+      expect(res).toEqual({ ok: true, userId: 'u-nuevo', created: true })
+      expect(admin.__calls.createUser[0]).toMatchObject({ email_confirm: true })
+      expect(admin.__calls.createUser[0]).not.toHaveProperty('password_hash')
+    })
+
+    it('manda el enlace para fijar contraseña en el correo de compra', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }] })
+      await provisionFromPending(session(), admin)
+      expect(admin.__calls.generateLink[0]).toEqual({ type: 'recovery', email: 'ana@example.com' })
+      expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({
+        setPasswordUrl: expect.stringContaining('/auth/confirm?token_hash='),
+        accountHasNoPassword: true,
+      }))
+    })
+
+    it('una compra con contraseña (en vuelo al desplegar) sigue funcionando', async () => {
+      const admin = makeAdmin({ pending: PENDING, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }] })
+      const res = await provisionFromPending(session(), admin)
+      expect(res.ok).toBe(true)
+      expect((admin.__calls.createUser[0] as { password_hash?: string }).password_hash).toBe(PENDING.password_hash)
+      expect(admin.__calls.generateLink, 'ya trae contraseña, no hace falta enlace').toEqual([])
+      expect(sendMock.mock.calls[0][0].setPasswordUrl).toBeUndefined()
+      // Trae contraseña real del checkout antiguo: el correo NO debe tratarla
+      // como una cuenta sin contraseña.
+      expect(sendMock.mock.calls[0][0].accountHasNoPassword).toBeUndefined()
+    })
+
+    it('cuenta ya existente sin password_hash: no genera enlace, entra con la de siempre', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null },
+                                profileByEmail: { id: 'u-old', terms_accepted_at: '2025-01-01T00:00:00Z' } })
+      const res = await provisionFromPending(session(), admin)
+      expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+      expect(admin.__calls.generateLink).toEqual([])
+      expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({
+        existingAccount: true, setPasswordUrl: undefined, accountHasNoPassword: undefined,
+      }))
+    })
+
+    it('alta demo sin password_hash: no genera enlace ni email (dry-run)', async () => {
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-demo' } })
+      await provisionFromPending(session(), admin, { isDemo: true })
+      expect(admin.__calls.generateLink).toEqual([])
+      expect(sendMock).not.toHaveBeenCalled()
+    })
+
+    /**
+     * Hallazgo 1 de la revisión (AUDITORIA-2026-09): sin `accountHasNoPassword`,
+     * este correo caía en la misma rama que una compra en vuelo del flujo
+     * antiguo (contraseña real elegida en el checkout) y le decía a un
+     * comprador SIN contraseña que usara una que nunca eligió, con el botón
+     * apuntando a /login. Aquí se comprueba que la señal llega al correo y que
+     * el correo (probado también en purchase-confirmation.test.ts) nunca dice
+     * esa frase para esta cuenta.
+     */
+    it('generateLink sin hashed_token: no bloquea la compra, avisa a Sentry, y el correo NO dice que use una contraseña elegida', async () => {
+      alertaMock.mockClear()
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }], generateLinkToken: null })
+      const res = await provisionFromPending(session(), admin)
+      expect(res.ok).toBe(true)
+      expect(sendMock.mock.calls[0][0]).toEqual(expect.objectContaining({
+        setPasswordUrl: undefined,
+        accountHasNoPassword: true,
+      }))
+      expect(alertaMock).toHaveBeenCalledWith(expect.stringContaining('enlace'), expect.objectContaining({
+        sesion: 'cs_1', usuario: 'u-nuevo', motivo: expect.stringContaining('hashed_token'),
+      }))
+    })
+
+    // Hallazgo 2 de la revisión: un fallo REAL de generateLink (rate limit,
+    // blip transitorio) no se distinguía en el aviso de una respuesta vacía
+    // sin error — porque `error` nunca se leía. Ahora el motivo real (y su
+    // código de estado) llegan a Sentry, no un "sin hashed_token" genérico.
+    it('generateLink devuelve error real: el aviso lleva el motivo y el estado, no un genérico', async () => {
+      alertaMock.mockClear()
+      const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
+                                createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }],
+                                generateLinkError: { message: 'over_request_rate_limit', status: 429 } })
+      const res = await provisionFromPending(session(), admin)
+      expect(res.ok).toBe(true)
+      expect(sendMock.mock.calls[0][0].setPasswordUrl).toBeUndefined()
+      expect(alertaMock).toHaveBeenCalledWith(expect.stringContaining('enlace'), expect.objectContaining({
+        sesion: 'cs_1', usuario: 'u-nuevo', motivo: 'over_request_rate_limit', estado: 429,
+      }))
+    })
   })
 })

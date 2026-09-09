@@ -1,41 +1,23 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import FormPrivacyNotice from './FormPrivacyNotice';
 import { useFormStatus } from 'react-dom';
-import { Eye, EyeOff } from 'lucide-react';
 import { landingCheckout } from '@/app/curso-bachatango/comprar/actions';
-import { COUNTRIES } from '@/utils/i18n/countries';
 import styles from '@/app/curso-bachatango/comprar/comprar.module.css';
 
-interface Defaults {
-  country?: string;
-  city?: string;
-  postalCode?: string;
-  dateOfBirth?: string;
-  danceLevel?: string;
-  phone?: string;
-}
-
-interface Props { courseId: string; defaultEmail: string; defaultName: string; error?: string; defaults?: Defaults }
+interface Props { courseId: string; defaultEmail: string; defaultName: string; error?: string }
 
 const ERROR_MESSAGES: Record<string, string> = {
-  missing: 'Rellena todos los campos obligatorios.',
-  invalid_email: 'El email no es válido.',
-  password_too_short: 'La contraseña debe tener al menos 8 caracteres.',
-  password_weak: 'La contraseña debe incluir mayúscula, minúscula y número.',
-  password_mismatch: 'Las contraseñas no coinciden.',
-  invalid_country: 'Selecciona un país válido.',
-  invalid_postal: 'Introduce un código postal válido.',
-  invalid_birthdate: 'Introduce una fecha de nacimiento válida (edad 16–100).',
-  invalid_phone: 'El teléfono no es válido.',
-  terms_not_accepted: 'Debes aceptar los términos y la privacidad.',
-  digital_execution_not_accepted:
-    'Debes solicitar el acceso inmediato y reconocer que pierdes el derecho de desistimiento.',
-  account_creation_failed: 'No pudimos procesar tu registro. Inténtalo de nuevo.',
-  rate: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
-  stripe: 'No pudimos iniciar el pago. Inténtalo de nuevo.',
-  course: 'Este curso no está disponible.',
+  invalid_name: 'Escribe tu nombre completo.',
+  invalid_email: 'Revisa el correo: no parece válido.',
+  age_required: 'Debes confirmar que tienes 16 años o más.',
+  terms_required: 'Tienes que aceptar las condiciones para continuar.',
+  digital_execution_required: 'Marca la casilla de acceso inmediato para continuar.',
+  rate: 'Has hecho varios intentos seguidos. Espera un minuto y vuelve a probar.',
+  stripe: 'No hemos podido abrir el pago. Inténtalo de nuevo en un momento.',
+  course: 'Ese curso no está disponible ahora mismo.',
+  account_creation_failed: 'No hemos podido preparar tu compra. Inténtalo de nuevo.',
 };
 
 function SubmitButton() {
@@ -47,12 +29,9 @@ function SubmitButton() {
   );
 }
 
-export default function LandingCheckoutForm({ courseId, defaultEmail, defaultName, error, defaults }: Props) {
+export default function LandingCheckoutForm({ courseId, defaultEmail, defaultName, error }: Props) {
   const message = error ? (ERROR_MESSAGES[error] ?? 'Revisa tus datos e inténtalo de nuevo.') : null;
   const errorRef = useRef<HTMLParagraphElement>(null);
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const [showPw, setShowPw] = useState(false);
-  const pwType = showPw ? 'text' : 'password';
 
   useEffect(() => {
     if (message) errorRef.current?.focus();
@@ -73,42 +52,10 @@ export default function LandingCheckoutForm({ courseId, defaultEmail, defaultNam
       <label className={styles.label} htmlFor="lc-email">Email</label>
       <input id="lc-email" name="email" type="email" required defaultValue={defaultEmail} placeholder="tu@email.com" className={styles.input} autoComplete="email" />
 
-      <label className={styles.label} htmlFor="lc-password">Contraseña</label>
-      <input id="lc-password" name="password" type={pwType} required minLength={8} className={styles.input} autoComplete="new-password" placeholder="Mín. 8, con mayúscula, minúscula y número" aria-describedby="lc-password-hint" />
-      <span id="lc-password-hint" className={styles.note}>Mín. 8 caracteres, con mayúscula, minúscula y número.</span>
-
-      <label className={styles.label} htmlFor="lc-password2">Repetir contraseña</label>
-      <input id="lc-password2" name="repeatPassword" type={pwType} required minLength={8} className={styles.input} autoComplete="new-password" />
-      <button type="button" onClick={() => setShowPw(v => !v)} aria-pressed={showPw} className={styles.pwToggle}>
-        {showPw ? <EyeOff size={14} strokeWidth={2} aria-hidden /> : <Eye size={14} strokeWidth={2} aria-hidden />}
-        {showPw ? 'Ocultar contraseñas' : 'Mostrar contraseñas'}
-      </button>
-
-      <label className={styles.label} htmlFor="lc-country">País</label>
-      <select id="lc-country" name="country" required defaultValue={defaults?.country ?? ''} className={styles.input} autoComplete="country">
-        <option value="" disabled>Selecciona tu país</option>
-        {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-      </select>
-
-      <label className={styles.label} htmlFor="lc-city">Ciudad</label>
-      <input id="lc-city" name="city" type="text" required defaultValue={defaults?.city ?? ''} className={styles.input} autoComplete="address-level2" />
-
-      <label className={styles.label} htmlFor="lc-postal">Código postal</label>
-      <input id="lc-postal" name="postalCode" type="text" required defaultValue={defaults?.postalCode ?? ''} className={styles.input} autoComplete="postal-code" placeholder="28001" />
-
-      <label className={styles.label} htmlFor="lc-dob">Fecha de nacimiento</label>
-      <input id="lc-dob" name="dateOfBirth" type="date" required defaultValue={defaults?.dateOfBirth ?? ''} max={todayISO} className={styles.input} autoComplete="bday" />
-
-      <label className={styles.label} htmlFor="lc-level">Nivel de baile</label>
-      <select id="lc-level" name="danceLevel" required defaultValue={defaults?.danceLevel ?? ''} className={styles.input}>
-        <option value="" disabled>Selecciona tu nivel</option>
-        <option value="principiante">Principiante</option>
-        <option value="intermedio">Intermedio</option>
-        <option value="avanzado">Avanzado</option>
-      </select>
-
-      <label className={styles.label} htmlFor="lc-phone">Teléfono (WhatsApp) · opcional</label>
-      <input id="lc-phone" name="phone" type="tel" defaultValue={defaults?.phone ?? ''} className={styles.input} autoComplete="tel" placeholder="+34 600 123 456" />
+      <label className={styles.checkboxRow}>
+        <input name="isAdult" type="checkbox" value="on" required />
+        <span>Confirmo que tengo 16 años o más.</span>
+      </label>
 
       <label className={styles.checkboxRow}>
         <input name="marketingConsent" type="checkbox" value="on" />
@@ -117,7 +64,7 @@ export default function LandingCheckoutForm({ courseId, defaultEmail, defaultNam
 
       <label className={styles.checkboxRow}>
         <input name="acceptTerms" type="checkbox" value="on" required />
-        <span>Acepto los <a href="/legal/terms" target="_blank" rel="noopener noreferrer">términos</a> y la <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">privacidad</a>.</span>
+        <span>Acepto los <a href="/legal/terms" target="_blank" rel="noopener noreferrer">términos y condiciones</a> y la <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">política de privacidad</a>.</span>
       </label>
 
       {/*

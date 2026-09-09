@@ -134,7 +134,11 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
                 ? <>Te hemos enviado un email a <strong>{email}</strong> para crear tu acceso al curso.</>
                 : <>Te hemos enviado un email para crear tu acceso al curso.</>}
             </p>
-            <p className={styles.hint}>Revisa tu bandeja de entrada (y la carpeta de spam). Entra con tu email y la contraseña que elegiste al comprar.</p>
+            <p className={styles.hint}>
+              Te hemos enviado un correo con un enlace para crear tu contraseña. Si ya tenías cuenta, entra con la de siempre.
+              Si no te llega, revisa la carpeta de spam o usa{' '}
+              <a href="/forgot-password" className={styles.link}>¿Olvidaste tu contraseña?</a>.
+            </p>
           </>
         ) : (
           <>

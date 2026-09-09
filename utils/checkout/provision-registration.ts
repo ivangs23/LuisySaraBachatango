@@ -71,6 +71,11 @@ export async function provisionFromPending(
   const courseId = pending.course_id as string | null
   if (!courseId) return { ok: false, reason: 'no-course' }
 
+  // La contraseña ya no se pide en el formulario de la landing (password_hash
+  // llega a null), pero una compra que estuviera en vuelo al desplegar este
+  // cambio todavía trae su hash. Se respetan los dos casos.
+  const sinContrasena = !pending.password_hash
+
   // Resolve-or-create.
   const { data: existing } = await admin
     .from('profiles').select('id').eq('email', email).maybeSingle()
@@ -83,8 +88,8 @@ export async function provisionFromPending(
     if (opts.isDemo) userMeta.is_demo = true // reapable by cleanup_demo_data
     const { data: createdUser, error: createErr } = await admin.auth.admin.createUser({
       email,
-      password_hash: pending.password_hash as string,
       email_confirm: true,
+      ...(sinContrasena ? {} : { password_hash: pending.password_hash as string }),
       user_metadata: userMeta,
     })
     if (createdUser?.user?.id) {
@@ -214,6 +219,47 @@ export async function provisionFromPending(
   // Consume the pending row (last data op).
   await admin.from('pending_registrations').delete().eq('id', pendingId)
 
+  // Un solo correo, no dos. Se podría dejar que Supabase mandase su
+  // invitación, pero entonces el comprador recibiría dos mensajes casi
+  // idénticos y el de Supabase no lleva la plantilla de la casa. Aquí se
+  // genera el enlace y viaja dentro del correo de compra, que ya se envía y
+  // ya está maquetado.
+  //
+  // `passwordless` es un hecho, no un "conseguimos el enlace": es verdad para
+  // toda alta genuinamente nueva y sin contraseña, haya salido bien o mal la
+  // llamada a generateLink. Se lo pasamos siempre al correo (más abajo) para
+  // que pueda distinguir "no tiene contraseña" de "compra en vuelo con
+  // contraseña elegida en el checkout" — ambos casos llegan sin
+  // setPasswordUrl y son indistinguibles si solo se mira ese campo (revisión
+  // AUDITORIA-2026-09 hallazgo 1: sin esto, un fallo de generateLink hacía
+  // que el correo le dijera al comprador que usara una contraseña que nunca
+  // eligió, con el botón apuntando a /login en vez de a "olvidé mi
+  // contraseña"). Una cuenta preexistente (o resuelta por la carrera de
+  // createUser) conserva su contraseña de siempre y no es `passwordless`.
+  const passwordless = sinContrasena && created
+  let setPasswordUrl: string | undefined
+  if (genuineInsert && !opts.isDemo && passwordless) {
+    const { data: link, error: linkErr } = await admin.auth.admin.generateLink({ type: 'recovery', email })
+    const th = link?.properties?.hashed_token
+    if (th) {
+      const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
+      setPasswordUrl = `${base}/auth/confirm?token_hash=${th}&type=recovery&next=/reset-password`
+    } else {
+      // Sin enlace el comprador no puede entrar por ese camino. El correo
+      // usa `passwordless` para no decirle que use una contraseña que nunca
+      // eligió y lo manda a "¿Olvidaste tu contraseña?" en su lugar — pero
+      // nadie se enteraría de que hizo falta sin este aviso. Se registra el
+      // motivo real (rate limit, fallo transitorio, etc.), no solo "sin
+      // token": un `error` de Supabase y una respuesta vacía sin error no son
+      // el mismo fallo para quien tenga que investigarlo.
+      alertaCritica('Compra sin enlace para fijar contraseña: el comprador tendrá que recuperarla', {
+        sesion: session.id, usuario: userId as string,
+        motivo: linkErr?.message ?? 'generateLink no devolvió hashed_token',
+        estado: linkErr?.status ?? null,
+      })
+    }
+  }
+
   // Email last, exactly once — only on a genuine new purchase insert. A
   // duplicate delivery (empty `inserted`) or an already-owned course does not
   // re-send. Demo/test provisioning does NOT email (it's an admin dry-run).
@@ -222,6 +268,12 @@ export async function provisionFromPending(
       email,
       fullName: (pending.full_name as string | null) ?? null,
       existingAccount: !created,
+      setPasswordUrl,
+      // `|| undefined` en vez de un booleano siempre presente: mantiene el
+      // campo ausente (no `false`) cuando no aplica, igual que
+      // `setPasswordUrl`, así una llamada de la rama normal sigue
+      // comparando igual frente a un objeto con solo los campos que importan.
+      accountHasNoPassword: passwordless || undefined,
     })
   }
 

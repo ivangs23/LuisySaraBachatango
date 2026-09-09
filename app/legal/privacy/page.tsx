@@ -31,7 +31,9 @@ const SECTIONS: LegalSection[] = [
   },
   {
     heading: 'Compra de un curso y alta de cuenta',
-    body: `Al comprar un curso creamos tu cuenta de alumno. Recogemos: nombre completo, correo electrónico, contraseña (que almacenamos siempre cifrada, nunca en claro), país, ciudad, código postal, fecha de nacimiento, nivel de baile y, de forma opcional, teléfono. Registramos también la aceptación de las condiciones de contratación, con su fecha y versión, y tu solicitud expresa de acceso inmediato al contenido digital.
+    body: `Al comprar un curso creamos tu cuenta de alumno. Recogemos tu nombre completo y tu correo electrónico. Registramos también la aceptación de las condiciones de contratación, con su fecha y versión, tu solicitud expresa de acceso inmediato al contenido digital y, si marcas la casilla correspondiente, tu consentimiento a recibir comunicaciones comerciales.
+
+Tras la compra, recibirás un correo para crear tu contraseña (o, si ya tenías cuenta con nosotros, podrás seguir usando la que ya tenías). La contraseña la eliges tú y la almacenamos siempre cifrada mediante funciones de hash, nunca en claro.
 
 Finalidad: formalizar la compra, crear y gestionar tu cuenta, procesar el pago, darte acceso a los contenidos y emitir la factura correspondiente.
 

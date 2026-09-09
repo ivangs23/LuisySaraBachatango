@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// server-only throws fuera de un contexto de servidor de Next.js; se mockea
+// para el entorno de test (mismo patrón que utils/analytics/visitor-hash.ts
+// importa transitivamente desde actions.ts).
+vi.mock('server-only', () => ({}))
+
 const H = vi.hoisted(() => ({
   isTest: vi.fn().mockResolvedValue(false),
   readCookie: vi.fn().mockResolvedValue(false),
-  hash: vi.fn().mockResolvedValue('$2b$12$hash'),
   provisionPending: vi.fn().mockResolvedValue({ ok: true, userId: 'u1', created: true }),
   sessionCreate: vi.fn().mockResolvedValue({ id: 'cs_1', url: 'https://checkout.stripe.com/x' }),
   courseSingle: vi.fn().mockResolvedValue({ data: { title: 'Curso', price_eur: 129 }, error: null }),
@@ -12,9 +16,15 @@ const H = vi.hoisted(() => ({
   pendingDelete: vi.fn().mockResolvedValue({ error: null }),
   redirect: vi.fn((u: string) => { throw new Error('REDIRECT:' + u) }),
   rateLimit: vi.fn().mockResolvedValue({ ok: true, retryAfter: 0 }),
+  // Por defecto en modo demo, igual que el entorno real de test (VERCEL_ENV
+  // sin definir): así los tests que no tocan el evento del embudo no cambian
+  // de comportamiento.
+  demoMode: vi.fn().mockReturnValue(true),
+  eventInsert: vi.fn().mockResolvedValue({ error: null }),
+  eventInsertPayload: null as Record<string, unknown> | null,
 }))
 vi.mock('@/utils/demo/test-mode', () => ({ isTestPurchaseMode: () => H.isTest(), readTestCookie: () => H.readCookie() }))
-vi.mock('@/utils/checkout/password-hash', () => ({ hashPassword: (p: string) => H.hash(p) }))
+vi.mock('@/utils/demo/mode', () => ({ isDemoMode: () => H.demoMode() }))
 vi.mock('@/utils/checkout/provision-registration', () => ({ provisionFromPending: (...a: unknown[]) => H.provisionPending(...a) }))
 vi.mock('@/utils/stripe/server', () => ({ stripe: { checkout: { sessions: { create: H.sessionCreate } } } }))
 vi.mock('next/navigation', () => ({ redirect: (u: string) => H.redirect(u) }))
@@ -28,77 +38,136 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({
     from: (t: string) => t === 'pending_registrations'
       ? { insert: (payload: Record<string, unknown>) => { H.pendingInsertPayload = payload; return { select: () => ({ single: H.pendingInsert }) } }, delete: () => ({ eq: (_c: string, v: string) => H.pendingDelete(v) }) }
-      : { select: () => ({ eq: () => ({ eq: () => ({ single: H.courseSingle }) }) }) },
+      : t === 'landing_events'
+        ? { insert: (payload: Record<string, unknown>) => { H.eventInsertPayload = payload; return H.eventInsert() } }
+        : { select: () => ({ eq: () => ({ eq: () => ({ single: H.courseSingle }) }) }) },
   }),
 }))
 
 import { landingCheckout } from '@/app/curso-bachatango/comprar/actions'
 const fd = (o: Record<string, string>) => { const f = new FormData(); Object.entries(o).forEach(([k, v]) => f.append(k, v)); return f }
+
+// Formulario reducido (tareas 2/3): dos campos + tres casillas. Ya no hay
+// contraseña, país, ciudad, código postal, fecha de nacimiento, nivel de
+// baile ni teléfono.
 const valid = {
   courseId: 'c1', fullName: 'Ana', email: 'ana@example.com',
-  password: 'Bachata2026', repeatPassword: 'Bachata2026', country: 'ES', city: 'Madrid',
-  postalCode: '28001', dateOfBirth: '1995-05-20', danceLevel: 'principiante', acceptTerms: 'on',
-  acceptDigitalExecution: 'on',
+  isAdult: 'on', acceptTerms: 'on', acceptDigitalExecution: 'on',
 }
-beforeEach(() => { vi.clearAllMocks(); H.isTest.mockResolvedValue(false); H.readCookie.mockResolvedValue(false); H.rateLimit.mockResolvedValue({ ok: true }) })
+const formularioValido = () => fd(valid)
 
-describe('landingCheckout (full registration)', () => {
-  it('real: hashes password, inserts pending, creates Stripe session with client_reference_id=pendingId and NO password fields', async () => {
-    await expect(landingCheckout(fd(valid))).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
-    expect(H.hash).toHaveBeenCalledWith('Bachata2026')
-    // The pending row stores the HASHED password (never plaintext) + the
-    // snake_case-mapped fields.
+// Extrae la URL del redirect que lanza el mock de next/navigation, para
+// poder seguir inspeccionando el estado (mocks) tras el catch.
+function getRedirectUrl(e: unknown): string {
+  if (e instanceof Error && e.message.startsWith('REDIRECT:')) return e.message.slice('REDIRECT:'.length)
+  throw e
+}
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  H.isTest.mockResolvedValue(false); H.readCookie.mockResolvedValue(false); H.rateLimit.mockResolvedValue({ ok: true })
+  H.pendingInsertPayload = null
+  H.demoMode.mockReturnValue(true)
+  H.eventInsert.mockResolvedValue({ error: null })
+  H.eventInsertPayload = null
+})
+
+describe('landingCheckout (formulario reducido)', () => {
+  it('real: inserta el pending sin contraseña y crea la sesión de Stripe con client_reference_id=pendingId', async () => {
+    await expect(landingCheckout(formularioValido())).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
     const row = H.pendingInsertPayload as Record<string, unknown>
-    expect(row.password_hash).toBe('$2b$12$hash')
-    expect(JSON.stringify(row)).not.toContain('Bachata2026')
+    expect(row.password_hash).toBeNull()
     expect(row).toEqual(expect.objectContaining({
-      email: 'ana@example.com', full_name: 'Ana', country: 'ES', city: 'Madrid',
-      postal_code: '28001', date_of_birth: '1995-05-20', dance_level: 'principiante', course_id: 'c1',
+      email: 'ana@example.com', full_name: 'Ana', course_id: 'c1',
       terms_version: '2026-07-14', terms_accepted_at: expect.any(String),
     }))
     const arg = H.sessionCreate.mock.calls[0][0]
     expect(arg.client_reference_id).toBe('pend-1')
     expect(arg.metadata).toEqual(expect.objectContaining({ courseId: 'c1', source: 'landing', pendingId: 'pend-1' }))
     expect(arg.customer_email).toBe('ana@example.com')
-    const asStr = JSON.stringify(arg).toLowerCase()
-    expect(asStr).not.toContain('bachata2026')
-    expect(asStr).not.toContain('password')
-    expect(asStr).not.toContain('$2b$')
+    expect(JSON.stringify(arg).toLowerCase()).not.toContain('password')
   })
-  it('validation error: redirects with ?error= code and NEVER hashes or inserts', async () => {
-    await expect(landingCheckout(fd({ ...valid, acceptTerms: '' }))).rejects.toThrow(/REDIRECT:.*error=terms_not_accepted/)
+
+  it('valida ANTES de gastar cupo: una errata no cuenta como intento', async () => {
+    const fdInvalido = fd({ ...valid, email: 'no-es-email' })
+    await landingCheckout(fdInvalido).catch(getRedirectUrl)
+    expect(H.rateLimit).not.toHaveBeenCalled()
+    expect(H.pendingInsert).not.toHaveBeenCalled()
+  })
+
+  it('no guarda contraseña ni los campos que nadie leía', async () => {
+    await landingCheckout(formularioValido()).catch(getRedirectUrl)
+    const row = H.pendingInsertPayload as Record<string, unknown>
+    expect(row.password_hash).toBeNull()
+    for (const c of ['country', 'city', 'postal_code', 'date_of_birth', 'dance_level', 'phone']) {
+      expect(row[c]).toBeUndefined()
+    }
+  })
+
+  it('sigue sellando los consentimientos antes del pago', async () => {
+    await landingCheckout(formularioValido()).catch(getRedirectUrl)
+    const row = H.pendingInsertPayload as Record<string, unknown>
+    expect(row.terms_version).toBeTruthy()
+    expect(row.terms_accepted_at).toBeTruthy()
+    expect(row.digital_execution_consent_at).toBeTruthy()
+  })
+
+  it('error de validación: redirige con ?error=<code> y NUNCA gasta cupo ni inserta', async () => {
+    await expect(landingCheckout(fd({ ...valid, acceptTerms: '' }))).rejects.toThrow(/REDIRECT:.*error=terms_required/)
     await expect(landingCheckout(fd({ ...valid, acceptDigitalExecution: '' })))
-      .rejects.toThrow(/REDIRECT:.*error=digital_execution_not_accepted/)
-    expect(H.hash).not.toHaveBeenCalled()
+      .rejects.toThrow(/REDIRECT:.*error=digital_execution_required/)
+    expect(H.rateLimit).not.toHaveBeenCalled()
     expect(H.pendingInsert).not.toHaveBeenCalled()
     expect(H.sessionCreate).not.toHaveBeenCalled()
   })
-  it('password mismatch: error=password_mismatch', async () => {
-    await expect(landingCheckout(fd({ ...valid, repeatPassword: 'Other1234' }))).rejects.toThrow(/error=password_mismatch/)
-  })
-  it('rate limited: redirects error=rate, no hash/insert', async () => {
+
+  it('con cupo agotado: redirige error=rate, sin insertar', async () => {
     H.rateLimit.mockResolvedValue({ ok: false, retryAfter: 60 })
-    await expect(landingCheckout(fd(valid))).rejects.toThrow(/error=rate/)
-    expect(H.hash).not.toHaveBeenCalled()
+    await expect(landingCheckout(formularioValido())).rejects.toThrow(/error=rate/)
+    expect(H.pendingInsert).not.toHaveBeenCalled()
   })
-  it('demo/test with admin cookie: provisions inline (isDemo) with a password-free synthetic session, redirects to /gracias?demo=1', async () => {
+
+  it('demo/test con cookie de admin: aprovisiona inline (isDemo) con una sesión sintética sin contraseña, redirige a /gracias?demo=1', async () => {
     H.isTest.mockResolvedValue(true); H.readCookie.mockResolvedValue(true)
-    await expect(landingCheckout(fd(valid))).rejects.toThrow(/REDIRECT:\/gracias\?demo=1/)
+    await expect(landingCheckout(formularioValido())).rejects.toThrow(/REDIRECT:\/gracias\?demo=1/)
     expect(H.sessionCreate).not.toHaveBeenCalled()
     const [synthetic, , opts] = H.provisionPending.mock.calls[0] as [{ client_reference_id: string }, unknown, unknown]
     expect(opts).toEqual({ isDemo: true })
     expect(synthetic.client_reference_id).toBe('pend-1')
-    const s = JSON.stringify(synthetic).toLowerCase()
-    expect(s).not.toContain('bachata2026'); expect(s).not.toContain('password'); expect(s).not.toContain('$2b$')
+    expect(JSON.stringify(synthetic).toLowerCase()).not.toContain('password')
   })
-  it('demo without admin cookie against the prod ref: refuses, deletes pending, no provision', async () => {
+
+  it('demo sin cookie de admin contra la referencia de producción: rechaza, borra el pending, no aprovisiona', async () => {
     H.isTest.mockResolvedValue(true); H.readCookie.mockResolvedValue(false)
     const prev = process.env.NEXT_PUBLIC_SUPABASE_URL
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://jytokoxbsykoyifzbjkd.supabase.co'
     try {
-      await expect(landingCheckout(fd(valid))).rejects.toThrow(/error=account_creation_failed/)
+      await expect(landingCheckout(formularioValido())).rejects.toThrow(/error=account_creation_failed/)
       expect(H.provisionPending).not.toHaveBeenCalled()
       expect(H.pendingDelete).toHaveBeenCalledWith('pend-1')
     } finally { process.env.NEXT_PUBLIC_SUPABASE_URL = prev }
+  })
+
+  it('registra el paso "enviado" del embudo justo tras crear el pending (fuera de modo demo)', async () => {
+    H.demoMode.mockReturnValue(false)
+    await expect(landingCheckout(formularioValido())).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
+    expect(H.eventInsert).toHaveBeenCalledTimes(1)
+    expect(H.eventInsertPayload).toEqual({
+      path: '/curso-bachatango/comprar/enviado',
+      visitor_hash: expect.any(String),
+    })
+  })
+
+  it('en modo demo no registra el evento del embudo (no ensucia métricas de local/preview)', async () => {
+    H.demoMode.mockReturnValue(true)
+    await expect(landingCheckout(formularioValido())).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
+    expect(H.eventInsert).not.toHaveBeenCalled()
+  })
+
+  it('si el insert del evento falla, la compra sigue adelante igualmente', async () => {
+    H.demoMode.mockReturnValue(false)
+    H.eventInsert.mockResolvedValue({ error: { message: 'boom' } })
+    await expect(landingCheckout(formularioValido())).rejects.toThrow('REDIRECT:https://checkout.stripe.com/x')
+    expect(H.sessionCreate).toHaveBeenCalled()
   })
 })

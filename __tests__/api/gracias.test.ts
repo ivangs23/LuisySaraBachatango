@@ -42,6 +42,13 @@ describe('/gracias', () => {
     // el email completo del comprador.
     expect(html).not.toContain('buyer@example.com')
     expect(html).toContain('b***@e***.com')
+    // El formulario ya no pide contraseña: nadie "la eligió al comprar". Esta
+    // es la página que ve el 100% de los compradores nada más pagar (success_url
+    // de Stripe), así que la falsedad aquí es la más visible de todas.
+    expect(html).not.toMatch(/elegiste al comprar/i)
+    // Escapatoria real para quien no reciba el correo (p. ej. cayó en spam):
+    // sin contraseña propia, sin este enlace no hay forma de entrar.
+    expect(html).toContain('/forgot-password')
   })
 
   it('sin session_id: mensaje neutro, no llama a Stripe', async () => {

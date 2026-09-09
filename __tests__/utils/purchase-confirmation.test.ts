@@ -82,4 +82,77 @@ describe('sendPurchaseConfirmation', () => {
     fetchMock.mockRejectedValue(new Error('network down'))
     await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBeUndefined()
   })
+
+  // El botón de "fijar contraseña" (tarea 6 del plan): la cuenta se crea sin
+  // contraseña durante la compra y el comprador la elige desde este enlace.
+  describe('con setPasswordUrl (cuenta nueva, sin contraseña elegida en la compra)', () => {
+    const setPasswordUrl = 'https://luisysarabachatango.com/auth/confirm?token_hash=abc123&type=recovery&next=/reset-password'
+
+    it('el botón lleva al enlace de fijar contraseña, no a /login', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, setPasswordUrl })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toContain('token_hash=abc123')
+      expect(body.html).toMatch(/crea tu contraseña/i)
+      expect(body.text).toContain('token_hash=abc123')
+    })
+
+    it('nunca dice "la contraseña que elegiste" cuando no se eligió ninguna', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, setPasswordUrl })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).not.toMatch(/elegiste durante la compra/i)
+      expect(body.text).not.toMatch(/elegiste durante la compra/i)
+    })
+
+    it('avisa de que el enlace caduca y es de un solo uso, con la salida de "olvidé mi contraseña"', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, setPasswordUrl })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toMatch(/caduca/i)
+      expect(body.html).toMatch(/olvidaste tu contraseña/i)
+    })
+  })
+
+  describe('sin setPasswordUrl', () => {
+    it('cuenta ya existente: manda al login de siempre, sin mencionar crear contraseña', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: true })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toContain('/login')
+      expect(body.html).not.toMatch(/crea tu contraseña/i)
+    })
+
+    it('cuenta nueva sin enlace (compra en vuelo con el flujo antiguo): sigue diciendo que use la contraseña de la compra', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toMatch(/contraseña que elegiste durante la compra/i)
+      expect(body.html).toContain('/login')
+      expect(body.html).not.toMatch(/crea tu contraseña/i)
+    })
+  })
+
+  // Hallazgo 1 de la revisión (AUDITORIA-2026-09): "sin setPasswordUrl" por sí
+  // solo es ambiguo. Puede ser una compra en vuelo del flujo antiguo (arriba,
+  // SÍ tiene contraseña real) o una cuenta nueva sin contraseña cuyo enlace
+  // falló al generarse (aquí, NO tiene ninguna). Confundirlas le decía al
+  // segundo comprador que usara una contraseña que nunca existió.
+  describe('sin setPasswordUrl, accountHasNoPassword (el enlace no se pudo generar)', () => {
+    it('nunca dice "la contraseña que elegiste" cuando no se eligió ninguna', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, accountHasNoPassword: true })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).not.toMatch(/elegiste durante la compra/i)
+      expect(body.text).not.toMatch(/elegiste durante la compra/i)
+    })
+
+    it('dice explícitamente que la cuenta todavía no tiene contraseña', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, accountHasNoPassword: true })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toMatch(/todavía no tiene contraseña/i)
+    })
+
+    it('el botón principal manda a "¿Olvidaste tu contraseña?" en vez de a /login', async () => {
+      await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false, accountHasNoPassword: true })
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.html).toMatch(/olvidaste tu contraseña/i)
+      expect(body.html).toContain('/forgot-password')
+      expect(body.html).not.toContain('/login')
+    })
+  })
 })
