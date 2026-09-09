@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendPurchaseConfirmation } from '@/utils/email/purchase-confirmation'
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest'
 import { alertaCritica } from '@/utils/alerta'
+import { sesionLiquidada } from '@/utils/checkout/session-status'
 
 
 export type ProvisionResult =
@@ -27,7 +28,7 @@ export async function provisionFromPending(
   // 'paid' (card) or 'no_payment_required' (a 100%-off promo / full credit —
   // allow_promotion_codes is on, so this state is reachable). Both mean Stripe
   // collected whatever was owed and the buyer should be provisioned.
-  if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') {
+  if (!sesionLiquidada(session)) {
     return { ok: false, reason: 'not-paid' }
   }
   const amount = session.amount_total

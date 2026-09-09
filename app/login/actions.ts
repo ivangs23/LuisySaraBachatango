@@ -8,6 +8,7 @@ import { createClient } from '@/utils/supabase/server'
 import { rateLimit, rateLimitKey } from '@/utils/rate-limit'
 import { getClientIp } from '@/utils/auth/client-ip'
 import { MIN_PASSWORD_LENGTH } from '@/utils/auth/password'
+import { avisoAuth } from '@/utils/alerta'
 import { EMAIL_RE } from '@/utils/auth/email'
 
 export async function login(formData: FormData) {
@@ -69,6 +70,7 @@ export async function resendConfirmation(formData: FormData) {
     // Se registra pero no se revela: puede ser simplemente que ese email no
     // exista o que ya esté confirmado.
     console.error('[resendConfirmation] %s', error.message)
+    avisoAuth('Reenvío de confirmación rechazado', { codigo: error.code, estado: error.status })
   }
   redirect('/login?message=email_confirmation')
 }
@@ -105,6 +107,13 @@ export async function signup(formData: FormData) {
   })
 
   if (error) {
+    // Se descartaba entero: ni un console.error. Si `handle_new_user` llegara a
+    // fallar, TODAS las altas se romperían y la única señal sería un genérico
+    // "no se pudo crear la cuenta" en pantalla. Vigilar el canje de los enlaces
+    // no puede detectar esto: si el correo no sale, no hay enlace que pulsar.
+    avisoAuth('Alta fallida: Supabase rechazó signUp', {
+      codigo: error.code, estado: error.status,
+    })
     redirect('/login?error=signup_failed')
   }
 
@@ -113,6 +122,19 @@ export async function signup(formData: FormData) {
 }
 
 export async function resetPassword(formData: FormData) {
+  // El único punto de entrada anónimo de este módulo que no limitaba: `login`,
+  // `resendConfirmation` y `signup` sí lo hacían. El presupuesto de correo de
+  // auth de Supabase es común, y por él pasa también `inviteUserByEmail`, que es
+  // como recibe su acceso quien acaba de PAGAR. Agotarlo deja al comprador sin
+  // el correo que le da acceso.
+  //
+  // 5/hora: holgado para quien de verdad no recuerda su contraseña, y el
+  // limitador falla cerrado, así que apretar más castigaría a quien acaba de
+  // recuperar este camino.
+  const ip = getClientIp(await headers())
+  const rl = await rateLimit(rateLimitKey([ip, 'reset-password']), 5, 60 * 60 * 1000)
+  if (!rl.ok) redirect('/login?error=rate_limit')
+
   const supabase = await createClient()
 
   const email = formData.get('email') as string
@@ -125,6 +147,7 @@ export async function resetPassword(formData: FormData) {
   // to avoid leaking account existence (oracle).
   if (error) {
     console.error('[resetPassword] internal error', error.message)
+    avisoAuth('Envío de restablecimiento rechazado', { codigo: error.code, estado: error.status })
   }
 
   revalidatePath('/', 'layout')
