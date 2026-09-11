@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { isTestPurchaseMode } from '@/utils/demo/test-mode';
 import { maskEmail } from '@/utils/sanitize';
 import { provisionFromPending } from '@/utils/checkout/provision-registration';
+import PurchaseTracking from './PurchaseTracking';
 import styles from './gracias.module.css';
 import { alertaCritica } from '@/utils/alerta'
 
@@ -67,6 +68,11 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
 
   let email: string | null = null;
   let paid = false;
+  // Importe real cobrado, para reportar la conversión con su valor. Sale de
+  // Stripe, no de la URL: así nadie puede inflar los ingresos manipulando un
+  // parámetro.
+  let importe = 0;
+  let moneda = 'EUR';
   if (session_id) {
     try {
       const session = await stripe.checkout.sessions.retrieve(session_id);
@@ -118,6 +124,8 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
       // acabar en manos de terceros (capturas, logs, referrers) — esta página
       // no debe funcionar como oráculo del email completo del comprador.
       email = maskEmail(session.customer_details?.email ?? null);
+      importe = (session.amount_total ?? 0) / 100;
+      moneda = (session.currency ?? 'eur').toUpperCase();
     } catch {
       // sesión inválida/expirada → mensaje neutro
     }
@@ -128,6 +136,7 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
       <div className={styles.card}>
         {paid ? (
           <>
+            <PurchaseTracking transactionId={session_id ?? ''} value={importe} currency={moneda} />
             <h1 className={styles.title}>¡Pago recibido! 🎉</h1>
             <p className={styles.body}>
               {email
