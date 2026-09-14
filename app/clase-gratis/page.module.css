@@ -78,10 +78,8 @@
 }
 
 .upsellPrice {
-  font-family: var(--font-serif);
-  font-size: clamp(2.2rem, 5vw, 3rem);
-  color: var(--primary);
-  line-height: 1;
+  /* El tamaño y el color los pone OfferPrice; aquí sólo la colocación. */
+  align-items: center;
   margin: 1.25rem 0 0;
 }
 

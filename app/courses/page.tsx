@@ -4,6 +4,23 @@ import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { getCurrentUser } from '@/utils/supabase/get-user'
 import { unstable_cache } from 'next/cache'
+import { selectWithOfferColumns } from '@/utils/courses/offer'
+
+type CourseRow = {
+  id: string
+  title: string
+  description: string | null
+  image_url: string | null
+  month: number | null
+  year: number | null
+  is_published: boolean
+  course_type: 'membership' | 'complete'
+  category: string | null
+  price_eur: number | null
+  compare_at_price_eur?: number | null
+  spots_left?: number | null
+  stripe_price_id: string | null
+}
 
 // Shared cache for the published courses list — same for all users.
 // Uses the anon key (no cookies) because unstable_cache cannot call cookies() internally.
@@ -15,12 +32,14 @@ const getPublishedCourses = unstable_cache(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-    const { data, error } = await supabase
-      .from('courses')
-      .select('id, title, description, image_url, month, year, is_published, course_type, category, price_eur, stripe_price_id')
-      .eq('is_published', true)
-      .order('year', { ascending: false })
-      .order('month', { ascending: false })
+    const { data, error } = await selectWithOfferColumns<CourseRow[]>((offerColumns) =>
+      supabase
+        .from('courses')
+        .select(`id, title, description, image_url, month, year, is_published, course_type, category, stripe_price_id, ${offerColumns}`)
+        .eq('is_published', true)
+        .order('year', { ascending: false })
+        .order('month', { ascending: false })
+    )
     if (error) console.error('Error fetching courses:', error)
     return data ?? []
   },

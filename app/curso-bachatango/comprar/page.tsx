@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
+import { buildOffer, formatSpotsLeft, selectWithOfferColumns } from '@/utils/courses/offer';
+import OfferPrice from '@/components/OfferPrice';
 import LandingCheckoutForm from '@/components/LandingCheckoutForm';
 import styles from './comprar.module.css';
 
@@ -31,15 +33,35 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: course } = await supabase
-    .from('courses').select('id, title, price_eur').eq('id', courseId).eq('is_published', true).single();
+  const { data: course } = await selectWithOfferColumns<{
+    id: string; title: string; price_eur: number | null;
+    compare_at_price_eur?: number | null; spots_left?: number | null;
+  }>((offerColumns) =>
+    supabase
+      .from('courses').select(`id, title, ${offerColumns}`).eq('id', courseId).eq('is_published', true).single(),
+  );
   if (!course) notFound();
+
+  const offer = buildOffer(course);
+  const spotsText = formatSpotsLeft('Quedan {n} plazas disponibles', offer.spotsLeft);
 
   return (
     <div className={styles.wrap}>
       <div className={styles.card}>
         <h1 className={styles.title}>{course.title}</h1>
-        <p className={styles.price}>€{course.price_eur} · pago único</p>
+        {offer.price !== null && (
+          <OfferPrice
+            className={styles.priceBlock}
+            price={offer.price}
+            compareAt={offer.compareAt}
+            discountPct={offer.discountPct}
+            spotsText={spotsText}
+            currency="prefix"
+            size="md"
+            align="center"
+          />
+        )}
+        <p className={styles.price}>Pago único</p>
         <p className={styles.note}>
           Producto digital con acceso inmediato. Pago único, <strong>sin devoluciones</strong>: al comprar
           solicitas el acceso inmediato y aceptas perder el derecho de desistimiento de 14 días (art. 103.m

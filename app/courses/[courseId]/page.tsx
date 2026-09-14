@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/utils/supabase/server'
+import { selectWithOfferColumns } from '@/utils/courses/offer'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { getCurrentUser } from '@/utils/supabase/get-user'
 import { safeJsonLd } from '@/utils/jsonld'
@@ -35,17 +36,34 @@ export async function generateMetadata(
   };
 }
 
+type CourseDetailRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  course_type: 'membership' | 'complete' | null;
+  is_published: boolean;
+  year: number | null;
+  month: number | null;
+  category: string | null;
+  price_eur: number | null;
+  compare_at_price_eur?: number | null;
+  spots_left?: number | null;
+};
+
 export default async function CourseDetailPage(props: { params: Promise<{ courseId: string }> }) {
   const params = await props.params;
   const supabase = await createClient()
 
   // Public-facing data — fetched before auth check so Googlebot sees it.
-  const { data: course, error: courseError } = await supabase
-    .from('courses')
-    .select('id, title, description, image_url, price_eur, course_type, is_published, year, month, category')
-    .eq('id', params.courseId)
-    .eq('is_published', true)
-    .single();
+  const { data: course, error: courseError } = await selectWithOfferColumns<CourseDetailRow>((offerColumns) =>
+    supabase
+      .from('courses')
+      .select(`id, title, description, image_url, course_type, is_published, year, month, category, ${offerColumns}`)
+      .eq('id', params.courseId)
+      .eq('is_published', true)
+      .single(),
+  );
 
   if (courseError || !course) notFound();
 
@@ -119,8 +137,14 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   const isAdmin = profile?.role === 'admin'
   const lessonIds = lessons?.map(l => l.id) ?? []
 
-  const courseFirstDay = new Date(course.year, course.month - 1, 1).toISOString()
-  const courseLastDay = new Date(course.year, course.month, 0, 23, 59, 59).toISOString()
+  // Los cursos `complete` no llevan mes/año. Hasta ahora el tipo inferido los
+  // dejaba pasar y JS los coaccionaba a 0; se mantiene ese mismo rango (un mes
+  // de 1899, que no cubre ninguna suscripción) ahora de forma explícita: el
+  // acceso a un `complete` se decide por compra, no por estas fechas.
+  const courseYear = course.year ?? 0
+  const courseMonth = course.month ?? 0
+  const courseFirstDay = new Date(courseYear, courseMonth - 1, 1).toISOString()
+  const courseLastDay = new Date(courseYear, courseMonth, 0, 23, 59, 59).toISOString()
 
   // Batch 2: access checks and progress — run in parallel now that we have course dates and lesson IDs.
   const [
@@ -175,6 +199,8 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
           course_type: course.course_type ?? 'complete',
           category: course.category ?? null,
           price_eur: course.price_eur ?? null,
+          compare_at_price_eur: course.compare_at_price_eur ?? null,
+          spots_left: course.spots_left ?? null,
         }}
         lessons={lessons ?? []}
         lessonCount={lessonCount ?? (lessons?.length ?? 0)}

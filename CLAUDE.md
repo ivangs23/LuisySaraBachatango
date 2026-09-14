@@ -42,6 +42,25 @@ Two course types control access:
 
 Videos are served by Mux. The `lessons` table stores a `mux_asset_id` + `mux_playback_id`. The lesson page (server component) checks access (admin, purchase, or subscription covering the course's month/year), then signs a short-lived JWT via `signPlaybackToken()` (`utils/mux/server.ts`) and passes it to `<MuxPlayer>`.
 
+### Offer Display (struck-through price + spots)
+
+`utils/courses/offer.ts` is the single place that decides what an offer looks
+like. `buildOffer()` turns a course row into `{ price, compareAt, spotsLeft,
+discountPct }`, dropping a `compare_at_price_eur` that does not exceed
+`price_eur` and a `spots_left` of 0 or less. `<OfferPrice>`
+([components/OfferPrice.tsx](components/OfferPrice.tsx)) renders it and takes its
+labels as props, so it works from both Server Components (landing, which resolves
+`copy.ts` by cookie) and Client Components (`useLanguage()`).
+
+Only `price_eur` ever reaches Stripe or the JSON-LD `Offer`. The struck-through
+number is decoration and must never drive an amount.
+
+Course queries fetch the offer columns through `selectWithOfferColumns()`, which
+retries without them if the DB has not run
+[supabase/2026_09_course_offer_fields.sql](supabase/2026_09_course_offer_fields.sql)
+yet — a deploy that lands before the migration loses the strike-through, not the
+whole course list.
+
 ### Data Flow Pattern
 
 All mutations go through **Next.js Server Actions** (`'use server'`). Pages are Server Components that fetch data directly via `createClient()` (server Supabase client). Client components use `'use client'` and receive data as props.
@@ -71,7 +90,7 @@ All translations live in `utils/dictionaries.ts` as a single typed object with k
 | Table | Purpose |
 |---|---|
 | `profiles` | Extends `auth.users`; holds `role`, `stripe_customer_id`, social links |
-| `courses` | Course metadata; `course_type` (`membership`\|`complete`), `month`/`year` for subscription matching |
+| `courses` | Course metadata; `course_type` (`membership`\|`complete`), `month`/`year` for subscription matching, `price_eur` (the amount actually charged) plus the display-only offer fields `compare_at_price_eur` (struck-through "before" price) and `spots_left` (manual scarcity counter) |
 | `events` | Public agenda; localized `title`/`description` JSONB (es/en/fr/de/it/ja), `start_date`/`end_date`, `is_published` |
 | `lessons` | Belong to courses; `video_source` (`url`\|`upload`), `is_free`, `media_config` (multi-track video) |
 | `subscriptions` | Synced from Stripe; `status` and period dates used for access gating |

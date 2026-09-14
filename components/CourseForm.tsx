@@ -24,6 +24,8 @@ type CourseData = {
   course_type: 'membership' | 'complete';
   category?: string | null;
   price_eur?: number | null;
+  compare_at_price_eur?: number | null;
+  spots_left?: number | null;
   stripe_price_id?: string | null;
 };
 
@@ -42,6 +44,8 @@ export default function CourseForm({ initialData }: CourseFormProps) {
   const [month, setMonth] = useState<number | ''>(initialData?.month ?? new Date().getMonth() + 1);
   const [category, setCategory] = useState(initialData?.category || 'bachatango');
   const [priceEur, setPriceEur] = useState<number | ''>(initialData?.price_eur ?? '');
+  const [compareAtPriceEur, setCompareAtPriceEur] = useState<number | ''>(initialData?.compare_at_price_eur ?? '');
+  const [spotsLeft, setSpotsLeft] = useState<number | ''>(initialData?.spots_left ?? '');
   const [isPublished, setIsPublished] = useState(initialData?.is_published ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -55,10 +59,12 @@ export default function CourseForm({ initialData }: CourseFormProps) {
       month !== (initialData.month ?? '') ||
       category !== (initialData.category ?? '') ||
       priceEur !== (initialData.price_eur ?? '') ||
+      compareAtPriceEur !== (initialData.compare_at_price_eur ?? '') ||
+      spotsLeft !== (initialData.spots_left ?? '') ||
       isPublished !== initialData.is_published ||
       imageFile !== null
     );
-  }, [courseType, title, description, year, month, category, priceEur, isPublished, imageFile, initialData]);
+  }, [courseType, title, description, year, month, category, priceEur, compareAtPriceEur, spotsLeft, isPublished, imageFile, initialData]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,6 +83,8 @@ export default function CourseForm({ initialData }: CourseFormProps) {
     formData.set('courseType', courseType);
     formData.set('category', courseType === 'complete' ? category : '');
     formData.set('priceEur', priceEur !== '' ? String(priceEur) : '');
+    formData.set('compareAtPriceEur', compareAtPriceEur !== '' ? String(compareAtPriceEur) : '');
+    formData.set('spotsLeft', spotsLeft !== '' ? String(spotsLeft) : '');
     // Membership-only fields
     if (courseType === 'membership') {
       formData.set('year', year !== '' ? String(year) : '');
@@ -194,6 +202,32 @@ export default function CourseForm({ initialData }: CourseFormProps) {
         <input type="number" id="priceEur" name="priceEur" min="0" className={styles.input}
           placeholder="Ej: 19"
           value={priceEur} onChange={(e) => setPriceEur(e.target.value ? parseInt(e.target.value) : '')} />
+      </div>
+
+      {/* Oferta: precio tachado + plazas anunciadas */}
+      <div className={styles.group}>
+        <label htmlFor="compareAtPriceEur">Precio antes de la oferta (€)</label>
+        <input type="number" id="compareAtPriceEur" name="compareAtPriceEur" min="0" className={styles.input}
+          placeholder="Ej: 150 — vacío para no enseñar tachado"
+          value={compareAtPriceEur}
+          onChange={(e) => setCompareAtPriceEur(e.target.value ? parseInt(e.target.value) : '')} />
+        <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+          Se enseña tachado junto al precio. Sólo aparece si es mayor que el precio actual.
+          Legalmente debe ser el precio más bajo que aplicaste en los 30 días anteriores
+          (art. 20 RDLeg 1/2007).
+        </small>
+      </div>
+
+      <div className={styles.group}>
+        <label htmlFor="spotsLeft">Plazas disponibles</label>
+        <input type="number" id="spotsLeft" name="spotsLeft" min="0" className={styles.input}
+          placeholder="Ej: 5 — vacío para no anunciar plazas"
+          value={spotsLeft}
+          onChange={(e) => setSpotsLeft(e.target.value ? parseInt(e.target.value) : '')} />
+        <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+          Se anuncia como «Quedan N plazas disponibles». No baja solo con las ventas: lo
+          actualizas tú. Anunciar una escasez que no es real es práctica desleal.
+        </small>
       </div>
 
       <div className={styles.group}>

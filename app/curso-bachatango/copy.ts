@@ -31,7 +31,7 @@ export type LandingCopy = {
   bio: { title: string; body: string };
   testimonials: { title: string; items: readonly Testimonio[] };
   freeClass: { title: string; body: string; cta: string; trust: readonly string[] };
-  offer: { title: string; includes: readonly string[]; priceNote: string; cta: string };
+  offer: { title: string; includes: readonly string[]; priceNote: string; cta: string; before: string; spotsLeft: string };
   faq: readonly Pregunta[];
   finalCta: { title: string; cta: string };
 };
@@ -95,6 +95,8 @@ const es: LandingCopy = {
       'Comunidad privada de alumnos',
     ],
     priceNote: 'Pago único · Acceso de por vida',
+    before: 'Antes',
+    spotsLeft: 'Quedan {n} plazas disponibles',
     cta: 'Comprar ahora',
   },
   faq: [
@@ -164,6 +166,8 @@ const en: LandingCopy = {
       'Private student community',
     ],
     priceNote: 'One-time payment · Lifetime access',
+    before: 'Before',
+    spotsLeft: 'Only {n} spots left',
     cta: 'Buy now',
   },
   faq: [
@@ -233,6 +237,8 @@ const fr: LandingCopy = {
       'Communauté privée d’élèves',
     ],
     priceNote: 'Paiement unique · Accès à vie',
+    before: 'Avant',
+    spotsLeft: 'Plus que {n} places disponibles',
     cta: 'Acheter maintenant',
   },
   faq: [
@@ -302,6 +308,8 @@ const de: LandingCopy = {
       'Private Community für Teilnehmende',
     ],
     priceNote: 'Einmalzahlung · Lebenslanger Zugang',
+    before: 'Vorher',
+    spotsLeft: 'Nur noch {n} Plätze frei',
     cta: 'Jetzt kaufen',
   },
   faq: [
@@ -371,6 +379,8 @@ const it: LandingCopy = {
       'Comunità privata di allievi',
     ],
     priceNote: 'Pagamento unico · Accesso a vita',
+    before: 'Prima',
+    spotsLeft: 'Restano solo {n} posti',
     cta: 'Acquista ora',
   },
   faq: [
@@ -440,6 +450,8 @@ const ja: LandingCopy = {
       '受講生限定のコミュニティ',
     ],
     priceNote: '買い切り · 生涯アクセス',
+    before: '通常価格',
+    spotsLeft: '残り{n}席',
     cta: '今すぐ購入',
   },
   faq: [

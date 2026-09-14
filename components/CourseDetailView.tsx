@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Lock, Play, Check, ArrowLeft, Calendar, Sparkles } from 'lucide-react';
 import BuyCourseButton from '@/components/BuyCourseButton';
+import OfferPrice from '@/components/OfferPrice';
+import { buildOffer, formatSpotsLeft } from '@/utils/courses/offer';
 import Reveal from '@/components/Reveal';
 import styles from '@/app/courses/[courseId]/course-detail.module.css';
 
@@ -31,6 +33,8 @@ export type CourseDetailCourse = {
   course_type: 'membership' | 'complete';
   category: string | null;
   price_eur: number | null;
+  compare_at_price_eur?: number | null;
+  spots_left?: number | null;
 };
 
 export type CourseDetailLesson = {
@@ -134,6 +138,7 @@ export default function CourseDetailView({
   const progressPct =
     lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
   const lessonTree = buildLessonTree(lessons);
+  const offer = buildOffer(course);
 
   const monthLabel =
     course.month && course.year
@@ -297,12 +302,25 @@ export default function CourseDetailView({
               ))}
             </ul>
 
+            {offer.price !== null && (
+              <OfferPrice
+                className={styles.lockedOffer}
+                price={offer.price}
+                compareAt={offer.compareAt}
+                discountPct={offer.discountPct}
+                spotsText={formatSpotsLeft('Quedan {n} plazas disponibles', offer.spotsLeft)}
+                currency="prefix"
+                size="md"
+                align="center"
+              />
+            )}
+
             <div className={styles.lockedActions}>
               <BuyCourseButton
                 courseId={course.id}
                 label={
-                  course.price_eur != null
-                    ? `Comprar curso · €${course.price_eur}`
+                  offer.price !== null
+                    ? `Comprar curso · €${offer.price}`
                     : 'Comprar curso'
                 }
               />

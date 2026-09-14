@@ -49,6 +49,10 @@ export const fr: Dictionary = {
     scrollLabel: "Défiler pour voir plus",
     stats: { years: "ANS DE DANSE", students: "ÉLÈVES", countries: "PAYS" }
   },
+  offer: {
+    before: "Avant",
+    spotsLeft: "Plus que {n} places disponibles"
+  },
   home: {
     offer: {
       chapter: "04",

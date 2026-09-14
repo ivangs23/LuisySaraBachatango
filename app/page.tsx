@@ -8,6 +8,7 @@ import FAQ from "@/components/FAQ";
 import Newsletter from "@/components/Newsletter";
 import InstagramGallery from "@/components/InstagramGallery";
 import { getLandingCourse } from "@/utils/courses/landing-course";
+import { buildOffer } from "@/utils/courses/offer";
 import { buildFaqJsonLd } from "@/utils/seo/faq-jsonld";
 import { safeJsonLd } from "@/utils/jsonld";
 import { getLandingStats, getTestimonials, getFaqItems } from "@/utils/landing/content";
@@ -52,7 +53,7 @@ export default async function Home() {
       <Testimonials items={testimonials} />
 
       {/* Oferta — solo si el curso existe y está publicado */}
-      {course && <HomeOffer price={course.price_eur} />}
+      {course && <HomeOffer offer={buildOffer(course)} />}
 
       {/* Gallery */}
       <InstagramGallery />

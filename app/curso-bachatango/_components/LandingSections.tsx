@@ -1,4 +1,6 @@
 import Reveal from '@/components/Reveal';
+import OfferPrice from '@/components/OfferPrice';
+import { formatSpotsLeft, type CourseOffer } from '@/utils/courses/offer';
 import type { LandingCopy } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
 import LandingFaq from './LandingFaq';
@@ -10,7 +12,7 @@ import styles from '../page.module.css';
 interface SectionsProps {
   copy: LandingCopy;
   courseId: string;
-  price: number;
+  offer: CourseOffer;
   /** null si la BD no responde: la página sigue vendiendo sin el temario. */
   curriculum: Curriculum | null;
   /**
@@ -26,8 +28,9 @@ interface SectionsProps {
   } | null;
 }
 
-export default function LandingSections({ courseId, price, curriculum, freeClass, copy }: SectionsProps) {
+export default function LandingSections({ courseId, offer, curriculum, freeClass, copy }: SectionsProps) {
   const c = copy;
+  const spotsText = formatSpotsLeft(copy.offer.spotsLeft, offer.spotsLeft);
   return (
     <>
       {/* Dolor → promesa */}
@@ -103,7 +106,19 @@ export default function LandingSections({ courseId, price, curriculum, freeClass
           <ul className={styles.includes}>
             {c.offer.includes.map((it, i) => <li key={i}>{it}</li>)}
           </ul>
-          <p className={styles.price}>€{price}</p>
+          {offer.price !== null && (
+            <OfferPrice
+              className={styles.offerPrice}
+              price={offer.price}
+              compareAt={offer.compareAt}
+              discountPct={offer.discountPct}
+              spotsText={spotsText}
+              compareAtLabel={copy.offer.before}
+              currency="prefix"
+              size="lg"
+              align="center"
+            />
+          )}
           <p className={styles.priceNote}>{c.offer.priceNote}</p>
           <CourseCtaButton courseId={courseId} label={c.offer.cta} />
         </Reveal>

@@ -74,7 +74,9 @@ test.describe('Home conectada al funnel', () => {
     await expect(offer).toBeVisible()
 
     // Precio de courses.price_eur: dígitos seguidos de €, nunca NaN ni undefined.
-    await expect(offer.getByText(/^\d+(?:[.,]\d+)?\s*€$/)).toBeVisible()
+    // Si hay oferta, delante va el precio anterior tachado (<s>), que casa con
+    // el mismo patrón: se comprueba el último, que es el que se paga.
+    await expect(offer.getByText(/^\d+(?:[.,]\d+)?\s*€$/).last()).toBeVisible()
     await expect(offer.locator('a[href="/curso-bachatango"]')).toBeVisible()
   })
 

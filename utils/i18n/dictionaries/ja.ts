@@ -49,6 +49,10 @@ export const ja: Dictionary = {
     scrollLabel: "スクロールして詳細を見る",
     stats: { years: "ダンス歴", students: "受講生", countries: "訪問国" }
   },
+  offer: {
+    before: "通常価格",
+    spotsLeft: "残り{n}席"
+  },
   home: {
     offer: {
       chapter: "04",

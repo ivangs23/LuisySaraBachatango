@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { getDict } from '@/utils/get-dict';
 import { getFreeLesson } from '@/utils/courses/free-lesson';
 import { getLandingCourse } from '@/utils/courses/landing-course';
+import { buildOffer, formatSpotsLeft } from '@/utils/courses/offer';
+import OfferPrice from '@/components/OfferPrice';
 import { signPublicPlaybackToken, signPublicThumbnailToken } from '@/utils/mux/public-token';
 import FreeClassPlayer from '@/components/FreeClassPlayer';
 import styles from './page.module.css';
@@ -32,6 +34,9 @@ export default async function FreeClassPage() {
   const c = dict.freeClass;
 
   const [lesson, course] = await Promise.all([getFreeLesson(), getLandingCourse()]);
+  // `course` puede ser null (BD caída o curso despublicado): buildOffer lo
+  // absorbe y el upsell se queda sin precio en vez de romper la página.
+  const upsellOffer = buildOffer(course);
 
   if (!lesson) {
     return (
@@ -72,7 +77,18 @@ export default async function FreeClassPage() {
       <section className={styles.upsell}>
         <h2 className={styles.upsellTitle}>{c.ctaTitle}</h2>
         <p className={styles.upsellBody}>{c.ctaBody}</p>
-        {course && <p className={styles.upsellPrice}>{course.price_eur} €</p>}
+        {upsellOffer.price !== null && (
+          <OfferPrice
+            className={styles.upsellPrice}
+            price={upsellOffer.price}
+            compareAt={upsellOffer.compareAt}
+            discountPct={upsellOffer.discountPct}
+            spotsText={formatSpotsLeft(dict.offer.spotsLeft, upsellOffer.spotsLeft)}
+            compareAtLabel={dict.offer.before}
+            size="lg"
+            align="center"
+          />
+        )}
         <Link href="/curso-bachatango" className={styles.cta}>{c.cta}</Link>
       </section>
     </div>
