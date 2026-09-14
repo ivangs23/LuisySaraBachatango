@@ -16,6 +16,7 @@ import styles from '@/app/dashboard/dashboard.module.css';
 import coursesStyles from '@/app/courses/courses.module.css';
 import cardStyles from '@/components/CoursesClient.module.css';
 import { safeImageUrl } from '@/utils/sanitize';
+import { buildOffer, formatSpotsLeft } from '@/utils/courses/offer';
 
 type Course = {
   id: string;
@@ -27,6 +28,8 @@ type Course = {
   course_type: 'membership' | 'complete';
   category: string | null;
   price_eur: number | null;
+  compare_at_price_eur?: number | null;
+  spots_left?: number | null;
 };
 
 type CoursesPageDict = {
@@ -36,6 +39,11 @@ type CoursesPageDict = {
   buy: string;
   viewMore: string;
   priceNA: string;
+};
+
+type OfferDict = {
+  before: string;
+  spotsLeft: string;
 };
 
 type DashboardDict = {
@@ -58,6 +66,7 @@ type Props = {
   role: 'member' | 'premium' | 'admin';
   t: DashboardDict;
   tc: CoursesPageDict;
+  to: OfferDict;
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -71,12 +80,16 @@ const CATEGORY_LABELS: Record<string, string> = {
 function CourseCard({
   course,
   tc,
+  to,
   accessible,
 }: {
   course: Course;
   tc: CoursesPageDict;
+  to: OfferDict;
   accessible: boolean;
 }) {
+  const offer = buildOffer(course);
+  const spotsText = accessible ? null : formatSpotsLeft(to.spotsLeft, offer.spotsLeft);
   return (
     <Link href={`/courses/${course.id}`} className={coursesStyles.card}>
       <div className={coursesStyles.imageContainer}>
@@ -120,10 +133,23 @@ function CourseCard({
           </p>
         )}
         <p className={coursesStyles.description}>{course.description}</p>
+        {spotsText && <p className={cardStyles.spotsNote}>{spotsText}</p>}
+
         <div className={cardStyles.cardFooter}>
           {!accessible && (
             <span className={cardStyles.priceTag}>
-              {course.price_eur ? `€${course.price_eur}` : tc.priceNA}
+              {offer.price !== null ? (
+                <>
+                  {offer.compareAt !== null && (
+                    <s className={cardStyles.priceCompare}>
+                      <span className="sr-only">{to.before}: </span>€{offer.compareAt}
+                    </s>
+                  )}
+                  €{offer.price}
+                </>
+              ) : (
+                tc.priceNA
+              )}
             </span>
           )}
           <span className={coursesStyles.cta}>
@@ -143,6 +169,7 @@ export default function DashboardClient({
   role,
   t,
   tc,
+  to,
 }: Props) {
   const hour = new Date().getHours();
   const greeting =
@@ -307,7 +334,7 @@ export default function DashboardClient({
                   direction="up"
                   distance={20}
                 >
-                  <CourseCard course={course} tc={tc} accessible />
+                  <CourseCard course={course} tc={tc} to={to} accessible />
                 </Reveal>
               ))}
             </div>
@@ -364,7 +391,7 @@ export default function DashboardClient({
                   direction="up"
                   distance={20}
                 >
-                  <CourseCard course={course} tc={tc} accessible={false} />
+                  <CourseCard course={course} tc={tc} to={to} accessible={false} />
                 </Reveal>
               ))}
             </div>

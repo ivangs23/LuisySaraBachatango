@@ -7,6 +7,7 @@ import { LayoutGroup, motion } from 'motion/react';
 import styles from './CoursesClient.module.css';
 import Reveal from './Reveal';
 import { useLanguage } from '@/context/LanguageContext';
+import { buildOffer, formatSpotsLeft } from '@/utils/courses/offer';
 import { safeImageUrl } from '@/utils/sanitize';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -28,6 +29,8 @@ type Course = {
   course_type: 'membership' | 'complete';
   category: string | null;
   price_eur: number | null;
+  compare_at_price_eur?: number | null;
+  spots_left?: number | null;
   stripe_price_id: string | null;
 };
 
@@ -38,17 +41,22 @@ type Props = {
 };
 
 type Dict = typeof import('@/utils/dictionaries').dictionaries['es']['coursesPage'];
+type OfferDict = typeof import('@/utils/dictionaries').dictionaries['es']['offer'];
 
 type CourseCardProps = {
   course: Course;
   accessible: boolean;
   index: number;
   tc: Dict;
+  /** Textos compartidos de la oferta (tachado y plazas). */
+  to: OfferDict;
   variant: 'complete' | 'membership';
 };
 
-function CourseCard({ course, accessible, index, tc, variant }: CourseCardProps) {
+function CourseCard({ course, accessible, index, tc, to, variant }: CourseCardProps) {
   const isMembership = variant === 'membership';
+  const offer = buildOffer(course);
+  const spotsText = accessible ? null : formatSpotsLeft(to.spotsLeft, offer.spotsLeft);
   const monthLabel =
     isMembership && course.month && course.year
       ? `${tc.months[course.month - 1]} ${course.year}`
@@ -114,12 +122,24 @@ function CourseCard({ course, accessible, index, tc, variant }: CourseCardProps)
           <p className={styles.description}>{course.description}</p>
         )}
 
+        {spotsText && <p className={styles.spotsNote}>{spotsText}</p>}
+
         <div className={styles.cardFooter}>
           <span className={styles.priceTag}>
             {accessible
               ? tc.hasAccess
-              : course.price_eur != null
-                ? <><span className={styles.priceCurrency}>€</span>{course.price_eur}</>
+              : offer.price !== null
+                ? (
+                  <>
+                    {offer.compareAt !== null && (
+                      <s className={styles.priceCompare}>
+                        <span className="sr-only">{to.before}: </span>
+                        <span className={styles.priceCurrency}>€</span>{offer.compareAt}
+                      </s>
+                    )}
+                    <span className={styles.priceCurrency}>€</span>{offer.price}
+                  </>
+                )
                 : tc.priceNA}
           </span>
           <span className={styles.cta}>
@@ -296,6 +316,7 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
                   accessible={accessibleCourseIds.includes(course.id)}
                   index={i}
                   tc={tc}
+                  to={t.offer}
                   variant="complete"
                 />
               </Reveal>
@@ -333,6 +354,7 @@ export default function CoursesClient({ courses, isAdmin, accessibleCourseIds }:
                   accessible={accessibleCourseIds.includes(course.id)}
                   index={i}
                   tc={tc}
+                  to={t.offer}
                   variant="membership"
                 />
               </Reveal>

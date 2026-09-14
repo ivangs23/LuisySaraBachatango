@@ -1,0 +1,94 @@
+/* Bloque de precio con "antes" tachado y aviso de plazas. Presentacional:
+   los textos ya llegan traducidos desde quien lo renderiza. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.center {
+  align-items: center;
+  text-align: center;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.center .row {
+  justify-content: center;
+}
+
+.compare {
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  /* La línea la pinta el <s>; el color apagado y el tamaño menor son los que
+     dejan claro de un vistazo cuál de los dos números se paga. */
+  opacity: 0.75;
+}
+
+.price {
+  font-family: var(--font-serif);
+  color: var(--primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.discount {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-main);
+  background: var(--secondary);
+  border-radius: var(--radius-pill);
+  padding: 0.18em 0.6em;
+  white-space: nowrap;
+}
+
+.spots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--secondary);
+  flex: none;
+  animation: offerPulse 2s ease-in-out infinite;
+}
+
+@keyframes offerPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot { animation: none; }
+}
+
+/* ---------- Tamaños ---------- */
+
+.sm .compare { font-size: 0.8rem; }
+.sm .price { font-size: 1.25rem; }
+.sm .spots { font-size: 0.62rem; letter-spacing: 0.1em; }
+
+.md .compare { font-size: 1rem; }
+.md .price { font-size: 1.9rem; }
+
+.lg .compare { font-size: clamp(1rem, 2.2vw, 1.4rem); }
+.lg .price { font-size: clamp(2.6rem, 6vw, 3.6rem); }

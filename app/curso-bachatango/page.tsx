@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getLandingCourse } from '@/utils/courses/landing-course';
+import { buildOffer } from '@/utils/courses/offer';
 import { getCurriculum } from '@/utils/courses/curriculum';
 import { getFreeLesson } from '@/utils/courses/free-lesson';
 import { signPublicPlaybackToken, signPublicThumbnailToken } from '@/utils/mux/public-token';
@@ -47,6 +48,9 @@ export default async function CursoBachatangoLanding() {
   // en español justo en la página que vende.
   const copy = getLandingCopy(locale);
   const isAuthed = !!user;
+  // Precio real + tachado + plazas, ya normalizados. El tachado es sólo
+  // decoración: `offers.price` del JSON-LD sigue siendo el precio que se cobra.
+  const offer = buildOffer(course);
 
   // Se firma en cada render, nunca se cachea: el token viaja embebido en el
   // HTML y una firma reutilizada puede llegar al visitante ya caducada (ver
@@ -94,9 +98,9 @@ export default async function CursoBachatangoLanding() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
-      <LandingHero courseId={course.id} isAuthed={isAuthed} price={course.price_eur} imageUrl={course.image_url} copy={copy} />
-      <LandingSections courseId={course.id} price={course.price_eur} curriculum={curriculum} freeClass={freeClass} copy={copy} />
-      <StickyBuyBar courseId={course.id} price={course.price_eur} copy={copy} />
+      <LandingHero courseId={course.id} isAuthed={isAuthed} offer={offer} imageUrl={course.image_url} copy={copy} />
+      <LandingSections courseId={course.id} offer={offer} curriculum={curriculum} freeClass={freeClass} copy={copy} />
+      <StickyBuyBar courseId={course.id} offer={offer} copy={copy} />
     </div>
   );
 }

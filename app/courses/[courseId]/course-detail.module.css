@@ -670,3 +670,9 @@
     white-space: normal;
   }
 }
+
+/* Precio de oferta dentro del bloque de contenido bloqueado. */
+.lockedOffer {
+  align-items: center;
+  margin-bottom: 1.25rem;
+}

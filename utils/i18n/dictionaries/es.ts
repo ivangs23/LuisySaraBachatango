@@ -66,6 +66,12 @@ export const es = {
     scrollLabel: "Bajar para ver más",
     stats: { years: "AÑOS BAILANDO", students: "ALUMNOS", countries: "PAÍSES" }
   },
+  // Oferta: textos compartidos por la landing, la home y las tarjetas de curso.
+  // `{n}` lo sustituye formatSpotsLeft() en utils/courses/offer.ts.
+  offer: {
+    before: "Antes",
+    spotsLeft: "Quedan {n} plazas disponibles"
+  },
   home: {
     offer: {
       chapter: "04",

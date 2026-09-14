@@ -144,6 +144,8 @@ export async function createCourse(formData: FormData) {
   const isPublished = formData.get('isPublished') === 'on'
   const imageFile = formData.get('image') as File
   const priceEurRaw = formData.get('priceEur') as string
+  const compareAtPriceEurRaw = formData.get('compareAtPriceEur') as string
+  const spotsLeftRaw = formData.get('spotsLeft') as string
   const category = (formData.get('category') as string) || null
 
   const yearRaw = formData.get('year') as string
@@ -151,10 +153,16 @@ export async function createCourse(formData: FormData) {
   const year = yearRaw ? parseInt(yearRaw) : null
   const month = monthRaw ? parseInt(monthRaw) : null
   const priceEur = priceEurRaw ? parseInt(priceEurRaw) : null
+  // Oferta: ambos opcionales. `compare_at_price_eur` sólo se pinta si supera al
+  // precio real (lo filtra buildOffer), y `spots_left` es un número manual.
+  const compareAtPriceEur = compareAtPriceEurRaw ? parseInt(compareAtPriceEurRaw) : null
+  const spotsLeft = spotsLeftRaw ? parseInt(spotsLeftRaw) : null
 
   if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
   if (description && description.length > 5000) return { error: 'description_too_long' }
   if (priceEur !== null && (priceEur < 0 || priceEur > 9999)) return { error: 'invalid_price' }
+  if (compareAtPriceEur !== null && (Number.isNaN(compareAtPriceEur) || compareAtPriceEur < 0 || compareAtPriceEur > 9999)) return { error: 'invalid_compare_at_price' }
+  if (spotsLeft !== null && (Number.isNaN(spotsLeft) || spotsLeft < 0 || spotsLeft > 9999)) return { error: 'invalid_spots_left' }
   if (year !== null && (year < 2020 || year > 2100)) return { error: 'invalid_year' }
   if (month !== null && (month < 1 || month > 12)) return { error: 'invalid_month' }
 
@@ -175,6 +183,8 @@ export async function createCourse(formData: FormData) {
     course_type: courseType,
     category,
     price_eur: priceEur,
+    compare_at_price_eur: compareAtPriceEur,
+    spots_left: spotsLeft,
   })
 
   if (error) {
@@ -198,6 +208,8 @@ export async function updateCourse(formData: FormData) {
   const imageFile = formData.get('image') as File
   const imageUrlProp = (formData.get('imageUrl') as string) || ''
   const priceEurRaw = formData.get('priceEur') as string
+  const compareAtPriceEurRaw = formData.get('compareAtPriceEur') as string
+  const spotsLeftRaw = formData.get('spotsLeft') as string
   const category = (formData.get('category') as string) || null
 
   const yearRaw = formData.get('year') as string
@@ -205,10 +217,16 @@ export async function updateCourse(formData: FormData) {
   const year = yearRaw ? parseInt(yearRaw) : null
   const month = monthRaw ? parseInt(monthRaw) : null
   const priceEur = priceEurRaw ? parseInt(priceEurRaw) : null
+  // Oferta: ambos opcionales. `compare_at_price_eur` sólo se pinta si supera al
+  // precio real (lo filtra buildOffer), y `spots_left` es un número manual.
+  const compareAtPriceEur = compareAtPriceEurRaw ? parseInt(compareAtPriceEurRaw) : null
+  const spotsLeft = spotsLeftRaw ? parseInt(spotsLeftRaw) : null
 
   if (!title?.trim() || title.length > 200) return { error: 'invalid_title' }
   if (description && description.length > 5000) return { error: 'description_too_long' }
   if (priceEur !== null && (priceEur < 0 || priceEur > 9999)) return { error: 'invalid_price' }
+  if (compareAtPriceEur !== null && (Number.isNaN(compareAtPriceEur) || compareAtPriceEur < 0 || compareAtPriceEur > 9999)) return { error: 'invalid_compare_at_price' }
+  if (spotsLeft !== null && (Number.isNaN(spotsLeft) || spotsLeft < 0 || spotsLeft > 9999)) return { error: 'invalid_spots_left' }
   if (year !== null && (year < 2020 || year > 2100)) return { error: 'invalid_year' }
   if (month !== null && (month < 1 || month > 12)) return { error: 'invalid_month' }
 
@@ -231,6 +249,8 @@ export async function updateCourse(formData: FormData) {
       course_type: courseType,
       category,
       price_eur: priceEur,
+    compare_at_price_eur: compareAtPriceEur,
+    spots_left: spotsLeft,
     })
     .eq('id', courseId)
 

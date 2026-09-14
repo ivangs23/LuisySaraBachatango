@@ -68,6 +68,10 @@ export const en: Dictionary = {
     scrollLabel: "Scroll to see more",
     stats: { years: "YEARS DANCING", students: "STUDENTS", countries: "COUNTRIES" }
   },
+  offer: {
+    before: "Before",
+    spotsLeft: "Only {n} spots left"
+  },
   home: {
     offer: {
       chapter: "04",

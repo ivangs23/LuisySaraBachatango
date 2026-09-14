@@ -23,6 +23,10 @@ export type Course = {
   course_type: 'membership' | 'complete'
   category: string | null
   price_eur: number | null
+  /** Precio anterior que se enseña tachado. Ver utils/courses/offer.ts. */
+  compare_at_price_eur: number | null
+  /** Plazas anunciadas como disponibles (valor manual, no un contador). */
+  spots_left: number | null
   stripe_price_id: string | null
   created_at: string
 }

@@ -33,6 +33,7 @@
 .heroSub { font: var(--body); color: var(--text-muted); font-size: 1.15rem; margin-bottom: var(--spacing-xl); }
 .heroCtaRow { display: flex; gap: var(--spacing-md); align-items: center; justify-content: center; flex-wrap: wrap; }
 .heroSecondary { color: var(--primary); text-decoration: underline; font: var(--small); }
+.heroOffer { margin-bottom: var(--spacing-lg); }
 .heroMicro { margin-top: var(--spacing-md); color: var(--text-muted); font: var(--small); }
 .heroLogin { margin-top: var(--spacing-md); font: var(--small); color: var(--text-muted); }
 .heroLogin a { color: var(--primary); text-decoration: underline; }
@@ -52,7 +53,13 @@
 .stickyVisible { transform: translateY(0); }
 .stickyBrand { color: var(--text-main); font: var(--small); }
 .stickyCta { padding: 0.6rem 1.4rem; }
+.stickyOffer { display: inline-flex; align-items: center; gap: var(--spacing-sm); min-width: 0; }
+.stickyCompare { color: var(--text-muted); font: var(--small); opacity: 0.75; }
+.stickySpots { color: var(--primary); font-family: var(--font-sans); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Por debajo de 600px la barra se queda sin sitio: cae la marca primero y, si
+   hace falta, el recordatorio de plazas. El tachado y el botón nunca se van. */
 @media (max-width: 600px) { .stickyBrand { display: none; } .sticky { justify-content: center; } }
+@media (max-width: 420px) { .stickySpots { display: none; } }
 
 .section { max-width: var(--page-max); margin: 0 auto; padding: var(--spacing-2xl) var(--page-pad); }
 .h2 { font: var(--h2); color: var(--text-main); text-align: center; margin-bottom: var(--spacing-lg); }
@@ -75,7 +82,7 @@
 .offer { max-width: 620px; margin: var(--spacing-2xl) auto; padding: var(--spacing-2xl) var(--page-pad); text-align: center; background: var(--surface); border: 1px solid var(--primary); border-radius: var(--radius-lg); }
 .includes { list-style: none; padding: 0; margin: 0 auto var(--spacing-lg); max-width: 420px; text-align: left; color: var(--text-main); }
 .includes li { padding: var(--spacing-xs) 0; }
-.price { font: var(--h1); color: var(--primary); }
+.offerPrice { margin-bottom: var(--spacing-sm); }
 .priceNote { color: var(--text-muted); font: var(--small); margin-bottom: var(--spacing-lg); }
 .finalCta { text-align: center; padding: var(--spacing-2xl) var(--page-pad); }
 .faq { max-width: 720px; margin: 0 auto; }

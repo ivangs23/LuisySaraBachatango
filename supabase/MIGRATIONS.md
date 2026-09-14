@@ -308,3 +308,34 @@ comprobación crítica es que `GET /rest/v1/profiles?select=role` con la anon ke
   recibido tráfico.
 
 Cada fichero lleva sus queries de validación comentadas al final.
+
+## Oferta de curso (precio tachado + plazas) — ⏳ PENDIENTE de aplicar
+
+**Fichero:** `supabase/2026_09_course_offer_fields.sql`
+
+Añade dos columnas nullables a `courses`:
+
+| Columna | Uso |
+|---|---|
+| `compare_at_price_eur` | Precio anterior que se enseña tachado en la landing, la home, las tarjetas de curso y la ficha. Sólo se pinta si es **mayor** que `price_eur`. |
+| `spots_left` | Plazas anunciadas («Quedan N plazas disponibles»). Valor manual, **no** un contador de `course_purchases`. |
+
+Aditivo y re-aplicable (`ADD COLUMN IF NOT EXISTS` + constraints creadas dentro
+de un `DO $$` que comprueba `pg_constraint`). No toca policies ni funciones.
+
+**Orden respecto al deploy:** da igual. `utils/courses/offer.ts` expone
+`selectWithOfferColumns()`, que reintenta la consulta sin las columnas nuevas si
+la BD todavía no las tiene (error `42703`), así que un deploy adelantado sólo
+pierde el tachado, no rompe `/`, `/courses`, `/dashboard` ni la landing. Lo que
+sí falla hasta aplicarlo es **guardar un curso desde el admin**, porque el
+`INSERT`/`UPDATE` sí manda las dos columnas.
+
+Tras aplicarlo, los valores se editan desde el formulario de curso
+(`/courses/<id>/edit`), no por SQL. El fichero deja comentado un `UPDATE` con la
+oferta inicial del curso de la landing (150 € tachado, 119 € reales, 5 plazas).
+
+⚖️ **Antes de rellenarlas:** el art. 20 del RDLeg 1/2007 (Directiva Ómnibus
+2019/2161) exige que el precio tachado sea el más bajo realmente aplicado en los
+30 días previos, y los arts. 5 y 7 de la Directiva 2005/29/CE prohíben anunciar
+una escasez que no existe. Un tachado inventado o unas plazas que nunca bajan
+son práctica comercial desleal.

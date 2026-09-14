@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
+import { formatSpotsLeft, type CourseOffer } from '@/utils/courses/offer';
+import OfferPrice from './OfferPrice';
 import Reveal from './Reveal';
 import styles from './HomeOffer.module.css';
 
@@ -10,9 +12,10 @@ import styles from './HomeOffer.module.css';
  * (Server Component padre) — nunca se hardcodea. El CTA lleva al funnel
  * completo, no al checkout: queremos que el visitante lea la venta entera.
  */
-export default function HomeOffer({ price }: { price: number }) {
+export default function HomeOffer({ offer }: { offer: CourseOffer }) {
   const { t } = useLanguage();
   const c = t.home.offer;
+  const spotsText = formatSpotsLeft(t.offer.spotsLeft, offer.spotsLeft);
 
   return (
     <section className={styles.offer} aria-labelledby="home-offer-title">
@@ -46,7 +49,17 @@ export default function HomeOffer({ price }: { price: number }) {
 
         <Reveal delay={0.24}>
           <div className={styles.priceRow}>
-            <span className={styles.price}>{price} €</span>
+            {offer.price !== null && (
+              <OfferPrice
+                price={offer.price}
+                compareAt={offer.compareAt}
+                discountPct={offer.discountPct}
+                spotsText={spotsText}
+                compareAtLabel={t.offer.before}
+                size="lg"
+                align="center"
+              />
+            )}
             <span className={styles.priceNote}>{c.priceNote}</span>
           </div>
         </Reveal>

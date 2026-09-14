@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { getDict } from '@/utils/get-dict';
 import DashboardClient from '@/components/DashboardClient';
+import { selectWithOfferColumns } from '@/utils/courses/offer';
 
 type Course = {
   id: string;
@@ -16,6 +17,8 @@ type Course = {
   course_type: 'membership' | 'complete';
   category: string | null;
   price_eur: number | null;
+  compare_at_price_eur?: number | null;
+  spots_left?: number | null;
 };
 
 const getPublishedCourses = unstable_cache(
@@ -24,11 +27,13 @@ const getPublishedCourses = unstable_cache(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
-    const { data } = await supabase
-      .from('courses')
-      .select('id, title, description, image_url, month, year, course_type, category, price_eur, created_at')
-      .eq('is_published', true)
-      .order('created_at', { ascending: false });
+    const { data } = await selectWithOfferColumns<(Course & { created_at: string })[]>((offerColumns) =>
+      supabase
+        .from('courses')
+        .select(`id, title, description, image_url, month, year, course_type, category, created_at, ${offerColumns}`)
+        .eq('is_published', true)
+        .order('created_at', { ascending: false }),
+    );
     return (data ?? []) as (Course & { created_at: string })[];
   },
   ['dashboard-courses'],
@@ -111,6 +116,7 @@ export default async function DashboardPage() {
       role={role}
       t={t.dashboard}
       tc={t.coursesPage}
+      to={t.offer}
     />
   );
 }
