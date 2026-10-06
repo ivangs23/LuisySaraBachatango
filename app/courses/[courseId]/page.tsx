@@ -119,7 +119,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
       .select('id, title, order, release_date, parent_lesson_id')
       .eq('course_id', params.courseId)
       .order('order', { ascending: true }),
-    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('profiles').select('role, full_name').eq('id', user.id).single(),
     // Cuántas lecciones tiene el curso DE VERDAD. La consulta de arriba pasa por
     // la RLS del paywall, que a quien no ha comprado le deja solo las gratuitas
     // — y el héroe llegaba a anunciar «0 LECCIONES» encima del botón de comprar,
@@ -151,6 +151,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
     { data: coursePurchase },
     { data: coveringSubscription },
     progressResult,
+    { data: completion },
   ] = await Promise.all([
     supabase.from('course_purchases')
       .select('id')
@@ -172,6 +173,13 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
           .in('lesson_id', lessonIds)
           .eq('is_completed', true)
       : Promise.resolve({ data: [] }),
+    // Certificado ya emitido: el botón del héroe enlaza al documento en vez de
+    // volver a pedir el nombre. RLS deja ver solo la fila propia.
+    supabase.from('course_completions')
+      .select('certificate_code')
+      .eq('user_id', user.id)
+      .eq('course_id', params.courseId)
+      .maybeSingle(),
   ])
 
   const hasAccess = isAdmin || !!coursePurchase || !!coveringSubscription
@@ -207,6 +215,8 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
         hasAccess={hasAccess}
         isAdmin={isAdmin}
         completedLessonIds={completedLessonIds}
+        certificateIssued={!!completion}
+        fullName={profile?.full_name ?? ''}
       />
     </>
   )

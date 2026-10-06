@@ -29,6 +29,9 @@ export default function robots(): MetadataRoute.Robots {
           '/courses/*/add-lesson',
           '/courses/*/*/edit',
           '/courses/*/*/submissions',
+          // Documento privado con el nombre de una persona. La página ya manda
+          // noindex, pero esto evita incluso la petición.
+          '/courses/*/certificado',
           '/community/create',
           '/monitoring',
         ],

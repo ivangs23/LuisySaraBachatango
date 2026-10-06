@@ -404,5 +404,32 @@ export const de: Dictionary = {
     nextComments: "Weiter →",
     conversation: "Gespräch",
     commentsPageLabel: "Kommentare — Seite {page} von {total}"
+  },
+  certificate: {
+    buttonReady: "Mein Zertifikat erhalten",
+    buttonLocked: "Teilnahmezertifikat",
+    remaining: "Dir fehlen noch {n} Lektionen",
+    remainingOne: "Dir fehlt noch 1 Lektion",
+    view: "Mein Zertifikat ansehen",
+    namePrompt: "Wie soll dein Name erscheinen?",
+    nameLabel: "Vollständiger Name",
+    namePlaceholder: "Vor- und Nachname",
+    nameHelp: "Er wird genau so gedruckt und kann danach nicht mehr geändert werden.",
+    issue: "Zertifikat ausstellen",
+    issuing: "Wird ausgestellt…",
+    cancel: "Abbrechen",
+    errorInvalidName: "Bitte gib deinen vollständigen Namen ein.",
+    errorIncomplete: "Du hast noch nicht alle Lektionen abgeschlossen.",
+    errorGeneric: "Das Zertifikat konnte nicht ausgestellt werden. Versuche es erneut.",
+    pageTitle: "Zertifikat",
+    docKicker: "Teilnahmezertifikat",
+    declaration: "Wir bestätigen, dass {name} das gesamte Programm {course} mit {lessons} Lektionen abgeschlossen und alle Inhalte bestanden hat.",
+    declarationOne: "Wir bestätigen, dass {name} das gesamte Programm {course} mit einer einzigen Lektion abgeschlossen und alle Inhalte bestanden hat.",
+    issuedAt: "Ausgestellt in {city} am {date}",
+    signatoryRole: "Leitung",
+    codeLabel: "Prüfcode",
+    disclaimer: "Privates Teilnahmezertifikat. Es stellt keinen offiziellen Abschluss und keine anerkannte akademische Akkreditierung dar.",
+    print: "Drucken oder als PDF speichern",
+    back: "← Zurück zum Kurs"
   }
 }

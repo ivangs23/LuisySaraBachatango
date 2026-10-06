@@ -22,4 +22,9 @@ describe('robots.txt — rutas que consumen tokens', () => {
       expect(disallow).toContain(p)
     }
   })
+
+  // El certificado lleva el nombre y apellidos de una persona concreta.
+  it('excluye el certificado de aprovechamiento', () => {
+    expect(disallow).toContain('/courses/*/certificado')
+  })
 })

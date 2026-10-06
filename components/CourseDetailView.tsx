@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { Lock, Play, Check, ArrowLeft, Calendar, Sparkles } from 'lucide-react';
 import BuyCourseButton from '@/components/BuyCourseButton';
 import OfferPrice from '@/components/OfferPrice';
+import CompletionCertificateButton from '@/components/CompletionCertificateButton';
 import { buildOffer, formatSpotsLeft } from '@/utils/courses/offer';
 import Reveal from '@/components/Reveal';
 import styles from '@/app/courses/[courseId]/course-detail.module.css';
@@ -66,6 +67,10 @@ type Props = {
   hasAccess: boolean;
   isAdmin: boolean;
   completedLessonIds: string[];
+  /** Ya hay certificado emitido para este usuario y curso. */
+  certificateIssued: boolean;
+  /** `profiles.full_name`, para prerrellenar el nombre del certificado. */
+  fullName: string;
 };
 
 /**
@@ -132,6 +137,8 @@ export default function CourseDetailView({
   hasAccess,
   isAdmin,
   completedLessonIds,
+  certificateIssued,
+  fullName,
 }: Props) {
   const completedSet = new Set(completedLessonIds);
   const completedCount = lessons.filter(l => completedSet.has(l.id)).length;
@@ -253,6 +260,15 @@ export default function CourseDetailView({
                         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
                       />
                     </div>
+                    {/* Certificado: se habilita solo al 100 %. El recuento que
+                        manda es el del servidor (issueCompletion). */}
+                    <CompletionCertificateButton
+                      courseId={course.id}
+                      lessonCount={lessonCount}
+                      completedCount={completedCount}
+                      alreadyIssued={certificateIssued}
+                      defaultName={fullName}
+                    />
                   </div>
                 </>
               )}

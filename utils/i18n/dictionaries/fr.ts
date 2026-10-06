@@ -404,5 +404,32 @@ export const fr: Dictionary = {
     nextComments: "Suivants →",
     conversation: "Conversation",
     commentsPageLabel: "Commentaires — page {page} sur {total}"
+  },
+  certificate: {
+    buttonReady: "Obtenir mon certificat",
+    buttonLocked: "Certificat de réussite",
+    remaining: "Il te reste {n} leçons à terminer",
+    remainingOne: "Il te reste 1 leçon à terminer",
+    view: "Voir mon certificat",
+    namePrompt: "Comment veux-tu que ton nom apparaisse ?",
+    nameLabel: "Nom complet",
+    namePlaceholder: "Prénom et nom",
+    nameHelp: "Il sera imprimé tel quel sur le document et ne pourra plus être modifié.",
+    issue: "Délivrer le certificat",
+    issuing: "Émission…",
+    cancel: "Annuler",
+    errorInvalidName: "Écris ton nom complet.",
+    errorIncomplete: "Tu n'as pas encore terminé toutes les leçons.",
+    errorGeneric: "Le certificat n'a pas pu être délivré. Réessaie.",
+    pageTitle: "Certificat",
+    docKicker: "Certificat de réussite",
+    declaration: "Nous certifions que {name} a suivi l'intégralité du programme {course}, composé de {lessons} leçons, et en a validé tous les contenus.",
+    declarationOne: "Nous certifions que {name} a suivi l'intégralité du programme {course}, composé d'une seule leçon, et en a validé tous les contenus.",
+    issuedAt: "Délivré à {city}, le {date}",
+    signatoryRole: "Directeurs",
+    codeLabel: "Code de validation",
+    disclaimer: "Document privé de réussite. Il ne constitue pas un diplôme officiel ni une accréditation académique reconnue.",
+    print: "Imprimer ou enregistrer en PDF",
+    back: "← Retour au cours"
   }
 }

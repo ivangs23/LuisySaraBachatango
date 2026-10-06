@@ -3,7 +3,12 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
+// El héroe monta CompletionCertificateButton, que importa el server action del
+// certificado; su cadena de imports toca `server-only`, que revienta fuera de
+// un Server Component. Mismo apaño que en __tests__/utils/curriculum.test.ts.
+vi.mock('server-only', () => ({}))
 
+import { LanguageProvider } from '@/context/LanguageContext'
 import CourseDetailView from '@/components/CourseDetailView'
 
 const COURSE = {
@@ -25,15 +30,19 @@ const VISIBLES = [
 
 function renderView(props: Partial<React.ComponentProps<typeof CourseDetailView>> = {}) {
   return render(
-    <CourseDetailView
-      course={COURSE}
-      lessons={VISIBLES}
-      lessonCount={24}
-      hasAccess={false}
-      isAdmin={false}
-      completedLessonIds={[]}
-      {...props}
-    />,
+    <LanguageProvider initialLocale="es">
+      <CourseDetailView
+        course={COURSE}
+        lessons={VISIBLES}
+        lessonCount={24}
+        hasAccess={false}
+        isAdmin={false}
+        completedLessonIds={[]}
+        certificateIssued={false}
+        fullName=""
+        {...props}
+      />
+    </LanguageProvider>,
   )
 }
 

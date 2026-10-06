@@ -339,3 +339,36 @@ oferta inicial del curso de la landing (150 € tachado, 119 € reales, 5 plaza
 30 días previos, y los arts. 5 y 7 de la Directiva 2005/29/CE prohíben anunciar
 una escasez que no existe. Un tachado inventado o unas plazas que nunca bajan
 son práctica comercial desleal.
+
+## Certificado de aprovechamiento (`course_completions`) — ⏳ PENDIENTE de aplicar
+
+**Fichero:** `supabase/2026_10_course_completions.sql`
+
+Tabla nueva con una fila por (alumno, curso), creada cuando el alumno ha marcado
+como completadas **todas** las lecciones del curso y pulsa el botón del héroe de
+la ficha:
+
+| Columna | Uso |
+|---|---|
+| `certificate_code` | Código impreso, `LSB-AAAA-XXXX`. Único (`course_completions_code_uniq`). |
+| `recipient_name` | Nombre congelado al emitir. **No** sigue a `profiles.full_name`: un documento ya expedido no cambia de nombre. |
+| `lessons_total` | Lecciones que tenía el curso al emitir, contadas en servidor. Es el número que se imprime. |
+| `completed_at` | Fecha de expedición. La pone el `DEFAULT` de la tabla, nunca el cliente. |
+
+🔒 **El modelo de escritura es asimétrico a propósito:** hay dos policies de
+`SELECT` (cada uno ve la suya, el admin ve todas) y **ninguna** de
+`INSERT`/`UPDATE`/`DELETE`. Con RLS activada eso deja la escritura sólo al
+service role, desde `app/courses/completion-actions.ts`, que recuenta lecciones y
+progreso antes de insertar. **Añadir aquí una policy de INSERT permitiría al
+alumno emitirse el certificado sin completar el curso.**
+
+Aditivo y re-aplicable: `IF NOT EXISTS` en tabla, índices y policies, y los
+`CHECK` se crean dentro de un `DO $$` que consulta `pg_constraint`.
+
+**Orden respecto al deploy:** aplicar **antes** de desplegar. A diferencia de las
+columnas de oferta, aquí no hay fallback: con la tabla ausente, la consulta de la
+ficha del curso (`certificateIssued`) falla y `issueCompletion` devuelve
+`db_error`. El resto de la ficha no depende de ella, pero el botón no funciona
+hasta que exista.
+
+Depende de `public.is_admin()` (de `supabase/rbac_setup.sql`, ya aplicado).

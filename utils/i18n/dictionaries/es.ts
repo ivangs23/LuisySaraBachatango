@@ -477,5 +477,32 @@ export const es = {
     nextComments: "Siguientes →",
     conversation: "Conversación",
     commentsPageLabel: "Comentarios — página {page} de {total}"
+  },
+  certificate: {
+    buttonReady: "Obtener mi certificado",
+    buttonLocked: "Certificado de aprovechamiento",
+    remaining: "Te faltan {n} lecciones por completar",
+    remainingOne: "Te falta 1 lección por completar",
+    view: "Ver mi certificado",
+    namePrompt: "¿Cómo quieres que aparezca tu nombre?",
+    nameLabel: "Nombre completo",
+    namePlaceholder: "Nombre y apellidos",
+    nameHelp: "Se imprimirá tal cual en el documento y no podrá cambiarse después.",
+    issue: "Emitir certificado",
+    issuing: "Emitiendo…",
+    cancel: "Cancelar",
+    errorInvalidName: "Escribe tu nombre completo.",
+    errorIncomplete: "Todavía no has completado todas las lecciones.",
+    errorGeneric: "No se ha podido emitir el certificado. Vuelve a intentarlo.",
+    pageTitle: "Certificado",
+    docKicker: "Certificado de aprovechamiento",
+    declaration: "Certificamos que {name} ha completado la totalidad del programa {course}, compuesto por {lessons} lecciones, superando todos sus contenidos.",
+    declarationOne: "Certificamos que {name} ha completado la totalidad del programa {course}, compuesto por una única lección, superando todos sus contenidos.",
+    issuedAt: "Expedido en {city}, a {date}",
+    signatoryRole: "Directores",
+    codeLabel: "Código de validación",
+    disclaimer: "Documento privado de aprovechamiento. No constituye titulación oficial ni acreditación académica reconocida.",
+    print: "Imprimir o guardar en PDF",
+    back: "← Volver al curso"
   }
 }

@@ -1,0 +1,114 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  align-items: flex-start;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  font: var(--small);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Desbloqueado: dorado, como el resto de las acciones principales. */
+.buttonReady {
+  border-color: var(--primary);
+  background: linear-gradient(90deg, var(--primary) 0%, #e6c885 100%);
+  color: #14110a;
+  box-shadow: 0 0 18px rgba(var(--primary-rgb), 0.28);
+}
+
+.buttonReady:hover {
+  color: #14110a;
+  filter: brightness(1.06);
+}
+
+.buttonGhost {
+  padding: 0.7rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font: var(--small);
+  cursor: pointer;
+}
+
+.buttonGhost:hover {
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+}
+
+.button:focus-visible,
+.buttonGhost:focus-visible,
+.nameInput:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.hint {
+  font: var(--small);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.error {
+  font: var(--small);
+  font-size: 0.78rem;
+  color: #ff8d8d;
+}
+
+.nameForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+  max-width: 420px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  backdrop-filter: blur(6px);
+}
+
+.nameLabel {
+  font: var(--small);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.nameInput {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-main);
+  font: var(--body);
+}
+
+.nameActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}

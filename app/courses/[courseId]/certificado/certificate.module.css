@@ -1,0 +1,387 @@
+/* Certificado de aprovechamiento.
+ *
+ * Dos presentaciones del mismo marcado:
+ *   · pantalla — fondo oscuro de la web, marco dorado, aspecto A4 horizontal;
+ *   · impresión (@media print al final) — papel blanco, tinta oscura, oro
+ *     conservado. Imprimir el fondo negro de la web gastaría media cartucho y
+ *     se vería sucio, así que la hoja se invierte sólo para el PDF.
+ *
+ * La página no lleva header ni footer globales: la ruta está en
+ * `utils/nav/chromeless-routes.ts`.
+ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: clamp(1rem, 4vw, 2.5rem) var(--page-pad) var(--spacing-xl);
+  background: var(--background);
+}
+
+/* ---------- Controles (fuera del documento) ---------- */
+
+.actions {
+  width: 100%;
+  max-width: 1040px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.backLink {
+  font: var(--small);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.backLink:hover { color: var(--primary); }
+
+.printButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--primary);
+  font: var(--small);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.printButton:hover {
+  background: var(--primary);
+  color: var(--background);
+}
+
+.printButton:focus-visible,
+.backLink:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- La hoja ---------- */
+
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 1040px;
+  padding: clamp(0.5rem, 1.4vw, 0.9rem);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(var(--primary-rgb), 0.08) 0%, transparent 60%),
+    var(--surface);
+  border: 1px solid rgba(var(--primary-rgb), 0.45);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+/* Marco interior: la segunda línea del doble filete dorado. */
+.frame {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1rem, 2.4vw, 2rem);
+  padding: clamp(1.5rem, 4vw, 3.2rem) clamp(1.25rem, 5vw, 4rem);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  text-align: center;
+}
+
+/* Proporción A4 horizontal sólo donde cabe; por debajo, alto libre para que el
+   texto no se aplaste en móvil.
+   El pseudo-elemento impone la proporción como ALTO MÍNIMO, no como alto fijo:
+   con `aspect-ratio` un título largo o un idioma más verboso desbordaba la hoja
+   y el código de validación acababa fuera del marco dorado. */
+@media (min-width: 900px) {
+  .sheet { display: flex; }
+
+  .sheet::before {
+    content: '';
+    width: 0;
+    /* El padding en % se resuelve contra el ANCHO del contenedor. */
+    padding-top: calc(210 / 297 * 100%);
+  }
+
+  .frame { flex: 1; min-width: 0; }
+}
+
+/* ---------- Cabecera ---------- */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Disco claro bajo el logo: el monograma de logo.png es oscuro y sobre el fondo
+   negro de la web sólo se vería el aro dorado. Copia del `.logoMark` del
+   header, incluido el escalado — el PNG es 576×1024 con la marca centrada y
+   mucho aire alrededor. En papel el disco sobra: el fondo ya es blanco. */
+.logoMark {
+  position: relative;
+  width: clamp(64px, 8vw, 104px);
+  height: clamp(64px, 8vw, 104px);
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--primary-rgb), 0.4);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(245, 240, 225, 0.85) 100%
+  );
+}
+
+.logo {
+  object-fit: contain;
+  object-position: center;
+  transform: scale(1.8);
+}
+
+.kicker {
+  font-family: var(--font-sans);
+  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.brand {
+  font: var(--h4);
+  font-size: clamp(0.8rem, 1.2vw, 0.95rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---------- Cuerpo ---------- */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.8rem, 1.6vw, 1.4rem);
+  width: 100%;
+}
+
+.rule {
+  display: block;
+  width: min(280px, 60%);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--primary-rgb), 0.75), transparent);
+}
+
+.recipient {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 4.6vw, 3.4rem);
+  line-height: 1.15;
+  color: var(--text-main);
+  text-wrap: balance;
+}
+
+.declaration {
+  max-width: 62ch;
+  font: var(--body);
+  font-size: clamp(0.88rem, 1.35vw, 1.02rem);
+  line-height: 1.75;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* ---------- Pie: fecha, firmas, código, aviso ---------- */
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.9rem, 2vw, 1.6rem);
+  width: 100%;
+}
+
+.issued {
+  font: var(--small);
+  font-size: clamp(0.72rem, 1.1vw, 0.85rem);
+  color: var(--text-muted);
+}
+
+.signatures {
+  display: flex;
+  justify-content: center;
+  gap: clamp(1.5rem, 8vw, 6rem);
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 190px;
+}
+
+.signatureName {
+  font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+  line-height: 1.1;
+  color: var(--text-main);
+  padding-bottom: 0.1rem;
+}
+
+.signatureLine {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: rgba(var(--primary-rgb), 0.5);
+}
+
+.signatoryMeta {
+  font-family: var(--font-sans);
+  font-size: clamp(0.62rem, 0.95vw, 0.74rem);
+  letter-spacing: 0.1em;
+  color: var(--text-main);
+  margin-top: 0.3rem;
+}
+
+.signatoryRole {
+  font-family: var(--font-sans);
+  font-size: clamp(0.58rem, 0.9vw, 0.68rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.code {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid rgba(var(--primary-rgb), 0.35);
+  border-radius: var(--radius-pill);
+}
+
+/* En móvil la etiqueta parte en dos dentro de la píldora; mejor apilada. */
+@media (max-width: 480px) {
+  .code {
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: center;
+  }
+}
+
+.codeLabel {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.codeValue {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+}
+
+.disclaimer {
+  max-width: 68ch;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+/* ---------- Impresión ---------- */
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  .page {
+    min-height: auto;
+    padding: 0;
+    background: #fff;
+    display: block;
+  }
+
+  /* Los controles no son parte del documento. */
+  .actions { display: none !important; }
+
+  .sheet {
+    width: 297mm;
+    height: 210mm;
+    max-width: none;
+    margin: 0;
+    padding: 7mm;
+    aspect-ratio: auto;
+    background: #fff;
+    border: 1px solid #b08f4f;
+    border-radius: 0;
+    box-shadow: none;
+    break-inside: avoid;
+    /* Sin esto Chrome descarta los dorados al imprimir. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* En papel el alto SÍ es fijo (210 mm), así que aquí no se deja nada al
+     clamp(): medidas explícitas que caben de sobra en una A4 horizontal. */
+  .frame {
+    height: 100%;
+    padding: 9mm 14mm;
+    gap: 4mm;
+    border-color: #d6c197;
+  }
+
+  .head { gap: 2mm; }
+  .body { gap: 4mm; }
+  .foot { gap: 4mm; }
+
+  .logoMark { width: 20mm; height: 20mm; border: none; background: none; }
+  .kicker { font-size: 8pt; }
+  .brand { font-size: 9pt; }
+  .recipient { font-size: 30pt; }
+  .declaration { font-size: 10.5pt; line-height: 1.6; max-width: 56ch; }
+  .issued { font-size: 9pt; }
+  .signatureName { font-size: 20pt; }
+  .signatoryMeta { font-size: 8pt; }
+  .signatoryRole { font-size: 7.5pt; }
+  .codeLabel { font-size: 6.5pt; }
+  .codeValue { font-size: 9pt; }
+  .disclaimer { font-size: 6.5pt; }
+
+  .kicker,
+  .signatoryRole,
+  .codeValue { color: #8a6d2f; }
+
+  .brand,
+  .declaration,
+  .issued,
+  .codeLabel { color: #4a4a4a; }
+
+  .recipient,
+  .signatureName,
+  .signatoryMeta { color: #141414; }
+
+  .rule { background: linear-gradient(90deg, transparent, #b08f4f, transparent); }
+  .signatureLine { background: #b08f4f; }
+  .code { border-color: #d6c197; }
+  .disclaimer { color: #6b6b6b; opacity: 1; }
+}
