@@ -404,5 +404,32 @@ export const ja: Dictionary = {
     nextComments: "次へ →",
     conversation: "会話",
     commentsPageLabel: "コメント — {total}ページ中{page}ページ目"
+  },
+  certificate: {
+    buttonReady: "修了証を取得する",
+    buttonLocked: "修了証",
+    remaining: "残り{n}レッスンです",
+    remainingOne: "残り1レッスンです",
+    view: "修了証を見る",
+    namePrompt: "お名前の表記を教えてください",
+    nameLabel: "氏名",
+    namePlaceholder: "氏名",
+    nameHelp: "入力したとおりに印刷され、あとから変更できません。",
+    issue: "修了証を発行する",
+    issuing: "発行中…",
+    cancel: "キャンセル",
+    errorInvalidName: "氏名をご記入ください。",
+    errorIncomplete: "まだすべてのレッスンを修了していません。",
+    errorGeneric: "修了証を発行できませんでした。もう一度お試しください。",
+    pageTitle: "修了証",
+    docKicker: "修了証",
+    declaration: "{name} 様が、全{lessons}レッスンからなる「{course}」の全課程を修了し、そのすべての内容を修めたことを証明します。",
+    declarationOne: "{name} 様が、1レッスンからなる「{course}」の全課程を修了し、そのすべての内容を修めたことを証明します。",
+    issuedAt: "{city}にて {date} 発行",
+    signatoryRole: "代表",
+    codeLabel: "認証コード",
+    disclaimer: "本書は私的な修了証明であり、公的な資格や認定された学位を示すものではありません。",
+    print: "印刷またはPDFで保存",
+    back: "← コースに戻る"
   }
 }

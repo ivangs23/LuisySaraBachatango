@@ -61,6 +61,37 @@ retries without them if the DB has not run
 yet — a deploy that lands before the migration loses the strike-through, not the
 whole course list.
 
+### Completion Certificate
+
+A private "certificado de aprovechamiento" the student can print or save as PDF
+once **every** lesson of a course is marked complete.
+
+`app/courses/completion-actions.ts#issueCompletion` is the only writer. It
+re-counts, with the service role, the course's lessons and this user's
+`lesson_progress` rows, and refuses anything under 100% — the disabled button in
+the hero is UX, not the gate. The count uses the service role on purpose: the
+paywall RLS on `lessons` hides paid lessons from non-buyers, so counting through
+the user session would yield a smaller total and a fake 100%. It is idempotent:
+an existing row is returned untouched, so neither the printed name nor the issue
+date of an expedited document can change.
+
+`course_completions` has **SELECT policies only** — no INSERT/UPDATE/DELETE. That
+is what keeps the student from writing their own certificate; see
+[supabase/2026_10_course_completions.sql](supabase/2026_10_course_completions.sql).
+
+- `utils/courses/completion.ts` — fixed document data (signatories, city, brand)
+  plus pure helpers: `generateCertificateCode()` (format must match the table's
+  CHECK), `normalizeRecipientName()`, `formatCertificateDate()`.
+- [components/CompletionCertificateButton.tsx](components/CompletionCertificateButton.tsx)
+  — hero button, under the progress bar. Asks for the name to print before issuing.
+- `app/courses/[courseId]/certificado/` — the document. Server Component, `noindex`,
+  404 when no row exists. Chromeless (`utils/nav/chromeless-routes.ts`) so the site
+  nav never lands in the PDF; `@media print` flips the dark theme to white paper,
+  A4 landscape.
+
+The handwritten signature is a `next/font` face (Great Vibes), self-hosted — no
+CSP change needed.
+
 ### Data Flow Pattern
 
 All mutations go through **Next.js Server Actions** (`'use server'`). Pages are Server Components that fetch data directly via `createClient()` (server Supabase client). Client components use `'use client'` and receive data as props.
@@ -100,6 +131,7 @@ All translations live in `utils/dictionaries.ts` as a single typed object with k
 | `notifications` | In-app notifications (e.g., graded assignment) |
 | `posts` / `comments` | Community forum |
 | `online_pings` | Live presence heartbeats; one row per ephemeral `visitor_hash`, read by admins only to render the "Online ahora" counter |
+| `course_completions` | Issued completion certificates; one row per (user, course). SELECT-only via RLS — rows are written exclusively by the service role (see Completion Certificate above) |
 
 SQL migration files are in `supabase/`. The canonical schema is `supabase/schema.sql` with additive patches in other files (e.g., `rbac_setup.sql`, `course_types.sql`). **See [supabase/MIGRATIONS.md](supabase/MIGRATIONS.md) for the apply order and which legacy files are dangerous to re-run** — some (`rbac_setup.sql`, `events.sql`, `full_setup.sql`) reopen hardened policies if replayed over a hardened DB.
 

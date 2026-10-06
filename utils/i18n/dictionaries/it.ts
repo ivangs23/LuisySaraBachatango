@@ -404,5 +404,32 @@ export const it: Dictionary = {
     nextComments: "Successivi →",
     conversation: "Conversazione",
     commentsPageLabel: "Commenti — pagina {page} di {total}"
+  },
+  certificate: {
+    buttonReady: "Ottieni il mio certificato",
+    buttonLocked: "Certificato di completamento",
+    remaining: "Ti mancano {n} lezioni da completare",
+    remainingOne: "Ti manca 1 lezione da completare",
+    view: "Vedi il mio certificato",
+    namePrompt: "Come vuoi che appaia il tuo nome?",
+    nameLabel: "Nome completo",
+    namePlaceholder: "Nome e cognome",
+    nameHelp: "Verrà stampato così sul documento e non potrà più essere modificato.",
+    issue: "Emetti il certificato",
+    issuing: "Emissione…",
+    cancel: "Annulla",
+    errorInvalidName: "Scrivi il tuo nome completo.",
+    errorIncomplete: "Non hai ancora completato tutte le lezioni.",
+    errorGeneric: "Non è stato possibile emettere il certificato. Riprova.",
+    pageTitle: "Certificato",
+    docKicker: "Certificato di completamento",
+    declaration: "Certifichiamo che {name} ha completato l'intero programma {course}, composto da {lessons} lezioni, superandone tutti i contenuti.",
+    declarationOne: "Certifichiamo che {name} ha completato l'intero programma {course}, composto da una sola lezione, superandone tutti i contenuti.",
+    issuedAt: "Rilasciato a {city}, il {date}",
+    signatoryRole: "Direttori",
+    codeLabel: "Codice di validazione",
+    disclaimer: "Documento privato di completamento. Non costituisce un titolo ufficiale né un accreditamento accademico riconosciuto.",
+    print: "Stampa o salva in PDF",
+    back: "← Torna al corso"
   }
 }

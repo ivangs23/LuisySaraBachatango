@@ -93,6 +93,23 @@ export type LessonProgress = {
   updated_at: string
 }
 
+/**
+ * Certificado privado de aprovechamiento ya emitido. Una fila por
+ * (alumno, curso); sólo la crea el service role desde
+ * `app/courses/completion-actions.ts`. Ver `utils/courses/completion.ts`.
+ */
+export type CourseCompletion = {
+  user_id: string
+  course_id: string
+  /** LSB-AAAA-XXXX. Único en la tabla. */
+  certificate_code: string
+  /** Nombre congelado al emitir; no sigue a `profiles.full_name`. */
+  recipient_name: string
+  /** Lecciones del curso contadas en servidor al emitir. */
+  lessons_total: number
+  completed_at: string
+}
+
 export type Notification = {
   id: string
   user_id: string

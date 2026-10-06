@@ -476,5 +476,32 @@ export const en: Dictionary = {
     nextComments: "Next →",
     conversation: "Conversation",
     commentsPageLabel: "Comments — page {page} of {total}"
+  },
+  certificate: {
+    buttonReady: "Get my certificate",
+    buttonLocked: "Certificate of completion",
+    remaining: "{n} lessons left to complete",
+    remainingOne: "1 lesson left to complete",
+    view: "View my certificate",
+    namePrompt: "How should your name appear?",
+    nameLabel: "Full name",
+    namePlaceholder: "First and last name",
+    nameHelp: "It will be printed exactly like this and cannot be changed afterwards.",
+    issue: "Issue certificate",
+    issuing: "Issuing…",
+    cancel: "Cancel",
+    errorInvalidName: "Please enter your full name.",
+    errorIncomplete: "You have not completed every lesson yet.",
+    errorGeneric: "The certificate could not be issued. Please try again.",
+    pageTitle: "Certificate",
+    docKicker: "Certificate of completion",
+    declaration: "We certify that {name} has completed the entire {course} programme, made up of {lessons} lessons, and has passed all of its content.",
+    declarationOne: "We certify that {name} has completed the entire {course} programme, made up of a single lesson, and has passed all of its content.",
+    issuedAt: "Issued in {city} on {date}",
+    signatoryRole: "Directors",
+    codeLabel: "Validation code",
+    disclaimer: "Private certificate of completion. It does not constitute an official qualification or a recognised academic accreditation.",
+    print: "Print or save as PDF",
+    back: "← Back to the course"
   }
 }
