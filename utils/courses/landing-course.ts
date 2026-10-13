@@ -47,7 +47,16 @@ async function leerCursoDeLaLanding(): Promise<LandingCourse | null> {
       .single(),
   );
 
-  if (error || !data) return null;
+  // El error se PROPAGA a propósito: `unstable_cache` no guarda el resultado
+  // de una llamada que lanza, así que un fallo de red no se queda pegado
+  // cinco minutos.
+  //
+  // Ojo con el reparto: con `.single()`, "la fila no está o no está
+  // publicada" llega como error (PGRST116), no como `data` vacío. O sea que
+  // ese caso tampoco se cachea — es correcto pero no gratis, y da igual
+  // porque la página hace `notFound()` de todas formas.
+  if (error) throw new Error(`[landing-course] ${error.message ?? 'consulta fallida'}`);
+  if (!data) return null;
   return data as LandingCourse;
 }
 
@@ -65,10 +74,15 @@ const cursoCacheado = unstable_cache(leerCursoDeLaLanding, ['landing-course'], {
  * es un extra: sin ello la landing podría anunciar un precio viejo mientras el
  * checkout cobra el nuevo, que sale de su propia lectura fresca.
  *
- * El `?? leerCursoDeLaLanding()` tampoco es un cinturón de más: sin él, un
- * hipo de red de Supabase dejaría la landing en `notFound()` durante los 5
- * minutos completos.
+ * Un fallo de base de datos llega aquí como excepción y sale como null: la
+ * página decide (`notFound()`), y como no se cacheó, la siguiente petición lo
+ * reintenta.
  */
 export async function getLandingCourse(): Promise<LandingCourse | null> {
-  return (await cursoCacheado()) ?? leerCursoDeLaLanding();
+  try {
+    return await cursoCacheado();
+  } catch (e) {
+    console.error('[landing-course] lectura fallida: %s', (e as Error).message);
+    return null;
+  }
 }

@@ -95,13 +95,14 @@ describe('getCurriculum', () => {
     expect(await getCurriculum()).toBeNull()
   })
 
-  it('reintenta en directo si la lectura cacheada vino vacía', async () => {
-    // Primera llamada: la BD falla. Segunda: responde. La landing no puede
-    // quedarse cinco minutos sin temario por un hipo de red.
-    orderMock.mockResolvedValueOnce({ data: null, error: { message: 'boom' } })
-    orderMock.mockResolvedValueOnce({ data: ROWS, error: null })
-    const temario = await getCurriculum()
-    expect(temario).not.toBeNull()
-    expect(temario?.moduleCount).toBe(2)
+  it('no repite la consulta cuando el curso legítimamente no tiene lecciones', async () => {
+    orderMock.mockResolvedValue({ data: [], error: null })
+    expect(await getCurriculum()).toBeNull()
+    expect(orderMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('devuelve null si la BD falla, y el fallo no se cachea', async () => {
+    orderMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    expect(await getCurriculum()).toBeNull()
   })
 })

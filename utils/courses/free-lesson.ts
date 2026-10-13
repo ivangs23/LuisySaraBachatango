@@ -42,7 +42,11 @@ async function leerClaseGratis(): Promise<FreeLesson | null> {
     .order('order', { ascending: true })
     .limit(1)
 
-  if (error || !data || data.length === 0) return null
+  // El error se propaga para que `unstable_cache` no lo guarde. "No hay
+  // lección gratuita" es un estado soportado —la landing cae al enlace de
+  // siempre— y sí se cachea como null.
+  if (error) throw new Error(`[free-lesson] ${error.message ?? 'consulta fallida'}`)
+  if (!data || data.length === 0) return null
 
   const row = data[0] as Partial<FreeLesson>
   if (!row.mux_playback_id) return null
@@ -62,5 +66,10 @@ const claseGratisCacheada = unstable_cache(leerClaseGratis, ['landing-free-lesso
  * cada render en app/curso-bachatango/page.tsx. Ver utils/mux/public-token.ts.
  */
 export async function getFreeLesson(): Promise<FreeLesson | null> {
-  return (await claseGratisCacheada()) ?? leerClaseGratis()
+  try {
+    return await claseGratisCacheada()
+  } catch (e) {
+    console.error('[free-lesson] lectura fallida: %s', (e as Error).message)
+    return null
+  }
 }

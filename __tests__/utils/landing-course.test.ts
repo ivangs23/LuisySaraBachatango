@@ -57,17 +57,10 @@ describe('getLandingCourse', () => {
     expect(await getLandingCourse()).toBeNull()
   })
 
-  it('reintenta en directo si la lectura cacheada vino vacía', async () => {
-    // Primera llamada: la BD falla. Segunda: responde. La landing no puede
-    // caer en notFound() durante cinco minutos por un hipo de red.
-    single.mockResolvedValueOnce({ data: null, error: { message: 'boom' } })
-    single.mockResolvedValueOnce({
-      data: { id: COURSE_ID, title: 'CURSO BACHATANGO', price_eur: 119, image_url: null },
-      error: null,
-    })
-    const course = await getLandingCourse()
-    expect(course).not.toBeNull()
-    expect(course?.price_eur).toBe(119)
+  it('no repite la consulta cuando la fila simplemente no está', async () => {
+    single.mockResolvedValue({ data: null, error: null })
+    expect(await getLandingCourse()).toBeNull()
+    expect(single).toHaveBeenCalledTimes(1)
   })
 
   it('devuelve null sin SUPABASE_SERVICE_ROLE_KEY', async () => {

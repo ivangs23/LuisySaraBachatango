@@ -74,7 +74,10 @@ async function leerTemario(): Promise<Curriculum | null> {
     .eq('course_id', COURSE_ID)
     .order('order', { ascending: true })
 
-  if (error || !data || data.length === 0) return null
+  // El error se propaga para que `unstable_cache` no lo guarde; un curso sin
+  // lecciones es un estado legítimo y sí se cachea como null.
+  if (error) throw new Error(`[curriculum] ${error.message ?? 'consulta fallida'}`)
+  if (!data || data.length === 0) return null
 
   const rows = data as Row[]
   const roots = rows.filter((r) => !r.parent_lesson_id)
@@ -123,9 +126,14 @@ const temarioCacheado = unstable_cache(leerTemario, ['landing-curriculum'], {
  * El temario solo cambia cuando un admin edita lecciones, y la landing lo pide
  * en cada clic de anuncio. Se cachea 5 minutos y se invalida al editar.
  *
- * El `?? leerTemario()` no es un cinturón de más: sin él, un hipo de red de
- * Supabase dejaría la landing sin temario durante los 5 minutos completos.
+ * Un fallo de base de datos sale como null —la landing sigue vendiendo sin
+ * temario— y, al no haberse cacheado, la siguiente petición lo reintenta.
  */
 export async function getCurriculum(): Promise<Curriculum | null> {
-  return (await temarioCacheado()) ?? leerTemario()
+  try {
+    return await temarioCacheado()
+  } catch (e) {
+    console.error('[curriculum] lectura fallida: %s', (e as Error).message)
+    return null
+  }
 }
