@@ -71,6 +71,18 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Los iconos no cambian entre despliegues y hasta ahora se
+        // revalidaban en cada visita (`max-age=0, must-revalidate`): 136 KB
+        // por delante del contenido en cada carga móvil de la landing. Next
+        // sirve `/favicon.ico` con un hash en la query, así que un cacheado
+        // largo no deja iconos viejos pegados: al cambiar el fichero cambia
+        // la URL.
+        source: '/:icon(favicon.ico|icon.png|apple-icon.png)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
     ];
   },
 };
