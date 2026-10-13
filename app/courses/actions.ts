@@ -51,6 +51,11 @@ export async function createLesson(formData: FormData) {
 
   revalidatePath(`/courses/${courseId}`)
   revalidateTag(`course:${courseId}:lessons`, 'max')
+  // La landing anuncia el temario y la clase gratis desde una caché de 5
+  // minutos; sin esto un módulo nuevo tardaría en aparecer en la página
+  // que vende.
+  revalidateTag('landing-curriculum', 'max')
+  revalidateTag('landing-free-lesson', 'max')
   redirect(`/courses/${courseId}/${inserted.id}/edit`)
 }
 
@@ -107,6 +112,11 @@ export async function updateLesson(formData: FormData) {
   revalidatePath(`/courses/${courseId}`)
   revalidatePath(`/courses/${courseId}/${lessonId}/edit`)
   revalidateTag(`course:${courseId}:lessons`, 'max')
+  // La landing anuncia el temario y la clase gratis desde una caché de 5
+  // minutos; sin esto un módulo nuevo tardaría en aparecer en la página
+  // que vende.
+  revalidateTag('landing-curriculum', 'max')
+  revalidateTag('landing-free-lesson', 'max')
 }
 
 async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClient>>, imageFile: File): Promise<{ url: string } | { error: string }> {
@@ -126,7 +136,12 @@ async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClien
 
   const { error: uploadError } = await supabase.storage
     .from('thumbnails')
-    .upload(filePath, imageFile)
+    .upload(filePath, imageFile, {
+      // El nombre lleva un UUID, así que el objeto es inmutable: nunca se
+      // sobrescribe, se sube uno nuevo. Sin esto Supabase servía la portada
+      // con `cache-control: no-cache` y se volvía a descargar en cada visita.
+      cacheControl: '31536000',
+    })
 
   if (uploadError) return { error: uploadError.message }
 
@@ -261,6 +276,9 @@ export async function updateCourse(formData: FormData) {
 
   revalidatePath('/courses')
   revalidatePath(`/courses/${courseId}`)
+  // El precio anunciado sale de una caché de 5 minutos; el que cobra Stripe,
+  // de una lectura fresca. Sin esta línea los dos pueden separarse.
+  revalidateTag('landing-course', 'max')
   redirect(`/courses/${courseId}`)
 }
 

@@ -12,6 +12,11 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({ from: fromMock }),
 }))
 
+vi.mock('next/cache', () => ({
+  // La caché se prueba por su contrato en landing-cache-tags.test.ts.
+  unstable_cache: (fn: unknown) => fn,
+}))
+
 import { getCurriculum, formatDuration } from '@/utils/courses/curriculum'
 
 const ROWS = [
@@ -87,6 +92,17 @@ describe('getCurriculum', () => {
 
   it('devuelve null si no hay lecciones', async () => {
     orderMock.mockResolvedValue({ data: [], error: null })
+    expect(await getCurriculum()).toBeNull()
+  })
+
+  it('no repite la consulta cuando el curso legítimamente no tiene lecciones', async () => {
+    orderMock.mockResolvedValue({ data: [], error: null })
+    expect(await getCurriculum()).toBeNull()
+    expect(orderMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('devuelve null si la BD falla, y el fallo no se cachea', async () => {
+    orderMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
     expect(await getCurriculum()).toBeNull()
   })
 })

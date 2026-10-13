@@ -112,7 +112,7 @@ describe('provisionFromPending', () => {
   it('new buyer: creates user (password_hash), updates enumerated profile cols, records purchase, deletes pending, emails (new)', async () => {
     const admin = makeAdmin({ pending: PENDING, profileByEmail: null, createUser: { id: 'u-new' } })
     const res = await provisionFromPending(session(), admin)
-    expect(res).toEqual({ ok: true, userId: 'u-new', created: true })
+    expect(res).toEqual({ ok: true, userId: 'u-new', created: true, genuineInsert: true })
     expect(admin.__calls.createUser[0]).toEqual(expect.objectContaining({ email: 'ana@example.com', password_hash: '$2b$12$abc', email_confirm: true, user_metadata: { full_name: 'Ana' } }))
     // enumerated columns bucket only — never password_hash, never stripe_customer_id
     expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({ country: 'ES', city: 'Madrid', postal_code: '28001', date_of_birth: '1995-05-20', phone: '+34600', marketing_consent: true, dance_level: 'principiante', terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z', digital_execution_consent_at: '2026-07-14T10:00:00Z' }))
@@ -127,7 +127,7 @@ describe('provisionFromPending', () => {
     // Un usuario genuinamente preexistente ya tiene terms_accepted_at → no backfill.
     const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old', terms_accepted_at: '2025-01-01T00:00:00Z' } })
     const res = await provisionFromPending(session(), admin)
-    expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+    expect(res).toEqual({ ok: true, userId: 'u-old', created: false, genuineInsert: true })
     expect(admin.__calls.createUser).toEqual([])
     expect(admin.__calls.profileColumns).toEqual([]) // no pisa a un usuario que ya tiene consentimiento
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ user_id: 'u-old' }))
@@ -145,7 +145,7 @@ describe('provisionFromPending', () => {
       existingConfirmed: false,
     })
     const res = await provisionFromPending(session(), admin)
-    expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+    expect(res).toEqual({ ok: true, userId: 'u-old', created: false, genuineInsert: true })
     expect(admin.__calls.getUserById).toEqual(['u-old'])
     expect(admin.__calls.confirmed, 'no se confirmó al comprador').toEqual(['u-old'])
     // Y la compra se concede igualmente
@@ -175,7 +175,7 @@ describe('provisionFromPending', () => {
     // falló; el retry lo resuelve (created=false) y debe rellenar el consentimiento.
     const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old', terms_accepted_at: null } })
     const res = await provisionFromPending(session(), admin)
-    expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+    expect(res).toEqual({ ok: true, userId: 'u-old', created: false, genuineInsert: true })
     expect(admin.__calls.createUser).toEqual([])
     expect(admin.__calls.profileColumns[0]).toEqual(expect.objectContaining({
       terms_version: '2026-07-14', terms_accepted_at: '2026-07-14T10:00:00Z', marketing_consent: true,
@@ -192,7 +192,7 @@ describe('provisionFromPending', () => {
   it('no_payment_required (100%-off promo) still provisions', async () => {
     const admin = makeAdmin({ pending: PENDING, profileByEmail: null, createUser: { id: 'u-new' } })
     const res = await provisionFromPending(session({ payment_status: 'no_payment_required', amount_total: 0 }), admin)
-    expect(res).toEqual({ ok: true, userId: 'u-new', created: true })
+    expect(res).toEqual({ ok: true, userId: 'u-new', created: true, genuineInsert: true })
     expect(admin.__calls.purchaseUpsert[0]).toEqual(expect.objectContaining({ amount_paid: 0 }))
   })
   it('duplicate delivery (empty insert) -> no second email', async () => {
@@ -206,7 +206,7 @@ describe('provisionFromPending', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const admin = makeAdmin({ pending: PENDING, profileByEmail: { id: 'u-old' }, purchaseError: { code: '23505', message: 'dup' } })
     const res = await provisionFromPending(session(), admin)
-    expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+    expect(res).toEqual({ ok: true, userId: 'u-old', created: false, genuineInsert: false })
     expect(sendMock).not.toHaveBeenCalled()
     expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('double-charge candidate'), 'cs_1', 'u-old', 'course-1')
     expect(admin.__calls.pendingDelete).toEqual(['pend-1'])
@@ -257,7 +257,7 @@ describe('provisionFromPending', () => {
   })
   it('pending not found + purchase EXISTS (retry after success) -> idempotent ok, no recovery', async () => {
     const admin = makeAdmin({ pending: null, existingPurchase: { id: 'p1' } })
-    expect(await provisionFromPending(session(), admin)).toEqual({ ok: true, userId: '', created: false })
+    expect(await provisionFromPending(session(), admin)).toEqual({ ok: true, userId: '', created: false, genuineInsert: false })
     expect(admin.__calls.createUser).toEqual([])
     expect(guestMock).not.toHaveBeenCalled()
   })
@@ -267,20 +267,20 @@ describe('provisionFromPending', () => {
     const res = await provisionFromPending(session({ customer_details: { email: 'x@y.com' } as Stripe.Checkout.Session.CustomerDetails }), admin)
     expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), 'cs_1')
     expect(guestMock).toHaveBeenCalled()
-    expect(res).toEqual({ ok: true, userId: 'u-guest', created: false })
+    expect(res).toEqual({ ok: true, userId: 'u-guest', created: false, genuineInsert: false })
   })
   it('pending not found + purchase EXISTS (retry after success) -> silent, no reconciliation log', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const admin = makeAdmin({ pending: null, existingPurchase: { id: 'p1' } })
     const res = await provisionFromPending(session(), admin)
-    expect(res).toEqual({ ok: true, userId: '', created: false })
+    expect(res).toEqual({ ok: true, userId: '', created: false, genuineInsert: false })
     expect(errSpy).not.toHaveBeenCalledWith(expect.stringContaining('orphaned-paid-session'), expect.anything(), expect.anything())
   })
   it('createUser already-exists race -> re-SELECT profile and continue (no 500), treated as existing', async () => {
     // La entrega concurrente ganadora ya escribió el consentimiento → no backfill.
     const admin = makeAdmin({ pending: PENDING, profileSequence: [null, { id: 'u-raced', terms_accepted_at: '2026-07-14T10:00:00Z' }], createUser: { error: { message: 'already been registered', status: 422 } } })
     const res = await provisionFromPending(session(), admin)
-    expect(res).toEqual({ ok: true, userId: 'u-raced', created: false })
+    expect(res).toEqual({ ok: true, userId: 'u-raced', created: false, genuineInsert: true })
     expect(admin.__calls.profileColumns).toEqual([]) // raced + ya con consent -> no enumerated write
   })
 
@@ -292,7 +292,7 @@ describe('provisionFromPending', () => {
       const admin = makeAdmin({ pending: { ...PENDING, password_hash: null }, profileByEmail: null,
                                 createUser: { id: 'u-nuevo' }, purchaseInserted: [{ id: 'p1' }] })
       const res = await provisionFromPending(session(), admin)
-      expect(res).toEqual({ ok: true, userId: 'u-nuevo', created: true })
+      expect(res).toEqual({ ok: true, userId: 'u-nuevo', created: true, genuineInsert: true })
       expect(admin.__calls.createUser[0]).toMatchObject({ email_confirm: true })
       expect(admin.__calls.createUser[0]).not.toHaveProperty('password_hash')
     })
@@ -325,7 +325,7 @@ describe('provisionFromPending', () => {
       const admin = makeAdmin({ pending: { ...PENDING, password_hash: null },
                                 profileByEmail: { id: 'u-old', terms_accepted_at: '2025-01-01T00:00:00Z' } })
       const res = await provisionFromPending(session(), admin)
-      expect(res).toEqual({ ok: true, userId: 'u-old', created: false })
+      expect(res).toEqual({ ok: true, userId: 'u-old', created: false, genuineInsert: true })
       expect(admin.__calls.generateLink).toEqual([])
       expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({
         existingAccount: true, setPasswordUrl: undefined, accountHasNoPassword: undefined,

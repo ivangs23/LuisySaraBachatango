@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { COURSE_ID } from './landing-course'
 
@@ -23,7 +24,7 @@ export interface FreeLesson {
  * Es seguro: el filtro `is_free = true` está fijado aquí, en servidor, y no
  * llega ningún parámetro desde el cliente. No hay forma de pedir otra lección.
  */
-export async function getFreeLesson(): Promise<FreeLesson | null> {
+async function leerClaseGratis(): Promise<FreeLesson | null> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) return null
 
@@ -41,10 +42,34 @@ export async function getFreeLesson(): Promise<FreeLesson | null> {
     .order('order', { ascending: true })
     .limit(1)
 
-  if (error || !data || data.length === 0) return null
+  // El error se propaga para que `unstable_cache` no lo guarde. "No hay
+  // lección gratuita" es un estado soportado —la landing cae al enlace de
+  // siempre— y sí se cachea como null.
+  if (error) throw new Error(`[free-lesson] ${error.message ?? 'consulta fallida'}`)
+  if (!data || data.length === 0) return null
 
   const row = data[0] as Partial<FreeLesson>
   if (!row.mux_playback_id) return null
 
   return row as FreeLesson
+}
+
+const claseGratisCacheada = unstable_cache(leerClaseGratis, ['landing-free-lesson'], {
+  revalidate: 300,
+  tags: ['landing-free-lesson'],
+})
+
+/**
+ * Ver `getCurriculum`: mismo motivo para cachear y mismo reintento en directo.
+ *
+ * Se cachea el `mux_playback_id`, NUNCA los tokens: esos se siguen firmando en
+ * cada render en app/curso-bachatango/page.tsx. Ver utils/mux/public-token.ts.
+ */
+export async function getFreeLesson(): Promise<FreeLesson | null> {
+  try {
+    return await claseGratisCacheada()
+  } catch (e) {
+    console.error('[free-lesson] lectura fallida: %s', (e as Error).message)
+    return null
+  }
 }

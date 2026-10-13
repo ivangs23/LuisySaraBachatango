@@ -116,6 +116,43 @@ All translations live in `utils/dictionaries.ts` as a single typed object with k
 
 `STRIPE_CONFIG` in [utils/stripe/config.ts](utils/stripe/config.ts) holds subscription price IDs. Currency is always EUR.
 
+### Meta Ads Conversion Tracking
+
+The ads funnel (landing → `/curso-bachatango/comprar` → Stripe → `/gracias`)
+reports three events to Meta. The logged-in funnel (`/api/checkout` → `/profile`)
+reports nothing — it is not where ad traffic lands.
+
+| Event | Where | Notes |
+|---|---|---|
+| `PageView` | [components/ThirdPartyScripts.tsx](components/ThirdPartyScripts.tsx) | With the Pixel |
+| `InitiateCheckout` | [components/LandingCheckoutForm.tsx](components/LandingCheckoutForm.tsx) | `onSubmit`, before the Server Action redirects to Stripe |
+| `Purchase` (browser) | [app/gracias/PurchaseTracking.tsx](app/gracias/PurchaseTracking.tsx) | Amount from the Stripe session, never the URL |
+| `Purchase` (server) | [app/api/webhooks/stripe/route.ts](app/api/webhooks/stripe/route.ts) | Conversions API |
+
+**Deduplication.** Both Purchase events carry `event_id = stripe_session_id`, so
+Meta keeps one. Changing either side's id breaks this and doubles reported revenue.
+
+**Attribution across the server boundary.** The webhook is called by Stripe
+machine-to-machine: no cookies, no client IP, no user agent. So `_fbp`, `_fbc`,
+the IP and the UA are captured when the Checkout Session is created and stored in
+`session.metadata` (`utils/analytics/meta-attribution.ts`), which the webhook
+receives. Values are truncated to Stripe's 500-char metadata limit — an
+untruncated user agent would fail session creation, i.e. lose the sale.
+
+**Consent.** `session.metadata.fb_consent` stamps the marketing decision at
+checkout time, because that is the only place the `ls_consent` cookie is
+readable. The webhook obeys that stamp and sends nothing when it is not `'1'`;
+a missing key counts as no. Browser events gate on `useConsent()` as usual.
+
+**Exactly once.** The server Purchase fires only when `provisionFromPending`
+returns `genuineInsert: true` — the `course_purchases` row was really inserted,
+the same signal that gates the welcome email. A Stripe redelivery does not
+re-report. Meta's `event_id` dedup is the second net.
+
+**Never breaks a sale.** `sendPurchaseToMeta` does not throw, has a 5s timeout,
+and the webhook wraps it again. Demo mode (preview/local) skips the send so test
+purchases do not pollute the real pixel.
+
 ### Key Database Tables
 
 | Table | Purpose |
@@ -162,7 +199,9 @@ TEST_MODE_SECRET               # Optional. HMAC key for the admin per-browser te
 CRON_SECRET                    # Bearer token for the scheduled purge route (/api/cron/purge-pending, Vercel cron). Fail-closed: if unset, the route returns 401 and stale pending_registrations are never purged.
 RESEND_API_KEY                 # Resend API key; sender/domain for transactional emails (guest access, purchase confirmation). If unset, those emails silently no-op.
 NEXT_PUBLIC_GA_MEASUREMENT_ID  # Optional. GA4 measurement ID (G-XXXXXXXXXX). Fail-closed: if unset, GA4 never loads even with analytics consent granted.
-NEXT_PUBLIC_META_PIXEL_ID      # Optional. Numeric Meta Pixel ID. Fail-closed: if unset, the Pixel never loads even with marketing consent granted.
+NEXT_PUBLIC_META_PIXEL_ID      # Optional. Numeric Meta Pixel ID. Fail-closed: if unset, the Pixel never loads even with marketing consent granted. The Conversions API posts to this same ID — they must match or Meta cannot deduplicate.
+META_CAPI_TOKEN                # Optional. Meta Conversions API access token (Events Manager → Settings → Generate access token). Fail-closed: if unset, no server-side Purchase is sent; the browser Pixel is unaffected.
+META_TEST_EVENT_CODE           # Optional, testing only. Routes server events to Events Manager → Test events. Leave empty in production.
 NEWSLETTER_UNSUBSCRIBE_SECRET  # HMAC key for newsletter unsubscribe links. Fail-closed: if unset, the welcome email is not sent (it could not carry a compliant unsubscribe link) and /unsubscribe rejects every token. Rotating it invalidates all outstanding links.
 LANDING_ANALYTICS_SECRET       # HMAC key for the daily visitor-hash salt used by /api/landing-event. Fail-closed: if unset, no landing events are recorded and the route still returns 204. Rotating it breaks unique-visitor continuity for that day.
 ```

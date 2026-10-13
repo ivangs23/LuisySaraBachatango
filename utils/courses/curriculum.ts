@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { COURSE_ID } from './landing-course'
 
@@ -58,7 +59,7 @@ export function formatDuration(seconds: number): string {
  *
  * Solo expone títulos y duraciones: ningún `mux_playback_id` sale de aquí.
  */
-export async function getCurriculum(): Promise<Curriculum | null> {
+async function leerTemario(): Promise<Curriculum | null> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) return null
 
@@ -73,7 +74,10 @@ export async function getCurriculum(): Promise<Curriculum | null> {
     .eq('course_id', COURSE_ID)
     .order('order', { ascending: true })
 
-  if (error || !data || data.length === 0) return null
+  // El error se propaga para que `unstable_cache` no lo guarde; un curso sin
+  // lecciones es un estado legítimo y sí se cachea como null.
+  if (error) throw new Error(`[curriculum] ${error.message ?? 'consulta fallida'}`)
+  if (!data || data.length === 0) return null
 
   const rows = data as Row[]
   const roots = rows.filter((r) => !r.parent_lesson_id)
@@ -110,5 +114,26 @@ export async function getCurriculum(): Promise<Curriculum | null> {
     // quedan fuera a propósito: contarlas mentiría sobre lo que se compra.
     lessonCount: modules.reduce((n, m) => n + 1 + m.lessons.length, 0),
     totalSeconds: modules.reduce((n, m) => n + m.totalSeconds, 0),
+  }
+}
+
+const temarioCacheado = unstable_cache(leerTemario, ['landing-curriculum'], {
+  revalidate: 300,
+  tags: ['landing-curriculum'],
+})
+
+/**
+ * El temario solo cambia cuando un admin edita lecciones, y la landing lo pide
+ * en cada clic de anuncio. Se cachea 5 minutos y se invalida al editar.
+ *
+ * Un fallo de base de datos sale como null —la landing sigue vendiendo sin
+ * temario— y, al no haberse cacheado, la siguiente petición lo reintenta.
+ */
+export async function getCurriculum(): Promise<Curriculum | null> {
+  try {
+    return await temarioCacheado()
+  } catch (e) {
+    console.error('[curriculum] lectura fallida: %s', (e as Error).message)
+    return null
   }
 }

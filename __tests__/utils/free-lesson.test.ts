@@ -13,6 +13,10 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({ from: fromMock }),
 }))
 
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: unknown) => fn,
+}))
+
 import { getFreeLesson } from '@/utils/courses/free-lesson'
 
 const ROW = {
@@ -56,6 +60,22 @@ describe('getFreeLesson', () => {
 
   it('descarta filas sin mux_playback_id', async () => {
     limitMock.mockResolvedValue({ data: [{ ...ROW, mux_playback_id: null }], error: null })
+    expect(await getFreeLesson()).toBeNull()
+  })
+
+  it('no repite la consulta cuando legítimamente no hay clase gratis', async () => {
+    // "Sin lección gratuita" es un estado soportado: la landing cae al enlace
+    // de siempre. Si se consultara dos veces, la caché no serviría de nada
+    // justo en ese estado y cada clic de anuncio pagaría el doble.
+    limitMock.mockResolvedValue({ data: [], error: null })
+    expect(await getFreeLesson()).toBeNull()
+    expect(limitMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('devuelve null si la BD falla, y el fallo no se cachea', async () => {
+    // El fallo se propaga desde la lectura interna para que `unstable_cache`
+    // no lo guarde; el envoltorio lo convierte en null para quien llama.
+    limitMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
     expect(await getFreeLesson()).toBeNull()
   })
 })

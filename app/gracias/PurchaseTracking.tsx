@@ -92,9 +92,15 @@ export default function PurchaseTracking({ transactionId, value, currency }: Pro
         })
       }
       if (quierePixel && window.fbq) {
-        // `eventID` permite a Meta descartar el duplicado si algún día se
-        // envía la misma compra también desde el servidor (Conversions API).
-        window.fbq('track', 'Purchase', { value, currency }, { eventID: transactionId })
+        window.fbq(
+          'track',
+          'Purchase',
+          { value, currency, content_name: 'Curso Bachatango' },
+          // `eventID` es el id de la sesión de Stripe, el mismo que manda el
+          // webhook por la API de conversiones: Meta descarta el duplicado y
+          // cuenta la venta una sola vez.
+          { eventID: transactionId },
+        )
       }
 
       lanzado.current = true

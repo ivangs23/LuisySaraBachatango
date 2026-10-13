@@ -80,4 +80,23 @@ describe('CookieConsent', () => {
     // Solo dos interruptores: análisis y marketing. Las necesarias no tienen.
     expect(screen.getAllByRole('checkbox')).toHaveLength(2)
   })
+
+  it('el texto del banner cabe en una pantalla de móvil', async () => {
+    renderBanner()
+    const dialogo = await screen.findByRole('dialog', { name: /tu privacidad/i })
+    const cuerpo = dialogo.querySelector('p')
+    // 180 caracteres son ~3 líneas a 390 px. Por encima, los botones caen por
+    // debajo del pliegue en el navegador de Instagram y la decisión se aplaza
+    // —y sin decisión el píxel no carga y Meta no cuenta la visita.
+    expect(cuerpo?.textContent?.length ?? 0).toBeLessThanOrEqual(180)
+  })
+
+  it('aceptar y rechazar siguen siendo dos botones igual de alcanzables', async () => {
+    renderBanner()
+    const aceptar = await screen.findByRole('button', { name: /aceptar todo/i })
+    const rechazar = screen.getByRole('button', { name: /^rechazar$/i })
+    expect(aceptar).toBeEnabled()
+    expect(rechazar).toBeEnabled()
+    expect(rechazar).not.toHaveAttribute('aria-hidden')
+  })
 })

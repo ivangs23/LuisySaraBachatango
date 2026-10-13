@@ -9,6 +9,10 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/curso-bachatango',
 }))
 
+// La portada pasa por `isOptimizableImageUrl`, que compara contra el host de
+// esta variable. Sin ella el guardián es fail-closed y no habría <img>.
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://jytokoxbsykoyifzbjkd.supabase.co'
+
 import LandingHero from '@/app/curso-bachatango/_components/LandingHero'
 
 // El copy ahora llega por props desde la página, que lo resuelve por idioma.
@@ -44,5 +48,45 @@ describe('LandingHero', () => {
     expect(screen.getByText('Quedan 5 plazas disponibles')).toBeInTheDocument()
     // El botón sigue llevando el precio que se cobra, no el tachado.
     expect(screen.getByRole('link', { name: /Empieza ahora · €119/ })).toBeInTheDocument()
+  })
+
+  const PORTADA =
+    'https://jytokoxbsykoyifzbjkd.supabase.co/storage/v1/object/public/thumbnails/course-covers/a.png'
+
+  it('pinta la portada como <img> con prioridad, no como background-image', () => {
+    const { container } = render(
+      <LandingHero copy={COPY} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={PORTADA} />,
+    )
+    // El elemento LCP tiene que ser descubrible en el HTML: con una
+    // background-image el navegador esperaba 3,55 s a parsear el CSS.
+    const img = container.querySelector('img')
+    expect(img).not.toBeNull()
+    expect(img).toHaveAttribute('fetchpriority', 'high')
+    // Decorativa: el titular ya dice lo que hay que leer.
+    expect(img).toHaveAttribute('alt', '')
+    expect(container.querySelector('section')?.getAttribute('style') ?? '')
+      .not.toContain('background-image')
+  })
+
+  it('omite la portada —sin romper la página— si el host no es optimizable', () => {
+    const { container } = render(
+      <LandingHero
+        copy={COPY}
+        courseId="c1"
+        isAuthed={false}
+        offer={OFFER}
+        imageUrl="https://evil.example.com/a.png"
+      />,
+    )
+    expect(container.querySelector('img')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+  })
+
+  it('se renderiza sin portada cuando imageUrl es null', () => {
+    const { container } = render(
+      <LandingHero copy={COPY} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />,
+    )
+    expect(container.querySelector('img')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
   })
 })

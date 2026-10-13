@@ -3,10 +3,21 @@
 import { useEffect, useRef } from 'react';
 import FormPrivacyNotice from './FormPrivacyNotice';
 import { useFormStatus } from 'react-dom';
+import { useConsent } from '@/context/ConsentContext';
 import { landingCheckout } from '@/app/curso-bachatango/comprar/actions';
 import styles from '@/app/curso-bachatango/comprar/comprar.module.css';
 
-interface Props { courseId: string; defaultEmail: string; defaultName: string; error?: string }
+interface Props {
+  courseId: string;
+  defaultEmail: string;
+  defaultName: string;
+  error?: string;
+  /** Importe que se va a cobrar, en euros. El mismo que usa el checkout. */
+  price: number | null;
+  courseTitle: string;
+  /** `fbclid` de la URL, si el anuncio enlazó directo a esta página. */
+  fbclid: string;
+}
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_name: 'Escribe tu nombre completo.',
@@ -29,17 +40,50 @@ function SubmitButton() {
   );
 }
 
-export default function LandingCheckoutForm({ courseId, defaultEmail, defaultName, error }: Props) {
+export default function LandingCheckoutForm({
+  courseId, defaultEmail, defaultName, error, price, courseTitle, fbclid,
+}: Props) {
   const message = error ? (ERROR_MESSAGES[error] ?? 'Revisa tus datos e inténtalo de nuevo.') : null;
   const errorRef = useRef<HTMLParagraphElement>(null);
+  const { state, hydrated } = useConsent();
 
   useEffect(() => {
     if (message) errorRef.current?.focus();
   }, [message]);
 
+  /**
+   * InitiateCheckout: el paso del embudo que separa "miró el formulario" de
+   * "se fue a pagar". Sin él, Meta no puede optimizar hacia quien avanza.
+   *
+   * Va en `onSubmit` porque el envío lo gestiona un Server Action que termina
+   * redirigiendo a Stripe: después del redirect ya no hay página donde
+   * disparar nada. El navegador llama a este handler antes de ejecutar la
+   * acción, y `fbq` encola el evento de forma síncrona, así que sale aunque la
+   * navegación sea inmediata.
+   *
+   * Solo con consentimiento de marketing, igual que el propio píxel: si el
+   * visitante lo rechazó, `fbq` ni siquiera existe.
+   */
+  const trackInitiateCheckout = () => {
+    if (!hydrated || !state?.marketing) return;
+    if (typeof window.fbq !== 'function') return;
+    if (!(price !== null && price > 0)) return;
+    try {
+      window.fbq('track', 'InitiateCheckout', {
+        value: price,
+        currency: 'EUR',
+        content_name: courseTitle,
+      });
+    } catch {
+      // La medición no puede impedir una compra bajo ningún concepto.
+    }
+  };
+
   return (
-    <form action={landingCheckout} className={styles.form}>
+    <form action={landingCheckout} onSubmit={trackInitiateCheckout} className={styles.form}>
       <input type="hidden" name="courseId" value={courseId} />
+      {/* Lo lee el Server Action para reconstruir `_fbc` si no hay cookie. */}
+      {fbclid && <input type="hidden" name="fbclid" value={fbclid} />}
       {message && (
         <p ref={errorRef} role="alert" tabIndex={-1} id="lc-form-error" className={styles.error}>
           {message}

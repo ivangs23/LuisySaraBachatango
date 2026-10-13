@@ -27,7 +27,7 @@ export const es = {
   },
   consent: {
     title: "Tu privacidad",
-    body: "Usamos cookies propias necesarias para que la web funcione. Con tu permiso, también usaremos cookies de análisis y de marketing para entender qué te interesa y mostrarte contenido de Instagram.",
+    body: "Usamos cookies necesarias para que la web funcione. Con tu permiso, también de análisis y marketing para medir campañas y mostrarte Instagram.",
     accept: "Aceptar todo",
     reject: "Rechazar",
     configure: "Configurar",

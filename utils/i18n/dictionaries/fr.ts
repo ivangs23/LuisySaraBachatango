@@ -20,7 +20,7 @@ export const fr: Dictionary = {
   },
   consent: {
     title: "Votre vie privée",
-    body: "Nous utilisons des cookies internes nécessaires au fonctionnement du site. Avec votre accord, nous utiliserons aussi des cookies d'analyse et de marketing pour comprendre ce qui vous intéresse et afficher du contenu Instagram.",
+    body: "Nous utilisons des cookies nécessaires au fonctionnement du site. Avec votre accord, aussi d'analyse et de marketing pour mesurer nos campagnes et afficher Instagram.",
     accept: "Tout accepter",
     reject: "Refuser",
     configure: "Personnaliser",
