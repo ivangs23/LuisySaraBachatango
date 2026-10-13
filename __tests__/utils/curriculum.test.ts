@@ -12,6 +12,11 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({ from: fromMock }),
 }))
 
+vi.mock('next/cache', () => ({
+  // La caché se prueba por su contrato en landing-cache-tags.test.ts.
+  unstable_cache: (fn: unknown) => fn,
+}))
+
 import { getCurriculum, formatDuration } from '@/utils/courses/curriculum'
 
 const ROWS = [
@@ -88,5 +93,15 @@ describe('getCurriculum', () => {
   it('devuelve null si no hay lecciones', async () => {
     orderMock.mockResolvedValue({ data: [], error: null })
     expect(await getCurriculum()).toBeNull()
+  })
+
+  it('reintenta en directo si la lectura cacheada vino vacía', async () => {
+    // Primera llamada: la BD falla. Segunda: responde. La landing no puede
+    // quedarse cinco minutos sin temario por un hipo de red.
+    orderMock.mockResolvedValueOnce({ data: null, error: { message: 'boom' } })
+    orderMock.mockResolvedValueOnce({ data: ROWS, error: null })
+    const temario = await getCurriculum()
+    expect(temario).not.toBeNull()
+    expect(temario?.moduleCount).toBe(2)
   })
 })

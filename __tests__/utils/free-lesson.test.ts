@@ -13,6 +13,10 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({ from: fromMock }),
 }))
 
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: unknown) => fn,
+}))
+
 import { getFreeLesson } from '@/utils/courses/free-lesson'
 
 const ROW = {
@@ -57,5 +61,11 @@ describe('getFreeLesson', () => {
   it('descarta filas sin mux_playback_id', async () => {
     limitMock.mockResolvedValue({ data: [{ ...ROW, mux_playback_id: null }], error: null })
     expect(await getFreeLesson()).toBeNull()
+  })
+
+  it('reintenta en directo si la lectura cacheada vino vacía', async () => {
+    limitMock.mockResolvedValueOnce({ data: null, error: { message: 'boom' } })
+    limitMock.mockResolvedValueOnce({ data: [ROW], error: null })
+    expect(await getFreeLesson()).not.toBeNull()
   })
 })
