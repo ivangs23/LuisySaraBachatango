@@ -9,8 +9,11 @@ Sentry.init({
   tracesSampleRate: 0.1,
   enabled: process.env.NODE_ENV === 'production',
   sendDefaultPii: false,
+  // Session Replay apagado a propósito: arrastraba su bundle a todas las
+  // páginas, la landing de pago incluida, y nunca se usó para diagnosticar
+  // nada. Los errores y el tracing siguen llegando.
   replaysSessionSampleRate: 0,
-  replaysOnErrorSampleRate: 0.1,
+  replaysOnErrorSampleRate: 0,
   beforeSend(event) {
     if (event.request?.headers) {
       const h = event.request.headers as Record<string, string>
