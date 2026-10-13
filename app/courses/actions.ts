@@ -126,7 +126,12 @@ async function uploadCourseImage(supabase: Awaited<ReturnType<typeof createClien
 
   const { error: uploadError } = await supabase.storage
     .from('thumbnails')
-    .upload(filePath, imageFile)
+    .upload(filePath, imageFile, {
+      // El nombre lleva un UUID, así que el objeto es inmutable: nunca se
+      // sobrescribe, se sube uno nuevo. Sin esto Supabase servía la portada
+      // con `cache-control: no-cache` y se volvía a descargar en cada visita.
+      cacheControl: '31536000',
+    })
 
   if (uploadError) return { error: uploadError.message }
 

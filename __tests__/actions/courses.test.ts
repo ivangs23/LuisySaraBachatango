@@ -1125,3 +1125,47 @@ describe('uploadAssignmentFile', () => {
   })
 })
 
+
+// ── cacheControl de las portadas ──────────────────────────────────────────────
+
+describe('uploadCourseImage (vía createCourse)', () => {
+  let uploadMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1' })
+    uploadMock = vi.fn().mockResolvedValue({ error: null })
+
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn() },
+      from: vi.fn().mockReturnValue({ insert: vi.fn().mockResolvedValue({ error: null }) }),
+      storage: {
+        from: vi.fn().mockReturnValue({
+          upload: uploadMock,
+          getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://storage/img.jpg' } }),
+        }),
+      },
+    })
+  })
+
+  it('sube la portada con cacheControl de un año', async () => {
+    const { createCourse } = await import('@/app/courses/actions')
+    // `fd()` solo mete cadenas, así que el File va a mano.
+    const archivo = new File([new Uint8Array([1, 2, 3])], 'portada.png', { type: 'image/png' })
+    const formData = new FormData()
+    formData.append('title', 'Curso')
+    formData.append('description', 'd')
+    formData.append('courseType', 'membership')
+    formData.append('image', archivo)
+
+    // El camino feliz termina en redirect('/courses'), que el mock convierte
+    // en throw. Lo que importa pasó antes.
+    await expect(createCourse(formData)).rejects.toThrow('REDIRECT:/courses')
+
+    expect(uploadMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^course-covers\//),
+      archivo,
+      expect.objectContaining({ cacheControl: '31536000' }),
+    )
+  })
+})
