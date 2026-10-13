@@ -29,7 +29,7 @@ export const en: Dictionary = {
   },
   consent: {
     title: "Your privacy",
-    body: "We use first-party cookies that are needed for the site to work. With your permission, we will also use analytics and marketing cookies to understand what interests you and to show you Instagram content.",
+    body: "We use cookies needed for the site to work. With your permission, also analytics and marketing ones to measure campaigns and show you Instagram.",
     accept: "Accept all",
     reject: "Reject",
     configure: "Customise",
