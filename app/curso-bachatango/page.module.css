@@ -18,6 +18,7 @@
 .cta:disabled { opacity: 0.6; cursor: default; }
 
 .hero {
+  position: relative;
   min-height: 92vh;
   display: flex;
   align-items: center;
@@ -25,10 +26,18 @@
   text-align: center;
   padding: var(--spacing-2xl) var(--page-pad);
   background-color: #050505;
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
 }
-.heroInner { max-width: 720px; }
+.heroBg { position: absolute; inset: 0; z-index: 0; }
+.heroBgImage { object-fit: cover; object-position: center; }
+/* El mismo degradado que antes iba en la background-image en línea: mantiene
+   el contraste del titular sobre cualquier portada. */
+.heroScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(5, 5, 5, 0.6), rgba(5, 5, 5, 0.85));
+}
+.heroInner { position: relative; z-index: 1; max-width: 720px; }
 .heroTitle { font: var(--h1); color: var(--text-main); margin-bottom: var(--spacing-lg); }
 .heroSub { font: var(--body); color: var(--text-muted); font-size: 1.15rem; margin-bottom: var(--spacing-xl); }
 .heroCtaRow { display: flex; gap: var(--spacing-md); align-items: center; justify-content: center; flex-wrap: wrap; }

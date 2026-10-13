@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // AVIF pesa ~20 % menos que WebP en fotografía y lo soportan el navegador
+    // de Instagram en iOS 16+ y Android. Next cae a WebP solo donde haga falta.
+    formats: ['image/avif', 'image/webp'],
     // 24h. Avatars and thumbnails change rarely; reduces re-optimization cost.
     minimumCacheTTL: 86400,
     remotePatterns: [
