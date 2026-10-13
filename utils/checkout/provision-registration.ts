@@ -7,7 +7,20 @@ import { sesionLiquidada } from '@/utils/checkout/session-status'
 
 
 export type ProvisionResult =
-  | { ok: true; userId: string; created: boolean }
+  | {
+      ok: true
+      userId: string
+      created: boolean
+      /**
+       * La fila de `course_purchases` se insertó DE VERDAD en esta llamada, no
+       * era una entrega repetida del mismo evento ni un curso ya poseído.
+       *
+       * Es la señal de "exactamente una vez" del flujo: ya decide si se manda
+       * el correo de bienvenida, y el webhook la usa además para reportar la
+       * compra a Meta una sola vez aunque Stripe reenvíe el evento.
+       */
+      genuineInsert: boolean
+    }
   | { ok: false; reason: string }
 
 /**
@@ -58,13 +71,13 @@ export async function provisionFromPending(
       // session's email + courseId (they set their password via the invite
       // email) so money never ends up without access. Idempotent.
       const rec = await provisionGuestPurchase(session, admin, { source: 'landing' })
-      if (rec.ok) return { ok: true, userId: rec.userId, created: false }
+      if (rec.ok) return { ok: true, userId: rec.userId, created: false, genuineInsert: false }
       alertaCritica('Sesión pagada sin acceso: falló también la recuperación de invitado', {
         sesion: session.id, motivo: rec.reason,
       })
       return { ok: false, reason: `orphan-recovery-failed:${rec.reason}` }
     }
-    return { ok: true, userId: '', created: false }
+    return { ok: true, userId: '', created: false, genuineInsert: false }
   }
 
   const email = String(pending.email).toLowerCase()
@@ -210,7 +223,7 @@ export async function provisionFromPending(
         courseId,
       })
       await admin.from('pending_registrations').delete().eq('id', pendingId)
-      return { ok: true, userId: userId as string, created }
+      return { ok: true, userId: userId as string, created, genuineInsert: false }
     }
     return { ok: false, reason: `purchase-error:${purchaseError.message}` }
   }
@@ -277,5 +290,5 @@ export async function provisionFromPending(
     })
   }
 
-  return { ok: true, userId: userId as string, created }
+  return { ok: true, userId: userId as string, created, genuineInsert }
 }

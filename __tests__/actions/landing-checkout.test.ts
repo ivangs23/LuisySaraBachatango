@@ -30,8 +30,9 @@ vi.mock('@/utils/stripe/server', () => ({ stripe: { checkout: { sessions: { crea
 vi.mock('next/navigation', () => ({ redirect: (u: string) => H.redirect(u) }))
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue({ get: () => '' }),
-  // back() guarda el re-echo de campos en una cookie flash (PII fuera de la URL).
-  cookies: vi.fn().mockResolvedValue({ set: vi.fn() }),
+  // back() guarda el re-echo de campos en una cookie flash (PII fuera de la URL),
+  // y la atribución de Meta LEE ls_consent, _fbp y _fbc.
+  cookies: vi.fn().mockResolvedValue({ set: vi.fn(), get: () => undefined }),
 }))
 vi.mock('@/utils/rate-limit', () => ({ rateLimit: (...a: unknown[]) => H.rateLimit(...a), rateLimitKey: (p: (string | null | undefined)[]) => p.map(x => x ?? 'anon').join(':') }))
 vi.mock('@supabase/supabase-js', () => ({

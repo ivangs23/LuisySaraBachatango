@@ -8,6 +8,9 @@ import { provisionGuestPurchase } from '@/utils/checkout/provision-guest';
 import { provisionFromPending } from '@/utils/checkout/provision-registration';
 import { alertaCritica } from '@/utils/alerta';
 import { sesionLiquidada } from '@/utils/checkout/session-status';
+import { attributionFromMetadata } from '@/utils/analytics/meta-attribution';
+import { sendPurchaseToMeta } from '@/utils/analytics/meta-capi';
+import { isDemoMode } from '@/utils/demo/mode';
 
 assertProdEnv();
 
@@ -18,6 +21,44 @@ function getSupabaseAdmin() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+/**
+ * Reporta la compra a la API de conversiones de Meta.
+ *
+ * Envuelve la llamada en un try/catch propio aunque `sendPurchaseToMeta` ya
+ * prometa no lanzar: este webhook es el que da acceso al curso a quien acaba de
+ * pagar, y ninguna herramienta de medición puede ponerlo en riesgo. Si Meta
+ * está caída, el comprador no se entera.
+ *
+ * El `event_id` es el id de la sesión de Stripe, el mismo que manda el píxel
+ * desde /gracias: así Meta se queda con una sola de las dos.
+ */
+async function reportarCompraAMeta(session: Stripe.Checkout.Session): Promise<void> {
+  try {
+    const attribution = attributionFromMetadata(session.metadata as Record<string, string> | null);
+    const outcome = await sendPurchaseToMeta(
+      {
+        eventId: session.id,
+        eventTime: Math.floor(Date.now() / 1000),
+        eventSourceUrl: `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/gracias`,
+        email: session.customer_details?.email ?? null,
+        fullName: session.customer_details?.name ?? null,
+        value: (session.amount_total ?? 0) / 100,
+        currency: (session.currency ?? 'eur').toUpperCase(),
+        contentName: 'Curso Bachatango',
+        attribution,
+      },
+      { isDemo: isDemoMode() },
+    );
+    if (!outcome.sent && outcome.reason !== 'no-consent' && outcome.reason !== 'demo') {
+      // 'no-consent' y 'demo' son funcionamiento correcto, no incidencias.
+      console.warn('[meta-capi] compra no reportada (%s) session=%s', outcome.reason, session.id);
+    }
+  } catch (e) {
+    console.error('[meta-capi] excepción reportando la compra session=%s: %s',
+      session.id, e instanceof Error ? e.message : String(e));
+  }
 }
 
 export async function POST(req: Request) {
@@ -49,6 +90,12 @@ export async function POST(req: Request) {
     const pendingId = session.client_reference_id ?? session.metadata?.pendingId;
     if (pendingId) {
       const result = await provisionFromPending(session, supabase);
+      if (result.ok && result.genuineInsert) {
+        // La compra, contada también desde el servidor. Va DESPUÉS de
+        // aprovisionar y sin `await` bloqueante sobre el resultado del alta:
+        // el acceso del alumno ya está concedido pase lo que pase aquí.
+        await reportarCompraAMeta(session);
+      }
       if (!result.ok) {
         // Non-retryable reasons (validation/idempotent) -> 200. DB/create errors -> 500 for Stripe retry.
         const nonRetryable = ['not-paid', 'bad-amount', 'no-pending-id', 'no-course'];

@@ -17,6 +17,8 @@ import { CURRENT_TERMS_VERSION } from '@/utils/legal/terms-version';
 import { alertaCritica } from '@/utils/alerta';
 import { dailyVisitorHash } from '@/utils/analytics/visitor-hash';
 import { isDemoMode } from '@/utils/demo/mode';
+import { attributionToMetadata, collectAttribution } from '@/utils/analytics/meta-attribution';
+import { CONSENT_COOKIE, parseConsent } from '@/utils/consent/categories';
 
 export async function landingCheckout(formData: FormData): Promise<void> {
   const hdrs = await headers();
@@ -198,6 +200,27 @@ export async function landingCheckout(formData: FormData): Promise<void> {
   }
 
   const origin = process.env.NEXT_PUBLIC_BASE_URL ?? '';
+
+  // Atribución de Meta. Se captura AQUÍ y viaja en `session.metadata` porque el
+  // webhook lo llama Stripe servidor contra servidor: allí no hay cookies del
+  // visitante, ni su IP, ni su user agent, y sin eso Meta no sabe qué anuncio
+  // produjo la venta.
+  //
+  // `fb_consent` es la pieza clave: el consentimiento de marketing solo se
+  // puede leer donde hay cookie, es decir, aquí. El webhook se limita a
+  // obedecer lo que diga este sello.
+  const ck = await cookies();
+  const consent = parseConsent(ck.get(CONSENT_COOKIE)?.value);
+  const attribution = collectAttribution({
+    fbpCookie: ck.get('_fbp')?.value,
+    fbcCookie: ck.get('_fbc')?.value,
+    fbclid: (formData.get('fbclid') as string | null) ?? null,
+    ip,
+    userAgent: hdrs.get('user-agent'),
+    marketingConsent: consent?.marketing === true,
+    nowMs: Date.now(),
+  });
+
   let url: string | null = null;
   try {
     const session = await stripe.checkout.sessions.create({
@@ -218,7 +241,7 @@ export async function landingCheckout(formData: FormData): Promise<void> {
       mode: 'payment',
       success_url: `${origin}/gracias?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/curso-bachatango`,
-      metadata: { courseId, source: 'landing', pendingId },
+      metadata: { courseId, source: 'landing', pendingId, ...attributionToMetadata(attribution) },
       allow_promotion_codes: true,
     });
     url = session.url;

@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic';
 
 type FlashFields = { name?: string; email?: string };
 
-export default async function ComprarPage(props: { searchParams: Promise<{ courseId?: string; error?: string }> }) {
-  const { courseId, error } = await props.searchParams;
+export default async function ComprarPage(props: { searchParams: Promise<{ courseId?: string; error?: string; fbclid?: string }> }) {
+  const { courseId, error, fbclid } = await props.searchParams;
   if (!courseId) notFound();
 
   // Re-echo de campos tras un error de validación: llegan por cookie flash
@@ -77,6 +77,14 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
           defaultEmail={email ?? user?.email ?? ''}
           defaultName={name ?? ''}
           error={error}
+          // Para el InitiateCheckout del píxel. Es `offer.price`, el importe que
+          // de verdad se cobra — nunca `compareAt`, que es decoración.
+          price={offer.price}
+          courseTitle={course.title}
+          // Solo sirve si el anuncio enlaza directo aquí. Lo normal es que el
+          // píxel ya haya escrito la cookie `_fbc` en la landing, que tiene
+          // prioridad; esto es la red por si llegó sin ella.
+          fbclid={fbclid ?? ''}
         />
       </div>
     </div>

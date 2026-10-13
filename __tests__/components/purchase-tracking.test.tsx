@@ -36,9 +36,9 @@ describe('PurchaseTracking', () => {
 
     const [accion, tipo, payload, opts] = fbq().mock.calls[0]
     expect([accion, tipo]).toEqual(['track', 'Purchase'])
-    expect(payload).toEqual({ value: 119, currency: 'EUR' })
-    // eventID deja a Meta descartar el duplicado si algún día se envía también
-    // desde el servidor.
+    expect(payload).toEqual({ value: 119, currency: 'EUR', content_name: 'Curso Bachatango' })
+    // eventID es el id de la sesión de Stripe, el mismo que manda el webhook
+    // por la API de conversiones: Meta se queda con una sola de las dos.
     expect(opts).toEqual({ eventID: SESION })
   })
 
