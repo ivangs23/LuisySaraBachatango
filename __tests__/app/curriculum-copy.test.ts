@@ -2,7 +2,9 @@ import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
-import { fillCurriculum } from '@/app/curso-bachatango/_lib/curriculum-copy'
+import { fillCurriculum, heroSub } from '@/app/curso-bachatango/_lib/curriculum-copy'
+import { getLandingCopy } from '@/app/curso-bachatango/copy'
+import { LOCALES } from '@/utils/i18n/types'
 import type { Curriculum } from '@/utils/courses/curriculum'
 
 const TEMARIO: Curriculum = { modules: [], moduleCount: 14, lessonCount: 28, totalSeconds: 7920 }
@@ -30,5 +32,22 @@ describe('fillCurriculum', () => {
 
   it('devuelve null si pide la duración y el curso no tiene ninguna', () => {
     expect(fillCurriculum('{duration} en total', { ...TEMARIO, totalSeconds: 0 })).toBeNull()
+  })
+})
+
+describe('heroSub', () => {
+  it('lleva las cifras reales del temario', () => {
+    expect(heroSub(getLandingCopy('es'), TEMARIO)).toBe(
+      '14 módulos, 28 lecciones en vídeo, 2 h 12 min. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.',
+    )
+  })
+
+  it('sin temario cae a un subtítulo sin cifras, en los seis idiomas', () => {
+    for (const locale of LOCALES) {
+      const copy = getLandingCopy(locale)
+      const sub = heroSub(copy, null)
+      expect(sub, locale).toBe(copy.hero.subFallback)
+      expect(sub, locale).not.toMatch(/[{}\d]/)
+    }
   })
 })

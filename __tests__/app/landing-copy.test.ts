@@ -46,6 +46,7 @@ describe('copy del embudo por idioma', () => {
         // marcador al traducir dejaría el dato fuera de la página.
         for (const marca of ['{modules}', '{lessons}', '{duration}']) {
           expect(copy.learn.summary, `${locale}: falta ${marca}`).toContain(marca)
+          expect(copy.hero.sub, `${locale}: falta ${marca} en hero.sub`).toContain(marca)
         }
         expect(copy.offer.lessonsIncluded, `${locale}: falta {lessons}`).toContain('{lessons}')
       })

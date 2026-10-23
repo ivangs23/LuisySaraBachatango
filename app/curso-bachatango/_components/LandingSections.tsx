@@ -72,11 +72,11 @@ export default function LandingSections({ courseId, offer, curriculum, freeClass
         </Reveal>
       </section>
 
-      {/* Bio */}
+      {/* Autoridad: hechos concretos, no adjetivos */}
       <section className={styles.section}>
         <Reveal>
-          <h2 className={styles.h2}>{c.bio.title}</h2>
-          <p className={styles.lead}>{c.bio.body}</p>
+          <h2 className={styles.h2}>{c.authority.title}</h2>
+          <p className={styles.lead}>{c.authority.body}</p>
         </Reveal>
       </section>
 

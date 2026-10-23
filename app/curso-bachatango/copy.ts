@@ -22,12 +22,25 @@ import type { Locale } from '@/utils/i18n/types';
 type Pregunta = { q: string; a: string };
 
 export type LandingCopy = {
-  hero: { h1: string; sub: string; cta: string; micro: string; secondary: string; haveAccount: string; login: string };
+  hero: {
+    h1: string;
+    // `sub` lleva las cifras del temario y se resuelve en servidor (el hero es
+    // de cliente); `subFallback` es para cuando la BD no responde.
+    sub: string;
+    subFallback: string;
+    cta: string;
+    micro: string;
+    secondary: string;
+    haveAccount: string;
+    login: string;
+  };
   sticky: { brand: string; cta: string };
   pain: { title: string; items: readonly string[]; promise: string };
   learn: { title: string; subtitle: string; summary: string };
   method: { title: string; body: string };
-  bio: { title: string; body: string };
+  // Hechos concretos y comprobables, no adjetivos. Sustituye a la antigua bio
+  // («instructores internacionales…»), que valía para cualquier profesor.
+  authority: { title: string; body: string };
   // Solo el título: las citas salen de `landing_testimonials`, las mismas que
   // pinta la home (utils/landing/content.ts).
   testimonials: { title: string };
@@ -53,8 +66,11 @@ export type LandingCopy = {
 
 const es: LandingCopy = {
   hero: {
-    h1: 'Baila bachatango como nunca imaginaste',
-    sub: 'El método completo de Luis y Sara para dominar la técnica, la conexión y la musicalidad — a tu ritmo, desde casa.',
+    // D7: llegaron los dos a la final de la 1.ª edición (Telecinco, 2024) y
+    // ganó Luis. «Los ganadores», en plural, no sería exacto.
+    h1: 'Aprende bachatango con los finalistas de Bailando con las Estrellas',
+    sub: '{modules} módulos, {lessons} lecciones en vídeo, {duration}. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.',
+    subFallback: 'El curso completo en vídeo. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.',
     cta: 'Empieza ahora',
     micro: 'Pago único · Acceso de por vida · Pago seguro con Stripe',
     secondary: 'Prueba una clase gratis',
@@ -83,9 +99,9 @@ const es: LandingCopy = {
     title: 'El método Luis y Sara',
     body: 'Cada movimiento desglosado y explicado desde una base sólida, estudiada y probada, con práctica guiada y una progresión pensada para que interiorices sin frustrarte. No son clases sueltas: es un camino completo.',
   },
-  bio: {
+  authority: {
     title: 'Quiénes son Luis y Sara',
-    body: 'Instructores internacionales de bailes de salón, latinos y bachatango. Años formando bailarines dentro y fuera de la pista, con un método propio que ahora tienes a tu alcance desde casa.',
+    body: 'Luis y Sara bailan juntos desde 2002, cuando tenían 9 años. Luis ganó la primera edición de Bailando con las Estrellas (Telecinco, 2024) y Sara llegó a la final. Son campeones internacionales de bailes de salón. Han bailado junto a Il Divo, Gente de Zona y Diego Torres, y en galas como los Premios Platino. Sara es licenciada en Pedagogía de la Danza y Luis es Juez Nacional de Baile Deportivo. Desde 2020 dirigen su propia escuela.',
   },
   testimonials: { title: 'Lo que dicen sus alumnos' },
   freeClass: {
@@ -120,13 +136,14 @@ const es: LandingCopy = {
     { q: '¿Cuánto dura el acceso?', a: 'Acceso de por vida. Compras una vez y es tuyo para siempre.' },
     { q: '¿Es seguro el pago?', a: 'Sí. El pago se procesa con Stripe; no almacenamos datos de tu tarjeta.' },
   ],
-  finalCta: { title: 'Tu mejor versión bailando empieza hoy', cta: 'Comprar el curso' },
+  finalCta: { title: 'Empieza hoy con la lección 1', cta: 'Comprar el curso' },
 };
 
 const en: LandingCopy = {
   hero: {
-    h1: 'Dance bachatango like you never imagined',
-    sub: "Luis and Sara's complete method for mastering technique, connection and musicality — at your own pace, from home.",
+    h1: 'Learn bachatango with the finalists of Bailando con las Estrellas',
+    sub: '{modules} modules, {lessons} video lessons, {duration}. You learn both the leader and the follower role, so you can start without a partner.',
+    subFallback: 'The complete course on video. You learn both the leader and the follower role, so you can start without a partner.',
     cta: 'Start now',
     micro: 'One-time payment · Lifetime access · Secure payment with Stripe',
     secondary: 'Try a free class',
@@ -152,9 +169,9 @@ const en: LandingCopy = {
     title: 'The Luis y Sara method',
     body: 'Every movement broken down and explained from a solid, studied and tested foundation, with guided practice and a progression designed so it sinks in without frustrating you. These are not scattered classes: it is a complete path.',
   },
-  bio: {
+  authority: {
     title: 'Who Luis and Sara are',
-    body: 'International instructors of ballroom, Latin and bachatango. Years training dancers on and off the floor, with a method of their own that you can now follow from home.',
+    body: "Luis and Sara have danced together since 2002, when they were 9. Luis won the first season of Bailando con las Estrellas, Spain's Dancing with the Stars (Telecinco, 2024), and Sara reached the final. They are international ballroom champions. They have danced alongside Il Divo, Gente de Zona and Diego Torres, and at galas such as the Platino Awards. Sara holds a degree in Dance Pedagogy and Luis is a National DanceSport Judge. They have run their own school since 2020.",
   },
   testimonials: { title: 'What their students say' },
   freeClass: {
@@ -187,13 +204,14 @@ const en: LandingCopy = {
     { q: 'How long does access last?', a: 'Lifetime access. You buy once and it is yours for good.' },
     { q: 'Is the payment secure?', a: 'Yes. Payment is processed by Stripe; we never store your card details.' },
   ],
-  finalCta: { title: 'Your best dancing self starts today', cta: 'Buy the course' },
+  finalCta: { title: 'Start today with lesson 1', cta: 'Buy the course' },
 };
 
 const fr: LandingCopy = {
   hero: {
-    h1: 'Dansez le bachatango comme vous ne l’aviez jamais imaginé',
-    sub: 'La méthode complète de Luis et Sara pour maîtriser la technique, la connexion et la musicalité — à votre rythme, depuis chez vous.',
+    h1: 'Apprenez le bachatango avec les finalistes de Bailando con las Estrellas',
+    sub: '{modules} modules, {lessons} leçons en vidéo, {duration}. Vous apprenez le rôle de leader et celui de follower : vous pouvez commencer sans partenaire.',
+    subFallback: 'Le cours complet en vidéo. Vous apprenez le rôle de leader et celui de follower : vous pouvez commencer sans partenaire.',
     cta: 'Commencer',
     micro: 'Paiement unique · Accès à vie · Paiement sécurisé avec Stripe',
     secondary: 'Essayer un cours gratuit',
@@ -219,9 +237,9 @@ const fr: LandingCopy = {
     title: 'La méthode Luis y Sara',
     body: 'Chaque mouvement décomposé et expliqué à partir d’une base solide, étudiée et éprouvée, avec une pratique guidée et une progression pensée pour intégrer sans se décourager. Ce ne sont pas des cours isolés : c’est un parcours complet.',
   },
-  bio: {
+  authority: {
     title: 'Qui sont Luis et Sara',
-    body: 'Professeurs internationaux de danses de salon, latines et bachatango. Des années à former des danseurs sur la piste et en dehors, avec une méthode qui leur est propre, désormais accessible depuis chez vous.',
+    body: 'Luis et Sara dansent ensemble depuis 2002, quand ils avaient 9 ans. Luis a remporté la première saison de Bailando con las Estrellas, la version espagnole de Danse avec les stars (Telecinco, 2024), et Sara est allée en finale. Ils sont champions internationaux de danses de salon. Ils ont dansé aux côtés d’Il Divo, Gente de Zona et Diego Torres, et lors de galas comme les Prix Platino. Sara est diplômée en Pédagogie de la Danse et Luis est Juge National de Danse Sportive. Depuis 2020, ils dirigent leur propre école.',
   },
   testimonials: { title: 'Ce que disent leurs élèves' },
   freeClass: {
@@ -254,13 +272,14 @@ const fr: LandingCopy = {
     { q: 'Combien de temps dure l’accès ?', a: 'Accès à vie. Vous achetez une fois et c’est à vous pour toujours.' },
     { q: 'Le paiement est-il sécurisé ?', a: 'Oui. Le paiement est traité par Stripe ; nous ne conservons aucune donnée de votre carte.' },
   ],
-  finalCta: { title: 'Votre meilleure version en danse commence aujourd’hui', cta: 'Acheter le cours' },
+  finalCta: { title: 'Commencez aujourd’hui avec la leçon 1', cta: 'Acheter le cours' },
 };
 
 const de: LandingCopy = {
   hero: {
-    h1: 'Tanze Bachatango, wie du es nie für möglich gehalten hast',
-    sub: 'Die komplette Methode von Luis und Sara für Technik, Verbindung und Musikalität — in deinem Tempo, von zu Hause aus.',
+    h1: 'Lerne Bachatango mit den Finalisten von Bailando con las Estrellas',
+    sub: '{modules} Module, {lessons} Videolektionen, {duration}. Du lernst die Leader- und die Follower-Rolle, also kannst du auch ohne Partner anfangen.',
+    subFallback: 'Der komplette Kurs als Video. Du lernst die Leader- und die Follower-Rolle, also kannst du auch ohne Partner anfangen.',
     cta: 'Jetzt starten',
     micro: 'Einmalzahlung · Lebenslanger Zugang · Sichere Zahlung mit Stripe',
     secondary: 'Kostenlose Stunde testen',
@@ -286,9 +305,9 @@ const de: LandingCopy = {
     title: 'Die Methode von Luis y Sara',
     body: 'Jede Bewegung aufgeschlüsselt und erklärt, auf einer soliden, durchdachten und erprobten Grundlage, mit angeleiteter Übung und einem Aufbau, der dich verinnerlichen lässt, ohne zu frustrieren. Das sind keine einzelnen Stunden, sondern ein vollständiger Weg.',
   },
-  bio: {
+  authority: {
     title: 'Wer Luis und Sara sind',
-    body: 'Internationale Lehrer für Gesellschafts-, Latein- und Bachatango-Tanz. Seit Jahren bilden sie Tänzerinnen und Tänzer auf und neben der Fläche aus — mit einer eigenen Methode, die du jetzt von zu Hause aus nutzen kannst.',
+    body: 'Luis und Sara tanzen seit 2002 zusammen, damals waren sie 9 Jahre alt. Luis gewann die erste Staffel von Bailando con las Estrellas, der spanischen Ausgabe von Let’s Dance (Telecinco, 2024), und Sara erreichte das Finale. Sie sind internationale Meister im Gesellschaftstanz. Sie haben mit Il Divo, Gente de Zona und Diego Torres getanzt und bei Galas wie den Platino Awards. Sara hat einen Abschluss in Tanzpädagogik und Luis ist nationaler Wertungsrichter im Tanzsport. Seit 2020 leiten sie ihre eigene Tanzschule.',
   },
   testimonials: { title: 'Was ihre Schüler sagen' },
   freeClass: {
@@ -321,13 +340,14 @@ const de: LandingCopy = {
     { q: 'Wie lange gilt der Zugang?', a: 'Lebenslang. Einmal kaufen und er gehört dir für immer.' },
     { q: 'Ist die Zahlung sicher?', a: 'Ja. Die Zahlung wird über Stripe abgewickelt; wir speichern keine Kartendaten.' },
   ],
-  finalCta: { title: 'Deine beste Version auf der Tanzfläche beginnt heute', cta: 'Kurs kaufen' },
+  finalCta: { title: 'Fang heute mit Lektion 1 an', cta: 'Kurs kaufen' },
 };
 
 const it: LandingCopy = {
   hero: {
-    h1: 'Balla il bachatango come non avresti mai immaginato',
-    sub: 'Il metodo completo di Luis e Sara per padroneggiare tecnica, connessione e musicalità — al tuo ritmo, da casa.',
+    h1: 'Impara il bachatango con i finalisti di Bailando con las Estrellas',
+    sub: '{modules} moduli, {lessons} lezioni in video, {duration}. Impari sia il ruolo di leader sia quello di follower, quindi puoi iniziare senza partner.',
+    subFallback: 'Il corso completo in video. Impari sia il ruolo di leader sia quello di follower, quindi puoi iniziare senza partner.',
     cta: 'Inizia ora',
     micro: 'Pagamento unico · Accesso a vita · Pagamento sicuro con Stripe',
     secondary: 'Prova una lezione gratis',
@@ -353,9 +373,9 @@ const it: LandingCopy = {
     title: 'Il metodo Luis y Sara',
     body: 'Ogni movimento scomposto e spiegato da una base solida, studiata e collaudata, con pratica guidata e una progressione pensata per farti interiorizzare senza frustrazione. Non sono lezioni sparse: è un percorso completo.',
   },
-  bio: {
+  authority: {
     title: 'Chi sono Luis e Sara',
-    body: 'Insegnanti internazionali di balli da sala, latini e bachatango. Anni a formare ballerini dentro e fuori dalla pista, con un metodo tutto loro che ora puoi seguire da casa.',
+    body: 'Luis e Sara ballano insieme dal 2002, quando avevano 9 anni. Luis ha vinto la prima edizione di Bailando con las Estrellas, la versione spagnola di Ballando con le stelle (Telecinco, 2024), e Sara è arrivata in finale. Sono campioni internazionali di balli da sala. Hanno ballato con Il Divo, Gente de Zona e Diego Torres, e in gala come i Premi Platino. Sara è laureata in Pedagogia della Danza e Luis è Giudice Nazionale di Danza Sportiva. Dal 2020 dirigono la loro scuola di ballo.',
   },
   testimonials: { title: 'Cosa dicono i loro allievi' },
   freeClass: {
@@ -388,13 +408,14 @@ const it: LandingCopy = {
     { q: 'Quanto dura l’accesso?', a: 'Accesso a vita. Acquisti una volta ed è tuo per sempre.' },
     { q: 'Il pagamento è sicuro?', a: 'Sì. Il pagamento è gestito da Stripe; non conserviamo i dati della tua carta.' },
   ],
-  finalCta: { title: 'La tua versione migliore in pista inizia oggi', cta: 'Acquista il corso' },
+  finalCta: { title: 'Inizia oggi con la lezione 1', cta: 'Acquista il corso' },
 };
 
 const ja: LandingCopy = {
   hero: {
-    h1: '想像を超えるバチャタンゴを踊る',
-    sub: 'テクニック、コネクション、音楽性を身につけるためのルイス＆サラの完全メソッド。自宅で、自分のペースで。',
+    h1: '『Bailando con las Estrellas』ファイナリストと学ぶバチャタンゴ',
+    sub: '{modules}モジュール、{lessons}本の動画レッスン、{duration}。リーダーとフォロワーの両方の役割を学べるので、パートナーなしで始められます。',
+    subFallback: '動画で学べる完全コース。リーダーとフォロワーの両方の役割を学べるので、パートナーなしで始められます。',
     cta: 'はじめる',
     micro: '買い切り · 生涯アクセス · Stripeによる安全な決済',
     secondary: '無料レッスンを試す',
@@ -420,9 +441,9 @@ const ja: LandingCopy = {
     title: 'ルイス＆サラのメソッド',
     body: 'すべての動きを、確かな理論と実践に裏づけられた土台から分解して解説します。ガイド付きの練習と、無理なく身につくよう設計された段階構成。単発のレッスンではなく、ひとつづきの道のりです。',
   },
-  bio: {
+  authority: {
     title: 'ルイスとサラについて',
-    body: '社交ダンス、ラテン、バチャタンゴの国際的なインストラクター。フロアの内外で長年ダンサーを育ててきた独自のメソッドを、自宅から学べます。',
+    body: 'ルイスとサラは、9歳だった2002年から一緒に踊り続けています。スペイン版『ダンシング・ウィズ・ザ・スターズ』である『Bailando con las Estrellas』（テレシンコ、2024年）の第1シーズンでルイスが優勝し、サラも決勝に進出しました。二人は社交ダンスの国際チャンピオンです。イル・ディーヴォ、ヘンテ・デ・ソナ、ディエゴ・トーレスと共演し、プラティノ賞などのガラにも出演しています。サラはダンス教育学の学位を持ち、ルイスは競技ダンスの国内審査員です。2020年からは自分たちのダンススクールを運営しています。',
   },
   testimonials: { title: '受講生の声' },
   freeClass: {
@@ -455,7 +476,7 @@ const ja: LandingCopy = {
     { q: 'アクセス期間はどのくらいですか', a: '生涯アクセスです。一度購入すれば、ずっとご利用いただけます。' },
     { q: '決済は安全ですか', a: 'はい。決済はStripeが処理し、カード情報を当方で保存することはありません。' },
   ],
-  finalCta: { title: '踊るあなたの最高の姿は、今日から', cta: 'コースを購入する' },
+  finalCta: { title: '今日、レッスン1から始めよう', cta: 'コースを購入する' },
 };
 
 const POR_IDIOMA: Record<Locale, LandingCopy> = { es, en, fr, de, it, ja };
