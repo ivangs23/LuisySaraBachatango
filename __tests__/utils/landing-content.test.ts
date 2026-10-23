@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('server-only', () => ({}))
+// Sin caché en los tests: cada llamada llega a la consulta mockeada.
+vi.mock('next/cache', () => ({ unstable_cache: (fn: unknown) => fn }))
 
 const orderMock = vi.fn()
 const eqMock = vi.fn(() => ({ order: orderMock }))
@@ -10,7 +12,7 @@ vi.mock('@/utils/supabase/admin', () => ({ createSupabaseAdmin: () => ({ from: f
 
 import { pickLocalized } from '@/utils/landing/locale-text'
 import { getLandingStats, getTestimonials, getFaqItems } from '@/utils/landing/content'
-import { FALLBACK_STATS, FALLBACK_TESTIMONIALS } from '@/utils/landing/fallbacks'
+import { FALLBACK_STATS } from '@/utils/landing/fallbacks'
 
 describe('pickLocalized', () => {
   const map = { es: 'hola', en: 'hi', fr: '' }
@@ -67,7 +69,7 @@ describe('getLandingStats', () => {
 })
 
 describe('getTestimonials', () => {
-  beforeEach(() => { orderMock.mockReset() })
+  beforeEach(() => { orderMock.mockReset(); eqMock.mockClear() })
 
   it('localiza las citas', async () => {
     orderMock.mockResolvedValue({
@@ -77,16 +79,28 @@ describe('getTestimonials', () => {
     expect(await getTestimonials('en')).toEqual([{ id: 'a', name: 'Ana', quote: 'great', stars: 5 }])
   })
 
-  it('cae a los de código si no hay filas', async () => {
+  it('pide solo los publicados', async () => {
     orderMock.mockResolvedValue({ data: [], error: null })
-    const r = await getTestimonials('es')
-    expect(r).toHaveLength(FALLBACK_TESTIMONIALS.length)
-    expect(r[0].name).toBe(FALLBACK_TESTIMONIALS[0].name)
+    await getTestimonials('es')
+    expect(eqMock).toHaveBeenCalledWith('is_published', true)
   })
 
-  it('cae a los de código si la consulta falla', async () => {
+  // Un testimonio tiene que ser de un alumno real. Si no hay ninguno
+  // publicado, o la BD falla, la sección desaparece: nunca se rellena con
+  // citas escritas en el código.
+  it('devuelve una lista vacía si no hay filas publicadas', async () => {
+    orderMock.mockResolvedValue({ data: [], error: null })
+    expect(await getTestimonials('es')).toEqual([])
+  })
+
+  it('devuelve una lista vacía si la consulta falla', async () => {
     orderMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
-    expect(await getTestimonials('es')).toHaveLength(FALLBACK_TESTIMONIALS.length)
+    expect(await getTestimonials('es')).toEqual([])
+  })
+
+  it('devuelve una lista vacía si el cliente lanza', async () => {
+    orderMock.mockRejectedValue(new Error('red caída'))
+    expect(await getTestimonials('es')).toEqual([])
   })
 })
 

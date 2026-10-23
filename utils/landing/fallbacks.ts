@@ -4,6 +4,9 @@
  *
  * En español a propósito: es el idioma obligatorio del modelo, y este camino
  * solo se recorre cuando algo va mal.
+ *
+ * Los testimonios no tienen reserva a propósito: una cita tiene que ser de un
+ * alumno real, así que sin filas en la BD la sección simplemente no sale.
  */
 export const FALLBACK_STATS = {
   years: '25',
@@ -11,30 +14,6 @@ export const FALLBACK_STATS = {
   countries: '30',
   titles: '100',
 } as const
-
-export const FALLBACK_TESTIMONIALS = [
-  {
-    id: 'fallback-1',
-    name: 'Elena M.',
-    stars: 5,
-    quote:
-      'Nunca creí que pudiera aprender a conectar así con mi pareja a través de una pantalla. La metodología de Luis y Sara es impecable.',
-  },
-  {
-    id: 'fallback-2',
-    name: 'Carlos R.',
-    stars: 5,
-    quote:
-      'Llevo años bailando bachata, pero el bachatango ha sido un descubrimiento. La elegancia que transmiten en cada clase es inspiradora.',
-  },
-  {
-    id: 'fallback-3',
-    name: 'Sofía y Marc',
-    stars: 5,
-    quote:
-      'Perfecto para practicar en casa. Los detalles técnicos marcan la diferencia. 100% recomendado.',
-  },
-]
 
 export const FALLBACK_FAQ = [
   {

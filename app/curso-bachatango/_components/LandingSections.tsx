@@ -7,6 +7,7 @@ import LandingFaq from './LandingFaq';
 import CourseCurriculum from './CourseCurriculum';
 import LandingFreeClass from './LandingFreeClass';
 import type { Curriculum } from '@/utils/courses/curriculum';
+import type { Testimonial } from '@/utils/landing/content';
 import styles from '../page.module.css';
 
 interface SectionsProps {
@@ -26,9 +27,14 @@ interface SectionsProps {
     thumbnailToken: string;
     title: string;
   } | null;
+  /**
+   * Testimonios publicados en `landing_testimonials`, los mismos de la home.
+   * Vacío si no hay ninguno o si la BD falla: entonces la sección no sale.
+   */
+  testimonials: Testimonial[];
 }
 
-export default function LandingSections({ courseId, offer, curriculum, freeClass, copy }: SectionsProps) {
+export default function LandingSections({ courseId, offer, curriculum, freeClass, testimonials, copy }: SectionsProps) {
   const c = copy;
   const spotsText = formatSpotsLeft(copy.offer.spotsLeft, offer.spotsLeft);
   return (
@@ -63,20 +69,23 @@ export default function LandingSections({ courseId, offer, curriculum, freeClass
         </Reveal>
       </section>
 
-      {/* Testimonios */}
-      <section className={styles.section}>
-        <Reveal><h2 className={styles.h2}>{c.testimonials.title}</h2></Reveal>
-        <div className={styles.grid}>
-          {c.testimonials.items.map((t, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <blockquote className={styles.card}>
-                <p className={styles.quote}>“{t.quote}”</p>
-                <cite className={styles.cite}>{t.author}</cite>
-              </blockquote>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* Testimonios: solo si hay alguno publicado. Mejor nada que un titular
+          sobre un hueco, y nunca citas que no haya escrito un alumno. */}
+      {testimonials.length > 0 && (
+        <section className={styles.section}>
+          <Reveal><h2 className={styles.h2}>{c.testimonials.title}</h2></Reveal>
+          <div className={styles.grid}>
+            {testimonials.map((t, i) => (
+              <Reveal key={t.id} delay={i * 0.05}>
+                <blockquote className={styles.card}>
+                  <p className={styles.quote}>“{t.quote}”</p>
+                  <cite className={styles.cite}>{t.name}</cite>
+                </blockquote>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Clase gratis (risk-reversal) */}
       <section id="clase-gratis" className={styles.section}>

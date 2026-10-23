@@ -19,7 +19,6 @@ import type { Locale } from '@/utils/i18n/types';
  * a quien ya baila.
  */
 
-type Testimonio = { quote: string; author: string };
 type Pregunta = { q: string; a: string };
 
 export type LandingCopy = {
@@ -29,7 +28,9 @@ export type LandingCopy = {
   learn: { title: string; subtitle: string; summary: string };
   method: { title: string; body: string };
   bio: { title: string; body: string };
-  testimonials: { title: string; items: readonly Testimonio[] };
+  // Solo el título: las citas salen de `landing_testimonials`, las mismas que
+  // pinta la home (utils/landing/content.ts).
+  testimonials: { title: string };
   freeClass: { title: string; body: string; cta: string; trust: readonly string[] };
   offer: { title: string; includes: readonly string[]; priceNote: string; cta: string; before: string; spotsLeft: string };
   faq: readonly Pregunta[];
@@ -72,14 +73,7 @@ const es: LandingCopy = {
     title: 'Quiénes son Luis y Sara',
     body: 'Instructores internacionales de bailes de salón, latinos y bachatango. Años formando bailarines dentro y fuera de la pista, con un método propio que ahora tienes a tu alcance desde casa.',
   },
-  testimonials: {
-    title: 'Lo que dicen sus alumnos',
-    items: [
-      { quote: 'En dos meses noté un cambio brutal en mi conexión y mi tiempo.', author: 'María, Madrid' },
-      { quote: 'Por fin entiendo la música y no solo cuento pasos.', author: 'Javier, Valencia' },
-      { quote: 'El método es clarísimo. Cada clase suma.', author: 'Lucía, Sevilla' },
-    ],
-  },
+  testimonials: { title: 'Lo que dicen sus alumnos' },
   freeClass: {
     title: 'Empieza sin riesgo',
     body: 'Prueba una clase gratis antes de decidir. Sin tarjeta, sin compromiso.',
@@ -143,14 +137,7 @@ const en: LandingCopy = {
     title: 'Who Luis and Sara are',
     body: 'International instructors of ballroom, Latin and bachatango. Years training dancers on and off the floor, with a method of their own that you can now follow from home.',
   },
-  testimonials: {
-    title: 'What their students say',
-    items: [
-      { quote: 'In two months I noticed a huge change in my connection and my timing.', author: 'María, Madrid' },
-      { quote: 'I finally understand the music instead of just counting steps.', author: 'Javier, Valencia' },
-      { quote: 'The method is crystal clear. Every class adds something.', author: 'Lucía, Sevilla' },
-    ],
-  },
+  testimonials: { title: 'What their students say' },
   freeClass: {
     title: 'Start with no risk',
     body: 'Try a free class before you decide. No card, no commitment.',
@@ -214,14 +201,7 @@ const fr: LandingCopy = {
     title: 'Qui sont Luis et Sara',
     body: 'Professeurs internationaux de danses de salon, latines et bachatango. Des années à former des danseurs sur la piste et en dehors, avec une méthode qui leur est propre, désormais accessible depuis chez vous.',
   },
-  testimonials: {
-    title: 'Ce que disent leurs élèves',
-    items: [
-      { quote: 'En deux mois, ma connexion et mon timing ont énormément changé.', author: 'María, Madrid' },
-      { quote: 'Je comprends enfin la musique au lieu de simplement compter les pas.', author: 'Javier, Valencia' },
-      { quote: 'La méthode est limpide. Chaque cours apporte quelque chose.', author: 'Lucía, Sevilla' },
-    ],
-  },
+  testimonials: { title: 'Ce que disent leurs élèves' },
   freeClass: {
     title: 'Commencez sans risque',
     body: 'Essayez un cours gratuit avant de décider. Sans carte, sans engagement.',
@@ -285,14 +265,7 @@ const de: LandingCopy = {
     title: 'Wer Luis und Sara sind',
     body: 'Internationale Lehrer für Gesellschafts-, Latein- und Bachatango-Tanz. Seit Jahren bilden sie Tänzerinnen und Tänzer auf und neben der Fläche aus — mit einer eigenen Methode, die du jetzt von zu Hause aus nutzen kannst.',
   },
-  testimonials: {
-    title: 'Was ihre Schüler sagen',
-    items: [
-      { quote: 'In zwei Monaten hat sich meine Verbindung und mein Timing enorm verändert.', author: 'María, Madrid' },
-      { quote: 'Endlich verstehe ich die Musik, statt nur Schritte zu zählen.', author: 'Javier, Valencia' },
-      { quote: 'Die Methode ist glasklar. Jede Stunde bringt etwas.', author: 'Lucía, Sevilla' },
-    ],
-  },
+  testimonials: { title: 'Was ihre Schüler sagen' },
   freeClass: {
     title: 'Fang ohne Risiko an',
     body: 'Teste eine kostenlose Stunde, bevor du dich entscheidest. Ohne Karte, ohne Verpflichtung.',
@@ -356,14 +329,7 @@ const it: LandingCopy = {
     title: 'Chi sono Luis e Sara',
     body: 'Insegnanti internazionali di balli da sala, latini e bachatango. Anni a formare ballerini dentro e fuori dalla pista, con un metodo tutto loro che ora puoi seguire da casa.',
   },
-  testimonials: {
-    title: 'Cosa dicono i loro allievi',
-    items: [
-      { quote: 'In due mesi ho notato un cambiamento enorme nella connessione e nel tempo.', author: 'María, Madrid' },
-      { quote: 'Finalmente capisco la musica invece di contare solo i passi.', author: 'Javier, Valencia' },
-      { quote: 'Il metodo è chiarissimo. Ogni lezione aggiunge qualcosa.', author: 'Lucía, Sevilla' },
-    ],
-  },
+  testimonials: { title: 'Cosa dicono i loro allievi' },
   freeClass: {
     title: 'Inizia senza rischi',
     body: 'Prova una lezione gratis prima di decidere. Senza carta, senza impegno.',
@@ -427,14 +393,7 @@ const ja: LandingCopy = {
     title: 'ルイスとサラについて',
     body: '社交ダンス、ラテン、バチャタンゴの国際的なインストラクター。フロアの内外で長年ダンサーを育ててきた独自のメソッドを、自宅から学べます。',
   },
-  testimonials: {
-    title: '受講生の声',
-    items: [
-      { quote: '2か月でコネクションとタイミングが大きく変わりました。', author: 'María, Madrid' },
-      { quote: 'ステップを数えるだけでなく、ようやく音楽が理解できました。', author: 'Javier, Valencia' },
-      { quote: 'メソッドがとても明快です。毎回のレッスンに発見があります。', author: 'Lucía, Sevilla' },
-    ],
-  },
+  testimonials: { title: '受講生の声' },
   freeClass: {
     title: 'リスクなしではじめる',
     body: '決める前に無料レッスンをお試しください。カード登録も、義務もありません。',

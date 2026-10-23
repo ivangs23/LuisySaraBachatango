@@ -6,14 +6,21 @@ const requireAdminMock = vi.fn().mockResolvedValue({ id: 'admin' })
 vi.mock('@/utils/auth/require-admin', () => ({ requireAdmin: () => requireAdminMock() }))
 
 const upsertMock = vi.fn().mockResolvedValue({ error: null })
+const deleteEqMock = vi.fn().mockResolvedValue({ error: null })
 vi.mock('@/utils/supabase/server', () => ({
-  createClient: async () => ({ from: () => ({ upsert: upsertMock }) }),
+  createClient: async () => ({
+    from: () => ({ upsert: upsertMock, delete: () => ({ eq: deleteEqMock }) }),
+  }),
 }))
 
 const revalidateMock = vi.fn()
-vi.mock('next/cache', () => ({ revalidatePath: (p: string) => revalidateMock(p) }))
+const revalidateTagMock = vi.fn()
+vi.mock('next/cache', () => ({
+  revalidatePath: (p: string) => revalidateMock(p),
+  revalidateTag: (tag: string, profile: string) => revalidateTagMock(tag, profile),
+}))
 
-import { updateStats } from '@/app/admin/landing/contenido/actions'
+import { updateStats, upsertTestimonial, deleteTestimonial } from '@/app/admin/landing/contenido/actions'
 import { parseStatsForm, parseTestimonialForm, parseFaqForm } from '@/app/admin/landing/contenido/_lib/parse'
 
 function fd(v: Record<string, string>): FormData {
@@ -108,5 +115,35 @@ describe('updateStats', () => {
   it('devuelve el error si la BD falla', async () => {
     upsertMock.mockResolvedValue({ error: { message: 'boom' } })
     expect(await updateStats(fd(OK_STATS))).toEqual({ error: 'boom' })
+  })
+})
+
+// La landing de anuncios cachea los testimonios (utils/landing/content.ts).
+// Publicar o despublicar uno tiene que invalidar esa caché, o la landing
+// seguiría enseñando un testimonio retirado.
+describe('testimonios · invalidación de la caché', () => {
+  beforeEach(() => {
+    upsertMock.mockClear().mockResolvedValue({ error: null })
+    deleteEqMock.mockClear().mockResolvedValue({ error: null })
+    revalidateTagMock.mockClear()
+    requireAdminMock.mockResolvedValue({ id: 'admin' })
+  })
+
+  const OK_TESTIMONIO = { name: 'Ana', quote_es: 'hola', stars: '5', position: '1' }
+
+  it('guardar un testimonio invalida la etiqueta landing-testimonials', async () => {
+    await upsertTestimonial(fd(OK_TESTIMONIO))
+    expect(revalidateTagMock).toHaveBeenCalledWith('landing-testimonials', 'max')
+  })
+
+  it('borrar un testimonio invalida la etiqueta landing-testimonials', async () => {
+    await deleteTestimonial(fd({ id: 't1' }))
+    expect(revalidateTagMock).toHaveBeenCalledWith('landing-testimonials', 'max')
+  })
+
+  it('si la BD falla no invalida nada', async () => {
+    upsertMock.mockResolvedValue({ error: { message: 'boom' } })
+    await upsertTestimonial(fd(OK_TESTIMONIO))
+    expect(revalidateTagMock).not.toHaveBeenCalled()
   })
 })

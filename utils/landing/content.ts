@@ -1,8 +1,9 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import type { Locale } from '@/utils/i18n/types'
 import { pickLocalized } from './locale-text'
-import { FALLBACK_STATS, FALLBACK_TESTIMONIALS, FALLBACK_FAQ } from './fallbacks'
+import { FALLBACK_STATS, FALLBACK_FAQ } from './fallbacks'
 
 export type LandingStats = Record<'years' | 'students' | 'countries' | 'titles', string>
 export type Testimonial = { id: string; name: string; quote: string; stars: number }
@@ -36,24 +37,50 @@ export async function getLandingStats(): Promise<LandingStats> {
   }
 }
 
+type TestimonialRow = { id: string; name: string; quote: unknown; stars: number }
+
+// Se cachean las filas sin localizar: una sola entrada sirve a los seis
+// idiomas. El error se propaga para que `unstable_cache` no lo guarde.
+async function leerTestimonios(): Promise<TestimonialRow[]> {
+  const { data, error } = await createSupabaseAdmin()
+    .from('landing_testimonials')
+    .select('id, name, quote, stars')
+    .eq('is_published', true)
+    .order('position', { ascending: true })
+
+  if (error) throw new Error(`[landing-testimonials] ${error.message ?? 'consulta fallida'}`)
+  return (data ?? []) as TestimonialRow[]
+}
+
+const testimoniosCacheados = unstable_cache(leerTestimonios, ['landing-testimonials'], {
+  revalidate: 300,
+  tags: ['landing-testimonials'],
+})
+
+/**
+ * Testimonios publicados, en el idioma pedido. Los pintan la home y la
+ * landing de anuncios, así que las dos enseñan siempre los mismos.
+ *
+ * Cacheado como el curso y el temario: la landing no hace ninguna consulta
+ * por visita y esta no debe ser la primera. Publicar o borrar uno desde el
+ * admin invalida la etiqueta (app/admin/landing/contenido/actions.ts).
+ *
+ * Sin filas publicadas, o con la BD caída, devuelve `[]` y la sección no se
+ * pinta. No hay testimonios de reserva en el código: un error de BD nunca
+ * debe enseñar citas que no ha escrito un alumno.
+ */
 export async function getTestimonials(locale: Locale): Promise<Testimonial[]> {
   try {
-    const { data, error } = await createSupabaseAdmin()
-      .from('landing_testimonials')
-      .select('id, name, quote, stars')
-      .eq('is_published', true)
-      .order('position', { ascending: true })
-
-    if (error || !data || data.length === 0) return [...FALLBACK_TESTIMONIALS]
-
-    return (data as { id: string; name: string; quote: unknown; stars: number }[]).map((r) => ({
+    const rows = await testimoniosCacheados()
+    return rows.map((r) => ({
       id: r.id,
       name: r.name,
       quote: pickLocalized(r.quote, locale),
       stars: r.stars,
     }))
-  } catch {
-    return [...FALLBACK_TESTIMONIALS]
+  } catch (e) {
+    console.error('[landing-testimonials] lectura fallida: %s', (e as Error).message)
+    return []
   }
 }
 
