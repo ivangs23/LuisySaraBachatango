@@ -15,37 +15,15 @@ import Reveal from './Reveal';
 import styles from './Footer.module.css';
 import { useLanguage } from '@/context/LanguageContext';
 import { useConsent } from '@/context/ConsentContext';
-import { safeSocialUrl } from '@/utils/sanitize';
 import { isChromelessRoute } from '@/utils/nav/chromeless-routes';
+import { SOCIAL_URLS } from '@/utils/brand/social';
 
-type FooterClientProps = {
-  adminProfile: {
-    instagram?: string | null;
-    facebook?: string | null;
-    tiktok?: string | null;
-    youtube?: string | null;
-  } | null;
-};
-
-export default function FooterClient({ adminProfile }: FooterClientProps) {
+export default function FooterClient() {
   const pathname = usePathname();
   const { t } = useLanguage();
   const { reopen } = useConsent();
 
   if (isChromelessRoute(pathname)) return null;
-
-  const instagramUrl =
-    safeSocialUrl(adminProfile?.instagram, 'instagram') ??
-    'https://www.instagram.com/luisysarabachatango/';
-  const facebookUrl =
-    safeSocialUrl(adminProfile?.facebook, 'facebook') ??
-    'https://www.facebook.com/LuisySaraBachatango';
-  const tiktokUrl =
-    safeSocialUrl(adminProfile?.tiktok, 'tiktok') ??
-    'https://www.tiktok.com/@luisysarabachatango';
-  const youtubeUrl =
-    safeSocialUrl(adminProfile?.youtube, 'youtube') ??
-    'https://www.youtube.com/@LuisySaraBachatango';
 
   const exploreLinks = [
     { href: '/curso-bachatango', label: t.footer.buyCourse },
@@ -68,10 +46,10 @@ export default function FooterClient({ adminProfile }: FooterClientProps) {
   ];
 
   const socials = [
-    { href: instagramUrl, label: 'Instagram', Icon: Instagram },
-    { href: facebookUrl, label: 'Facebook', Icon: Facebook },
-    { href: tiktokUrl, label: 'TikTok', Icon: Music2 },
-    { href: youtubeUrl, label: 'YouTube', Icon: Youtube },
+    { href: SOCIAL_URLS.instagram, label: 'Instagram', Icon: Instagram },
+    { href: SOCIAL_URLS.facebook, label: 'Facebook', Icon: Facebook },
+    { href: SOCIAL_URLS.tiktok, label: 'TikTok', Icon: Music2 },
+    { href: SOCIAL_URLS.youtube, label: 'YouTube', Icon: Youtube },
   ];
 
   return (
