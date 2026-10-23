@@ -134,7 +134,7 @@ export const it: Dictionary = {
     heroTitle: "Passione ed Eleganza", heroSubtitle: "La Storia di Luis e Sara", bioTitle: "Più che Ballo",
     bio1: "Luis e Sara si sono conosciuti a soli 9 anni, il loro primo giorno di lezione di ballo nel 2002. Da allora non hanno mai smesso di ballare insieme.",
     bio2: "Ognuno ha seguito il proprio percorso nel mondo artistico: Sara è laureata in Pedagogia della Danza e Luis è Giudice Nazionale di Danza Sportiva. Insieme hanno calcato palcoscenici di mezzo mondo condividendo il ballo con artisti come Il Divo, Gente de Zona o Diego Torres, e hanno fatto parte di corpi di ballo in televisione e in gala prestigiosi come i Premi Platino del Cinema Iberoamericano.",
-    bio3: "Inoltre sono campioni internazionali di balli da sala e si sono proclamati vincitori della prima edizione di Bailando con las Estrellas su Telecinco.",
+    bio3: "Inoltre sono campioni internazionali di balli da sala. Nel 2024 Luis ha vinto la prima edizione di Bailando con las Estrellas su Telecinco e Sara è arrivata in finale.",
     bio4: "Nel 2020 hanno fatto un passo in più e hanno aperto la loro scuola di ballo, un progetto che oggi riunisce più di 300 allievi ed è diventato la loro grande casa.",
     stats: { s1: "Anni di Esperienza", s2: "Studenti Online", s3: "Paesi Visitati", s4: "Titoli Internazionali" },
     quote: "Bachatango: quando la tecnica incontra la passione, e due diventano uno. Balla. Senti. Vivi.", cta: "Inizia a Ballare Oggi"

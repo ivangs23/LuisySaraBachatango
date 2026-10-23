@@ -201,7 +201,7 @@ export const es = {
     bioTitle: "Más que Baile, una Conexión",
     bio1: "Luis y Sara se conocieron con apenas 9 años, en su primer día de clase de baile allá por 2002. Desde entonces, no han parado de bailar juntos.",
     bio2: "Cada uno ha seguido su propio camino dentro del mundo artístico: Sara es licenciada en Pedagogía de la Danza y Luis es Juez Nacional de Baile Deportivo. Juntos han recorrido escenarios de medio mundo compartiendo baile con artistas como Il Divo, Gente de Zona o Diego Torres, y han formado parte de cuerpos de baile en televisión y en galas tan importantes como los Premios Platino del Cine Iberoamericano.",
-    bio3: "Además, son campeones internacionales de bailes de salón y se proclamaron ganadores de la primera edición de Bailando con las Estrellas en Telecinco.",
+    bio3: "Además, son campeones internacionales de bailes de salón. En 2024, Luis ganó la primera edición de Bailando con las Estrellas en Telecinco y Sara llegó a la final.",
     bio4: "En 2020 dieron un paso más y abrieron su propia escuela de baile, un proyecto que hoy reúne a más de 300 alumnos y que se ha convertido en su gran casa.",
     stats: {
       s1: "Años de Experiencia",
