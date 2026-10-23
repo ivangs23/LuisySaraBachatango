@@ -61,6 +61,8 @@ export type LandingCopy = {
   // temario; si la BD no responde, esa pregunta no se pinta.
   faq: readonly Pregunta[];
   finalCta: { title: string; cta: string };
+  // Página privada `/clase-gratis/mas`, con las dos clases que llegan por email.
+  extraClasses: { title: string; lead: string; unavailable: string; ctaTitle: string; ctaBody: string; cta: string };
 };
 
 const es: LandingCopy = {
@@ -127,6 +129,14 @@ const es: LandingCopy = {
     { q: '¿Es seguro el pago?', a: 'Sí. El pago se procesa con Stripe; no almacenamos datos de tu tarjeta.' },
   ],
   finalCta: { title: 'Empieza hoy con la lección 1', cta: 'Comprar el curso' },
+  extraClasses: {
+    title: 'Tus dos clases',
+    lead: 'Dos lecciones del CURSO BACHATANGO para practicar en casa. Empieza por la de posturas: es la base de todo lo demás.',
+    unavailable: 'Ahora mismo no podemos mostrar las clases. Vuelve a abrir el enlace del correo dentro de un rato.',
+    ctaTitle: '¿Seguimos?',
+    ctaBody: 'El curso completo sigue desde aquí, módulo a módulo: el resto de básicos y las combinaciones, cada una explicada y después bailada con música.',
+    cta: 'Ver el curso completo',
+  },
 };
 
 const en: LandingCopy = {
@@ -186,6 +196,14 @@ const en: LandingCopy = {
     { q: 'Is the payment secure?', a: 'Yes. Payment is processed by Stripe; we never store your card details.' },
   ],
   finalCta: { title: 'Start today with lesson 1', cta: 'Buy the course' },
+  extraClasses: {
+    title: 'Your two classes',
+    lead: 'Two lessons from CURSO BACHATANGO to practise at home. Start with posture: everything else is built on it.',
+    unavailable: "We can't show the classes right now. Open the link in the email again in a little while.",
+    ctaTitle: 'Shall we carry on?',
+    ctaBody: 'The full course continues from here, module by module: the rest of the basic steps and the combinations, each one explained and then danced to music.',
+    cta: 'See the full course',
+  },
 };
 
 const fr: LandingCopy = {
@@ -245,6 +263,14 @@ const fr: LandingCopy = {
     { q: 'Le paiement est-il sécurisé ?', a: 'Oui. Le paiement est traité par Stripe ; nous ne conservons aucune donnée de votre carte.' },
   ],
   finalCta: { title: 'Commencez aujourd’hui avec la leçon 1', cta: 'Acheter le cours' },
+  extraClasses: {
+    title: 'Vos deux cours',
+    lead: 'Deux leçons du CURSO BACHATANGO pour pratiquer chez vous. Commencez par la posture : tout le reste repose dessus.',
+    unavailable: 'Nous ne pouvons pas afficher les cours pour le moment. Rouvrez le lien de l’e-mail un peu plus tard.',
+    ctaTitle: 'On continue ?',
+    ctaBody: 'Le cours complet reprend à partir d’ici, module par module : les autres pas de base et les combinaisons, chacune expliquée puis dansée en musique.',
+    cta: 'Voir le cours complet',
+  },
 };
 
 const de: LandingCopy = {
@@ -304,6 +330,14 @@ const de: LandingCopy = {
     { q: 'Ist die Zahlung sicher?', a: 'Ja. Die Zahlung wird über Stripe abgewickelt; wir speichern keine Kartendaten.' },
   ],
   finalCta: { title: 'Fang heute mit Lektion 1 an', cta: 'Kurs kaufen' },
+  extraClasses: {
+    title: 'Deine zwei Stunden',
+    lead: 'Zwei Lektionen aus dem CURSO BACHATANGO zum Üben zu Hause. Fang mit der Haltung an: Darauf baut alles andere auf.',
+    unavailable: 'Wir können die Stunden gerade nicht anzeigen. Öffne den Link aus der E-Mail in einer Weile noch einmal.',
+    ctaTitle: 'Machen wir weiter?',
+    ctaBody: 'Der komplette Kurs geht von hier aus weiter, Modul für Modul: die übrigen Grundschritte und die Kombinationen, jede erklärt und danach zur Musik getanzt.',
+    cta: 'Zum kompletten Kurs',
+  },
 };
 
 const it: LandingCopy = {
@@ -363,6 +397,14 @@ const it: LandingCopy = {
     { q: 'Il pagamento è sicuro?', a: 'Sì. Il pagamento è gestito da Stripe; non conserviamo i dati della tua carta.' },
   ],
   finalCta: { title: 'Inizia oggi con la lezione 1', cta: 'Acquista il corso' },
+  extraClasses: {
+    title: 'Le tue due lezioni',
+    lead: 'Due lezioni del CURSO BACHATANGO da praticare a casa. Comincia dalla postura: tutto il resto si basa su quella.',
+    unavailable: 'In questo momento non riusciamo a mostrare le lezioni. Riapri il link dell’email tra poco.',
+    ctaTitle: 'Continuiamo?',
+    ctaBody: 'Il corso completo riparte da qui, modulo per modulo: gli altri passi base e le combinazioni, ognuna spiegata e poi ballata con la musica.',
+    cta: 'Vedi il corso completo',
+  },
 };
 
 const ja: LandingCopy = {
@@ -422,6 +464,14 @@ const ja: LandingCopy = {
     { q: '決済は安全ですか', a: 'はい。決済はStripeが処理し、カード情報を当方で保存することはありません。' },
   ],
   finalCta: { title: '今日、レッスン1から始めよう', cta: 'コースを購入する' },
+  extraClasses: {
+    title: 'あなたの2つのレッスン',
+    lead: '自宅で練習できる、CURSO BACHATANGOの2つのレッスンです。まずは姿勢から。ほかのすべての土台になります。',
+    unavailable: '現在レッスンを表示できません。しばらくしてから、メールのリンクをもう一度開いてください。',
+    ctaTitle: '続けてみませんか',
+    ctaBody: 'コース全体はここから続きます。残りのベーシックと各コンビネーションを、モジュールごとに解説し、音楽に合わせて踊ります。',
+    cta: 'コース全体を見る',
+  },
 };
 
 const POR_IDIOMA: Record<Locale, LandingCopy> = { es, en, fr, de, it, ja };

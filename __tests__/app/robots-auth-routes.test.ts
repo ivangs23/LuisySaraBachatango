@@ -27,4 +27,11 @@ describe('robots.txt — rutas que consumen tokens', () => {
   it('excluye el certificado de aprovechamiento', () => {
     expect(disallow).toContain('/courses/*/certificado')
   })
+
+  // Lleva el email de quien se apuntó en la query, como /unsubscribe.
+  it('excluye la página privada de las clases por email', () => {
+    expect(disallow).toContain('/clase-gratis/mas')
+    // La clase gratis pública sí se rastrea.
+    expect(disallow).not.toContain('/clase-gratis')
+  })
 })
