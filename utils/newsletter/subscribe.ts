@@ -20,22 +20,46 @@ export type ConsentSource = 'newsletter_form' | 'clase_gratis'
  * consentimiento (RGPD art. 7.1): IP, fecha y origen.
  *
  * Sin `ignoreDuplicates`: quien se dio de baja y vuelve está dando un
- * consentimiento nuevo y debe reactivarse. Por la misma razón el origen y la
- * fecha se sobrescriben con los del último formulario.
+ * consentimiento nuevo y debe reactivarse (`unsubscribed_at` a null, IP y
+ * fecha del último formulario).
+ *
+ * El origen, en cambio, no siempre se pisa: la newsletter de la home nunca
+ * sobrescribe `clase_gratis`. Si lo hiciera, quien entró por la clase gratis
+ * y después se suscribe en la home saldría de la secuencia de nutrición sin
+ * haberlo pedido. Al revés sí: pedir las clases es justo el consentimiento
+ * para esa secuencia.
  */
 export async function upsertSubscriber(opts: {
   email: string
   ip: string
   source: ConsentSource
 }): Promise<boolean> {
-  const { error } = await createSupabaseAdmin()
+  const sb = createSupabaseAdmin()
+
+  let source = opts.source
+  if (source !== 'clase_gratis') {
+    const { data: actual, error: readErr } = await sb
+      .from('newsletter_subscribers')
+      .select('consent_source')
+      .eq('email', opts.email)
+      .maybeSingle()
+    // Sin saber el origen actual, escribir podría sacar a alguien de la
+    // secuencia: mejor fallar y que reintente.
+    if (readErr) {
+      console.error('[upsertSubscriber] read error', { code: readErr.code, message: readErr.message })
+      return false
+    }
+    if ((actual as { consent_source?: string } | null)?.consent_source === 'clase_gratis') source = 'clase_gratis'
+  }
+
+  const { error } = await sb
     .from('newsletter_subscribers')
     .upsert(
       {
         email: opts.email,
         consent_ip: opts.ip,
         consent_at: new Date().toISOString(),
-        consent_source: opts.source,
+        consent_source: source,
         unsubscribed_at: null,
       },
       { onConflict: 'email' },

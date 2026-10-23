@@ -9,8 +9,16 @@ const upsertSelectMock = vi.fn()
 const upsertMock = vi.fn<(payload: Record<string, unknown>, opts: Record<string, unknown>) => { select: typeof upsertSelectMock }>(
   () => ({ select: upsertSelectMock }),
 )
+// Antes del upsert se lee el origen actual (la newsletter no pisa
+// `clase_gratis`, ver __tests__/utils/newsletter-subscribe.test.ts). Aquí,
+// sin fila previa.
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({ from: () => ({ upsert: upsertMock }) }),
+  createClient: () => ({
+    from: () => ({
+      upsert: upsertMock,
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
+    }),
+  }),
 }))
 
 vi.mock('@/utils/rate-limit', () => ({
