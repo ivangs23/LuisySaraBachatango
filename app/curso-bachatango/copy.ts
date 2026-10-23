@@ -35,7 +35,6 @@ export type LandingCopy = {
     login: string;
   };
   sticky: { brand: string; cta: string };
-  pain: { title: string; items: readonly string[]; promise: string };
   learn: { title: string; subtitle: string; summary: string };
   method: { title: string; body: string };
   // Hechos concretos y comprobables, no adjetivos. Sustituye a la antigua bio
@@ -78,15 +77,6 @@ const es: LandingCopy = {
     login: 'Inicia sesión',
   },
   sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Comprar' },
-  pain: {
-    title: '¿Te suena esto?',
-    items: [
-      '¿Te trabas con las figuras y pierdes el hilo?',
-      '¿No terminas de conectar con tu pareja?',
-      '¿Sientes que no marcas el tiempo de la música?',
-    ],
-    promise: 'Este curso te lleva de la frustración a bailar con seguridad, estilo y disfrute.',
-  },
   learn: {
     title: 'Qué vas a aprender',
     // El detalle sale de la BD (utils/courses/curriculum.ts): son los módulos
@@ -151,15 +141,6 @@ const en: LandingCopy = {
     login: 'Log in',
   },
   sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Buy' },
-  pain: {
-    title: 'Sound familiar?',
-    items: [
-      'Do you stumble through the figures and lose your thread?',
-      'Do you never quite connect with your partner?',
-      'Do you feel you are not hitting the beat?',
-    ],
-    promise: 'This course takes you from frustration to dancing with confidence, style and joy.',
-  },
   learn: {
     title: 'What you will learn',
     subtitle: 'The full syllabus, module by module.',
@@ -219,15 +200,6 @@ const fr: LandingCopy = {
     login: 'Se connecter',
   },
   sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Acheter' },
-  pain: {
-    title: 'Ça vous parle ?',
-    items: [
-      'Vous bloquez sur les figures et perdez le fil ?',
-      'Vous n’arrivez pas vraiment à connecter avec votre partenaire ?',
-      'Vous avez l’impression de ne pas être dans le tempo ?',
-    ],
-    promise: 'Ce cours vous mène de la frustration à une danse sûre, élégante et joyeuse.',
-  },
   learn: {
     title: 'Ce que vous allez apprendre',
     subtitle: 'Le programme complet, module par module.',
@@ -287,15 +259,6 @@ const de: LandingCopy = {
     login: 'Anmelden',
   },
   sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Kaufen' },
-  pain: {
-    title: 'Kommt dir das bekannt vor?',
-    items: [
-      'Du kommst bei den Figuren ins Stocken und verlierst den Faden?',
-      'Die Verbindung zu deinem Partner will nicht recht entstehen?',
-      'Du hast das Gefühl, den Takt nicht zu treffen?',
-    ],
-    promise: 'Dieser Kurs bringt dich von der Frustration zu sicherem, stilvollem Tanzen mit Freude.',
-  },
   learn: {
     title: 'Was du lernen wirst',
     subtitle: 'Der komplette Lehrplan, Modul für Modul.',
@@ -355,15 +318,6 @@ const it: LandingCopy = {
     login: 'Accedi',
   },
   sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Acquista' },
-  pain: {
-    title: 'Ti suona familiare?',
-    items: [
-      'Ti blocchi sulle figure e perdi il filo?',
-      'Non riesci a connetterti davvero con il tuo partner?',
-      'Hai la sensazione di non andare a tempo?',
-    ],
-    promise: 'Questo corso ti porta dalla frustrazione a ballare con sicurezza, stile e piacere.',
-  },
   learn: {
     title: 'Che cosa imparerai',
     subtitle: 'Il programma completo, modulo per modulo.',
@@ -423,15 +377,6 @@ const ja: LandingCopy = {
     login: 'ログイン',
   },
   sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: '購入' },
-  pain: {
-    title: 'こんな悩みはありませんか',
-    items: [
-      'フィガーでつまずいて、流れを見失っていませんか',
-      'パートナーとうまくつながれていないと感じませんか',
-      '音楽のタイミングに乗れていないと感じませんか',
-    ],
-    promise: 'このコースは、もどかしさから自信・スタイル・楽しさをもって踊れる状態へと導きます。',
-  },
   learn: {
     title: '学べる内容',
     subtitle: 'カリキュラム全体を、モジュールごとに。',
