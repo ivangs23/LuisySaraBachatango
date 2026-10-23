@@ -42,6 +42,12 @@ describe('/curso-bachatango/comprar', () => {
     expect(html).toContain('ana@example.com')
     expect(html).toContain('Ana')
   })
+  it('la lista de garantías no promete una comunidad (D6: no existe)', async () => {
+    const el = await ComprarPage({ searchParams: Promise.resolve({ courseId: 'c1' }) })
+    const html = JSON.stringify(el)
+    expect(html).toContain('Pago seguro con Stripe')
+    expect(html).not.toMatch(/comunidad/i)
+  })
   it('cookie flash corrupta → formulario vacío, sin crash', async () => {
     mockCookieGet.mockReturnValueOnce({ value: '{not json' })
     const el = await ComprarPage({ searchParams: Promise.resolve({ courseId: 'c1' }) })

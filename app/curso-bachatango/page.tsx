@@ -7,6 +7,7 @@ import { getFreeLesson } from '@/utils/courses/free-lesson';
 import { signPublicPlaybackToken, signPublicThumbnailToken } from '@/utils/mux/public-token';
 import { getCurrentUser } from '@/utils/supabase/get-user';
 import { getCurrentLocale } from '@/utils/i18n/get-locale';
+import { getTestimonials } from '@/utils/landing/content';
 import { getLandingCopy } from './copy';
 import { safeJsonLd } from '@/utils/jsonld';
 import LandingHero from './_components/LandingHero';
@@ -40,8 +41,11 @@ export default async function CursoBachatangoLanding() {
   const course = await getLandingCourse();
   if (!course) notFound();
 
-  const [user, curriculum, lesson, locale] = await Promise.all([
-    getCurrentUser(), getCurriculum(), getFreeLesson(), getCurrentLocale(),
+  // El idioma va primero porque los testimonios se localizan con él; solo
+  // lee una cookie, así que no retrasa al resto.
+  const locale = await getCurrentLocale();
+  const [user, curriculum, lesson, testimonials] = await Promise.all([
+    getCurrentUser(), getCurriculum(), getFreeLesson(), getTestimonials(locale),
   ]);
   // El idioma se resuelve en servidor desde la cookie, no en el contexto de
   // cliente: así el HTML sale ya en el idioma correcto y no hay un parpadeo
@@ -99,7 +103,7 @@ export default async function CursoBachatangoLanding() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <LandingHero courseId={course.id} isAuthed={isAuthed} offer={offer} imageUrl={course.image_url} copy={copy} />
-      <LandingSections courseId={course.id} offer={offer} curriculum={curriculum} freeClass={freeClass} copy={copy} />
+      <LandingSections courseId={course.id} offer={offer} curriculum={curriculum} freeClass={freeClass} testimonials={testimonials} copy={copy} />
       <StickyBuyBar courseId={course.id} offer={offer} copy={copy} />
     </div>
   );

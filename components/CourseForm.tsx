@@ -209,12 +209,14 @@ export default function CourseForm({ initialData }: CourseFormProps) {
         <label htmlFor="compareAtPriceEur">Precio antes de la oferta (€)</label>
         <input type="number" id="compareAtPriceEur" name="compareAtPriceEur" min="0" className={styles.input}
           placeholder="Ej: 150 — vacío para no enseñar tachado"
+          aria-describedby="compareAtPriceEur-hint"
           value={compareAtPriceEur}
           onChange={(e) => setCompareAtPriceEur(e.target.value ? parseInt(e.target.value) : '')} />
-        <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-          Se enseña tachado junto al precio. Sólo aparece si es mayor que el precio actual.
-          Legalmente debe ser el precio más bajo que aplicaste en los 30 días anteriores
-          (art. 20 RDLeg 1/2007).
+        {/* La advertencia va primero: es lo que hay que leer antes de rellenarlo. */}
+        <small id="compareAtPriceEur-hint" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+          <strong>Solo si es el precio más bajo que habéis cobrado en los últimos 30 días.</strong>{' '}
+          Se enseña tachado junto al precio, y solo si es mayor que el precio actual. Un
+          tachado que no se ha cobrado es publicidad engañosa (art. 20 RDLeg 1/2007).
         </small>
       </div>
 
@@ -222,9 +224,11 @@ export default function CourseForm({ initialData }: CourseFormProps) {
         <label htmlFor="spotsLeft">Plazas disponibles</label>
         <input type="number" id="spotsLeft" name="spotsLeft" min="0" className={styles.input}
           placeholder="Ej: 5 — vacío para no anunciar plazas"
+          aria-describedby="spotsLeft-hint"
           value={spotsLeft}
           onChange={(e) => setSpotsLeft(e.target.value ? parseInt(e.target.value) : '')} />
-        <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+        <small id="spotsLeft-hint" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+          <strong>Solo si hay un límite real de alumnos.</strong>{' '}
           Se anuncia como «Quedan N plazas disponibles». No baja solo con las ventas: lo
           actualizas tú. Anunciar una escasez que no es real es práctica desleal.
         </small>

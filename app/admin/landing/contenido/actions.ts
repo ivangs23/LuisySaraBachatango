@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { parseStatsForm, parseTestimonialForm, parseFaqForm } from './_lib/parse'
@@ -26,6 +26,16 @@ function revalidateLanding(): void {
   revalidatePath('/sobre-nosotros')
   revalidatePath('/opengraph-image')
   revalidatePath(ADMIN_PATH)
+}
+
+/**
+ * La landing de anuncios es dinámica (lee la sesión), así que revalidar su
+ * ruta no basta: los testimonios llegan de un `unstable_cache` con etiqueta
+ * propia (utils/landing/content.ts).
+ */
+function revalidateTestimonials(): void {
+  revalidateTag('landing-testimonials', 'max')
+  revalidateLanding()
 }
 
 export async function updateStats(formData: FormData): Promise<{ error: string } | void> {
@@ -64,7 +74,7 @@ export async function upsertTestimonial(formData: FormData): Promise<{ error: st
     return { error: error.message }
   }
 
-  revalidateLanding()
+  revalidateTestimonials()
 }
 
 export async function deleteTestimonial(formData: FormData): Promise<{ error: string } | void> {
@@ -78,7 +88,7 @@ export async function deleteTestimonial(formData: FormData): Promise<{ error: st
   const { error } = await supabase.from('landing_testimonials').delete().eq('id', id)
   if (error) return { error: error.message }
 
-  revalidateLanding()
+  revalidateTestimonials()
 }
 
 export async function upsertFaqItem(formData: FormData): Promise<{ error: string } | void> {

@@ -47,6 +47,7 @@ describe('copy del embudo por idioma', () => {
         for (const marca of ['{modules}', '{lessons}', '{duration}']) {
           expect(copy.learn.summary, `${locale}: falta ${marca}`).toContain(marca)
         }
+        expect(copy.offer.lessonsIncluded, `${locale}: falta {lessons}`).toContain('{lessons}')
       })
 
       it('mantiene el nombre del producto sin traducir', () => {
@@ -59,10 +60,8 @@ describe('copy del embudo por idioma', () => {
       if (locale !== 'es') {
         it('está traducido de verdad, no copiado del español', () => {
           // Idéntico a propósito: nombre de la marca y del producto, que no se
-          // traducen en ningún idioma. Los testimonios llevan nombre y ciudad
-          // reales, que tampoco cambian, pero sus rutas terminan en `.author`.
-          const EXENTOS = (ruta: string) =>
-            ruta === 'sticky.brand' || ruta.endsWith('.author')
+          // traducen en ningún idioma.
+          const EXENTOS = (ruta: string) => ruta === 'sticky.brand'
 
           const esMap = new Map(cadenas(base))
           const iguales = pares

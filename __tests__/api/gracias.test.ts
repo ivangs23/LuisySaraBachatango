@@ -27,6 +27,11 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockReturnValue({ auth: { admin: { generateLink: mockGenerateLink } } }),
 }))
 
+// El píxel de compra es un componente de cliente con su propio test
+// (purchase-tracking.test.tsx); aquí solo interesa el texto de la página.
+vi.mock('@/app/gracias/PurchaseTracking', () => ({ default: () => null }))
+
+import { renderToStaticMarkup } from 'react-dom/server'
 import GraciasPage from '@/app/gracias/page'
 import { stripe } from '@/utils/stripe/server'
 
@@ -49,6 +54,41 @@ describe('/gracias', () => {
     // Escapatoria real para quien no reciba el correo (p. ej. cayó en spam):
     // sin contraseña propia, sin este enlace no hay forma de entrar.
     expect(html).toContain('/forgot-password')
+  })
+
+  describe('sesión pagada: un solo mensaje', () => {
+    // Antes había dos párrafos que decían lo mismo con palabras distintas
+    // («para crear tu acceso» y «para crear tu contraseña»). Ahora uno solo,
+    // que además dice por dónde empezar, y el enlace de recuperación como
+    // plan B.
+    async function textoPagada(email: string | null) {
+      vi.mocked(stripe.checkout.sessions.retrieve).mockResolvedValue({
+        payment_status: 'paid', customer_details: { email },
+      } as unknown as Stripe.Response<Stripe.Checkout.Session>)
+      const el = await GraciasPage({ searchParams: Promise.resolve({ session_id: 'cs_1' }) })
+      return renderToStaticMarkup(el).replace(/<[^>]+>/g, '')
+    }
+
+    it('dice a qué email ha ido el correo y por qué lección empezar', async () => {
+      expect(await textoPagada('buyer@example.com')).toContain(
+        'Te hemos enviado un email a b***@e***.com para crear tu contraseña. Cuando entres, empieza por la lección 1.',
+      )
+    })
+
+    it('sin email en la sesión, el mismo mensaje sin dirección', async () => {
+      expect(await textoPagada(null)).toContain(
+        'Te hemos enviado un email para crear tu contraseña. Cuando entres, empieza por la lección 1.',
+      )
+    })
+
+    it('no repite el aviso del correo', async () => {
+      const texto = await textoPagada('buyer@example.com')
+      expect(texto.match(/Te hemos enviado/g)).toHaveLength(1)
+    })
+
+    it('ofrece «¿Olvidaste tu contraseña?» como plan B', async () => {
+      expect(await textoPagada('buyer@example.com')).toContain('¿Olvidaste tu contraseña?')
+    })
   })
 
   it('sin session_id: mensaje neutro, no llama a Stripe', async () => {

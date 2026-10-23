@@ -1,5 +1,6 @@
 import type { LandingCopy } from '../copy';
 import { formatDuration, type Curriculum } from '@/utils/courses/curriculum';
+import { fillCurriculum } from '../_lib/curriculum-copy';
 import styles from '../page.module.css';
 
 /**
@@ -12,16 +13,15 @@ import styles from '../page.module.css';
 export default function CourseCurriculum({ curriculum, copy }: { curriculum: Curriculum; copy: LandingCopy }) {
   const c = copy.learn;
 
-  const summary = c.summary
-    .replace('{modules}', String(curriculum.moduleCount))
-    .replace('{lessons}', String(curriculum.lessonCount))
-    .replace('{duration}', formatDuration(curriculum.totalSeconds));
+  // null solo si el curso no tiene duración: mejor sin resumen que con un
+  // «28 lecciones · » colgando.
+  const summary = fillCurriculum(c.summary, curriculum);
 
   return (
     <section className={styles.section} aria-labelledby="curriculum-title">
       <h2 id="curriculum-title" className={styles.h2}>{c.title}</h2>
       <p className={styles.lead}>{c.subtitle}</p>
-      <p className={styles.curriculumSummary}>{summary}</p>
+      {summary && <p className={styles.curriculumSummary}>{summary}</p>}
 
       <ol className={styles.curriculumList}>
         {curriculum.modules.map((m) => {

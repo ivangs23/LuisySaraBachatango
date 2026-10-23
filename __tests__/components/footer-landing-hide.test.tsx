@@ -60,14 +60,14 @@ describe('FooterClient en landing', () => {
     'no renderiza nada en el funnel (%s)',
     (path) => {
       mockPath = path
-      const { container } = render(<FooterClient adminProfile={null} />)
+      const { container } = render(<FooterClient />)
       expect(container).toBeEmptyDOMElement()
     },
   )
 
   it('renderiza normalmente en otras rutas', () => {
     mockPath = '/'
-    const { container } = render(<FooterClient adminProfile={null} />)
+    const { container } = render(<FooterClient />)
     expect(container).not.toBeEmptyDOMElement()
   })
 })

@@ -138,15 +138,17 @@ export default async function GraciasPage(props: { searchParams: Promise<{ sessi
           <>
             <PurchaseTracking transactionId={session_id ?? ''} value={importe} currency={moneda} />
             <h1 className={styles.title}>¡Pago recibido! 🎉</h1>
+            {/* Un solo mensaje: qué hacer ahora y por dónde empezar. */}
             <p className={styles.body}>
-              {email
-                ? <>Te hemos enviado un email a <strong>{email}</strong> para crear tu acceso al curso.</>
-                : <>Te hemos enviado un email para crear tu acceso al curso.</>}
+              Te hemos enviado un email{email && <> a <strong>{email}</strong></>} para crear tu
+              contraseña. Cuando entres, empieza por la lección 1.
             </p>
+            {/* Plan B. Quien ya tenía cuenta recibe un correo distinto («entra
+                con tu contraseña habitual», utils/email/purchase-confirmation.ts),
+                así que se le dice aquí para no contradecirlo. */}
             <p className={styles.hint}>
-              Te hemos enviado un correo con un enlace para crear tu contraseña. Si ya tenías cuenta, entra con la de siempre.
-              Si no te llega, revisa la carpeta de spam o usa{' '}
-              <a href="/forgot-password" className={styles.link}>¿Olvidaste tu contraseña?</a>.
+              Si ya tenías cuenta, entra con la de siempre. ¿No te llega? Revisa la carpeta de spam
+              o usa <a href="/forgot-password" className={styles.link}>¿Olvidaste tu contraseña?</a>
             </p>
           </>
         ) : (
