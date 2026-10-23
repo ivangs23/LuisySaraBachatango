@@ -15,6 +15,7 @@ export const TRACKED_PATHS = [
   '/curso-bachatango/comprar/enviado',
   '/gracias',
   '/curso-bachatango/clase-play',
+  '/curso-bachatango/lead',
 ] as const
 
 export type TrackedPath = (typeof TRACKED_PATHS)[number]
@@ -28,10 +29,17 @@ export type TrackedPath = (typeof TRACKED_PATHS)[number]
 export const FREE_CLASS_PLAY_PATH = '/curso-bachatango/clase-play' satisfies TrackedPath
 
 /**
+ * Email capturado en el formulario «dos clases más por email» de la landing.
+ * EVENTO, no página: lo registra la Server Action (`app/actions/free-classes.ts`)
+ * al guardar la suscripción, no un beacon del navegador.
+ */
+export const FREE_CLASS_LEAD_PATH = '/curso-bachatango/lead' satisfies TrackedPath
+
+/**
  * Rutas medidas que no son vistas de página. El panel no las cuenta en el
  * tráfico ni son pasos del embudo.
  */
-export const EVENT_PATHS: readonly TrackedPath[] = [FREE_CLASS_PLAY_PATH]
+export const EVENT_PATHS: readonly TrackedPath[] = [FREE_CLASS_PLAY_PATH, FREE_CLASS_LEAD_PATH]
 
 /** Cota defensiva: una ruta real nunca se acerca, y evita trabajo inútil. */
 const MAX_PATH_LENGTH = 512

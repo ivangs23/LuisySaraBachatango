@@ -24,6 +24,9 @@ export default function robots(): MetadataRoute.Robots {
           '/forgot-password',
           '/reset-password',
           '/unsubscribe',
+          // Clases por email: lleva el email de la persona en la query. La
+          // página ya manda noindex; esto evita incluso la petición.
+          '/clase-gratis/mas',
           '/courses/create',
           '/courses/*/edit',
           '/courses/*/add-lesson',

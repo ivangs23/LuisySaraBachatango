@@ -9,7 +9,8 @@ const CERTIFICATE_ROUTE = /^\/courses\/[^/]+\/certificado\/?$/;
  * funnel: landing (`/curso-bachatango`), checkout form (`/curso-bachatango/comprar`)
  * and thank-you (`/gracias`). Keeps the buyer focused on completing payment +
  * signup with no site nav to wander off through. Plus the printable certificate,
- * for the reason above.
+ * for the reason above, and `/clase-gratis/mas`, the private page with the two
+ * classes sent by email: its only next step is the course.
  */
 export function isChromelessRoute(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
@@ -17,6 +18,7 @@ export function isChromelessRoute(pathname: string | null | undefined): boolean 
     pathname === '/curso-bachatango' ||
     pathname.startsWith('/curso-bachatango/') ||
     pathname === '/gracias' ||
+    pathname === '/clase-gratis/mas' ||
     CERTIFICATE_ROUTE.test(pathname)
   );
 }

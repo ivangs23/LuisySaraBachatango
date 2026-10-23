@@ -1,6 +1,6 @@
 import 'server-only'
-import { makeUnsubscribeToken } from '@/utils/newsletter/unsubscribe-token'
-import { renderEmail, renderTexto, enviar, esc } from './layout'
+import { renderEmail, renderTexto, enviar } from './layout'
+import { pieDeBaja } from './unsubscribe-footer'
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
 
@@ -19,13 +19,14 @@ export async function sendNewsletterWelcome(opts: { email: string }): Promise<vo
   const key = process.env.RESEND_API_KEY
   if (!key) return
 
-  const token = makeUnsubscribeToken(opts.email)
-  if (!token) {
+  const pie = pieDeBaja(
+    opts.email,
+    `Recibes este correo porque te suscribiste en ${BASE.replace(/^https?:\/\//, '')}.`,
+  )
+  if (!pie) {
     console.error('[newsletter-welcome] NEWSLETTER_UNSUBSCRIBE_SECRET unset, refusing to send')
     return
   }
-
-  const unsubUrl = `${BASE}/unsubscribe?email=${encodeURIComponent(opts.email)}&token=${token}`
 
   const titulo = 'Tu clase gratis, como te prometimos'
   const parrafos = [
@@ -34,33 +35,21 @@ export async function sendNewsletterWelcome(opts: { email: string }): Promise<vo
   ]
   const boton = { texto: 'Ver la clase gratis', url: `${BASE}/clase-gratis` }
 
-  const pieHtml = `<p style="margin:0 0 14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#8b857c;">
-      Recibes este correo porque te suscribiste en ${esc(BASE.replace(/^https?:\/\//, ''))}.
-      <a href="${esc(unsubUrl)}" style="color:#8b857c;">Darse de baja</a>.
-    </p>`
-  const pieTexto = `Recibes este correo porque te suscribiste. Darse de baja: ${unsubUrl}`
-
   const html = renderEmail({
     preheader: 'Una clase completa del curso, gratis y sin registro.',
     titulo,
     parrafos,
     boton,
-    pieExtra: pieHtml,
+    pieExtra: pie.html,
   })
-  const text = renderTexto({ titulo, parrafos, boton, pieExtra: pieTexto })
+  const text = renderTexto({ titulo, parrafos, boton, pieExtra: pie.text })
 
   await enviar({
     to: opts.email,
     subject: 'Tu clase gratis de Bachatango',
     html,
     text,
-    // RFC 8058: permite a Gmail y Outlook mostrar su propio botón de baja
-    // junto al remitente. Reduce mucho las marcas de spam, porque quien no
-    // quiere seguir se da de baja en vez de denunciar el correo.
-    headers: {
-      'List-Unsubscribe': `<${unsubUrl}>`,
-      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-    },
+    headers: pie.headers,
     etiqueta: 'newsletter-welcome',
   })
 }

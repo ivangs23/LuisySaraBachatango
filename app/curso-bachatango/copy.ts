@@ -34,7 +34,19 @@ export type LandingCopy = {
     haveAccount: string;
     login: string;
   };
-  sticky: { brand: string; cta: string };
+  sticky: { brand: string; cta: string; freeEmail: string };
+  // Formulario «dos clases más por email», bajo la clase gratis (T3.1).
+  freeEmail: {
+    title: string;
+    body: string;
+    emailLabel: string;
+    placeholder: string;
+    consent: string;
+    cta: string;
+    sending: string;
+    success: string;
+    errors: Record<'invalid_email' | 'consent_required' | 'rate_limit' | 'server_error', string>;
+  };
   learn: { title: string; subtitle: string; summary: string };
   method: { title: string; body: string };
   // Hechos concretos y comprobables, no adjetivos. Sustituye a la antigua bio
@@ -61,6 +73,8 @@ export type LandingCopy = {
   // temario; si la BD no responde, esa pregunta no se pinta.
   faq: readonly Pregunta[];
   finalCta: { title: string; cta: string };
+  // Página privada `/clase-gratis/mas`, con las dos clases que llegan por email.
+  extraClasses: { title: string; lead: string; unavailable: string; ctaTitle: string; ctaBody: string; cta: string };
 };
 
 const es: LandingCopy = {
@@ -76,7 +90,23 @@ const es: LandingCopy = {
     haveAccount: '¿Ya tienes cuenta?',
     login: 'Inicia sesión',
   },
-  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Comprar' },
+  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Comprar', freeEmail: 'Clase gratis por email' },
+  freeEmail: {
+    title: '¿Te ha gustado? Te mandamos dos clases más',
+    body: 'La de posturas y la del segundo básico, gratis en tu correo.',
+    emailLabel: 'Tu email',
+    placeholder: 'tu@email.com',
+    consent: 'Quiero recibir las clases y emails de Luis y Sara. Puedo darme de baja cuando quiera.',
+    cta: 'Quiero las dos clases',
+    sending: 'Enviando…',
+    success: 'Hecho. Revisa tu correo: te acabamos de mandar las dos clases.',
+    errors: {
+      invalid_email: 'Revisa el email: no parece válido.',
+      consent_required: 'Marca la casilla para que podamos mandarte las clases.',
+      rate_limit: 'Has hecho varios intentos seguidos. Espera un rato y vuelve a probar.',
+      server_error: 'No hemos podido apuntarte. Inténtalo de nuevo en un momento.',
+    },
+  },
   learn: {
     title: 'Qué vas a aprender',
     // El detalle sale de la BD (utils/courses/curriculum.ts): son los módulos
@@ -127,6 +157,14 @@ const es: LandingCopy = {
     { q: '¿Es seguro el pago?', a: 'Sí. El pago se procesa con Stripe; no almacenamos datos de tu tarjeta.' },
   ],
   finalCta: { title: 'Empieza hoy con la lección 1', cta: 'Comprar el curso' },
+  extraClasses: {
+    title: 'Tus dos clases',
+    lead: 'Dos lecciones del CURSO BACHATANGO para practicar en casa. Empieza por la de posturas: es la base de todo lo demás.',
+    unavailable: 'Ahora mismo no podemos mostrar las clases. Vuelve a abrir el enlace del correo dentro de un rato.',
+    ctaTitle: '¿Seguimos?',
+    ctaBody: 'El curso completo sigue desde aquí, módulo a módulo: el resto de básicos y las combinaciones, cada una explicada y después bailada con música.',
+    cta: 'Ver el curso completo',
+  },
 };
 
 const en: LandingCopy = {
@@ -140,7 +178,23 @@ const en: LandingCopy = {
     haveAccount: 'Already have an account?',
     login: 'Log in',
   },
-  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Buy' },
+  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Buy', freeEmail: 'Free class by email' },
+  freeEmail: {
+    title: "Enjoyed it? We'll send you two more classes",
+    body: 'The posture class and the second basic step, free in your inbox (in Spanish, like the course).',
+    emailLabel: 'Your email',
+    placeholder: 'you@email.com',
+    consent: 'I want to receive the classes and emails from Luis and Sara. I can unsubscribe at any time.',
+    cta: 'Send me the two classes',
+    sending: 'Sending…',
+    success: 'Done. Check your inbox: we have just sent you the two classes.',
+    errors: {
+      invalid_email: 'Check your email address: it does not look valid.',
+      consent_required: 'Tick the box so we can send you the classes.',
+      rate_limit: 'Too many attempts in a row. Wait a little and try again.',
+      server_error: "We couldn't sign you up. Please try again in a moment.",
+    },
+  },
   learn: {
     title: 'What you will learn',
     subtitle: 'The full syllabus, module by module.',
@@ -186,6 +240,14 @@ const en: LandingCopy = {
     { q: 'Is the payment secure?', a: 'Yes. Payment is processed by Stripe; we never store your card details.' },
   ],
   finalCta: { title: 'Start today with lesson 1', cta: 'Buy the course' },
+  extraClasses: {
+    title: 'Your two classes',
+    lead: 'Two lessons from CURSO BACHATANGO to practise at home. Start with posture: everything else is built on it.',
+    unavailable: "We can't show the classes right now. Open the link in the email again in a little while.",
+    ctaTitle: 'Shall we carry on?',
+    ctaBody: 'The full course continues from here, module by module: the rest of the basic steps and the combinations, each one explained and then danced to music.',
+    cta: 'See the full course',
+  },
 };
 
 const fr: LandingCopy = {
@@ -199,7 +261,23 @@ const fr: LandingCopy = {
     haveAccount: 'Vous avez déjà un compte ?',
     login: 'Se connecter',
   },
-  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Acheter' },
+  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Acheter', freeEmail: 'Cours gratuit par e-mail' },
+  freeEmail: {
+    title: 'Ça vous a plu ? On vous envoie deux cours de plus',
+    body: 'Le cours sur la posture et le deuxième pas de base, gratuits dans votre boîte mail (en espagnol, comme le cours).',
+    emailLabel: 'Votre e-mail',
+    placeholder: 'vous@email.com',
+    consent: 'Je veux recevoir les cours et les e-mails de Luis et Sara. Je peux me désinscrire à tout moment.',
+    cta: 'Je veux les deux cours',
+    sending: 'Envoi…',
+    success: 'C’est fait. Vérifiez votre boîte mail : nous venons de vous envoyer les deux cours.',
+    errors: {
+      invalid_email: 'Vérifiez l’adresse e-mail : elle ne semble pas valide.',
+      consent_required: 'Cochez la case pour que nous puissions vous envoyer les cours.',
+      rate_limit: 'Trop de tentatives d’affilée. Attendez un peu et réessayez.',
+      server_error: 'Nous n’avons pas pu vous inscrire. Réessayez dans un instant.',
+    },
+  },
   learn: {
     title: 'Ce que vous allez apprendre',
     subtitle: 'Le programme complet, module par module.',
@@ -245,6 +323,14 @@ const fr: LandingCopy = {
     { q: 'Le paiement est-il sécurisé ?', a: 'Oui. Le paiement est traité par Stripe ; nous ne conservons aucune donnée de votre carte.' },
   ],
   finalCta: { title: 'Commencez aujourd’hui avec la leçon 1', cta: 'Acheter le cours' },
+  extraClasses: {
+    title: 'Vos deux cours',
+    lead: 'Deux leçons du CURSO BACHATANGO pour pratiquer chez vous. Commencez par la posture : tout le reste repose dessus.',
+    unavailable: 'Nous ne pouvons pas afficher les cours pour le moment. Rouvrez le lien de l’e-mail un peu plus tard.',
+    ctaTitle: 'On continue ?',
+    ctaBody: 'Le cours complet reprend à partir d’ici, module par module : les autres pas de base et les combinaisons, chacune expliquée puis dansée en musique.',
+    cta: 'Voir le cours complet',
+  },
 };
 
 const de: LandingCopy = {
@@ -258,7 +344,23 @@ const de: LandingCopy = {
     haveAccount: 'Du hast schon ein Konto?',
     login: 'Anmelden',
   },
-  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Kaufen' },
+  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Kaufen', freeEmail: 'Gratis-Stunde per E-Mail' },
+  freeEmail: {
+    title: 'Hat es dir gefallen? Wir schicken dir zwei weitere Stunden',
+    body: 'Die Stunde zur Haltung und den zweiten Grundschritt, kostenlos per E-Mail (auf Spanisch, wie der Kurs).',
+    emailLabel: 'Deine E-Mail',
+    placeholder: 'du@email.com',
+    consent: 'Ich möchte die Stunden und E-Mails von Luis und Sara erhalten. Ich kann mich jederzeit abmelden.',
+    cta: 'Ich will die zwei Stunden',
+    sending: 'Wird gesendet…',
+    success: 'Erledigt. Schau in dein Postfach: Wir haben dir gerade die zwei Stunden geschickt.',
+    errors: {
+      invalid_email: 'Prüfe die E-Mail-Adresse: Sie scheint nicht gültig zu sein.',
+      consent_required: 'Setz das Häkchen, damit wir dir die Stunden schicken können.',
+      rate_limit: 'Zu viele Versuche hintereinander. Warte kurz und versuch es noch einmal.',
+      server_error: 'Wir konnten dich nicht eintragen. Versuch es gleich noch einmal.',
+    },
+  },
   learn: {
     title: 'Was du lernen wirst',
     subtitle: 'Der komplette Lehrplan, Modul für Modul.',
@@ -304,6 +406,14 @@ const de: LandingCopy = {
     { q: 'Ist die Zahlung sicher?', a: 'Ja. Die Zahlung wird über Stripe abgewickelt; wir speichern keine Kartendaten.' },
   ],
   finalCta: { title: 'Fang heute mit Lektion 1 an', cta: 'Kurs kaufen' },
+  extraClasses: {
+    title: 'Deine zwei Stunden',
+    lead: 'Zwei Lektionen aus dem CURSO BACHATANGO zum Üben zu Hause. Fang mit der Haltung an: Darauf baut alles andere auf.',
+    unavailable: 'Wir können die Stunden gerade nicht anzeigen. Öffne den Link aus der E-Mail in einer Weile noch einmal.',
+    ctaTitle: 'Machen wir weiter?',
+    ctaBody: 'Der komplette Kurs geht von hier aus weiter, Modul für Modul: die übrigen Grundschritte und die Kombinationen, jede erklärt und danach zur Musik getanzt.',
+    cta: 'Zum kompletten Kurs',
+  },
 };
 
 const it: LandingCopy = {
@@ -317,7 +427,23 @@ const it: LandingCopy = {
     haveAccount: 'Hai già un account?',
     login: 'Accedi',
   },
-  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Acquista' },
+  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: 'Acquista', freeEmail: 'Lezione gratis via email' },
+  freeEmail: {
+    title: 'Ti è piaciuta? Ti mandiamo altre due lezioni',
+    body: 'La lezione sulla postura e il secondo passo base, gratis nella tua email (in spagnolo, come il corso).',
+    emailLabel: 'La tua email',
+    placeholder: 'tu@email.com',
+    consent: 'Voglio ricevere le lezioni e le email di Luis e Sara. Posso disiscrivermi quando voglio.',
+    cta: 'Voglio le due lezioni',
+    sending: 'Invio in corso…',
+    success: 'Fatto. Controlla la tua email: ti abbiamo appena mandato le due lezioni.',
+    errors: {
+      invalid_email: 'Controlla l’indirizzo email: non sembra valido.',
+      consent_required: 'Spunta la casella così possiamo mandarti le lezioni.',
+      rate_limit: 'Troppi tentativi di seguito. Aspetta un po’ e riprova.',
+      server_error: 'Non siamo riusciti a iscriverti. Riprova tra un momento.',
+    },
+  },
   learn: {
     title: 'Che cosa imparerai',
     subtitle: 'Il programma completo, modulo per modulo.',
@@ -363,6 +489,14 @@ const it: LandingCopy = {
     { q: 'Il pagamento è sicuro?', a: 'Sì. Il pagamento è gestito da Stripe; non conserviamo i dati della tua carta.' },
   ],
   finalCta: { title: 'Inizia oggi con la lezione 1', cta: 'Acquista il corso' },
+  extraClasses: {
+    title: 'Le tue due lezioni',
+    lead: 'Due lezioni del CURSO BACHATANGO da praticare a casa. Comincia dalla postura: tutto il resto si basa su quella.',
+    unavailable: 'In questo momento non riusciamo a mostrare le lezioni. Riapri il link dell’email tra poco.',
+    ctaTitle: 'Continuiamo?',
+    ctaBody: 'Il corso completo riparte da qui, modulo per modulo: gli altri passi base e le combinazioni, ognuna spiegata e poi ballata con la musica.',
+    cta: 'Vedi il corso completo',
+  },
 };
 
 const ja: LandingCopy = {
@@ -376,7 +510,23 @@ const ja: LandingCopy = {
     haveAccount: 'すでにアカウントをお持ちですか',
     login: 'ログイン',
   },
-  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: '購入' },
+  sticky: { brand: 'Luis y Sara · CURSO BACHATANGO', cta: '購入', freeEmail: 'メールで無料レッスン' },
+  freeEmail: {
+    title: '気に入りましたか？あと2つのレッスンをお送りします',
+    body: '姿勢のレッスンと2つ目のベーシックを、無料でメールにお届けします（コースと同じくスペイン語です）。',
+    emailLabel: 'メールアドレス',
+    placeholder: 'you@email.com',
+    consent: 'ルイスとサラからレッスンとメールを受け取ります。いつでも配信を停止できます。',
+    cta: '2つのレッスンを受け取る',
+    sending: '送信中…',
+    success: '完了しました。メールをご確認ください。2つのレッスンをお送りしました。',
+    errors: {
+      invalid_email: 'メールアドレスをご確認ください。正しくないようです。',
+      consent_required: 'レッスンをお送りするため、チェックボックスにチェックを入れてください。',
+      rate_limit: '短時間に何度も試行されました。少し待ってからもう一度お試しください。',
+      server_error: '登録できませんでした。しばらくしてからもう一度お試しください。',
+    },
+  },
   learn: {
     title: '学べる内容',
     subtitle: 'カリキュラム全体を、モジュールごとに。',
@@ -422,6 +572,14 @@ const ja: LandingCopy = {
     { q: '決済は安全ですか', a: 'はい。決済はStripeが処理し、カード情報を当方で保存することはありません。' },
   ],
   finalCta: { title: '今日、レッスン1から始めよう', cta: 'コースを購入する' },
+  extraClasses: {
+    title: 'あなたの2つのレッスン',
+    lead: '自宅で練習できる、CURSO BACHATANGOの2つのレッスンです。まずは姿勢から。ほかのすべての土台になります。',
+    unavailable: '現在レッスンを表示できません。しばらくしてから、メールのリンクをもう一度開いてください。',
+    ctaTitle: '続けてみませんか',
+    ctaBody: 'コース全体はここから続きます。残りのベーシックと各コンビネーションを、モジュールごとに解説し、音楽に合わせて踊ります。',
+    cta: 'コース全体を見る',
+  },
 };
 
 const POR_IDIOMA: Record<Locale, LandingCopy> = { es, en, fr, de, it, ja };

@@ -28,8 +28,17 @@ describe('vercel.json', () => {
   })
 
   it('no pierde el cron de purga de pendientes', () => {
-    expect(config.crons).toEqual([
-      { path: '/api/cron/purge-pending', schedule: '0 4 * * *' },
-    ])
+    expect(config.crons).toContainEqual({ path: '/api/cron/purge-pending', schedule: '0 4 * * *' })
+  })
+
+  // T3.3: la secuencia de nutrición, a las 08:00 UTC (10:00 en Madrid en
+  // horario de verano, 09:00 en invierno). No envía nada hasta que
+  // LIFECYCLE_EMAILS_ENABLED=1.
+  it('programa el cron de la secuencia de emails una vez al día', () => {
+    expect(config.crons).toContainEqual({ path: '/api/cron/lifecycle-emails', schedule: '0 8 * * *' })
+  })
+
+  it('no programa crons de más', () => {
+    expect(config.crons).toHaveLength(2)
   })
 })

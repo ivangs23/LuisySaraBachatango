@@ -202,6 +202,9 @@ export function renderTexto(opts: {
  * en texto y para no repetir el manejo de errores: un fallo de email nunca
  * puede tumbar la operación que lo dispara (compra o suscripción ya están
  * comprometidas en base de datos).
+ *
+ * No lanza nunca. Devuelve si Resend aceptó el correo: quien no lo necesita
+ * lo ignora, y el motor de secuencias lo usa para reintentar lo que falló.
  */
 export async function enviar(opts: {
   to: string
@@ -210,9 +213,11 @@ export async function enviar(opts: {
   text: string
   /** Cabeceras extra, p. ej. List-Unsubscribe en los comerciales. */
   headers?: Record<string, string>
+  /** A dónde van las respuestas. Sin él, al noreply del remitente. */
+  replyTo?: string
   /** Etiqueta para los logs. */
   etiqueta: string
-}): Promise<void> {
+}): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
   if (!key) {
     // El no-op sin clave es deliberado en local y preview. En producción
@@ -222,7 +227,7 @@ export async function enviar(opts: {
     if (process.env.NODE_ENV === 'production') {
       alertaCritica('Sin RESEND_API_KEY en producción: no sale ningún correo', { etiqueta: opts.etiqueta })
     }
-    return
+    return false
   }
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -234,6 +239,7 @@ export async function enviar(opts: {
         subject: opts.subject,
         html: opts.html,
         text: opts.text,
+        ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
         ...(opts.headers ? { headers: opts.headers } : {}),
       }),
     })
@@ -243,11 +249,14 @@ export async function enviar(opts: {
       alertaCritica('Correo transaccional no entregado a Resend', {
         etiqueta: opts.etiqueta, estado: res.status, detalle: detalle.slice(0, 300),
       })
+      return false
     }
+    return true
   } catch (e) {
     console.error(`[${opts.etiqueta}] resend threw`, e)
     alertaCritica('Correo transaccional falló al enviarse', {
       etiqueta: opts.etiqueta, mensaje: e instanceof Error ? e.message : String(e),
     })
+    return false
   }
 }
