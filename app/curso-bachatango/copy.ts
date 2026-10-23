@@ -32,7 +32,21 @@ export type LandingCopy = {
   // pinta la home (utils/landing/content.ts).
   testimonials: { title: string };
   freeClass: { title: string; body: string; cta: string; trust: readonly string[] };
-  offer: { title: string; includes: readonly string[]; priceNote: string; cta: string; before: string; spotsLeft: string };
+  offer: {
+    title: string;
+    // Primera viñeta de la oferta. Lleva `{lessons}`, que se rellena con el
+    // temario real; el fallback es para cuando la BD no responde.
+    lessonsIncluded: string;
+    lessonsIncludedFallback: string;
+    includes: readonly string[];
+    priceNote: string;
+    cta: string;
+    before: string;
+    spotsLeft: string;
+  };
+  faqTitle: string;
+  // Una respuesta con `{modules}`, `{lessons}` o `{duration}` se rellena con el
+  // temario; si la BD no responde, esa pregunta no se pinta.
   faq: readonly Pregunta[];
   finalCta: { title: string; cta: string };
 };
@@ -78,28 +92,33 @@ const es: LandingCopy = {
     title: 'Empieza sin riesgo',
     body: 'Prueba una clase gratis antes de decidir. Sin tarjeta, sin compromiso.',
     cta: 'Ver clase gratis',
-    trust: ['Pago seguro con Stripe', 'Acceso de por vida', 'Comunidad de bailarines'],
+    trust: ['Pago seguro con Stripe', 'Acceso de por vida'],
   },
   offer: {
     title: 'CURSO BACHATANGO completo',
+    lessonsIncluded: '{lessons} lecciones en vídeo HD',
+    lessonsIncludedFallback: 'Todas las lecciones en vídeo HD',
     includes: [
-      'Todas las lecciones en vídeo HD',
-      'Técnica, figuras, musicalidad y estilo',
-      'Acceso de por vida y actualizaciones',
-      'Comunidad privada de alumnos',
+      'Cada combinación explicada y después bailada con música',
+      'Acceso de por vida, en móvil y ordenador',
+      'Certificado al completar el curso',
     ],
     priceNote: 'Pago único · Acceso de por vida',
     before: 'Antes',
     spotsLeft: 'Quedan {n} plazas disponibles',
     cta: 'Comprar ahora',
   },
+  faqTitle: 'Preguntas frecuentes',
   faq: [
     { q: '¿Necesito pareja?', a: 'No. El curso enseña tanto el rol de LIDER como el de FOLLOWER; puedes practicar solo/a y aplicarlo en pareja después.' },
-    { q: '¿Qué nivel necesito?', a: 'Nivel básico de bachata. Empieza desde cero y progresa hasta nivel avanzado.' },
+    // Misma respuesta que la FAQ de la home (`landing_faq`): antes había aquí
+    // dos preguntas sobre el nivel que se contradecían entre sí y con ella.
+    { q: '¿Qué nivel necesito?', a: 'Ninguno. El curso empieza desde cero y avanza paso a paso. Si ya bailas bachata o tango partirás con ventaja, pero no es un requisito: lo único que damos por hecho es que quieres aprender.' },
+    { q: '¿Me sirve si ya bailo bachata?', a: 'Sí, y partirás con ventaja. El bachatango tiene su propia técnica, así que el curso empieza por la postura y los básicos antes de llegar a los combos: no te saltas nada, pero lo que ya sabes de bachata te hará avanzar más rápido.' },
+    { q: '¿Cuánto dura el curso?', a: '{modules} módulos y {lessons} lecciones en vídeo, {duration} en total. Lo ves a tu ritmo y puedes repetir cada lección las veces que quieras.' },
     { q: '¿En qué dispositivos lo veo?', a: 'En cualquier dispositivo con navegador: móvil, tablet u ordenador.' },
     { q: '¿Cuánto dura el acceso?', a: 'Acceso de por vida. Compras una vez y es tuyo para siempre.' },
     { q: '¿Es seguro el pago?', a: 'Sí. El pago se procesa con Stripe; no almacenamos datos de tu tarjeta.' },
-    { q: '¿Puedo empezar sin experiencia?', a: 'Totalmente. El método está diseñado para llevarte de la mano desde el primer paso.' },
   ],
   finalCta: { title: 'Tu mejor versión bailando empieza hoy', cta: 'Comprar el curso' },
 };
@@ -142,28 +161,31 @@ const en: LandingCopy = {
     title: 'Start with no risk',
     body: 'Try a free class before you decide. No card, no commitment.',
     cta: 'Watch the free class',
-    trust: ['Secure payment with Stripe', 'Lifetime access', 'A community of dancers'],
+    trust: ['Secure payment with Stripe', 'Lifetime access'],
   },
   offer: {
     title: 'The complete CURSO BACHATANGO',
+    lessonsIncluded: '{lessons} HD video lessons',
+    lessonsIncludedFallback: 'Every lesson in HD video',
     includes: [
-      'Every lesson in HD video',
-      'Technique, figures, musicality and style',
-      'Lifetime access and updates',
-      'Private student community',
+      'Every combination explained, then danced to music',
+      'Lifetime access, on phone and computer',
+      'Certificate when you complete the course',
     ],
     priceNote: 'One-time payment · Lifetime access',
     before: 'Before',
     spotsLeft: 'Only {n} spots left',
     cta: 'Buy now',
   },
+  faqTitle: 'Frequently asked questions',
   faq: [
     { q: 'Do I need a partner?', a: 'No. The course teaches both the leader and the follower role; you can practise on your own and apply it with a partner later.' },
-    { q: 'What level do I need?', a: 'Basic bachata level. It starts from the ground up and progresses to advanced.' },
+    { q: 'What level do I need?', a: 'None. The course starts from scratch and builds up step by step. If you already dance bachata or tango you will have a head start, but it is not a requirement — all we assume is that you want to learn.' },
+    { q: 'Is it for me if I already dance bachata?', a: 'Yes, and you will have a head start. Bachatango has its own technique, so the course begins with posture and the basic steps before moving on to the combos: you skip nothing, but what you already know from bachata will help you progress faster.' },
+    { q: 'How long is the course?', a: '{modules} modules and {lessons} video lessons, {duration} in total. You watch at your own pace and can replay each lesson as many times as you like.' },
     { q: 'What devices can I watch it on?', a: 'Any device with a browser: phone, tablet or computer.' },
     { q: 'How long does access last?', a: 'Lifetime access. You buy once and it is yours for good.' },
     { q: 'Is the payment secure?', a: 'Yes. Payment is processed by Stripe; we never store your card details.' },
-    { q: 'Can I start with no experience?', a: 'Absolutely. The method is designed to take you by the hand from the very first step.' },
   ],
   finalCta: { title: 'Your best dancing self starts today', cta: 'Buy the course' },
 };
@@ -206,28 +228,31 @@ const fr: LandingCopy = {
     title: 'Commencez sans risque',
     body: 'Essayez un cours gratuit avant de décider. Sans carte, sans engagement.',
     cta: 'Voir le cours gratuit',
-    trust: ['Paiement sécurisé avec Stripe', 'Accès à vie', 'Une communauté de danseurs'],
+    trust: ['Paiement sécurisé avec Stripe', 'Accès à vie'],
   },
   offer: {
     title: 'CURSO BACHATANGO complet',
+    lessonsIncluded: '{lessons} leçons en vidéo HD',
+    lessonsIncludedFallback: 'Toutes les leçons en vidéo HD',
     includes: [
-      'Toutes les leçons en vidéo HD',
-      'Technique, figures, musicalité et style',
-      'Accès à vie et mises à jour',
-      'Communauté privée d’élèves',
+      'Chaque combinaison expliquée, puis dansée en musique',
+      'Accès à vie, sur mobile et ordinateur',
+      'Certificat à la fin du cours',
     ],
     priceNote: 'Paiement unique · Accès à vie',
     before: 'Avant',
     spotsLeft: 'Plus que {n} places disponibles',
     cta: 'Acheter maintenant',
   },
+  faqTitle: 'Questions fréquentes',
   faq: [
     { q: 'Ai-je besoin d’un partenaire ?', a: 'Non. Le cours enseigne le rôle de leader comme celui de follower ; vous pouvez travailler seul(e) puis l’appliquer en couple.' },
-    { q: 'Quel niveau faut-il ?', a: 'Un niveau de base en bachata. Le cours part de zéro et progresse jusqu’au niveau avancé.' },
+    { q: 'Quel niveau faut-il ?', a: 'Aucun. Le cours part de zéro et progresse pas à pas. Si vous dansez déjà la bachata ou le tango, vous aurez une longueur d’avance, mais ce n’est pas obligatoire : la seule chose que nous supposons, c’est votre envie d’apprendre.' },
+    { q: 'Est-ce utile si je danse déjà la bachata ?', a: 'Oui, et vous aurez une longueur d’avance. Le bachatango a sa propre technique : le cours commence par la posture et les pas de base avant d’aborder les combinaisons. Vous ne sautez aucune étape, mais ce que vous savez déjà de la bachata vous fera progresser plus vite.' },
+    { q: 'Combien de temps dure le cours ?', a: '{modules} modules et {lessons} leçons en vidéo, {duration} au total. Vous avancez à votre rythme et pouvez revoir chaque leçon autant de fois que vous le souhaitez.' },
     { q: 'Sur quels appareils puis-je le suivre ?', a: 'Sur tout appareil doté d’un navigateur : téléphone, tablette ou ordinateur.' },
     { q: 'Combien de temps dure l’accès ?', a: 'Accès à vie. Vous achetez une fois et c’est à vous pour toujours.' },
     { q: 'Le paiement est-il sécurisé ?', a: 'Oui. Le paiement est traité par Stripe ; nous ne conservons aucune donnée de votre carte.' },
-    { q: 'Puis-je commencer sans expérience ?', a: 'Tout à fait. La méthode est conçue pour vous accompagner dès le premier pas.' },
   ],
   finalCta: { title: 'Votre meilleure version en danse commence aujourd’hui', cta: 'Acheter le cours' },
 };
@@ -270,28 +295,31 @@ const de: LandingCopy = {
     title: 'Fang ohne Risiko an',
     body: 'Teste eine kostenlose Stunde, bevor du dich entscheidest. Ohne Karte, ohne Verpflichtung.',
     cta: 'Kostenlose Stunde ansehen',
-    trust: ['Sichere Zahlung mit Stripe', 'Lebenslanger Zugang', 'Eine Community von Tanzenden'],
+    trust: ['Sichere Zahlung mit Stripe', 'Lebenslanger Zugang'],
   },
   offer: {
     title: 'CURSO BACHATANGO komplett',
+    lessonsIncluded: '{lessons} Lektionen als HD-Video',
+    lessonsIncludedFallback: 'Alle Lektionen als HD-Video',
     includes: [
-      'Alle Lektionen als HD-Video',
-      'Technik, Figuren, Musikalität und Stil',
-      'Lebenslanger Zugang und Aktualisierungen',
-      'Private Community für Teilnehmende',
+      'Jede Kombination erklärt und danach zur Musik getanzt',
+      'Lebenslanger Zugang, auf Handy und Computer',
+      'Zertifikat nach Abschluss des Kurses',
     ],
     priceNote: 'Einmalzahlung · Lebenslanger Zugang',
     before: 'Vorher',
     spotsLeft: 'Nur noch {n} Plätze frei',
     cta: 'Jetzt kaufen',
   },
+  faqTitle: 'Häufige Fragen',
   faq: [
     { q: 'Brauche ich einen Partner?', a: 'Nein. Der Kurs vermittelt sowohl die Leader- als auch die Follower-Rolle; du kannst allein üben und es später zu zweit anwenden.' },
-    { q: 'Welches Niveau brauche ich?', a: 'Bachata-Grundkenntnisse. Der Kurs beginnt bei null und führt bis zum fortgeschrittenen Niveau.' },
+    { q: 'Welches Niveau brauche ich?', a: 'Keines. Der Kurs beginnt bei null und baut Schritt für Schritt auf. Wenn du schon Bachata oder Tango tanzt, hast du einen Vorsprung, aber Voraussetzung ist es nicht — wir setzen nur voraus, dass du lernen willst.' },
+    { q: 'Lohnt sich der Kurs, wenn ich schon Bachata tanze?', a: 'Ja, und du hast einen Vorsprung. Bachatango hat eine eigene Technik, deshalb beginnt der Kurs mit Haltung und Grundschritten, bevor es an die Kombinationen geht: Du überspringst nichts, aber was du von der Bachata schon kannst, lässt dich schneller vorankommen.' },
+    { q: 'Wie lang ist der Kurs?', a: '{modules} Module und {lessons} Videolektionen, insgesamt {duration}. Du lernst in deinem Tempo und kannst jede Lektion so oft ansehen, wie du willst.' },
     { q: 'Auf welchen Geräten kann ich zusehen?', a: 'Auf jedem Gerät mit Browser: Handy, Tablet oder Computer.' },
     { q: 'Wie lange gilt der Zugang?', a: 'Lebenslang. Einmal kaufen und er gehört dir für immer.' },
     { q: 'Ist die Zahlung sicher?', a: 'Ja. Die Zahlung wird über Stripe abgewickelt; wir speichern keine Kartendaten.' },
-    { q: 'Kann ich ohne Vorkenntnisse anfangen?', a: 'Auf jeden Fall. Die Methode nimmt dich vom ersten Schritt an bei der Hand.' },
   ],
   finalCta: { title: 'Deine beste Version auf der Tanzfläche beginnt heute', cta: 'Kurs kaufen' },
 };
@@ -334,28 +362,31 @@ const it: LandingCopy = {
     title: 'Inizia senza rischi',
     body: 'Prova una lezione gratis prima di decidere. Senza carta, senza impegno.',
     cta: 'Guarda la lezione gratis',
-    trust: ['Pagamento sicuro con Stripe', 'Accesso a vita', 'Una comunità di ballerini'],
+    trust: ['Pagamento sicuro con Stripe', 'Accesso a vita'],
   },
   offer: {
     title: 'CURSO BACHATANGO completo',
+    lessonsIncluded: '{lessons} lezioni in video HD',
+    lessonsIncludedFallback: 'Tutte le lezioni in video HD',
     includes: [
-      'Tutte le lezioni in video HD',
-      'Tecnica, figure, musicalità e stile',
-      'Accesso a vita e aggiornamenti',
-      'Comunità privata di allievi',
+      'Ogni combinazione spiegata e poi ballata con la musica',
+      'Accesso a vita, da telefono e computer',
+      'Certificato al termine del corso',
     ],
     priceNote: 'Pagamento unico · Accesso a vita',
     before: 'Prima',
     spotsLeft: 'Restano solo {n} posti',
     cta: 'Acquista ora',
   },
+  faqTitle: 'Domande frequenti',
   faq: [
     { q: 'Mi serve un partner?', a: 'No. Il corso insegna sia il ruolo di leader sia quello di follower; puoi esercitarti da solo/a e applicarlo in coppia più avanti.' },
-    { q: 'Che livello serve?', a: 'Livello base di bachata. Si parte da zero e si arriva al livello avanzato.' },
+    { q: 'Che livello serve?', a: 'Nessuno. Il corso parte da zero e procede passo dopo passo. Se balli già bachata o tango partirai avvantaggiato, ma non è un requisito: l’unica cosa che diamo per scontata è la voglia di imparare.' },
+    { q: 'Fa per me se ballo già bachata?', a: 'Sì, e partirai avvantaggiato. Il bachatango ha una tecnica propria, quindi il corso comincia dalla postura e dai passi base prima di arrivare alle combinazioni: non salti nulla, ma quello che sai già della bachata ti farà avanzare più in fretta.' },
+    { q: 'Quanto dura il corso?', a: '{modules} moduli e {lessons} lezioni in video, {duration} in tutto. Lo segui al tuo ritmo e puoi rivedere ogni lezione tutte le volte che vuoi.' },
     { q: 'Su quali dispositivi posso vederlo?', a: 'Su qualsiasi dispositivo con un browser: telefono, tablet o computer.' },
     { q: 'Quanto dura l’accesso?', a: 'Accesso a vita. Acquisti una volta ed è tuo per sempre.' },
     { q: 'Il pagamento è sicuro?', a: 'Sì. Il pagamento è gestito da Stripe; non conserviamo i dati della tua carta.' },
-    { q: 'Posso iniziare senza esperienza?', a: 'Assolutamente. Il metodo è pensato per accompagnarti dal primo passo.' },
   ],
   finalCta: { title: 'La tua versione migliore in pista inizia oggi', cta: 'Acquista il corso' },
 };
@@ -398,28 +429,31 @@ const ja: LandingCopy = {
     title: 'リスクなしではじめる',
     body: '決める前に無料レッスンをお試しください。カード登録も、義務もありません。',
     cta: '無料レッスンを見る',
-    trust: ['Stripeによる安全な決済', '生涯アクセス', 'ダンサーのコミュニティ'],
+    trust: ['Stripeによる安全な決済', '生涯アクセス'],
   },
   offer: {
     title: 'CURSO BACHATANGO 完全版',
+    lessonsIncluded: '{lessons}本のHD動画レッスン',
+    lessonsIncludedFallback: '全レッスンをHD動画で',
     includes: [
-      '全レッスンをHD動画で',
-      'テクニック、フィガー、音楽性、スタイル',
-      '生涯アクセスと今後の更新',
-      '受講生限定のコミュニティ',
+      '各コンビネーションを解説し、音楽に合わせて踊ります',
+      'スマートフォンでもパソコンでも、生涯アクセス',
+      'コース修了時に修了証',
     ],
     priceNote: '買い切り · 生涯アクセス',
     before: '通常価格',
     spotsLeft: '残り{n}席',
     cta: '今すぐ購入',
   },
+  faqTitle: 'よくある質問',
   faq: [
     { q: 'パートナーは必要ですか', a: 'いいえ。リーダーとフォロワーの両方の役割を学べます。ひとりで練習し、あとからペアで活かせます。' },
-    { q: 'どのくらいのレベルが必要ですか', a: 'バチャタの基礎レベルです。ゼロから始めて上級まで進みます。' },
+    { q: 'どのくらいのレベルが必要ですか', a: '特別なレベルは必要ありません。コースはゼロから始まり、一歩ずつ進みます。バチャタやタンゴの経験があれば有利ですが、必須ではありません。前提となるのは、学びたいという気持ちだけです。' },
+    { q: 'すでにバチャタを踊っていても役立ちますか', a: 'はい、しかも有利なスタートを切れます。バチャタンゴには独自のテクニックがあるため、コースはコンビネーションに進む前に、姿勢とベーシックから始めます。どのステップも飛ばしませんが、バチャタで身につけたことが上達を早めてくれます。' },
+    { q: 'コースの長さはどのくらいですか', a: '{modules}モジュール、{lessons}本の動画レッスン、合計{duration}です。自分のペースで進められ、各レッスンは何度でも見直せます。' },
     { q: 'どの端末で見られますか', a: 'ブラウザのある端末ならどれでも。スマートフォン、タブレット、パソコン。' },
     { q: 'アクセス期間はどのくらいですか', a: '生涯アクセスです。一度購入すれば、ずっとご利用いただけます。' },
     { q: '決済は安全ですか', a: 'はい。決済はStripeが処理し、カード情報を当方で保存することはありません。' },
-    { q: '未経験でも始められますか', a: 'もちろんです。最初の一歩から手を取って進める設計になっています。' },
   ],
   finalCta: { title: '踊るあなたの最高の姿は、今日から', cta: 'コースを購入する' },
 };

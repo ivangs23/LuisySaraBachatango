@@ -2,14 +2,17 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import type { LandingCopy } from '../copy';
 import styles from '../page.module.css';
 
-export default function LandingFaq({ copy }: { copy: LandingCopy }) {
+/**
+ * Recibe las preguntas ya resueltas en servidor (con las cifras del temario
+ * dentro), no el copy entero: al cliente solo viaja lo que se pinta.
+ */
+export default function LandingFaq({ items }: { items: readonly { q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
     <div className={styles.faq}>
-      {copy.faq.map((item, i) => {
+      {items.map((item, i) => {
         const isOpen = open === i;
         return (
           <div key={i} className={styles.faqItem}>

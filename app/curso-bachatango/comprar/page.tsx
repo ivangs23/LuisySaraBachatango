@@ -70,7 +70,6 @@ export default async function ComprarPage(props: { searchParams: Promise<{ cours
         <ul className={styles.trust}>
           <li>Pago seguro con Stripe</li>
           <li>Acceso de por vida</li>
-          <li>Comunidad de bailarines</li>
         </ul>
         <LandingCheckoutForm
           courseId={course.id}

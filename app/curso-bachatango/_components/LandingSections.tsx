@@ -8,6 +8,7 @@ import CourseCurriculum from './CourseCurriculum';
 import LandingFreeClass from './LandingFreeClass';
 import type { Curriculum } from '@/utils/courses/curriculum';
 import type { Testimonial } from '@/utils/landing/content';
+import { fillCurriculum } from '../_lib/curriculum-copy';
 import styles from '../page.module.css';
 
 interface SectionsProps {
@@ -37,6 +38,16 @@ interface SectionsProps {
 export default function LandingSections({ courseId, offer, curriculum, freeClass, testimonials, copy }: SectionsProps) {
   const c = copy;
   const spotsText = formatSpotsLeft(copy.offer.spotsLeft, offer.spotsLeft);
+  // Las cifras salen del temario real. Sin él (BD caída), la pregunta de la
+  // duración desaparece y la línea de lecciones pierde el número.
+  const faqItems = c.faq.flatMap((f) => {
+    const a = fillCurriculum(f.a, curriculum);
+    return a ? [{ q: f.q, a }] : [];
+  });
+  const includes = [
+    fillCurriculum(c.offer.lessonsIncluded, curriculum) ?? c.offer.lessonsIncludedFallback,
+    ...c.offer.includes,
+  ];
   return (
     <>
       {/* Dolor → promesa */}
@@ -113,7 +124,7 @@ export default function LandingSections({ courseId, offer, curriculum, freeClass
         <Reveal>
           <h2 className={styles.h2}>{c.offer.title}</h2>
           <ul className={styles.includes}>
-            {c.offer.includes.map((it, i) => <li key={i}>{it}</li>)}
+            {includes.map((it, i) => <li key={i}>{it}</li>)}
           </ul>
           {offer.price !== null && (
             <OfferPrice
@@ -135,8 +146,8 @@ export default function LandingSections({ courseId, offer, curriculum, freeClass
 
       {/* FAQ */}
       <section className={styles.section}>
-        <Reveal><h2 className={styles.h2}>Preguntas frecuentes</h2></Reveal>
-        <LandingFaq copy={copy} />
+        <Reveal><h2 className={styles.h2}>{c.faqTitle}</h2></Reveal>
+        <LandingFaq items={faqItems} />
       </section>
 
       {/* CTA final */}
