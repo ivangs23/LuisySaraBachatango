@@ -63,17 +63,19 @@
 }
 .stickyVisible { transform: translateY(0); }
 .stickyBrand { color: var(--text-main); font: var(--small); }
-.stickyCta { padding: 0.6rem 1.4rem; }
+.stickyCta { padding: 0.6rem 1.4rem; white-space: nowrap; }
 .stickyOffer { display: inline-flex; align-items: center; gap: var(--spacing-sm); min-width: 0; }
 .stickyCompare { color: var(--text-muted); font: var(--small); opacity: 0.75; }
 .stickySpots { color: var(--primary); font-family: var(--font-sans); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Salida secundaria: texto pequeño y subrayado, para que no compita con el botón. */
-.stickyFreeEmail { color: var(--text-muted); font: var(--small); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+/* Salida secundaria: texto pequeño y subrayado, para que no compita con el
+   botón. Puede partirse en dos líneas cortas: a 390 px, con el tachado, el
+   enlace y el botón, no cabe en una y el que no debe partirse es el botón. */
+.stickyFreeEmail { color: var(--text-muted); font: var(--small); line-height: 1.25; text-align: center; max-width: 7.5rem; text-decoration: underline; text-underline-offset: 3px; }
 .stickyFreeEmail:hover { color: var(--text-main); }
 /* Por debajo de 600px la barra se queda sin sitio: cae la marca primero y, si
    hace falta, el recordatorio de plazas. El tachado y el botón nunca se van. */
 @media (max-width: 600px) { .stickyBrand { display: none; } .sticky { justify-content: center; } }
-@media (max-width: 420px) { .stickySpots { display: none; } }
+@media (max-width: 420px) { .stickySpots { display: none; } .sticky { gap: var(--spacing-sm); } .stickyCta { padding: 0.6rem 1rem; } }
 
 .section { max-width: var(--page-max); margin: 0 auto; padding: var(--spacing-2xl) var(--page-pad); }
 .h2 { font: var(--h2); color: var(--text-main); text-align: center; margin-bottom: var(--spacing-lg); }
