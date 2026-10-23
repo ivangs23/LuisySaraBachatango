@@ -373,7 +373,7 @@ hasta que exista.
 
 Depende de `public.is_admin()` (de `supabase/rbac_setup.sql`, ya aplicado).
 
-## Secuencias de email (`email_sends`) — octubre 2026 · ⏳ PENDIENTE de aplicar
+## Secuencias de email (`email_sends`) — octubre 2026 · ✅ APLICADA (2026-10-23)
 
 **Fichero:** `supabase/2026_10_email_sends.sql` (plan de marketing, T3.3)
 
@@ -395,3 +395,16 @@ Además el cron no envía nada mientras `LIFECYCLE_EMAILS_ENABLED` no valga `1`
 
 Aditivo y re-aplicable (`if not exists`). Tras aplicarlo, ejecutar la sección
 VALIDACIÓN del propio fichero.
+
+Aplicada en producción el 2026-10-23 (migración `marketing_2026_10_email_sends`
+en el historial de Supabase). Validación:
+
+| Comprobación | Resultado |
+|---|---|
+| `relrowsecurity` | `true` |
+| Policies | 0 |
+| Columnas | `id uuid`, `email text`, `sequence text`, `step integer`, `sent_at timestamptz`, todas `not null` |
+| Constraint | `UNIQUE (email, sequence, step)` |
+| `select` como `anon` | 0 filas (la tabla estaba vacía) |
+| `insert` como `anon` | `42501: new row violates row-level security policy` |
+| `insert` como `authenticated` | `42501: new row violates row-level security policy` |
