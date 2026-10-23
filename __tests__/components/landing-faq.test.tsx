@@ -50,7 +50,7 @@ describe('LandingSections · FAQ', () => {
   it('responde cuánto dura con las cifras del temario', () => {
     pintar(TEMARIO)
     fireEvent.click(screen.getByRole('button', { name: '¿Cuánto dura el curso?' }))
-    expect(screen.getByText(/14 módulos y 28 lecciones en vídeo, 2 h 12 min en total/)).toBeInTheDocument()
+    expect(screen.getByText(/14 módulos y 28 lecciones en vídeo, 2\sh\s12\smin en total/)).toBeInTheDocument()
   })
 
   it('sin temario quita esa pregunta en vez de enseñar marcadores', () => {

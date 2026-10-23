@@ -9,10 +9,21 @@ import type { Curriculum } from '@/utils/courses/curriculum'
 
 const TEMARIO: Curriculum = { modules: [], moduleCount: 14, lessonCount: 28, totalSeconds: 7920 }
 
+// Espacio de no separación: la duración va como un bloque («2 h 12 min»).
+const NBSP = String.fromCharCode(0xa0)
+const DURACION = `2${NBSP}h${NBSP}12${NBSP}min`
+
 describe('fillCurriculum', () => {
   it('rellena módulos, lecciones y duración con el temario real', () => {
     expect(fillCurriculum('{modules} módulos · {lessons} lecciones · {duration}', TEMARIO))
-      .toBe('14 módulos · 28 lecciones · 2 h 12 min')
+      .toBe(`14 módulos · 28 lecciones · ${DURACION}`)
+  })
+
+  // En el hero a 390 px la línea se partía entre «2» y «h 12 min».
+  it('la duración nunca se parte entre líneas', () => {
+    const texto = fillCurriculum('{duration}', TEMARIO)!
+    expect(texto).toBe(DURACION)
+    expect(texto).not.toMatch(/ /)
   })
 
   it('sustituye un marcador aunque aparezca dos veces', () => {
@@ -38,7 +49,7 @@ describe('fillCurriculum', () => {
 describe('heroSub', () => {
   it('lleva las cifras reales del temario', () => {
     expect(heroSub(getLandingCopy('es'), TEMARIO)).toBe(
-      '14 módulos, 28 lecciones en vídeo, 2 h 12 min. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.',
+      `14 módulos, 28 lecciones en vídeo, ${DURACION}. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.`,
     )
   })
 
