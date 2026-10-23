@@ -14,7 +14,9 @@
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
 }
-.cta:hover { background: var(--primary-hover); transform: translateY(-1px); }
+/* `color` repetido a propósito: el botón es un <a> y `a:hover` de globals.css
+   (más específico) lo volvía dorado sobre dorado. */
+.cta:hover { color: #050505; background: var(--primary-hover); transform: translateY(-1px); }
 .cta:disabled { opacity: 0.6; cursor: default; }
 
 .hero {
