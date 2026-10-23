@@ -372,3 +372,26 @@ ficha del curso (`certificateIssued`) falla y `issueCompletion` devuelve
 hasta que exista.
 
 Depende de `public.is_admin()` (de `supabase/rbac_setup.sql`, ya aplicado).
+
+## Secuencias de email (`email_sends`) — octubre 2026 · ⏳ PENDIENTE de aplicar
+
+**Fichero:** `supabase/2026_10_email_sends.sql` (plan de marketing, T3.3)
+
+Tabla nueva con una fila por (email, secuencia, paso) enviado. La escribe solo
+el cron `/api/cron/lifecycle-emails` con service role: inserta la fila **antes**
+de enviar —el `unique (email, sequence, step)` impide que dos ejecuciones
+solapadas manden dos veces el mismo correo— y la borra si el envío falla, para
+reintentarlo al día siguiente.
+
+🔒 RLS activada y **ninguna** policy: ni la anon key ni un alumno leen o
+escriben. Igual que `course_completions`, añadir una policy aquí abriría la
+tabla a quien no debe tocarla.
+
+**Orden respecto al deploy:** da igual para la web —el formulario de la
+landing no usa esta tabla—, pero el cron no envía nada sin ella: si falta,
+responde 500 y avisa, en vez de mandar correos sin poder evitar duplicados.
+Además el cron no envía nada mientras `LIFECYCLE_EMAILS_ENABLED` no valga `1`
+(los textos los revisan Luis y Sara antes de activarlo).
+
+Aditivo y re-aplicable (`if not exists`). Tras aplicarlo, ejecutar la sección
+VALIDACIÓN del propio fichero.

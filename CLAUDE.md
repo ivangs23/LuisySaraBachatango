@@ -196,13 +196,14 @@ MUX_TOKEN_SECRET               # Mux Access Token secret
 MUX_SIGNING_KEY_ID             # Mux Signing Key ID (Settings → Signing Keys), used for playback JWTs
 MUX_SIGNING_KEY_PRIVATE        # Base64-encoded PEM of the Mux signing private key
 TEST_MODE_SECRET               # Optional. HMAC key for the admin per-browser test-mode cookie (/admin/pruebas). Fail-closed: if unset, the test-mode toggle is inert and checkout always uses real Stripe.
-CRON_SECRET                    # Bearer token for the scheduled purge route (/api/cron/purge-pending, Vercel cron). Fail-closed: if unset, the route returns 401 and stale pending_registrations are never purged.
+CRON_SECRET                    # Bearer token for the scheduled routes (/api/cron/purge-pending and /api/cron/lifecycle-emails, Vercel cron). Fail-closed: if unset, both return 401: stale pending_registrations are never purged and no nurture email is sent.
+LIFECYCLE_EMAILS_ENABLED       # Set to "1" to let /api/cron/lifecycle-emails send the nurture sequence (utils/email/sequences/nutricion.ts). Fail-closed: any other value and the cron sends nothing. Turn on only after Luis y Sara have reviewed the email copy. The first email (the two free classes) is sent by the landing form regardless.
 RESEND_API_KEY                 # Resend API key; sender/domain for transactional emails (guest access, purchase confirmation). If unset, those emails silently no-op.
 NEXT_PUBLIC_GA_MEASUREMENT_ID  # Optional. GA4 measurement ID (G-XXXXXXXXXX). Fail-closed: if unset, GA4 never loads even with analytics consent granted.
 NEXT_PUBLIC_META_PIXEL_ID      # Optional. Numeric Meta Pixel ID. Fail-closed: if unset, the Pixel never loads even with marketing consent granted. The Conversions API posts to this same ID — they must match or Meta cannot deduplicate.
 META_CAPI_TOKEN                # Optional. Meta Conversions API access token (Events Manager → Settings → Generate access token). Fail-closed: if unset, no server-side Purchase is sent; the browser Pixel is unaffected.
 META_TEST_EVENT_CODE           # Optional, testing only. Routes server events to Events Manager → Test events. Leave empty in production.
-NEWSLETTER_UNSUBSCRIBE_SECRET  # HMAC key for newsletter unsubscribe links. Fail-closed: if unset, the welcome email is not sent (it could not carry a compliant unsubscribe link) and /unsubscribe rejects every token. Rotating it invalidates all outstanding links.
+NEWSLETTER_UNSUBSCRIBE_SECRET  # HMAC key for newsletter unsubscribe links and for the /clase-gratis/mas links (signed over a different message, so the two tokens never coincide). Fail-closed: if unset, no commercial email is sent (welcome, free classes, nurture: none could carry a compliant unsubscribe link) and /unsubscribe and /clase-gratis/mas reject every token. Rotating it invalidates all outstanding links.
 LANDING_ANALYTICS_SECRET       # HMAC key for the daily visitor-hash salt used by /api/landing-event. Fail-closed: if unset, no landing events are recorded and the route still returns 204. Rotating it breaks unique-visitor continuity for that day.
 ```
 

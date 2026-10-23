@@ -1,6 +1,7 @@
 {
   "regions": ["cdg1"],
   "crons": [
-    { "path": "/api/cron/purge-pending", "schedule": "0 4 * * *" }
+    { "path": "/api/cron/purge-pending", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/lifecycle-emails", "schedule": "0 8 * * *" }
   ]
 }
