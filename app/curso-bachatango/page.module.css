@@ -14,7 +14,9 @@
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
 }
-.cta:hover { background: var(--primary-hover); transform: translateY(-1px); }
+/* `color` repetido a propósito: el botón es un <a> y `a:hover` de globals.css
+   (más específico) lo volvía dorado sobre dorado. */
+.cta:hover { color: #050505; background: var(--primary-hover); transform: translateY(-1px); }
 .cta:disabled { opacity: 0.6; cursor: default; }
 
 .hero {
@@ -74,9 +76,6 @@
 .h2 { font: var(--h2); color: var(--text-main); text-align: center; margin-bottom: var(--spacing-lg); }
 .h3 { font: var(--h3); color: var(--primary); margin-bottom: var(--spacing-sm); }
 .lead { font: var(--body); font-size: 1.15rem; color: var(--text-muted); text-align: center; max-width: 680px; margin: 0 auto; }
-.painList { list-style: none; padding: 0; max-width: 560px; margin: 0 auto var(--spacing-lg); color: var(--text-main); }
-.painList li { padding: var(--spacing-sm) 0; border-bottom: 1px solid var(--border-subtle); }
-.promise { font: var(--h3); color: var(--primary); text-align: center; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--spacing-lg); }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--spacing-lg); }
 .cardBody { color: var(--text-muted); font: var(--body); }

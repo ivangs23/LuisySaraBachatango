@@ -50,7 +50,7 @@ El agente no las toma: las pregunta. Entre paréntesis, el valor por defecto si 
 | D4 | Lecciones: cuál es la clase abierta de la landing y cuáles dos se envían por email | T2.3, T3.2 | Abierta: «INTRODUCCIÓN» o «PRIMER BÁSICO DIAGONAL CON MÚSICA». Por email: «POSTURAS» y «BÁSICO PASEO DIAGONAL» |
 | D5 | Bonus de corrección: texto y fecha de fin real (p. ej. «compras hasta el 30-nov») | T4.2 | Sin fecha no se publica el bonus |
 | D6 | Comunidad: ¿se activa (grupo de WhatsApp o Telegram) o se quita de la oferta? | T1.3 | Quitarla de la oferta |
-| D7 | Nombre exacto del programa de televisión y cadena para el titular | T2.1 | El texto de `about.bio3` del diccionario `es`, confirmado por Luis y Sara |
+| D7 | Nombre exacto del programa de televisión y cadena para el titular | T2.1 | Resuelta: 1.ª edición, Telecinco 2024; Luis ganó (con María Isabel) y Sara fue segunda (con Adrián Lastra). «Ganadores» en plural no es exacto |
 
 ## Material que tienen que aportar Luis y Sara
 
@@ -133,9 +133,9 @@ La landing de los anuncios pinta tres testimonios escritos en `copy.ts` (Madrid,
 
 **Files:**
 - Modify: `app/curso-bachatango/copy.ts`, 6 idiomas:
-  - `hero.h1` (español, opción A del informe, con el nombre confirmado en D7): «Aprende bachatango con los ganadores de Bailando con las Estrellas».
+  - `hero.h1` (español, opción A del informe, con el nombre confirmado en D7): «Aprende bachatango con los finalistas de Bailando con las Estrellas».
   - `hero.sub`: «{modules} módulos, {lessons} lecciones en vídeo, {duration}. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.» — interpolado con los mismos datos que `learn.summary`.
-  - Nueva sección `authority: { title, body }` con este texto en español (traducir el resto): «Luis y Sara bailan juntos desde 2002, cuando tenían 9 años. Ganaron la primera edición de Bailando con las Estrellas y son campeones internacionales de bailes de salón. Han bailado junto a Il Divo, Gente de Zona y Diego Torres, y en galas como los Premios Platino. Sara es licenciada en Pedagogía de la Danza y Luis es Juez Nacional de Baile Deportivo. Desde 2020 dirigen su propia escuela.» Sustituye a `bio`.
+  - Nueva sección `authority: { title, body }` con este texto en español (traducir el resto): «Luis y Sara bailan juntos desde 2002, cuando tenían 9 años. Luis ganó la primera edición de Bailando con las Estrellas (Telecinco, 2024) y Sara llegó a la final. Son campeones internacionales de bailes de salón. Han bailado junto a Il Divo, Gente de Zona y Diego Torres, y en galas como los Premios Platino. Sara es licenciada en Pedagogía de la Danza y Luis es Juez Nacional de Baile Deportivo. Desde 2020 dirigen su propia escuela.» Sustituye a `bio`.
   - `finalCta.title`: «Empieza hoy con la lección 1».
 - Modify: `app/curso-bachatango/_components/LandingHero.tsx` (sub interpolado), `LandingSections.tsx` (bloque `authority` en lugar de `bio`).
 - Modify: `metadata` de `app/curso-bachatango/page.tsx`: description y OG alineados con el nuevo titular.

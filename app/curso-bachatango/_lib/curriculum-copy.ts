@@ -1,6 +1,8 @@
 import { formatDuration, type Curriculum } from '@/utils/courses/curriculum';
+import type { LandingCopy } from '../copy';
 
 const MARCADOR = /\{(?:modules|lessons|duration)\}/;
+const NBSP = String.fromCharCode(0xa0);
 
 /**
  * Rellena `{modules}`, `{lessons}` y `{duration}` de un texto de copy.ts con
@@ -16,11 +18,22 @@ export function fillCurriculum(template: string, curriculum: Curriculum | null):
   if (!MARCADOR.test(template)) return template;
   if (!curriculum) return null;
 
-  const duration = formatDuration(curriculum.totalSeconds);
+  // Espacios de no separación: «2 h 12 min» es un solo bloque. En el hero a
+  // 390 px la línea se partía entre «2» y «h 12 min».
+  const duration = formatDuration(curriculum.totalSeconds).replace(/ /g, NBSP);
   if (template.includes('{duration}') && !duration) return null;
 
   return template
     .replace(/\{modules\}/g, String(curriculum.moduleCount))
     .replace(/\{lessons\}/g, String(curriculum.lessonCount))
     .replace(/\{duration\}/g, duration);
+}
+
+/**
+ * Subtítulo del hero con las cifras del temario, o el de reserva si no lo
+ * hay. Se resuelve en servidor y el hero lo recibe ya montado: es un
+ * componente de cliente y `formatDuration` vive en un módulo server-only.
+ */
+export function heroSub(copy: LandingCopy, curriculum: Curriculum | null): string {
+  return fillCurriculum(copy.hero.sub, curriculum) ?? copy.hero.subFallback;
 }

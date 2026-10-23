@@ -2,7 +2,8 @@ import Link from 'next/link'
 import RangePicker from '@/components/admin/charts/RangePicker'
 import LandingFunnelChart from '@/components/admin/charts/LandingFunnelChart'
 import LandingTrafficChart from '@/components/admin/charts/LandingTrafficChart'
-import { getLandingFunnel, getLandingTraffic } from '@/utils/admin/landing-queries'
+import FreeClassPlaysCard from '@/components/admin/FreeClassPlaysCard'
+import { getLandingFunnel, getLandingTraffic, getFreeClassPlays } from '@/utils/admin/landing-queries'
 import type { Range } from '@/utils/admin/queries'
 import styles from './landing.module.css'
 
@@ -24,9 +25,12 @@ export default async function LandingStatsPage({
   const range = parseRange(sp.range)
   const rangeKey = sp.range && ['30', '90', '365', 'all'].includes(sp.range) ? sp.range : '90'
 
-  const [funnel, traffic] = await Promise.all([
+  // Las tres comparten una sola lectura de `landing_events` (cache() en
+  // utils/admin/landing-queries.ts).
+  const [funnel, traffic, plays] = await Promise.all([
     getLandingFunnel(range),
     getLandingTraffic(range),
+    getFreeClassPlays(range),
   ])
 
   return (
@@ -43,6 +47,10 @@ export default async function LandingStatsPage({
         Medición propia, sin cookies y sin datos personales. Empieza el día que
         se desplegó: no hay histórico anterior.
       </p>
+
+      <div className={styles.kpis}>
+        <FreeClassPlaysCard data={plays} />
+      </div>
 
       <div className={styles.grid}>
         <LandingFunnelChart data={funnel} />

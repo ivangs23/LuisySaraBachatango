@@ -11,13 +11,15 @@ import styles from '../page.module.css';
 
 interface HeroProps {
   copy: LandingCopy;
+  /** Subtítulo ya resuelto en servidor con las cifras del temario (`heroSub`). */
+  sub: string;
   courseId: string;
   isAuthed: boolean;
   offer: CourseOffer;
   imageUrl: string | null;
 }
 
-export default function LandingHero({ courseId, isAuthed, offer, imageUrl, copy }: HeroProps) {
+export default function LandingHero({ courseId, isAuthed, offer, imageUrl, copy, sub }: HeroProps) {
   const c = copy.hero;
   // Dos filtros, no uno: `sanitizeUrl` valida la forma (https, sin
   // `javascript:`) y `isOptimizableImageUrl` la pertenencia al bucket que
@@ -53,7 +55,7 @@ export default function LandingHero({ courseId, isAuthed, offer, imageUrl, copy 
       )}
       <div className={styles.heroInner}>
         <h1 className={styles.heroTitle}>{c.h1}</h1>
-        <p className={styles.heroSub}>{c.sub}</p>
+        <p className={styles.heroSub}>{sub}</p>
         {offer.price !== null && (
           <OfferPrice
             className={styles.heroOffer}

@@ -200,7 +200,7 @@ export const en: Dictionary = {
     bioTitle: "More than Dance, a Connection",
     bio1: "Luis and Sara met when they were just 9 years old, on their first day of dance class back in 2002. They haven't stopped dancing together since.",
     bio2: "Each has followed their own path within the artistic world: Sara holds a degree in Dance Pedagogy and Luis is a National DanceSport Judge. Together they have performed on stages across half the world, sharing the floor with artists such as Il Divo, Gente de Zona, and Diego Torres, and have been part of dance troupes on television and at galas as prestigious as the Platino Awards for Ibero-American Cinema.",
-    bio3: "They are also international ballroom dance champions and were crowned winners of the first season of Bailando con las Estrellas on Telecinco.",
+    bio3: "They are also international ballroom dance champions. In 2024, Luis won the first season of Bailando con las Estrellas on Telecinco and Sara reached the final.",
     bio4: "In 2020 they took a further step and opened their own dance school, a project that today brings together more than 300 students and has become their true home.",
     stats: {
       s1: "Years of Experience",

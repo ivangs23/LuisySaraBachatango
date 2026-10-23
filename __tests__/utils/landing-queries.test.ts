@@ -8,7 +8,7 @@ const selectMock = vi.fn(() => ({ gte: gteMock }))
 const fromMock = vi.fn(() => ({ select: selectMock }))
 vi.mock('@/utils/supabase/admin', () => ({ createSupabaseAdmin: () => ({ from: fromMock }) }))
 
-import { getLandingFunnel, getLandingTraffic } from '@/utils/admin/landing-queries'
+import { getLandingFunnel, getLandingTraffic, getFreeClassPlays } from '@/utils/admin/landing-queries'
 
 /** 3 visitantes en la home, 2 llegan a venta, 1 compra. */
 const ROWS = [
@@ -82,5 +82,41 @@ describe('getLandingTraffic', () => {
   it('devuelve vacío si la query falla', async () => {
     gteMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
     expect(await getLandingTraffic(90)).toEqual([])
+  })
+})
+
+// T2.3. Cada carga de la landing manda como mucho un evento de play.
+const PLAY = '/curso-bachatango/clase-play'
+const CON_PLAYS = [
+  ...ROWS,
+  { path: PLAY, visitor_hash: 'a', created_at: '2026-08-10T10:06:00Z' },
+  { path: PLAY, visitor_hash: 'a', created_at: '2026-08-10T10:30:00Z' }, // recargó y volvió a dar al play
+]
+
+describe('getLandingTraffic · eventos que no son páginas', () => {
+  it('no cuenta los plays de la clase gratis como vistas', async () => {
+    gteMock.mockResolvedValue({ data: CON_PLAYS, error: null })
+    expect(await getLandingTraffic(90)).toEqual([
+      { date: '2026-08-10', views: 7, uniques: 2 },
+      { date: '2026-08-11', views: 1, uniques: 1 },
+    ])
+  })
+})
+
+describe('getFreeClassPlays', () => {
+  it('cuenta únicos que dieron al play frente a únicos que vieron la landing', async () => {
+    gteMock.mockResolvedValue({ data: CON_PLAYS, error: null })
+    // 'a' y 'b' vieron /curso-bachatango; solo 'a' reprodujo (dos veces).
+    expect(await getFreeClassPlays(90)).toEqual({ plays: 2, viewers: 1, landingVisitors: 2, rate: 50 })
+  })
+
+  it('sin visitas a la landing no hay porcentaje', async () => {
+    gteMock.mockResolvedValue({ data: [], error: null })
+    expect(await getFreeClassPlays(90)).toEqual({ plays: 0, viewers: 0, landingVisitors: 0, rate: null })
+  })
+
+  it('a cero si la query falla', async () => {
+    gteMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    expect(await getFreeClassPlays(90)).toEqual({ plays: 0, viewers: 0, landingVisitors: 0, rate: null })
   })
 })

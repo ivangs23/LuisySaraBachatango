@@ -9,6 +9,7 @@ import { getCurrentUser } from '@/utils/supabase/get-user';
 import { getCurrentLocale } from '@/utils/i18n/get-locale';
 import { getTestimonials } from '@/utils/landing/content';
 import { getLandingCopy } from './copy';
+import { heroSub } from './_lib/curriculum-copy';
 import { safeJsonLd } from '@/utils/jsonld';
 import LandingHero from './_components/LandingHero';
 import LandingSections from './_components/LandingSections';
@@ -17,12 +18,21 @@ import styles from './page.module.css';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com';
 
+// Alineada con el titular de la landing (copy.ts → hero.h1). El <title> se
+// queda con «Curso de Bachatango online», que es lo que se busca; la
+// descripción y la tarjeta social llevan la autoridad. Sin cifras del temario:
+// el metadata es estático y no debe envejecer cuando cambie el curso.
+const SOCIAL_TITLE = 'Aprende bachatango con los finalistas de Bailando con las Estrellas';
+const SOCIAL_DESCRIPTION =
+  'El curso online de Luis y Sara, en vídeo. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.';
+
 export const metadata: Metadata = {
   title: 'Curso de Bachatango online | Luis y Sara',
-  description: 'Aprende bachatango desde cero con el método completo de Luis y Sara: técnica, conexión y musicalidad. Pago único, acceso de por vida.',
+  description:
+    'Aprende bachatango con Luis y Sara, finalistas de Bailando con las Estrellas. Curso online en vídeo, con el rol de leader y el de follower: puedes empezar sin pareja. Pago único, acceso de por vida.',
   openGraph: {
-    title: 'Curso de Bachatango online | Luis y Sara',
-    description: 'El método completo de Luis y Sara para dominar el bachatango a tu ritmo, desde casa.',
+    title: SOCIAL_TITLE,
+    description: SOCIAL_DESCRIPTION,
     url: `${BASE_URL}/curso-bachatango`,
     type: 'website',
     // Sin `images`: las inyecta ./opengraph-image.tsx.
@@ -31,8 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Curso de Bachatango online | Luis y Sara',
-    description: 'El método completo de Luis y Sara para dominar el bachatango a tu ritmo, desde casa.',
+    title: SOCIAL_TITLE,
+    description: SOCIAL_DESCRIPTION,
   },
   alternates: { canonical: `${BASE_URL}/curso-bachatango` },
 };
@@ -102,7 +112,7 @@ export default async function CursoBachatangoLanding() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
-      <LandingHero courseId={course.id} isAuthed={isAuthed} offer={offer} imageUrl={course.image_url} copy={copy} />
+      <LandingHero courseId={course.id} isAuthed={isAuthed} offer={offer} imageUrl={course.image_url} copy={copy} sub={heroSub(copy, curriculum)} />
       <LandingSections courseId={course.id} offer={offer} curriculum={curriculum} freeClass={freeClass} testimonials={testimonials} copy={copy} />
       <StickyBuyBar courseId={course.id} offer={offer} copy={copy} />
     </div>

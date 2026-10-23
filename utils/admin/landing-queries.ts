@@ -1,8 +1,9 @@
 import 'server-only'
+import { cache } from 'react'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { rangeStartIso, type Range } from '@/utils/admin/queries'
-import { FUNNEL_STEPS } from '@/utils/analytics/tracked-paths'
+import { FUNNEL_STEPS, EVENT_PATHS, FREE_CLASS_PLAY_PATH } from '@/utils/analytics/tracked-paths'
 
 export type FunnelStep = {
   path: string
@@ -15,14 +16,28 @@ export type FunnelStep = {
 
 export type TrafficDay = { date: string; views: number; uniques: number }
 
+export type FreeClassPlays = {
+  /** Eventos de play (uno por carga de la landing como mucho). */
+  plays: number
+  /** Únicos/día que dieron al play. */
+  viewers: number
+  /** Únicos/día que vieron la landing. */
+  landingVisitors: number
+  /** % de `landingVisitors` que reprodujo la clase. null sin visitas. */
+  rate: number | null
+}
+
 type Row = { path: string; visitor_hash: string; created_at: string }
 
 /**
  * Lee los eventos del rango. Agrega en JS, igual que el resto de
  * `utils/admin/queries.ts`: PostgREST no hace `count(distinct)` y a este volumen
  * no compensa una vista materializada. Ver «Cuándo habrá que volver» en el spec.
+ *
+ * Con `cache()` el panel, que pide embudo, tráfico y reproducciones a la vez,
+ * hace una sola lectura por petición en lugar de tres.
  */
-async function fetchRows(range: Range): Promise<Row[]> {
+const fetchRows = cache(async function fetchRows(range: Range): Promise<Row[]> {
   await requireAdmin()
   const sb = createSupabaseAdmin()
   const since = rangeStartIso(range)
@@ -34,6 +49,10 @@ async function fetchRows(range: Range): Promise<Row[]> {
 
   if (error || !data) return []
   return data as Row[]
+})
+
+function uniquesOf(rows: Row[], path: string): number {
+  return new Set(rows.filter((r) => r.path === path).map((r) => r.visitor_hash)).size
 }
 
 /**
@@ -70,6 +89,8 @@ export async function getLandingTraffic(range: Range): Promise<TrafficDay[]> {
 
   const byDay = new Map<string, { views: number; uniques: Set<string> }>()
   for (const r of rows) {
+    // Un play de la clase gratis no es una vista de página.
+    if ((EVENT_PATHS as readonly string[]).includes(r.path)) continue
     const day = r.created_at.slice(0, 10)
     const entry = byDay.get(day) ?? { views: 0, uniques: new Set<string>() }
     entry.views += 1
@@ -80,4 +101,17 @@ export async function getLandingTraffic(range: Range): Promise<TrafficDay[]> {
   return [...byDay.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, v]) => ({ date, views: v.views, uniques: v.uniques.size }))
+}
+
+/**
+ * Reproducciones de la clase gratis de la landing frente a las visitas a la
+ * landing. Mismas salvedades que el embudo: únicos por día, sin enlazar días.
+ */
+export async function getFreeClassPlays(range: Range): Promise<FreeClassPlays> {
+  const rows = await fetchRows(range)
+  const plays = rows.filter((r) => r.path === FREE_CLASS_PLAY_PATH).length
+  const viewers = uniquesOf(rows, FREE_CLASS_PLAY_PATH)
+  const landingVisitors = uniquesOf(rows, '/curso-bachatango')
+  const rate = landingVisitors === 0 ? null : (viewers / landingVisitors) * 100
+  return { plays, viewers, landingVisitors, rate }
 }

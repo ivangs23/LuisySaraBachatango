@@ -20,29 +20,42 @@ const COPY = getLandingCopy('es')
 
 const OFFER = buildOffer({ price_eur: 199 })
 
+// El subtítulo llega ya resuelto con las cifras del temario: el hero es un
+// componente de cliente y el temario sale de un módulo server-only. La
+// interpolación se prueba en __tests__/app/curriculum-copy.test.ts (heroSub).
+const SUB = '14 módulos, 28 lecciones en vídeo, 2 h 12 min. Aprendes el rol de leader y el de follower, así que puedes empezar sin pareja.'
+
 describe('LandingHero', () => {
   it('muestra titular, precio y CTA', () => {
-    render(<LandingHero copy={COPY} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Baila bachatango')
+    render(<LandingHero copy={COPY} sub={SUB} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />)
+    // D7: los dos llegaron a la final; ganó Luis. «Los ganadores» no es exacto.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Aprende bachatango con los finalistas de Bailando con las Estrellas',
+    )
     // El precio sale dos veces: en el bloque de oferta y dentro del CTA.
     expect(screen.getAllByText(/€199/).length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: /Empieza ahora/ })).toBeInTheDocument()
   })
 
+  it('pinta el subtítulo con las cifras que le llegan del servidor', () => {
+    render(<LandingHero copy={COPY} sub={SUB} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />)
+    expect(screen.getByText(SUB)).toBeInTheDocument()
+  })
+
   it('muestra link de login cuando no está autenticado', () => {
-    render(<LandingHero copy={COPY} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />)
+    render(<LandingHero copy={COPY} sub={SUB} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />)
     expect(screen.getByRole('link', { name: /Inicia sesión/i })).toHaveAttribute('href', '/login')
   })
 
   it('no muestra link de login cuando está autenticado', () => {
-    render(<LandingHero copy={COPY} courseId="c1" isAuthed={true} offer={OFFER} imageUrl={null} />)
+    render(<LandingHero copy={COPY} sub={SUB} courseId="c1" isAuthed={true} offer={OFFER} imageUrl={null} />)
     expect(screen.queryByRole('link', { name: /Inicia sesión/i })).toBeNull()
   })
 
   it('tacha el precio anterior y anuncia las plazas de la oferta', () => {
     const offer = buildOffer({ price_eur: 119, compare_at_price_eur: 150, spots_left: 5 })
     const { container } = render(
-      <LandingHero copy={COPY} courseId="c1" isAuthed={false} offer={offer} imageUrl={null} />,
+      <LandingHero copy={COPY} sub={SUB} courseId="c1" isAuthed={false} offer={offer} imageUrl={null} />,
     )
     expect(container.querySelector('s')).toHaveTextContent('€150')
     expect(screen.getByText('Quedan 5 plazas disponibles')).toBeInTheDocument()
@@ -55,7 +68,7 @@ describe('LandingHero', () => {
 
   it('pinta la portada como <img> con prioridad, no como background-image', () => {
     const { container } = render(
-      <LandingHero copy={COPY} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={PORTADA} />,
+      <LandingHero copy={COPY} sub={SUB} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={PORTADA} />,
     )
     // El elemento LCP tiene que ser descubrible en el HTML: con una
     // background-image el navegador esperaba 3,55 s a parsear el CSS.
@@ -72,6 +85,7 @@ describe('LandingHero', () => {
     const { container } = render(
       <LandingHero
         copy={COPY}
+        sub={SUB}
         courseId="c1"
         isAuthed={false}
         offer={OFFER}
@@ -84,7 +98,7 @@ describe('LandingHero', () => {
 
   it('se renderiza sin portada cuando imageUrl es null', () => {
     const { container } = render(
-      <LandingHero copy={COPY} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />,
+      <LandingHero copy={COPY} sub={SUB} courseId="c1" isAuthed={false} offer={OFFER} imageUrl={null} />,
     )
     expect(container.querySelector('img')).toBeNull()
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()

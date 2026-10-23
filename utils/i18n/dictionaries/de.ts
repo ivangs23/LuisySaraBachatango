@@ -134,7 +134,7 @@ export const de: Dictionary = {
     heroTitle: "Leidenschaft und Eleganz", heroSubtitle: "Die Geschichte von Luis und Sara", bioTitle: "Mehr als Tanz",
     bio1: "Luis und Sara lernten sich mit gerade einmal 9 Jahren kennen, an ihrem ersten Tag im Tanzunterricht im Jahr 2002. Seitdem haben sie nie aufgehört, zusammen zu tanzen.",
     bio2: "Jeder ist seinen eigenen Weg in der Kunstwelt gegangen: Sara hat einen Abschluss in Tanzpädagogik und Luis ist nationaler Wertungsrichter im Tanzsport. Gemeinsam standen sie auf Bühnen in aller Welt und teilten das Parkett mit Künstlern wie Il Divo, Gente de Zona und Diego Torres. Sie waren Teil von Tanzensembles im Fernsehen und bei bedeutenden Galas wie den Platino Awards des iberoamerikanischen Films.",
-    bio3: "Außerdem sind sie internationale Standardtanz-Meister und gewannen die erste Staffel von Bailando con las Estrellas auf Telecinco.",
+    bio3: "Außerdem sind sie internationale Standardtanz-Meister. 2024 gewann Luis die erste Staffel von Bailando con las Estrellas auf Telecinco, und Sara erreichte das Finale.",
     bio4: "2020 gingen sie einen Schritt weiter und eröffneten ihre eigene Tanzschule – ein Projekt, das heute mehr als 300 Schüler vereint und zu ihrem großen Zuhause geworden ist.",
     stats: { s1: "Jahre Erfahrung", s2: "Online-Schüler", s3: "Besuchte Länder", s4: "Internationale Titel" },
     quote: "Bachatango: wenn Technik auf Leidenschaft trifft und zwei zu eins werden. Tanze. Fühle. Lebe.", cta: "Fang heute an zu tanzen"

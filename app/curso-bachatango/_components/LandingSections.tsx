@@ -48,35 +48,17 @@ export default function LandingSections({ courseId, offer, curriculum, freeClass
     fillCurriculum(c.offer.lessonsIncluded, curriculum) ?? c.offer.lessonsIncludedFallback,
     ...c.offer.includes,
   ];
+  // Orden para quien no conoce a Luis y Sara y llega de un anuncio: primero
+  // por qué fiarse (autoridad, alumnos), luego probarlo gratis, y solo después
+  // qué hay dentro y cuánto cuesta. El bloque de dolor («¿Te suena esto?») se
+  // quitó: eran tres preguntas genéricas que retrasaban la autoridad.
   return (
     <>
-      {/* Dolor → promesa */}
+      {/* Autoridad: hechos concretos, no adjetivos */}
       <section className={styles.section}>
         <Reveal>
-          <h2 className={styles.h2}>{c.pain.title}</h2>
-          <ul className={styles.painList}>
-            {c.pain.items.map((p, i) => <li key={i}>{p}</li>)}
-          </ul>
-          <p className={styles.promise}>{c.pain.promise}</p>
-        </Reveal>
-      </section>
-
-      {/* Temario real, desde la BD */}
-      {curriculum && <CourseCurriculum curriculum={curriculum} copy={copy} />}
-
-      {/* Método */}
-      <section className={styles.section}>
-        <Reveal>
-          <h2 className={styles.h2}>{c.method.title}</h2>
-          <p className={styles.lead}>{c.method.body}</p>
-        </Reveal>
-      </section>
-
-      {/* Bio */}
-      <section className={styles.section}>
-        <Reveal>
-          <h2 className={styles.h2}>{c.bio.title}</h2>
-          <p className={styles.lead}>{c.bio.body}</p>
+          <h2 className={styles.h2}>{c.authority.title}</h2>
+          <p className={styles.lead}>{c.authority.body}</p>
         </Reveal>
       </section>
 
@@ -116,6 +98,17 @@ export default function LandingSections({ courseId, offer, curriculum, freeClass
           <ul className={styles.trustRow}>
             {c.freeClass.trust.map((t, i) => <li key={i}>{t}</li>)}
           </ul>
+        </Reveal>
+      </section>
+
+      {/* Temario real, desde la BD */}
+      {curriculum && <CourseCurriculum curriculum={curriculum} copy={copy} />}
+
+      {/* Método */}
+      <section className={styles.section}>
+        <Reveal>
+          <h2 className={styles.h2}>{c.method.title}</h2>
+          <p className={styles.lead}>{c.method.body}</p>
         </Reveal>
       </section>
 
