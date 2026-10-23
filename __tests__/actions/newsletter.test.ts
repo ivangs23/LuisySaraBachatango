@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// El alta vive ahora en utils/newsletter/subscribe.ts, marcado server-only.
+vi.mock('server-only', () => ({}))
+
 const upsertSelectMock = vi.fn()
 // Firma tipada para poder inspeccionar `mock.calls[0]` sin castear. Los
 // argumentos no se usan en el cuerpo: solo se registran para las aserciones.

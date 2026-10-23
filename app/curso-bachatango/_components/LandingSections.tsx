@@ -6,6 +6,7 @@ import CourseCtaButton from './CourseCtaButton';
 import LandingFaq from './LandingFaq';
 import CourseCurriculum from './CourseCurriculum';
 import LandingFreeClass from './LandingFreeClass';
+import FreeClassesForm from '@/components/FreeClassesForm';
 import type { Curriculum } from '@/utils/courses/curriculum';
 import type { Testimonial } from '@/utils/landing/content';
 import { fillCurriculum } from '../_lib/curriculum-copy';
@@ -95,6 +96,9 @@ export default function LandingSections({ courseId, offer, curriculum, freeClass
           ) : (
             <a href="/clase-gratis" className={styles.ctaOutline}>{c.freeClass.cta}</a>
           )}
+          {/* Justo debajo del vídeo: quien no compra en la primera visita deja
+              aquí su email a cambio de dos clases más. */}
+          <FreeClassesForm copy={c.freeEmail} />
           <ul className={styles.trustRow}>
             {c.freeClass.trust.map((t, i) => <li key={i}>{t}</li>)}
           </ul>

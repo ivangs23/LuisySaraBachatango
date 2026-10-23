@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  normalisePath, TRACKED_PATHS, FUNNEL_STEPS, EVENT_PATHS, FREE_CLASS_PLAY_PATH,
+  normalisePath, TRACKED_PATHS, FUNNEL_STEPS, EVENT_PATHS, FREE_CLASS_PLAY_PATH, FREE_CLASS_LEAD_PATH,
 } from '@/utils/analytics/tracked-paths'
 
 describe('normalisePath', () => {
@@ -54,6 +54,14 @@ describe('normalisePath', () => {
     expect(normalisePath(FREE_CLASS_PLAY_PATH)).toBe(FREE_CLASS_PLAY_PATH)
     expect(EVENT_PATHS).toContain(FREE_CLASS_PLAY_PATH)
     expect(FUNNEL_STEPS.map(s => s.path)).not.toContain(FREE_CLASS_PLAY_PATH)
+  })
+
+  // T3.1: el email capturado en el formulario de las clases gratis.
+  it('el lead del formulario de clases es un evento medido, fuera del embudo', () => {
+    expect(FREE_CLASS_LEAD_PATH).toBe('/curso-bachatango/lead')
+    expect(normalisePath(FREE_CLASS_LEAD_PATH)).toBe(FREE_CLASS_LEAD_PATH)
+    expect(EVENT_PATHS).toContain(FREE_CLASS_LEAD_PATH)
+    expect(FUNNEL_STEPS.map(s => s.path)).not.toContain(FREE_CLASS_LEAD_PATH)
   })
 
   it('el paso de envío del formulario es una ruta medida y va en el embudo', () => {

@@ -49,6 +49,25 @@ export function splitName(fullName: string | null | undefined): { first: string 
   return { first: parts[0], last: parts.slice(1).join(' ') }
 }
 
+/** `user_data` común: PII hasheada; fbp, fbc, IP y UA en claro, como pide Meta. */
+function buildUserData(
+  attribution: MetaAttribution,
+  pii: { email: string | null; first?: string | null; last?: string | null },
+): Record<string, unknown> {
+  const userData: Record<string, unknown> = {}
+  const em = hashPii(pii.email)
+  const fn = hashPii(pii.first)
+  const ln = hashPii(pii.last)
+  if (em) userData.em = [em]
+  if (fn) userData.fn = [fn]
+  if (ln) userData.ln = [ln]
+  if (attribution.fbp) userData.fbp = attribution.fbp
+  if (attribution.fbc) userData.fbc = attribution.fbc
+  if (attribution.ip) userData.client_ip_address = attribution.ip
+  if (attribution.ua) userData.client_user_agent = attribution.ua
+  return userData
+}
+
 export interface PurchaseEventInput {
   /** Id de la sesión de Stripe. Es el `event_id` que deduplica con el píxel. */
   eventId: string
@@ -69,18 +88,6 @@ export interface PurchaseEventInput {
 export function buildPurchaseEvent(input: PurchaseEventInput): Record<string, unknown> {
   const { first, last } = splitName(input.fullName)
 
-  const userData: Record<string, unknown> = {}
-  const em = hashPii(input.email)
-  const fn = hashPii(first)
-  const ln = hashPii(last)
-  if (em) userData.em = [em]
-  if (fn) userData.fn = [fn]
-  if (ln) userData.ln = [ln]
-  if (input.attribution.fbp) userData.fbp = input.attribution.fbp
-  if (input.attribution.fbc) userData.fbc = input.attribution.fbc
-  if (input.attribution.ip) userData.client_ip_address = input.attribution.ip
-  if (input.attribution.ua) userData.client_user_agent = input.attribution.ua
-
   const payload: Record<string, unknown> = {
     data: [{
       event_name: 'Purchase',
@@ -88,7 +95,7 @@ export function buildPurchaseEvent(input: PurchaseEventInput): Record<string, un
       event_id: input.eventId,
       action_source: 'website',
       event_source_url: input.eventSourceUrl,
-      user_data: userData,
+      user_data: buildUserData(input.attribution, { email: input.email, first, last }),
       custom_data: {
         value: input.value,
         currency: input.currency,
@@ -100,27 +107,54 @@ export function buildPurchaseEvent(input: PurchaseEventInput): Record<string, un
   return payload
 }
 
+export interface LeadEventInput {
+  /** Generado en la Server Action y devuelto al navegador: el píxel manda el mismo. */
+  eventId: string
+  /** Segundos Unix. */
+  eventTime: number
+  eventSourceUrl: string
+  email: string
+  attribution: MetaAttribution
+  testEventCode?: string | null
+}
+
+/** Email capturado en el formulario de las clases gratis (T3.1). */
+export function buildLeadEvent(input: LeadEventInput): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    data: [{
+      event_name: 'Lead',
+      event_time: Math.trunc(input.eventTime),
+      event_id: input.eventId,
+      action_source: 'website',
+      event_source_url: input.eventSourceUrl,
+      user_data: buildUserData(input.attribution, { email: input.email }),
+      custom_data: { content_name: 'Clases gratis por email' },
+    }],
+  }
+  if (input.testEventCode) payload.test_event_code = input.testEventCode
+  return payload
+}
+
 export type CapiOutcome =
   | { sent: true }
   | { sent: false; reason: 'no-consent' | 'not-configured' | 'demo' | 'http-error' | 'network-error' }
 
 /**
- * Manda la compra a Meta. No lanza nunca: devuelve por qué no se mandó.
- *
- * Idempotencia: quien llama solo debe invocarla en el alta genuina de la
- * compra (ver `genuineInsert` en provision-registration.ts). Si aun así
- * llegara repetida, Meta descarta el duplicado por `event_id`.
+ * Las dos reglas de la cabecera, en un solo sitio: sin consentimiento o en
+ * modo demo no sale nada, y nada de lo que pase aquí lanza.
  */
-export async function sendPurchaseToMeta(
-  input: PurchaseEventInput,
-  opts: { isDemo?: boolean } = {},
+async function postToMeta(
+  attribution: MetaAttribution,
+  isDemo: boolean | undefined,
+  build: (testEventCode: string | null) => Record<string, unknown>,
+  que: string,
 ): Promise<CapiOutcome> {
   // 1. Consentimiento primero: si no lo hay, ni se mira la configuración.
-  if (!input.attribution.marketingConsent) return { sent: false, reason: 'no-consent' }
+  if (!attribution.marketingConsent) return { sent: false, reason: 'no-consent' }
 
   // 2. Preview y local escriben en la misma BD que producción; que además
   //    inflaran el píxel real haría el dato inservible.
-  if (opts.isDemo) return { sent: false, reason: 'demo' }
+  if (isDemo) return { sent: false, reason: 'demo' }
 
   const token = process.env.META_CAPI_TOKEN
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID
@@ -128,10 +162,7 @@ export async function sendPurchaseToMeta(
   // ser el MISMO que el del navegador o Meta no deduplicaría.
   if (!token || !pixelId) return { sent: false, reason: 'not-configured' }
 
-  const payload = buildPurchaseEvent({
-    ...input,
-    testEventCode: input.testEventCode ?? process.env.META_TEST_EVENT_CODE ?? null,
-  })
+  const payload = build(process.env.META_TEST_EVENT_CODE ?? null)
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
@@ -154,11 +185,43 @@ export async function sendPurchaseToMeta(
     }
     return { sent: true }
   } catch (e) {
-    // Timeout, DNS, red. La venta ya está hecha y el acceso concedido; esto es
-    // solo medición.
-    console.error('[meta-capi] no se pudo enviar la compra: %s', e instanceof Error ? e.message : String(e))
+    // Timeout, DNS, red. Lo que el evento mide ya ha ocurrido; esto es solo
+    // medición.
+    console.error('[meta-capi] no se pudo enviar %s: %s', que, e instanceof Error ? e.message : String(e))
     return { sent: false, reason: 'network-error' }
   } finally {
     clearTimeout(timer)
   }
+}
+
+/**
+ * Manda la compra a Meta. No lanza nunca: devuelve por qué no se mandó.
+ *
+ * Idempotencia: quien llama solo debe invocarla en el alta genuina de la
+ * compra (ver `genuineInsert` en provision-registration.ts). Si aun así
+ * llegara repetida, Meta descarta el duplicado por `event_id`.
+ */
+export async function sendPurchaseToMeta(
+  input: PurchaseEventInput,
+  opts: { isDemo?: boolean } = {},
+): Promise<CapiOutcome> {
+  return postToMeta(input.attribution, opts.isDemo, (envCode) => buildPurchaseEvent({
+    ...input,
+    testEventCode: input.testEventCode ?? envCode,
+  }), 'la compra')
+}
+
+/**
+ * Manda el lead del formulario de las clases gratis. Mismas reglas que la
+ * compra; el navegador manda el mismo `event_id` con el píxel y Meta se queda
+ * con uno solo.
+ */
+export async function sendLeadToMeta(
+  input: LeadEventInput,
+  opts: { isDemo?: boolean } = {},
+): Promise<CapiOutcome> {
+  return postToMeta(input.attribution, opts.isDemo, (envCode) => buildLeadEvent({
+    ...input,
+    testEventCode: input.testEventCode ?? envCode,
+  }), 'el lead')
 }

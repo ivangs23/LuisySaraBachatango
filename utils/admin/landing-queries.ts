@@ -3,7 +3,9 @@ import { cache } from 'react'
 import { createSupabaseAdmin } from '@/utils/supabase/admin'
 import { requireAdmin } from '@/utils/auth/require-admin'
 import { rangeStartIso, type Range } from '@/utils/admin/queries'
-import { FUNNEL_STEPS, EVENT_PATHS, FREE_CLASS_PLAY_PATH } from '@/utils/analytics/tracked-paths'
+import {
+  FUNNEL_STEPS, EVENT_PATHS, FREE_CLASS_PLAY_PATH, FREE_CLASS_LEAD_PATH, type TrackedPath,
+} from '@/utils/analytics/tracked-paths'
 
 export type FunnelStep = {
   path: string
@@ -16,14 +18,15 @@ export type FunnelStep = {
 
 export type TrafficDay = { date: string; views: number; uniques: number }
 
-export type FreeClassPlays = {
-  /** Eventos de play (uno por carga de la landing como mucho). */
-  plays: number
-  /** Únicos/día que dieron al play. */
+/** Un evento de la landing (ver EVENT_PATHS) frente a las visitas a la landing. */
+export type LandingEventRate = {
+  /** Eventos registrados en el rango. */
+  events: number
+  /** Únicos/día que lo hicieron. */
   viewers: number
   /** Únicos/día que vieron la landing. */
   landingVisitors: number
-  /** % de `landingVisitors` que reprodujo la clase. null sin visitas. */
+  /** % de `landingVisitors` que lo hizo. null sin visitas. */
   rate: number | null
 }
 
@@ -104,14 +107,24 @@ export async function getLandingTraffic(range: Range): Promise<TrafficDay[]> {
 }
 
 /**
- * Reproducciones de la clase gratis de la landing frente a las visitas a la
- * landing. Mismas salvedades que el embudo: únicos por día, sin enlazar días.
+ * Un evento de la landing frente a las visitas a la landing. Mismas
+ * salvedades que el embudo: únicos por día, sin enlazar días.
  */
-export async function getFreeClassPlays(range: Range): Promise<FreeClassPlays> {
+async function getLandingEventRate(range: Range, path: TrackedPath): Promise<LandingEventRate> {
   const rows = await fetchRows(range)
-  const plays = rows.filter((r) => r.path === FREE_CLASS_PLAY_PATH).length
-  const viewers = uniquesOf(rows, FREE_CLASS_PLAY_PATH)
+  const events = rows.filter((r) => r.path === path).length
+  const viewers = uniquesOf(rows, path)
   const landingVisitors = uniquesOf(rows, '/curso-bachatango')
   const rate = landingVisitors === 0 ? null : (viewers / landingVisitors) * 100
-  return { plays, viewers, landingVisitors, rate }
+  return { events, viewers, landingVisitors, rate }
+}
+
+/** Reproducciones de la clase gratis (T2.3). */
+export function getFreeClassPlays(range: Range): Promise<LandingEventRate> {
+  return getLandingEventRate(range, FREE_CLASS_PLAY_PATH)
+}
+
+/** Emails capturados en el formulario de las clases por email (T3.1). */
+export function getFreeClassLeads(range: Range): Promise<LandingEventRate> {
+  return getLandingEventRate(range, FREE_CLASS_LEAD_PATH)
 }

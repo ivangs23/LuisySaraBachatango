@@ -1,0 +1,102 @@
+/* Formulario «dos clases más por email», bajo la clase gratis de la landing.
+   Va dentro de la misma sección: tarjeta discreta, sin competir con el vídeo. */
+.wrap {
+  max-width: 560px;
+  margin: var(--spacing-xl) auto 0;
+  padding: var(--spacing-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  /* La barra fija tapa el final de la pantalla al saltar a la ancla. */
+  scroll-margin-top: var(--spacing-xl);
+  scroll-margin-bottom: 6rem;
+}
+
+.title {
+  font: var(--h3);
+  color: var(--text-main);
+  margin: 0 0 var(--spacing-xs);
+}
+
+.body {
+  margin: 0 0 var(--spacing-md);
+  color: var(--text-muted);
+  font: var(--body);
+}
+
+.form { margin: 0; }
+
+.label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--text-muted);
+  font: var(--small);
+}
+
+.row {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 0.8rem 1rem;
+  font: var(--body);
+  color: var(--text-main);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+}
+.input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.button {
+  flex: 0 0 auto;
+  padding: 0.8rem 1.6rem;
+  font: var(--h4);
+  color: #050505;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.button:hover { background: var(--primary-hover); }
+.button:disabled { opacity: 0.6; cursor: default; }
+
+/* En móvil el botón ocupa el ancho entero: es más fácil de pulsar y el
+   texto («Quiero las dos clases») no se parte. */
+@media (max-width: 480px) {
+  .button { flex-basis: 100%; }
+}
+
+.consent {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-top: var(--spacing-md);
+  color: var(--text-muted);
+  font: var(--small);
+  line-height: 1.5;
+}
+.consent input {
+  margin-top: 0.2rem;
+  accent-color: var(--primary);
+  flex: 0 0 auto;
+}
+
+.error {
+  margin: var(--spacing-sm) 0 0;
+  color: #ff8a80;
+  font: var(--small);
+}
+
+.success {
+  margin: 0;
+  color: var(--primary);
+  font: var(--body);
+}

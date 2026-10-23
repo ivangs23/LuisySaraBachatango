@@ -67,6 +67,9 @@
 .stickyOffer { display: inline-flex; align-items: center; gap: var(--spacing-sm); min-width: 0; }
 .stickyCompare { color: var(--text-muted); font: var(--small); opacity: 0.75; }
 .stickySpots { color: var(--primary); font-family: var(--font-sans); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Salida secundaria: texto pequeño y subrayado, para que no compita con el botón. */
+.stickyFreeEmail { color: var(--text-muted); font: var(--small); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.stickyFreeEmail:hover { color: var(--text-main); }
 /* Por debajo de 600px la barra se queda sin sitio: cae la marca primero y, si
    hace falta, el recordatorio de plazas. El tachado y el botón nunca se van. */
 @media (max-width: 600px) { .stickyBrand { display: none; } .sticky { justify-content: center; } }

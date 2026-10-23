@@ -3,6 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 
 // CourseCurriculum importa `formatDuration` de un módulo server-only.
 vi.mock('server-only', () => ({}))
+// El formulario de clases por email tiene su propio test (landing-free-email).
+vi.mock('@/components/FreeClassesForm', () => ({ default: () => null, FREE_CLASSES_ANCHOR: 'clases-por-email' }))
 import { getLandingCopy } from '@/app/curso-bachatango/copy'
 import { render, screen, fireEvent } from '@testing-library/react'
 import LandingFaq from '@/app/curso-bachatango/_components/LandingFaq'

@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createHash } from 'node:crypto'
 import {
+  buildLeadEvent,
   buildPurchaseEvent,
   hashPii,
+  sendLeadToMeta,
   sendPurchaseToMeta,
   splitName,
 } from '@/utils/analytics/meta-capi'
@@ -183,5 +185,52 @@ describe('sendPurchaseToMeta — envío', () => {
     fetchMock.mockResolvedValue({ ok: true, text: async () => '' })
     await sendPurchaseToMeta(INPUT)
     expect(fetchMock.mock.calls[0][1].body).not.toContain('token-de-prueba')
+  })
+})
+
+// T3.1: el email capturado en el formulario de las clases gratis. Mismas
+// reglas que la compra: hasheado, solo con consentimiento y deduplicado con
+// el píxel por event_id.
+describe('Lead', () => {
+  const LEAD = {
+    eventId: '7f1c2d3e-0000-4000-8000-000000000001',
+    eventTime: 1_760_000_000,
+    eventSourceUrl: 'https://luisysarabachatango.com/curso-bachatango',
+    email: ' Ana@Ejemplo.COM ',
+    attribution: CONSENTIDO,
+  }
+
+  it('buildLeadEvent: event_name Lead, el event_id del navegador y el email hasheado', () => {
+    const e = (buildLeadEvent(LEAD).data as Record<string, unknown>[])[0]
+    expect(e.event_name).toBe('Lead')
+    expect(e.event_id).toBe(LEAD.eventId)
+    expect((e.user_data as Record<string, unknown>).em).toEqual([sha('ana@ejemplo.com')])
+    expect(JSON.stringify(e)).not.toContain('Ana@Ejemplo')
+  })
+
+  describe('sendLeadToMeta', () => {
+    const fetchMock = vi.fn()
+    beforeEach(() => {
+      vi.stubGlobal('fetch', fetchMock)
+      fetchMock.mockReset().mockResolvedValue({ ok: true, text: async () => '' })
+      vi.stubEnv('META_CAPI_TOKEN', 'token-de-prueba')
+      vi.stubEnv('NEXT_PUBLIC_META_PIXEL_ID', '941883441913782')
+    })
+    afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals() })
+
+    it('manda el evento con consentimiento', async () => {
+      expect(await sendLeadToMeta(LEAD)).toEqual({ sent: true })
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).data[0].event_name).toBe('Lead')
+    })
+
+    it('sin consentimiento de marketing no sale nada', async () => {
+      expect(await sendLeadToMeta({ ...LEAD, attribution: RECHAZADO })).toEqual({ sent: false, reason: 'no-consent' })
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('en modo demo tampoco', async () => {
+      expect(await sendLeadToMeta(LEAD, { isDemo: true })).toEqual({ sent: false, reason: 'demo' })
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
   })
 })

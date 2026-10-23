@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatSpotsLeft, type CourseOffer } from '@/utils/courses/offer';
 import type { LandingCopy } from '../copy';
 import CourseCtaButton from './CourseCtaButton';
+import { FREE_CLASSES_ANCHOR } from '@/components/FreeClassesForm';
 import styles from '../page.module.css';
 
 interface StickyProps {
@@ -38,6 +39,9 @@ export default function StickyBuyBar({ courseId, offer, copy }: StickyProps) {
           {spotsText && <span className={styles.stickySpots}>{spotsText}</span>}
         </span>
       )}
+      {/* Segunda salida, discreta, para quien aún no va a comprar: le lleva al
+          formulario de las dos clases por email. */}
+      <a href={`#${FREE_CLASSES_ANCHOR}`} className={styles.stickyFreeEmail}>{copy.sticky.freeEmail}</a>
       <CourseCtaButton
         courseId={courseId}
         label={offer.price !== null ? `${copy.sticky.cta} · €${offer.price}` : copy.sticky.cta}

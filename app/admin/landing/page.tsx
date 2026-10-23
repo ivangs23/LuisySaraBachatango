@@ -2,8 +2,11 @@ import Link from 'next/link'
 import RangePicker from '@/components/admin/charts/RangePicker'
 import LandingFunnelChart from '@/components/admin/charts/LandingFunnelChart'
 import LandingTrafficChart from '@/components/admin/charts/LandingTrafficChart'
-import FreeClassPlaysCard from '@/components/admin/FreeClassPlaysCard'
-import { getLandingFunnel, getLandingTraffic, getFreeClassPlays } from '@/utils/admin/landing-queries'
+import { Mail, PlayCircle } from 'lucide-react'
+import LandingRateCard from '@/components/admin/LandingRateCard'
+import {
+  getLandingFunnel, getLandingTraffic, getFreeClassPlays, getFreeClassLeads,
+} from '@/utils/admin/landing-queries'
 import type { Range } from '@/utils/admin/queries'
 import styles from './landing.module.css'
 
@@ -25,12 +28,13 @@ export default async function LandingStatsPage({
   const range = parseRange(sp.range)
   const rangeKey = sp.range && ['30', '90', '365', 'all'].includes(sp.range) ? sp.range : '90'
 
-  // Las tres comparten una sola lectura de `landing_events` (cache() en
+  // Todas comparten una sola lectura de `landing_events` (cache() en
   // utils/admin/landing-queries.ts).
-  const [funnel, traffic, plays] = await Promise.all([
+  const [funnel, traffic, plays, leads] = await Promise.all([
     getLandingFunnel(range),
     getLandingTraffic(range),
     getFreeClassPlays(range),
+    getFreeClassLeads(range),
   ])
 
   return (
@@ -49,7 +53,8 @@ export default async function LandingStatsPage({
       </p>
 
       <div className={styles.kpis}>
-        <FreeClassPlaysCard data={plays} />
+        <LandingRateCard label="Reproducciones de la clase gratis" Icon={PlayCircle} data={plays} />
+        <LandingRateCard label="Emails capturados" Icon={Mail} data={leads} />
       </div>
 
       <div className={styles.grid}>

@@ -8,7 +8,7 @@ const selectMock = vi.fn(() => ({ gte: gteMock }))
 const fromMock = vi.fn(() => ({ select: selectMock }))
 vi.mock('@/utils/supabase/admin', () => ({ createSupabaseAdmin: () => ({ from: fromMock }) }))
 
-import { getLandingFunnel, getLandingTraffic, getFreeClassPlays } from '@/utils/admin/landing-queries'
+import { getLandingFunnel, getLandingTraffic, getFreeClassPlays, getFreeClassLeads } from '@/utils/admin/landing-queries'
 
 /** 3 visitantes en la home, 2 llegan a venta, 1 compra. */
 const ROWS = [
@@ -107,16 +107,35 @@ describe('getFreeClassPlays', () => {
   it('cuenta únicos que dieron al play frente a únicos que vieron la landing', async () => {
     gteMock.mockResolvedValue({ data: CON_PLAYS, error: null })
     // 'a' y 'b' vieron /curso-bachatango; solo 'a' reprodujo (dos veces).
-    expect(await getFreeClassPlays(90)).toEqual({ plays: 2, viewers: 1, landingVisitors: 2, rate: 50 })
+    expect(await getFreeClassPlays(90)).toEqual({ events: 2, viewers: 1, landingVisitors: 2, rate: 50 })
   })
 
   it('sin visitas a la landing no hay porcentaje', async () => {
     gteMock.mockResolvedValue({ data: [], error: null })
-    expect(await getFreeClassPlays(90)).toEqual({ plays: 0, viewers: 0, landingVisitors: 0, rate: null })
+    expect(await getFreeClassPlays(90)).toEqual({ events: 0, viewers: 0, landingVisitors: 0, rate: null })
   })
 
   it('a cero si la query falla', async () => {
     gteMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
-    expect(await getFreeClassPlays(90)).toEqual({ plays: 0, viewers: 0, landingVisitors: 0, rate: null })
+    expect(await getFreeClassPlays(90)).toEqual({ events: 0, viewers: 0, landingVisitors: 0, rate: null })
+  })
+})
+
+// T3.1. KPI del plan: «Landing → email capturado».
+describe('getFreeClassLeads', () => {
+  it('cuenta únicos que dejaron su email frente a únicos que vieron la landing', async () => {
+    gteMock.mockResolvedValue({
+      data: [...ROWS, { path: '/curso-bachatango/lead', visitor_hash: 'b', created_at: '2026-08-10T11:20:00Z' }],
+      error: null,
+    })
+    expect(await getFreeClassLeads(90)).toEqual({ events: 1, viewers: 1, landingVisitors: 2, rate: 50 })
+  })
+
+  it('el lead tampoco cuenta como vista en el tráfico', async () => {
+    gteMock.mockResolvedValue({
+      data: [...ROWS, { path: '/curso-bachatango/lead', visitor_hash: 'b', created_at: '2026-08-10T11:20:00Z' }],
+      error: null,
+    })
+    expect((await getLandingTraffic(90))[0]).toEqual({ date: '2026-08-10', views: 7, uniques: 2 })
   })
 })
