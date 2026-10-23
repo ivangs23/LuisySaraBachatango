@@ -3,6 +3,8 @@
 import { useCallback, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Play } from 'lucide-react'
+import { FREE_CLASS_PLAY_PATH } from '@/utils/analytics/tracked-paths'
+import { sendLandingEvent } from '@/utils/analytics/landing-beacon'
 import styles from './LandingFreeClass.module.css'
 
 /**
@@ -40,6 +42,19 @@ export default function LandingFreeClass({
 }: Props) {
   const [playing, setPlaying] = useState(false)
   const startedRef = useRef(false)
+  const playCountedRef = useRef(false)
+
+  /**
+   * Se mide el primer `play` real, no el clic en la portada: el navegador
+   * puede bloquear la reproducción, y eso no es haber visto la clase. Pausar,
+   * reanudar o volver a empezar emiten más `play`; solo cuenta el primero de
+   * cada carga de página (KPI «reproducciones / visitas a la landing»).
+   */
+  const countPlay = useCallback(() => {
+    if (playCountedRef.current) return
+    playCountedRef.current = true
+    sendLandingEvent(FREE_CLASS_PLAY_PATH)
+  }, [])
 
   // El token de miniatura es obligatorio: la reproducción está firmada, así
   // que image.mux.com devuelve 403 sin él.
@@ -78,6 +93,7 @@ export default function LandingFreeClass({
           playbackId={playbackId}
           tokens={{ playback: playbackToken, thumbnail: thumbnailToken }}
           metadata={{ video_title: title }}
+          onPlay={countPlay}
           autoPlay
           className={styles.player}
         />

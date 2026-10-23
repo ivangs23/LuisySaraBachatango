@@ -14,9 +14,24 @@ export const TRACKED_PATHS = [
   '/curso-bachatango/comprar',
   '/curso-bachatango/comprar/enviado',
   '/gracias',
+  '/curso-bachatango/clase-play',
 ] as const
 
 export type TrackedPath = (typeof TRACKED_PATHS)[number]
+
+/**
+ * Primer `play` de la clase gratis incrustada en la landing. Es un EVENTO, no
+ * una página: no existe ninguna ruta con ese nombre. Se guarda en
+ * `landing_events` con esta ruta virtual para medirlo con la misma tubería
+ * (sin cookies, hash diario) que las vistas. Una vez por carga de página.
+ */
+export const FREE_CLASS_PLAY_PATH = '/curso-bachatango/clase-play' satisfies TrackedPath
+
+/**
+ * Rutas medidas que no son vistas de página. El panel no las cuenta en el
+ * tráfico ni son pasos del embudo.
+ */
+export const EVENT_PATHS: readonly TrackedPath[] = [FREE_CLASS_PLAY_PATH]
 
 /** Cota defensiva: una ruta real nunca se acerca, y evita trabajo inútil. */
 const MAX_PATH_LENGTH = 512

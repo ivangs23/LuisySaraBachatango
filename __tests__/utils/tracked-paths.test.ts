@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { normalisePath, TRACKED_PATHS, FUNNEL_STEPS } from '@/utils/analytics/tracked-paths'
+import {
+  normalisePath, TRACKED_PATHS, FUNNEL_STEPS, EVENT_PATHS, FREE_CLASS_PLAY_PATH,
+} from '@/utils/analytics/tracked-paths'
 
 describe('normalisePath', () => {
   it('acepta las rutas medidas', () => {
@@ -43,6 +45,15 @@ describe('normalisePath', () => {
     expect(FUNNEL_STEPS.map(s => s.path)).toEqual([
       '/', '/curso-bachatango', '/curso-bachatango/comprar', '/curso-bachatango/comprar/enviado', '/gracias',
     ])
+  })
+
+  // T2.3: el play de la clase gratis no es una página sino un evento que se
+  // guarda en la misma tabla con una ruta inventada.
+  it('el play de la clase gratis se acepta, pero no es un paso del embudo', () => {
+    expect(FREE_CLASS_PLAY_PATH).toBe('/curso-bachatango/clase-play')
+    expect(normalisePath(FREE_CLASS_PLAY_PATH)).toBe(FREE_CLASS_PLAY_PATH)
+    expect(EVENT_PATHS).toContain(FREE_CLASS_PLAY_PATH)
+    expect(FUNNEL_STEPS.map(s => s.path)).not.toContain(FREE_CLASS_PLAY_PATH)
   })
 
   it('el paso de envío del formulario es una ruta medida y va en el embudo', () => {
