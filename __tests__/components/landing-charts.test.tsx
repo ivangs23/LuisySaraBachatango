@@ -50,6 +50,43 @@ describe('LandingFunnelChart', () => {
   })
 })
 
+// Con los anuncios entra más gente directa a la landing que por la home: el
+// segundo paso tiene más visitas que el primero. Con el ancho calculado sobre
+// el primero, la barra medía un 183 % y se salía de la tarjeta, y el panel
+// enseñaba porcentajes de paso que no significan nada.
+describe('LandingFunnelChart · entradas directas', () => {
+  const ANUNCIOS: FunnelStep[] = [
+    { path: '/', label: 'Inicio', visitors: 213, dropFromPrev: null },
+    { path: '/curso-bachatango', label: 'Página de venta', visitors: 390, dropFromPrev: 183.1 },
+    { path: '/curso-bachatango/comprar', label: 'Formulario de compra', visitors: 60, dropFromPrev: 15.4 },
+    { path: '/curso-bachatango/comprar/enviado', label: 'Formulario enviado', visitors: 3, dropFromPrev: 5 },
+    { path: '/gracias', label: 'Compra completada', visitors: 8, dropFromPrev: 266.7 },
+  ]
+
+  it('ninguna barra pasa del 100 % y la más ancha es la del paso con más visitas', () => {
+    const { container } = render(<LandingFunnelChart data={ANUNCIOS} />)
+    const anchos = [...container.querySelectorAll<HTMLElement>('[data-funnel-bar]')].map((b) => parseFloat(b.style.width))
+    expect(Math.max(...anchos)).toBe(100)
+    expect(anchos[1]).toBe(100)
+    expect(anchos.every((a) => a > 0 && a <= 100)).toBe(true)
+  })
+
+  it('no enseña porcentajes de paso por encima del 100 %', () => {
+    render(<LandingFunnelChart data={ANUNCIOS} />)
+    expect(screen.queryByText(/183,1/)).toBeNull()
+    expect(screen.queryByText(/266,7/)).toBeNull()
+    expect(screen.getAllByText(/más que en el paso anterior/)).toHaveLength(2)
+    // Los que sí tienen sentido se siguen enseñando.
+    expect(screen.getByText(/15,4\s*%/)).toBeInTheDocument()
+  })
+
+  it('la conversión total se calcula sobre el paso con más visitas, y lo dice', () => {
+    render(<LandingFunnelChart data={ANUNCIOS} />)
+    // 8 compras / 390 visitas a la página de venta = 2,1 %
+    expect(screen.getByText('Conversión total 2,1 % (compras / Página de venta)')).toBeInTheDocument()
+  })
+})
+
 describe('LandingTrafficChart', () => {
   it('renderiza con datos', () => {
     render(<LandingTrafficChart data={TRAFFIC} />)
