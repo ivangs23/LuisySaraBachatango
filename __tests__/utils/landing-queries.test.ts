@@ -3,10 +3,34 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('server-only', () => ({}))
 vi.mock('@/utils/auth/require-admin', () => ({ requireAdmin: vi.fn().mockResolvedValue({ id: 'admin' }) }))
 
-const gteMock = vi.fn()
-const selectMock = vi.fn(() => ({ gte: gteMock }))
-const fromMock = vi.fn(() => ({ select: selectMock }))
+// Simula la tabla y el tope de filas por petición de PostgREST (1000 en
+// Supabase por defecto): una consulta que pida más recibe solo las primeras.
+// Así se puede probar que el panel pagina en vez de quedarse con un trozo.
+type Fila = { path: string; visitor_hash: string; created_at: string }
+let tabla: Array<Fila & { id: number }> = []
+let topePostgrest = 1000
+let falloEnConsulta: number | null = null
+let consultas = 0
+
+function consulta() {
+  let desdeId = 0
+  const b = {
+    gte: () => b,
+    gt: (_col: string, id: number) => { desdeId = id; return b },
+    order: () => b,
+    limit: async (n: number) => {
+      consultas++
+      if (falloEnConsulta !== null && consultas >= falloEnConsulta) return { data: null, error: { message: 'boom' } }
+      return { data: tabla.filter((r) => r.id > desdeId).slice(0, Math.min(n, topePostgrest)), error: null }
+    },
+  }
+  return b
+}
+const fromMock = vi.fn(() => ({ select: () => consulta() }))
 vi.mock('@/utils/supabase/admin', () => ({ createSupabaseAdmin: () => ({ from: fromMock }) }))
+
+function servir(filas: Fila[]) { tabla = filas.map((f, i) => ({ id: i + 1, ...f })) }
+function servirError() { falloEnConsulta = 1 }
 
 import { getLandingFunnel, getLandingTraffic, getFreeClassPlays, getFreeClassLeads } from '@/utils/admin/landing-queries'
 
@@ -23,7 +47,10 @@ const ROWS = [
 ]
 
 beforeEach(() => {
-  gteMock.mockReset().mockResolvedValue({ data: ROWS, error: null })
+  servir(ROWS)
+  topePostgrest = 1000
+  falloEnConsulta = null
+  consultas = 0
   fromMock.mockClear()
 })
 
@@ -46,7 +73,7 @@ describe('getLandingFunnel', () => {
   })
 
   it('no divide por cero cuando un paso está vacío', async () => {
-    gteMock.mockResolvedValue({ data: [{ path: '/gracias', visitor_hash: 'z', created_at: '2026-08-10T10:00:00Z' }], error: null })
+    servir([{ path: '/gracias', visitor_hash: 'z', created_at: '2026-08-10T10:00:00Z' }])
     const f = await getLandingFunnel(90)
     expect(f[0].visitors).toBe(0)
     expect(f[1].dropFromPrev).toBeNull()
@@ -54,14 +81,14 @@ describe('getLandingFunnel', () => {
   })
 
   it('devuelve los pasos aunque no haya datos', async () => {
-    gteMock.mockResolvedValue({ data: [], error: null })
+    servir([])
     const f = await getLandingFunnel(90)
     expect(f).toHaveLength(5)
     expect(f.every(s => s.visitors === 0)).toBe(true)
   })
 
   it('devuelve los pasos a cero si la query falla', async () => {
-    gteMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    servirError()
     const f = await getLandingFunnel(90)
     expect(f).toHaveLength(5)
     expect(f.every(s => s.visitors === 0)).toBe(true)
@@ -80,7 +107,7 @@ describe('getLandingTraffic', () => {
   })
 
   it('devuelve vacío si la query falla', async () => {
-    gteMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    servirError()
     expect(await getLandingTraffic(90)).toEqual([])
   })
 })
@@ -95,7 +122,7 @@ const CON_PLAYS = [
 
 describe('getLandingTraffic · eventos que no son páginas', () => {
   it('no cuenta los plays de la clase gratis como vistas', async () => {
-    gteMock.mockResolvedValue({ data: CON_PLAYS, error: null })
+    servir(CON_PLAYS)
     expect(await getLandingTraffic(90)).toEqual([
       { date: '2026-08-10', views: 7, uniques: 2 },
       { date: '2026-08-11', views: 1, uniques: 1 },
@@ -105,18 +132,18 @@ describe('getLandingTraffic · eventos que no son páginas', () => {
 
 describe('getFreeClassPlays', () => {
   it('cuenta únicos que dieron al play frente a únicos que vieron la landing', async () => {
-    gteMock.mockResolvedValue({ data: CON_PLAYS, error: null })
+    servir(CON_PLAYS)
     // 'a' y 'b' vieron /curso-bachatango; solo 'a' reprodujo (dos veces).
     expect(await getFreeClassPlays(90)).toEqual({ events: 2, viewers: 1, landingVisitors: 2, rate: 50 })
   })
 
   it('sin visitas a la landing no hay porcentaje', async () => {
-    gteMock.mockResolvedValue({ data: [], error: null })
+    servir([])
     expect(await getFreeClassPlays(90)).toEqual({ events: 0, viewers: 0, landingVisitors: 0, rate: null })
   })
 
   it('a cero si la query falla', async () => {
-    gteMock.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    servirError()
     expect(await getFreeClassPlays(90)).toEqual({ events: 0, viewers: 0, landingVisitors: 0, rate: null })
   })
 })
@@ -124,18 +151,40 @@ describe('getFreeClassPlays', () => {
 // T3.1. KPI del plan: «Landing → email capturado».
 describe('getFreeClassLeads', () => {
   it('cuenta únicos que dejaron su email frente a únicos que vieron la landing', async () => {
-    gteMock.mockResolvedValue({
-      data: [...ROWS, { path: '/curso-bachatango/lead', visitor_hash: 'b', created_at: '2026-08-10T11:20:00Z' }],
-      error: null,
-    })
+    servir([...ROWS, { path: '/curso-bachatango/lead', visitor_hash: 'b', created_at: '2026-08-10T11:20:00Z' }])
     expect(await getFreeClassLeads(90)).toEqual({ events: 1, viewers: 1, landingVisitors: 2, rate: 50 })
   })
 
   it('el lead tampoco cuenta como vista en el tráfico', async () => {
-    gteMock.mockResolvedValue({
-      data: [...ROWS, { path: '/curso-bachatango/lead', visitor_hash: 'b', created_at: '2026-08-10T11:20:00Z' }],
-      error: null,
-    })
+    servir([...ROWS, { path: '/curso-bachatango/lead', visitor_hash: 'b', created_at: '2026-08-10T11:20:00Z' }])
     expect((await getLandingTraffic(90))[0]).toEqual({ date: '2026-08-10', views: 7, uniques: 2 })
+  })
+})
+
+// PostgREST devuelve como mucho 1000 filas por petición. El panel pedía todas
+// de golpe y se quedaba con las 1000 más antiguas: con 4542 eventos en 90 días,
+// todo octubre (los anuncios) quedaba fuera de las cifras y del gráfico.
+describe('lectura completa de landing_events', () => {
+  const muchas = (n: number): Fila[] => Array.from({ length: n }, (_, i) => ({
+    path: '/curso-bachatango', visitor_hash: `v${i}`, created_at: '2026-10-20T10:00:00Z',
+  }))
+
+  it('lee todas las filas aunque pasen del tope de 1000 por petición', async () => {
+    servir(muchas(2500))
+    const f = await getLandingFunnel(90)
+    expect(f.find((s) => s.path === '/curso-bachatango')!.visitors).toBe(2500)
+  })
+
+  it('también si el servidor tuviera un tope menor que la página que pide', async () => {
+    topePostgrest = 300
+    servir(muchas(1000))
+    expect((await getLandingTraffic(90))[0].views).toBe(1000)
+  })
+
+  it('si falla una página a mitad, no enseña cifras parciales', async () => {
+    servir(muchas(2500))
+    falloEnConsulta = 2
+    const f = await getLandingFunnel(90)
+    expect(f.every((s) => s.visitors === 0)).toBe(true)
   })
 })

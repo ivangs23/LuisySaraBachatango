@@ -30,12 +30,26 @@ export type LandingEventRate = {
   rate: number | null
 }
 
-type Row = { path: string; visitor_hash: string; created_at: string }
+type Row = { id: number; path: string; visitor_hash: string; created_at: string }
+
+/** Filas por petición. PostgREST no devuelve más de su `max-rows` (1000 en Supabase). */
+const PAGINA = 1000
+/** Cota de seguridad: a partir de aquí toca agregar en SQL, no en JS. */
+const MAX_FILAS = 200_000
 
 /**
  * Lee los eventos del rango. Agrega en JS, igual que el resto de
  * `utils/admin/queries.ts`: PostgREST no hace `count(distinct)` y a este volumen
  * no compensa una vista materializada. Ver «Cuándo habrá que volver» en el spec.
+ *
+ * Por páginas, con el `id` como cursor. Una sola consulta devolvía como mucho
+ * 1000 filas —las más antiguas— y el panel se quedaba ahí sin avisar: con 4542
+ * eventos en 90 días, octubre entero (los anuncios) no salía en ninguna cifra.
+ * Se para cuando una página llega VACÍA, no cuando llega corta: así sigue
+ * funcionando aunque el `max-rows` del servidor sea menor que PAGINA. El
+ * cursor por `id` no salta ni duplica filas aunque entren eventos mientras lee.
+ *
+ * Si falla cualquier página, devuelve [] en vez de cifras parciales.
  *
  * Con `cache()` el panel, que pide embudo, tráfico y reproducciones a la vez,
  * hace una sola lectura por petición en lugar de tres.
@@ -43,15 +57,25 @@ type Row = { path: string; visitor_hash: string; created_at: string }
 const fetchRows = cache(async function fetchRows(range: Range): Promise<Row[]> {
   await requireAdmin()
   const sb = createSupabaseAdmin()
-  const since = rangeStartIso(range)
+  const since = rangeStartIso(range) ?? '1970-01-01T00:00:00Z'
 
-  const { data, error } = await sb
-    .from('landing_events')
-    .select('path, visitor_hash, created_at')
-    .gte('created_at', since ?? '1970-01-01T00:00:00Z')
+  const rows: Row[] = []
+  let ultimoId = 0
+  while (rows.length < MAX_FILAS) {
+    const { data, error } = await sb
+      .from('landing_events')
+      .select('id, path, visitor_hash, created_at')
+      .gte('created_at', since)
+      .gt('id', ultimoId)
+      .order('id', { ascending: true })
+      .limit(PAGINA)
 
-  if (error || !data) return []
-  return data as Row[]
+    if (error || !data) return []
+    if (data.length === 0) break
+    rows.push(...(data as Row[]))
+    ultimoId = (data as Row[])[data.length - 1].id
+  }
+  return rows
 })
 
 function uniquesOf(rows: Row[], path: string): number {
