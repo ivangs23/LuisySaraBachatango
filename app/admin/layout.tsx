@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { requireAdmin, AdminGuardError } from '@/utils/auth/require-admin'
 import { createClient } from '@/utils/supabase/server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import { getEmailAviso } from '@/utils/admin/email-status'
 import styles from './layout.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -23,14 +24,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const supabase = await createClient()
-  const { count } = await supabase
-    .from('submissions')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'pending')
+  const [{ count }, correos] = await Promise.all([
+    supabase
+      .from('submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    getEmailAviso(),
+  ])
 
   return (
     <div className={styles.shell}>
-      <AdminSidebar pendingSubmissions={count ?? 0} />
+      <AdminSidebar
+        pendingSubmissions={count ?? 0}
+        unsentEmails={correos.pendientes}
+        emailOutage={correos.sinEnvio}
+      />
       <main className={styles.main}>{children}</main>
     </div>
   )

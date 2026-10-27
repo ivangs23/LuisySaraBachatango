@@ -16,12 +16,21 @@ import {
   X,
   FlaskConical,
   Megaphone,
+  Mail,
 } from 'lucide-react'
 import styles from './AdminSidebar.module.css'
 
-type Item = { href: string; label: string; Icon: typeof Users; badge?: number }
+type Item = { href: string; label: string; Icon: typeof Users; badge?: number | string; alert?: boolean }
 
-export default function AdminSidebar({ pendingSubmissions }: { pendingSubmissions: number }) {
+type Props = {
+  pendingSubmissions: number
+  /** Correos que no salieron (utils/admin/email-status.ts). */
+  unsentEmails?: number
+  /** Resend rechaza la clave: no sale ningún correo. */
+  emailOutage?: boolean
+}
+
+export default function AdminSidebar({ pendingSubmissions, unsentEmails = 0, emailOutage = false }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
@@ -31,6 +40,10 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
     { href: '/admin/estadisticas', label: 'Estadísticas', Icon: BarChart3 },
     { href: '/admin/landing', label: 'Landing', Icon: Megaphone },
     { href: '/admin/entregas', label: 'Entregas', Icon: Inbox, badge: pendingSubmissions },
+    {
+      href: '/admin/correos', label: 'Correos', Icon: Mail,
+      badge: emailOutage ? '!' : unsentEmails, alert: emailOutage || unsentEmails > 0,
+    },
     { href: '/admin/cursos', label: 'Cursos', Icon: GraduationCap },
     { href: '/admin/eventos', label: 'Eventos', Icon: CalendarDays },
     { href: '/admin/comunidad', label: 'Comunidad', Icon: MessagesSquare },
@@ -64,7 +77,7 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
         </div>
 
         <nav className={styles.nav}>
-          {items.map(({ href, label, Icon, badge }) => (
+          {items.map(({ href, label, Icon, badge, alert }) => (
             <Link
               key={href}
               href={href}
@@ -73,8 +86,8 @@ export default function AdminSidebar({ pendingSubmissions }: { pendingSubmission
             >
               <Icon size={16} strokeWidth={2} aria-hidden />
               <span>{label}</span>
-              {badge && badge > 0 ? (
-                <span className={styles.badge}>{badge}</span>
+              {badge && (typeof badge === 'string' || badge > 0) ? (
+                <span className={`${styles.badge} ${alert ? styles.badgeAlert : ''}`}>{badge}</span>
               ) : null}
             </Link>
           ))}

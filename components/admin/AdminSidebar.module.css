@@ -79,6 +79,12 @@
   text-align: center;
 }
 
+/* Algo que no debería esperar: un correo que no salió. */
+.badgeAlert {
+  background: rgba(180, 40, 40, 0.9);
+  color: #fff;
+}
+
 .burger {
   display: none;
   position: fixed;
