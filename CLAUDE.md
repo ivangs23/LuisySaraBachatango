@@ -116,6 +116,34 @@ All translations live in `utils/dictionaries.ts` as a single typed object with k
 
 `STRIPE_CONFIG` in [utils/stripe/config.ts](utils/stripe/config.ts) holds subscription price IDs. Currency is always EUR.
 
+### Transactional Email Monitoring (`/admin/correos`)
+
+All app email goes through `enviar()` in [utils/email/layout.ts](utils/email/layout.ts)
+(Resend). Supabase auth emails (password reset, signup confirmation) do **not**:
+Supabase sends those over its own SMTP with a separate Resend key, so they keep
+working when the app's key is broken — which is exactly how a dead
+`RESEND_API_KEY` went unnoticed from 23 to 27 Oct 2026 (2 buyers and 4 free-class
+signups without email).
+
+`/admin/correos` answers "did this person get their email?" for the last 28 days
+(Resend keeps about 30). [utils/admin/email-status.ts](utils/admin/email-status.ts)
+matches `course_purchases` and `clase_gratis` signups against Resend's sent-email
+log (`listSentEmails`, [utils/email/resend-log.ts](utils/email/resend-log.ts)) by
+recipient + fixed subject (`PURCHASE_CONFIRMATION_SUBJECT`, `FREE_CLASSES_SUBJECT`)
++ time. No table of its own: Resend is the source of truth, including for emails
+sent before the panel existed. **Changing either subject** makes past emails
+unmatchable.
+
+- A button resends by hand (`app/admin/correos/actions.ts`). A purchase email to
+  someone who never signed in carries a **fresh** set-password link (invalidating
+  the old one); never to refunded or demo purchases. Free classes are commercial
+  email: never to someone who unsubscribed.
+- The admin sidebar badge counts emails that did not go out, or shows `!` when
+  Resend rejects the key (nothing is going out). Cached 5 min, refreshed at once by
+  a manual send (`updateTag`).
+- A purchase whose buyer has already signed in is shown but not counted.
+  `source: 'web'` purchases (logged-in checkout) never get this email by design.
+
 ### Meta Ads Conversion Tracking
 
 The ads funnel (landing → `/curso-bachatango/comprar` → Stripe → `/gracias`)
@@ -198,7 +226,7 @@ MUX_SIGNING_KEY_PRIVATE        # Base64-encoded PEM of the Mux signing private k
 TEST_MODE_SECRET               # Optional. HMAC key for the admin per-browser test-mode cookie (/admin/pruebas). Fail-closed: if unset, the test-mode toggle is inert and checkout always uses real Stripe.
 CRON_SECRET                    # Bearer token for the scheduled routes (/api/cron/purge-pending and /api/cron/lifecycle-emails, Vercel cron). Fail-closed: if unset, both return 401: stale pending_registrations are never purged and no nurture email is sent.
 LIFECYCLE_EMAILS_ENABLED       # Set to "1" to let /api/cron/lifecycle-emails send the nurture sequence (utils/email/sequences/nutricion.ts). Fail-closed: any other value and the cron sends nothing. Turn on only after Luis y Sara have reviewed the email copy. The first email (the two free classes) is sent by the landing form regardless.
-RESEND_API_KEY                 # Resend API key; sender/domain for transactional emails (guest access, purchase confirmation). If unset, those emails silently no-op.
+RESEND_API_KEY                 # Resend API key; sender/domain for transactional emails (guest access, purchase confirmation). If unset, those emails silently no-op. Must be "Full access": /admin/correos reads Resend's sent-email log with it, and a "Sending access" key cannot (the panel then says it cannot see delivery).
 NEXT_PUBLIC_GA_MEASUREMENT_ID  # Optional. GA4 measurement ID (G-XXXXXXXXXX). Fail-closed: if unset, GA4 never loads even with analytics consent granted.
 NEXT_PUBLIC_META_PIXEL_ID      # Optional. Numeric Meta Pixel ID. Fail-closed: if unset, the Pixel never loads even with marketing consent granted. The Conversions API posts to this same ID — they must match or Meta cannot deduplicate.
 META_CAPI_TOKEN                # Optional. Meta Conversions API access token (Events Manager → Settings → Generate access token). Fail-closed: if unset, no server-side Purchase is sent; the browser Pixel is unaffected.

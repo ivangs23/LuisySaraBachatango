@@ -4,6 +4,7 @@ import { sendPurchaseConfirmation } from '@/utils/email/purchase-confirmation'
 import { provisionGuestPurchase } from '@/utils/checkout/provision-guest'
 import { alertaCritica } from '@/utils/alerta'
 import { sesionLiquidada } from '@/utils/checkout/session-status'
+import { setPasswordUrl as buildSetPasswordUrl } from '@/utils/checkout/set-password-url'
 
 
 export type ProvisionResult =
@@ -255,8 +256,7 @@ export async function provisionFromPending(
     const { data: link, error: linkErr } = await admin.auth.admin.generateLink({ type: 'recovery', email })
     const th = link?.properties?.hashed_token
     if (th) {
-      const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
-      setPasswordUrl = `${base}/auth/confirm?token_hash=${th}&type=recovery&next=/reset-password`
+      setPasswordUrl = buildSetPasswordUrl(th)
     } else {
       // Sin enlace el comprador no puede entrar por ese camino. El correo
       // usa `passwordless` para no decirle que use una contraseña que nunca

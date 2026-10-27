@@ -21,6 +21,12 @@ import type { Sequence, StepContext } from './types'
 
 const curso = (ctx: StepContext) => ({ texto: 'Ver el curso', url: `${ctx.base}/curso-bachatango` })
 
+/**
+ * Asunto del paso 1. `/admin/correos` lo busca en el registro de Resend para
+ * saber si a cada persona le llegaron sus dos clases.
+ */
+export const FREE_CLASSES_SUBJECT = 'Tus dos clases de bachatango'
+
 export const NUTRICION: Sequence = {
   name: 'nutricion',
   steps: [
@@ -31,7 +37,7 @@ export const NUTRICION: Sequence = {
         const token = makeFreeClassesToken(ctx.email)
         if (!token) return null
         return {
-          subject: 'Tus dos clases de bachatango',
+          subject: FREE_CLASSES_SUBJECT,
           preheader: 'Posturas y segundo básico, para practicar en casa.',
           titulo: 'Aquí tienes tus dos clases',
           parrafos: [
