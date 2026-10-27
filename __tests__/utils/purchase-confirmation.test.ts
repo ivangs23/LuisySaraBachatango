@@ -12,7 +12,7 @@ beforeEach(() => {
   fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 'e1' }) })
 })
 
-import { sendPurchaseConfirmation } from '@/utils/email/purchase-confirmation'
+import { sendPurchaseConfirmation, PURCHASE_CONFIRMATION_SUBJECT } from '@/utils/email/purchase-confirmation'
 
 describe('sendPurchaseConfirmation', () => {
   it('new account: posts to Resend with the access copy', async () => {
@@ -69,18 +69,25 @@ describe('sendPurchaseConfirmation', () => {
     expect(body.html).toContain('LS ESCUELA DE BAILES')
     expect(body.html).toContain('E09928052')
   })
-  it('never throws when Resend fails', async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => 'boom' })
-    await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBeUndefined()
+  it('uses the fixed subject that /admin/correos looks for', async () => {
+    await sendPurchaseConfirmation({ email: 'ana@example.com', fullName: 'Ana', existingAccount: false })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).subject).toBe(PURCHASE_CONFIRMATION_SUBJECT)
   })
-  it('no-op without RESEND_API_KEY', async () => {
+  it('reports true when Resend accepts the email', async () => {
+    await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBe(true)
+  })
+  it('never throws when Resend fails, and reports false', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => 'boom' })
+    await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBe(false)
+  })
+  it('no-op without RESEND_API_KEY, and reports false', async () => {
     delete process.env.RESEND_API_KEY
-    await sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })
+    await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBe(false)
     expect(fetchMock).not.toHaveBeenCalled()
   })
-  it('never throws when fetch itself rejects (network error)', async () => {
+  it('never throws when fetch itself rejects (network error), and reports false', async () => {
     fetchMock.mockRejectedValue(new Error('network down'))
-    await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBeUndefined()
+    await expect(sendPurchaseConfirmation({ email: 'a@b.com', fullName: 'A', existingAccount: false })).resolves.toBe(false)
   })
 
   // El botón de "fijar contraseña" (tarea 6 del plan): la cuenta se crea sin

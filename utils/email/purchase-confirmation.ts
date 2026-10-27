@@ -4,6 +4,13 @@ import { renderEmail, renderTexto, enviar, esc } from './layout'
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.com'
 
 /**
+ * Asunto fijo. `/admin/correos` lo busca en el registro de Resend para saber
+ * si a cada comprador le salió su correo: cambiarlo aquí basta, pero los
+ * correos ya enviados con el asunto anterior dejarían de encontrarse.
+ */
+export const PURCHASE_CONFIRMATION_SUBJECT = 'Tu acceso al CURSO BACHATANGO ya está activo'
+
+/**
  * Confirmación posterior al pago. Se envía como ÚLTIMO paso del
  * aprovisionamiento, exactamente una vez por alta genuina. Nunca lanza: un
  * fallo de email no puede tumbar el webhook, porque la compra ya está
@@ -12,6 +19,9 @@ const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://luisysarabachatango.co
  * Es el primer correo que recibe alguien que acaba de pagar 119 €, así que
  * dice explícitamente CON QUÉ CONTRASEÑA entrar: es la duda número uno cuando
  * la cuenta se crea durante la compra y no antes.
+ *
+ * Devuelve si Resend aceptó el correo. El aprovisionamiento lo ignora; el
+ * reenvío manual desde `/admin/correos` lo enseña.
  */
 export async function sendPurchaseConfirmation(opts: {
   email: string
@@ -40,7 +50,7 @@ export async function sendPurchaseConfirmation(opts: {
    * AUDITORIA-2026-09, hallazgo 1).
    */
   accountHasNoPassword?: boolean
-}): Promise<void> {
+}): Promise<boolean> {
   const nombre = opts.fullName ? esc(opts.fullName.split(' ')[0]) : null
   const saludo = nombre ? `Hola ${nombre},` : 'Hola,'
 
@@ -93,9 +103,9 @@ export async function sendPurchaseConfirmation(opts: {
   })
   const text = renderTexto({ titulo, parrafos, boton, nota })
 
-  await enviar({
+  return enviar({
     to: opts.email,
-    subject: 'Tu acceso al CURSO BACHATANGO ya está activo',
+    subject: PURCHASE_CONFIRMATION_SUBJECT,
     html,
     text,
     etiqueta: 'purchase-confirmation',
